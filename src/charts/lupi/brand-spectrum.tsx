@@ -52,10 +52,10 @@ const lean = (row: SpectrumRow, v: number) =>
 /** Stops on every rail's ruler: both ends, the centre and two between each. */
 const STOPS = 7;
 /** Half-heights of a ruler tick: the ends and centre, then the stops between. */
-const TICK_MAJOR = 5;
-const TICK_MINOR = 3;
-/** Half-height of the gap bar, so it spans 7 whole pixels on the rail. */
-const GAP_HALF = 3;
+const TICK_MAJOR = 8;
+const TICK_MINOR = 4;
+/** Half-height of the gap bar, so it spans 11 whole pixels on the rail. */
+const GAP_HALF = 5;
 
 /** A competitor: a hollow 1px ring, well under our dot. */
 const Ring = (props: { cx: number; cy: number; style?: CSSProperties }) => (
@@ -63,7 +63,7 @@ const Ring = (props: { cx: number; cy: number; style?: CSSProperties }) => (
     className="pop fill-paper stroke-l5"
     cx={props.cx}
     cy={props.cy}
-    r={3}
+    r={4}
     strokeWidth={1}
     style={props.style}
   />
@@ -231,17 +231,17 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
                 row: r,
                 series: m.series,
                 x: cx,
-                y: y - (us ? 14 : 8),
+                y: y - (us ? 16 : 10),
               });
             }}
           >
-            <circle cx={cx} cy={y} fill="transparent" r={us ? 12 : 7} />
+            <circle cx={cx} cy={y} fill="transparent" r={us ? 12 : 8} />
             {us ? (
               <circle
                 className="pop fill-hero"
                 cx={cx}
                 cy={y}
-                r={4.5}
+                r={6}
                 style={stagger(r * 4, "mark")}
               />
             ) : (
