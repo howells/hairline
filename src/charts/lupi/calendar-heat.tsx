@@ -6,7 +6,12 @@ import { monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, DotScreen } from "../texture";
-import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
+import {
+  HALFTONE_R,
+  TEXTURE_PITCH,
+  paint,
+  useTextureIds,
+} from "../texture-ids";
 import { dimClass, noteSpace, stagger } from "../util";
 import { calendarHeatDemo } from "./calendar-heat.data";
 import type { DayDatum } from "./calendar-heat.data";
@@ -57,8 +62,8 @@ const GUTTER = 3;
 /** Months per stacked band: half-years on wide screens, thirds on narrow. */
 const WIDE_MONTHS = 6;
 const NARROW_MONTHS = 4;
-/** Halftone dot radius per step of the day's count, quietest first. */
-const RADII = [0.75, 1, 1.25, 1.5, 1.75];
+/** Halftone dot radius per step of the day's count, quietest first: the shared ladder. */
+const RADII = HALFTONE_R;
 /** Smallest gap between a cell's edge and its outermost dot centre. */
 const MARGIN = 2.5;
 /** Where DotScreen puts its dot inside each tile. */
@@ -132,7 +137,7 @@ const Screens = ({ ids }: { ids: (name: string) => string }) => (
         />
       ))
     )}
-    <CrossHatch ground="fill-paper" id={ids("peak")} tone="fill-ink" />
+    <CrossHatch ground="fill-paper" id={ids("peak")} tone="fill-hero" />
   </defs>
 );
 

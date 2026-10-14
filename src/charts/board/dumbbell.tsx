@@ -32,7 +32,7 @@ const DumbbellRow = (props: {
   const { i, row: r, x, y } = props;
   const bh = y.bandwidth();
   const cy = Math.round((y(r.name) ?? 0) + bh / 2);
-  const ink = props.worst ? "var(--alert)" : "var(--ink)";
+  const ink = props.worst ? "var(--alert)" : "var(--hero)";
   return (
     <g
       onPointerEnter={() => {
@@ -106,7 +106,7 @@ export const Dumbbell = (props: {
           className="mt-3"
           items={[
             { label: props.ends[0], tone: "fill-l4" },
-            { label: props.ends[1], tone: "fill-ink" },
+            { label: props.ends[1], tone: "fill-hero" },
           ]}
         />
       }

@@ -217,7 +217,7 @@ const DestinationMark = (props: {
   return (
     <>
       {props.hero ? (
-        <circle className="fill-ink" cx={x} cy={stop.y} r={4.5} />
+        <circle className="fill-hero" cx={x} cy={stop.y} r={4.5} />
       ) : (
         <circle
           className={`fill-paper transition-tone ${props.bright ? "stroke-ink" : "stroke-l3"}`}

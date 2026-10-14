@@ -292,6 +292,7 @@ const ScrubCursor = (props: {
           right={frame.width - m.right}
           min={m.top + 6}
           max={plotBottom - 8}
+          plate={chart.fill !== undefined}
           tags={chart.series.map((s) => ({
             id: seriesKey(s),
             name: s.name,

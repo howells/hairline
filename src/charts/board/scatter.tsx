@@ -6,7 +6,7 @@ import type { PointerEvent } from "react";
 import { fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart, HGrid, VGrid } from "../core";
-import { Stipple } from "../texture";
+import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { Key } from "./key";
 import { CURSOR, OUTLINE, POINT, RULE_TARGET, TICK, VALUE } from "./styles";
@@ -217,7 +217,7 @@ const SlaRule = (props: { frame: Frame; zone: string; sla: number }) => {
 /** The worst point: red. Hovered: ink. Otherwise the one grey. */
 const pointTone = (worst: boolean, active: boolean) => {
   if (active) {
-    return "var(--ink)";
+    return "var(--hero)";
   }
   return worst ? "var(--alert)" : POINT_TONE;
 };
@@ -231,6 +231,47 @@ const labelAnchor = (text: string, px: number, frame: Frame) => {
   return px + half > frame.width - frame.m.right ? "end" : "middle";
 };
 
+/** Baseline to the middle of an 11px line. */
+const MID = 4;
+
+/**
+ * A label set on its baseline: on a plate where it falls inside the
+ * stippled zone over the SLA, on its halo everywhere else.
+ */
+const ZoneText = (props: {
+  anchor: "end" | "middle" | "start";
+  baseline: number;
+  className: string;
+  frame: Frame;
+  sla: number;
+  text: string;
+  x: number;
+}) => {
+  const { frame } = props;
+  const mid = props.baseline - MID;
+  const inZone =
+    mid - 7.5 < Math.round(frame.y(props.sla)) &&
+    mid + 7.5 > Math.round(frame.m.top);
+  return inZone ? (
+    <PlateLabel
+      anchor={props.anchor}
+      className={props.className}
+      text={props.text}
+      x={props.x}
+      y={mid}
+    />
+  ) : (
+    <text
+      className={`${props.className} t-halo`}
+      x={props.x}
+      y={props.baseline}
+      textAnchor={props.anchor}
+    >
+      {props.text}
+    </text>
+  );
+};
+
 /** A dot or ring; named points carry a leader and label until hovered. */
 const PointMark = (props: {
   point: ScatterPoint;
@@ -239,6 +280,7 @@ const PointMark = (props: {
   /** The single worst point over the SLA. */
   worst: boolean;
   active: boolean;
+  sla: number;
 }) => {
   const { active, point: p } = props;
   const { x, y } = props.frame;
@@ -266,14 +308,15 @@ const PointMark = (props: {
             y2={Math.round(y(p.y) - 17)}
             stroke="var(--l4)"
           />
-          <text
-            className={`${TICK} t-halo`}
+          <ZoneText
+            anchor={labelAnchor(p.name ?? "", px, props.frame)}
+            baseline={y(p.y) - 22}
+            className={TICK}
+            frame={props.frame}
+            sla={props.sla}
+            text={p.name ?? ""}
             x={px}
-            y={y(p.y) - 22}
-            textAnchor={labelAnchor(p.name ?? "", px, props.frame)}
-          >
-            {p.name ?? ""}
-          </text>
+          />
         </g>
       )}
     </g>
@@ -281,7 +324,11 @@ const PointMark = (props: {
 };
 
 /** Drop line and value label for the hovered point. */
-const HoverReadout = (props: { point: ScatterPoint; frame: Frame }) => {
+const HoverReadout = (props: {
+  point: ScatterPoint;
+  frame: Frame;
+  sla: number;
+}) => {
   const { point: hp } = props;
   const { axis, height: h, m, x, y } = props.frame;
   const readout = `${hasName(hp) ? `${hp.name ?? ""} ` : ""}${axis.yFormat(hp.y)} · ${axis.xFormat(hp.x)}`;
@@ -294,14 +341,15 @@ const HoverReadout = (props: { point: ScatterPoint; frame: Frame }) => {
         y1={Math.round(y(hp.y) + 8)}
         y2={h - m.bottom}
       />
-      <text
-        className={`${VALUE} t-halo`}
+      <ZoneText
+        anchor={labelAnchor(readout, x(hp.x), props.frame)}
+        baseline={y(hp.y) - 14}
+        className={VALUE}
+        frame={props.frame}
+        sla={props.sla}
+        text={readout}
         x={x(hp.x)}
-        y={y(hp.y) - 14}
-        textAnchor={labelAnchor(readout, x(hp.x), props.frame)}
-      >
-        {readout}
-      </text>
+      />
     </g>
   );
 };
@@ -389,9 +437,12 @@ export const Scatter = (props: ScatterProps) => {
                 frame={frame}
                 worst={i === worst}
                 active={hover === i}
+                sla={props.sla}
               />
             ))}
-            {hp !== null && <HoverReadout point={hp} frame={frame} />}
+            {hp !== null && (
+              <HoverReadout point={hp} frame={frame} sla={props.sla} />
+            )}
           </svg>
         );
       }}

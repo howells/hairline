@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { CrossHatch, DotScreen, KeySwatch } from "../texture";
+import { DotScreen, KeySwatch, PlateLabel } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { matrixHeatGlanceDemo } from "./matrix-heat-glance.data";
@@ -30,9 +30,8 @@ interface Hit {
   y: number;
 }
 
-/** Tile corner (the radius scale's small step) and the value's inset. */
+/** Tile corner (the radius scale's small step). */
 const TILE_RADIUS = 2;
-const INSET = 8;
 /** Dot radius of each bin's screen, lowest bin first: the shared halftone ladder at pitch 4. */
 const DOT_RADII = HALFTONE_R;
 /** Key swatch size, the gap after it, and the space between key entries. */
@@ -63,8 +62,8 @@ interface CellProps {
 }
 
 /**
- * One tile: its screen on paper inside a 1px rule (the hero: ink crosshatch
- * inside an ink rule), the number in the lower-left corner. The tile is
+ * One tile: its screen on paper inside a 1px rule (the hero: solid ink), the
+ * number centred on a plate. The tile is
  * translated to its own whole-pixel corner so every screen starts the same
  * way against its outline.
  */
@@ -83,26 +82,11 @@ const Cell = (p: CellProps) => (
       width={p.w - 1}
       height={p.h - 1}
       rx={TILE_RADIUS}
-      className={`shape-crisp ${p.hero ? "stroke-ink" : "stroke-l5"}`}
-      fill={p.fill}
+      className={`shape-crisp ${p.hero ? "fill-hero stroke-hero" : "stroke-l5"}`}
+      fill={p.hero ? undefined : p.fill}
       strokeWidth={1}
     />
-    {p.hero ? (
-      <text
-        className="t-value stroke-ink fill-paper"
-        paintOrder="stroke"
-        strokeLinejoin="round"
-        strokeWidth={3}
-        x={INSET}
-        y={p.h - INSET}
-      >
-        {p.text}
-      </text>
-    ) : (
-      <text className="t-value t-halo" x={INSET} y={p.h - INSET}>
-        {p.text}
-      </text>
-    )}
+    <PlateLabel hero={p.hero} text={p.text} x={p.w / 2} y={p.h / 2} />
   </g>
 );
 
@@ -237,8 +221,8 @@ const peakOf = (values: number[][]): [number, number] => {
 /**
  * G20 Feature adoption. One tile per row and column, each a halftone screen
  * on paper whose dot grows a step per bin (five bins, pitch 4), the number
- * set small in the tile's lower-left corner. The one hero tile (the highest
- * value) is crosshatched ink with its number in paper.
+ * centred on a paper plate. The one hero tile (the highest value) is solid
+ * ink, its number in paper.
  */
 export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
   const data = props.data ?? matrixHeatGlanceDemo;
@@ -308,11 +292,6 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
                   tone="fill-l3"
                 />
               ))}
-              <CrossHatch
-                ground="fill-ink"
-                id={tex("hero")}
-                tone="fill-paper"
-              />
             </defs>
             {data.columns.map((c, j) => (
               <text
@@ -329,9 +308,7 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
               cell={cell}
               data={data}
               fillOf={(i, j) =>
-                i === hr && j === hc
-                  ? paint(tex("hero"))
-                  : screens[shade(data.values[i][j])]
+                i === hr && j === hc ? "" : screens[shade(data.values[i][j])]
               }
               format={format}
               gap={gap}

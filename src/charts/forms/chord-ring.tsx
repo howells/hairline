@@ -182,7 +182,7 @@ const Ring = (props: RingProps) => {
       {chords.groups.map((g) => (
         <g key={props.data.teams[g.index]}>
           <path
-            className={`pop transition-colors ${g.index === props.focus ? "fill-ink" : "fill-l3"}`}
+            className={`pop transition-colors ${g.index === props.focus ? "fill-hero" : "fill-l3"}`}
             d={segment(g) ?? ""}
             style={stagger(g.index, "mark")}
           />
@@ -263,7 +263,7 @@ export const ChordRing = (props: { data?: SharedWork }) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={hatch} tone="fill-ink" />
+              <Hatch ground="fill-paper" id={hatch} tone="fill-hero" />
             </defs>
             <g transform={`translate(${cx} ${cy})`}>
               <Ring

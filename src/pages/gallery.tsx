@@ -24,17 +24,15 @@ const ground = (entry: GalleryEntry) => {
 };
 
 /**
- * One chart in the house frame: a short ink bar, the chart's name as its
- * title, then the chart centred in the room left. Every cell is set the same
- * way, so the grid reads as one desk's work.
+ * One chart in the house frame: its name, then the chart centred in the room
+ * left. Every cell is set the same way, so the grid reads as one desk's work.
  */
 const Cell = (props: { entry: GalleryEntry }) => (
   <figure
     id={props.entry.id}
     className={`m-0 flex min-w-0 flex-col gap-8 p-6 md:p-10 ${ground(props.entry)} ${props.entry.span === "full" ? "col-span-full" : ""}`}
   >
-    <figcaption className="text-card text-ink font-medium">
-      <span aria-hidden className="bg-ink mb-3 block h-0.75 w-8" />
+    <figcaption className="text-small text-text">
       {sentenceCase(props.entry.name)}
     </figcaption>
     <div className="flex min-w-0 flex-1 flex-col justify-center">

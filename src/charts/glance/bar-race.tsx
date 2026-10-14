@@ -241,7 +241,7 @@ const Track = (p: TrackProps) => {
         return (
           <g key={period} className="pointer-events-none">
             <circle
-              className={passed ? "fill-ink" : "fill-paper stroke-l5"}
+              className={passed ? "fill-hero" : "fill-paper stroke-l5"}
               cx={x(k)}
               cy={p.y}
               r={3}

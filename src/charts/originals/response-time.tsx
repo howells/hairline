@@ -5,7 +5,12 @@ import { useState } from "react";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { DotScreen, KeySwatch } from "../texture";
-import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
+import {
+  HALFTONE_R,
+  paint,
+  TEXTURE_PITCH,
+  useTextureIds,
+} from "../texture-ids";
 import { dimClass, sansWidth, stagger } from "../util";
 import { fmtDuration } from "./format";
 import { Key } from "./key";
@@ -19,8 +24,8 @@ const GAP = 16;
 const DECILE = 14;
 const MEDIAN_H = 18;
 const DOMAIN: [number, number] = [1, 2880];
-/** The halftone: one screen, four dot sizes, largest where tickets crowd. */
-const DOT_R = [0.5, 0.9, 1.3, 1.7];
+/** The halftone: the shared ladder's dot sizes, largest where tickets crowd. */
+const DOT_R = HALFTONE_R;
 /**
  * The band, centred on its row: 21px inside the outline, a whole number of
  * screen tiles and one, so the dots sit as far from the bottom as the top.
@@ -44,7 +49,7 @@ const densities = (q: number[], x: (v: number) => number) =>
       (v, i) => (LEVELS[i + 1] - LEVELS[i]) / Math.max(1, x(q[i + 1]) - x(v))
     );
 
-/** Which of the four dot sizes a density gets, against the chart's densest step. */
+/** Which dot size a density gets, against the chart's densest step. */
 const levelOf = (d: number, max: number) =>
   Math.min(DOT_R.length - 1, Math.floor((d / max) * DOT_R.length));
 
@@ -185,11 +190,13 @@ const keyItems = (tex: (name: string) => string) => [
   { label: "Deciles", mark: tickMark(4, "stroke-l2") },
   {
     label: "Tickets",
-    mark: <KeySwatch fill={paint(tex("3"))} x={0} y={-6} />,
+    mark: (
+      <KeySwatch fill={paint(tex(String(DOT_R.length - 1)))} x={0} y={-6} />
+    ),
   },
 ];
 
-/** The four halftone screens, one per dot size. */
+/** The halftone screens, one per dot size. */
 const Screens = ({ tex }: { tex: (name: string) => string }) => (
   <defs>
     {DOT_R.map((r, i) => (

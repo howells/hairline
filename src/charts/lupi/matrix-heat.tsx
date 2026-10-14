@@ -1,7 +1,13 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { CrossHatch, DotScreen, Hatch, KeySwatch } from "../texture";
+import {
+  CrossHatch,
+  DotScreen,
+  Hatch,
+  KeySwatch,
+  PlateLabel,
+} from "../texture";
 import {
   HALFTONE_R,
   paint,
@@ -209,19 +215,6 @@ interface CellsProps {
   triangle: boolean;
 }
 
-/** A tile's number, centred: ink on a paper halo, over any screen or the hero's crosshatch. */
-const CellValue = (props: { label: string; x: number; y: number }) => (
-  <text
-    className="t-value t-halo"
-    dy="0.36em"
-    textAnchor="middle"
-    x={props.x}
-    y={props.y}
-  >
-    {props.label}
-  </text>
-);
-
 interface CellProps {
   /** The row the tile is drawn in (a triangle drops the empty first row). */
   at: number;
@@ -280,7 +273,12 @@ const Cell = ({
       </g>
       {g.size >= 24 || hero ? (
         <g className="fade" style={stagger(hero ? 8 : i + j, "mark")}>
-          <CellValue label={format(v)} x={x + g.size / 2} y={y + g.size / 2} />
+          <PlateLabel
+            hero={hero}
+            text={format(v)}
+            x={x + g.size / 2}
+            y={y + g.size / 2}
+          />
         </g>
       ) : null}
     </g>

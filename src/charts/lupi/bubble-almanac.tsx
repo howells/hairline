@@ -6,7 +6,12 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { DotRing, DotScreen } from "../texture";
-import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
+import {
+  HALFTONE_R,
+  paint,
+  TEXTURE_PITCH,
+  useTextureIds,
+} from "../texture-ids";
 import { clamp, dimClass, noteSpace, stagger } from "../util";
 import {
   bubbleAlmanacDemo,
@@ -303,8 +308,8 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
               <DotScreen
                 ground="fill-paper"
                 id={screen}
-                r={0.75}
-                tone="fill-hero"
+                r={HALFTONE_R[1]}
+                tone="fill-l3"
               />
             </defs>
             <Ledger layout={layout} />

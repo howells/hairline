@@ -255,7 +255,7 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           strokeWidth={1.5}
         />
         <circle
-          className="pop fill-ink"
+          className="pop fill-hero"
           cx={Math.round(frame.x(hero))}
           cy={frame.y(values[hero])}
           r={3}
@@ -272,7 +272,7 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
         </text>
         {hover === null || hover === hero ? null : (
           <circle
-            className="fill-l1"
+            className="fill-l2"
             cx={crisp(frame.x(hover))}
             cy={frame.y(values[hover])}
             r={2}

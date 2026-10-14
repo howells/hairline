@@ -333,7 +333,7 @@ const nodeFill = (n: FunnelNode, heroId: string | undefined) => {
   if (n.alert === true) {
     return "var(--alert)";
   }
-  return n.id === heroId ? "var(--ink)" : "var(--l3)";
+  return n.id === heroId ? "var(--hero)" : "var(--l3)";
 };
 
 /** The hero: the largest final-stage node that is not an alert. */

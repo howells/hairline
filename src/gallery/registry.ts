@@ -6,6 +6,7 @@ import { entries as glance } from "../charts/glance";
 import { entries as lupi } from "../charts/lupi";
 import { entries as maps } from "../charts/maps";
 import { entries as originals } from "../charts/originals";
+import { entries as palette } from "../charts/palette";
 import type { GalleryEntry } from "./types";
 
 const byId = (list: GalleryEntry[], id: string) =>
@@ -32,6 +33,8 @@ export const ALL_ENTRIES: GalleryEntry[] = [
   ...originals,
   ...forms,
   ...byId(maps, "M2"),
+  // The fills sheet closes the grid: every fill above is one of these.
+  ...palette,
 ];
 
 export const entryById = (id: string) =>

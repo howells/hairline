@@ -201,14 +201,14 @@ const Detail = (props: DetailProps) => {
       />
       {props.hover === null || props.hover === peak ? null : (
         <circle
-          className="fill-l1"
+          className="fill-l2"
           cx={crisp(x(props.hover))}
           cy={y(props.data[props.hover].value)}
           r={2}
         />
       )}
       <circle
-        className="pop fill-ink"
+        className="pop fill-hero"
         cx={Math.round(x(peak))}
         cy={y(props.data[peak].value)}
         r={3}

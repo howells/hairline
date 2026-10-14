@@ -5,7 +5,7 @@ export interface KeyItem {
   fill?: string;
   /** Series name, in the axis voice. */
   label?: string;
-  /** Fill class for a solid swatch, e.g. "fill-ink". */
+  /** Fill class for a solid swatch, e.g. "fill-hero". */
   tone?: string;
   /** The value at the cursor, in the value voice. */
   value?: string;
@@ -33,7 +33,7 @@ export const Key = (props: {
           <span className="text-muted">{item.label}</span>
         )}
         {item.value !== undefined && (
-          <span className="text-ink text-xs font-semibold">{item.value}</span>
+          <span className="text-ink font-semibold">{item.value}</span>
         )}
       </span>
     ))}

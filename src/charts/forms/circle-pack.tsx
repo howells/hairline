@@ -3,7 +3,7 @@ import type { HierarchyCircularNode } from "d3-hierarchy";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { Stipple } from "../texture";
+import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger } from "../util";
 import { orgDemo } from "./circle-pack.data";
@@ -53,25 +53,17 @@ const LeafLabel = (props: { hero: boolean; n: Circle }) => {
     return null;
   }
   if (props.hero) {
+    // Two hero plates, name over value, centred on the disc.
     return (
       <g className="fade pointer-events-none" style={stagger(6, "mark")}>
-        <text
-          className="t-label fill-paper"
-          textAnchor="middle"
+        <PlateLabel
+          className="t-label"
+          hero
+          text={n.data.name}
           x={n.x}
-          y={n.y - 2}
-        >
-          {n.data.name}
-        </text>
-        <text
-          className="t-value fill-paper"
-          dy="0.9em"
-          textAnchor="middle"
-          x={n.x}
-          y={n.y + 2}
-        >
-          {n.value}
-        </text>
+          y={n.y - 7.5}
+        />
+        <PlateLabel hero text={String(n.value ?? 0)} x={n.x} y={n.y + 7.5} />
       </g>
     );
   }

@@ -169,7 +169,7 @@ const StreamLayer = (p: LayerProps) => (
       y1={crisp(p.floor)}
       y2={crisp(p.floor)}
     />
-    <circle className="fill-ink" cx={p.right} cy={p.headY} r={4.5} />
+    <circle className="fill-hero" cx={p.right} cy={p.headY} r={4.5} />
     <text className="t-value t-halo" x={p.right + 9} y={p.headY} dy="0.35em">
       {p.format(p.latest)}
     </text>

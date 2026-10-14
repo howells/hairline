@@ -5,7 +5,7 @@ import { area } from "d3-shape";
 
 import type { Point } from "../../lib/data";
 import { DotScreen, Hatch, Rules, Stipple } from "../texture";
-import { paint } from "../texture-ids";
+import { HALFTONE_R, paint } from "../texture-ids";
 import { OUTLINE, TICK } from "./styles";
 import { curveOf } from "./time-frame";
 import type {
@@ -27,7 +27,14 @@ const ShadePattern = (props: { id: string; kind: Shade }) => {
     );
   }
   if (props.kind === "screen") {
-    return <DotScreen ground="fill-paper" id={props.id} r={1} tone="fill-l5" />;
+    return (
+      <DotScreen
+        ground="fill-paper"
+        id={props.id}
+        r={HALFTONE_R[0]}
+        tone="fill-l4"
+      />
+    );
   }
   return <Hatch ground="fill-paper" id={props.id} tone="fill-l4" />;
 };

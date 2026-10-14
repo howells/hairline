@@ -47,7 +47,7 @@ const scaleAnchor = (f: number) => {
  */
 const Textures = ({ tex }: { tex: (name: string) => string }) => (
   <defs>
-    <CrossHatch ground="fill-paper" id={tex("0")} tone="fill-ink" />
+    <CrossHatch ground="fill-paper" id={tex("0")} tone="fill-hero" />
     <Hatch angle="rising" ground="fill-paper" id={tex("1")} tone="fill-l2" />
     <Hatch angle="falling" ground="fill-paper" id={tex("2")} tone="fill-l3" />
     <DotScreen ground="fill-paper" id={tex("3")} r={1} tone="fill-l3" />

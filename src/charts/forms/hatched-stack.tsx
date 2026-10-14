@@ -8,16 +8,22 @@ import {
   KeySwatch,
   Rules,
 } from "../texture";
-import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
+import {
+  HALFTONE_R,
+  TEXTURE_PITCH,
+  paint,
+  useTextureIds,
+} from "../texture-ids";
 import { dimClass, sansWidth, stagger, sum } from "../util";
 import { timeSharesDemo } from "./hatched-stack.data";
 import type { ShareTable, WorkKind, WorkTexture } from "./hatched-stack.data";
 
 /**
- * Bar height: 57px inside the outline, so the dot screen and the level rules
- * sit an equal distance from the top and bottom rules (see LEAD).
+ * Bar height: 53px inside the outline (4k + 1 for the dot screen, 3k + 2 for
+ * the level rules), so both sit an equal distance from the top and bottom
+ * rules (see LEAD).
  */
-const BAR_H = 59;
+const BAR_H = 55;
 const ROW = 88;
 const KEY_LINE = 20;
 /** Room between the key and the first bar. */
@@ -59,19 +65,17 @@ const TONES: Record<WorkTexture, string> = {
   upright: "fill-l2",
 };
 const TEXTURES: WorkTexture[] = ["cross", "dots", "level", "upright"];
-/** The halftone's dot radius: a clearly visible screen at pitch 4. */
-const DOT_R = 1.25;
 
 /**
  * Where each texture's tile meets a segment's inside edge. Every segment
  * pins its texture to its own outline, so the screen starts the same way
- * in every segment wherever it begins: dots 1.25px in, the first rule two
+ * in every segment wherever it begins: dots 1.2px in, the first rule two
  * clear pixels in, never drawn against the outline.
  */
 const LEAD: Record<WorkTexture, { x: number; y: number }> = {
   cross: { x: 0, y: 0 },
   dots: { x: 0, y: 0 },
-  level: { x: 0, y: 2 },
+  level: { x: 0, y: 1 },
   upright: { x: 1, y: 0 },
 };
 
@@ -89,7 +93,7 @@ const WHOLE: Record<WorkTexture, { clear: number; pitch: number } | undefined> =
 
 /**
  * The pattern for one texture family, on paper, in one ramp tone: dense
- * upright rules, a halftone screen, crosshatch, or sparse level rules.
+ * upright rules, a halftone screen, crosshatch, or level rules.
  */
 const engrave = (texture: WorkTexture, id: string, tone: string) => {
   if (texture === "cross") {
@@ -97,19 +101,18 @@ const engrave = (texture: WorkTexture, id: string, tone: string) => {
   }
   if (texture === "dots") {
     return (
-      <DotScreen ground="fill-paper" id={id} key={id} r={DOT_R} tone={tone} />
-    );
-  }
-  if (texture === "level") {
-    return (
-      <Rules
+      // The halftone ladder's middle step: clearly visible at pitch 4.
+      <DotScreen
         ground="fill-paper"
         id={id}
         key={id}
-        pitch={TEXTURE_PITCH.hatch}
+        r={HALFTONE_R[2]}
         tone={tone}
       />
     );
+  }
+  if (texture === "level") {
+    return <Rules ground="fill-paper" id={id} key={id} tone={tone} />;
   }
   return (
     <Rules angle="upright" ground="fill-paper" id={id} key={id} tone={tone} />
@@ -123,7 +126,7 @@ const Textures = (props: {
 }) => (
   <defs>
     {TEXTURES.map((t) => engrave(t, props.tex(t), TONES[t]))}
-    {engrave(props.heroTexture, props.tex("hero"), "fill-ink")}
+    {engrave(props.heroTexture, props.tex("hero"), "fill-hero")}
   </defs>
 );
 

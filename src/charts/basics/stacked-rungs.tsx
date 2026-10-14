@@ -29,10 +29,13 @@ interface StackedRungsProps {
 
 /*
  * Segment engraving, bottom first: solid dark rungs, solid light rungs, then
- * broken (beaded) rungs. Every fifth solid rung steps darker.
+ * broken (beaded) rungs. Every fifth solid rung reaches a little wider, and
+ * on the light rungs steps darker too.
  */
 const RUNG_CLASSES = ["fill-l2", "fill-l4", ""];
-const ACCENT_CLASSES = ["fill-l1", "fill-l3"];
+const ACCENT_CLASSES = ["fill-l2", "fill-l3"];
+/** Whole px a count-off rung reaches past its column on each side. */
+const ACCENT_REACH = 2;
 const pick = (list: string[], k: number) => list[Math.min(k, list.length - 1)];
 
 /** Key swatches that read as each segment's engraving: dark rules, light rules, dots. */
@@ -132,6 +135,7 @@ const Column = ({
             n={seg.n}
             order={seg.start * 0.35 + index * 2}
             pitch={pitch}
+            reach={ACCENT_REACH}
             width={bw}
           />
           {seg.n > 0 ? (
@@ -232,7 +236,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Beads id={ids("beads")} tone="fill-l3" />
+              <Beads ground="fill-paper" id={ids("beads")} tone="fill-l3" />
               {KEY_LOOKS.map((look) => (
                 <look.Pattern
                   ground="fill-paper"

@@ -11,6 +11,7 @@
 import type { CSSProperties } from "react";
 
 import { TEXTURE_PITCH } from "./texture-ids";
+import { sansWidth } from "./util";
 
 interface PatternProps {
   /** Fill class for the ground under the marks, e.g. "fill-paper". */
@@ -410,7 +411,7 @@ export const PixelLine = (props: PixelLineProps) => (
 interface KeySwatchProps {
   /** A pattern fill (`paint(id)`) or omit and pass a fill class in `tone`. */
   fill?: string;
-  /** Fill class when the swatch is solid, e.g. "fill-ink". */
+  /** Fill class when the swatch is solid, e.g. "fill-hero". */
   tone?: string;
   x: number;
   y: number;
@@ -514,6 +515,70 @@ export const EngravedRect = (props: EngravedRectProps) => {
           y={ly}
         />
       </g>
+    </g>
+  );
+};
+
+/** Space around the text inside a plate, and the plate's height. */
+const PLATE_PAD = 4;
+const PLATE_H = 15;
+
+interface PlateLabelProps {
+  /** Where `x` sits on the text. */
+  anchor?: "end" | "middle" | "start";
+  /** The text role, e.g. `t-value` (default) or `t-label`. */
+  className?: string;
+  /** On the ink hero: an ink plate with paper text. */
+  hero?: boolean;
+  /** A quieter lead-in before the text, in the axis voice: a series name before its value. */
+  lead?: string;
+  text: string;
+  x: number;
+  /** The text's vertical centre. */
+  y: number;
+}
+
+/**
+ * The one way to set text on a texture: a small paper plate cut out of the
+ * engraving, the text in ink on it (or an ink plate with paper text on the
+ * hero). Text over lines and marks, not a texture, keeps the `t-halo`.
+ */
+export const PlateLabel = ({
+  anchor = "middle",
+  className = "t-value",
+  hero = false,
+  lead,
+  text,
+  x,
+  y,
+}: PlateLabelProps) => {
+  const full = lead === undefined ? text : `${lead} ${text}`;
+  const w = Math.ceil(sansWidth(full, 11)) + PLATE_PAD * 2;
+  const offset = { end: w, middle: w / 2, start: 0 }[anchor];
+  const left = Math.round(x - offset);
+  const top = Math.round(y - PLATE_H / 2);
+  return (
+    <g>
+      <rect
+        className={hero ? "fill-hero" : "fill-paper"}
+        height={PLATE_H}
+        rx={2}
+        width={w}
+        x={left}
+        y={top}
+      />
+      <text
+        className={`${className} ${hero ? "fill-paper" : ""}`}
+        dy="0.35em"
+        textAnchor="middle"
+        x={left + w / 2}
+        y={top + PLATE_H / 2}
+      >
+        {lead === undefined ? null : (
+          <tspan className={hero ? "" : "t-axis"}>{`${lead} `}</tspan>
+        )}
+        {text}
+      </text>
     </g>
   );
 };

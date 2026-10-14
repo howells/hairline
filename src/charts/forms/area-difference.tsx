@@ -131,7 +131,7 @@ const GapReading = (props: { d: PlanWeek; frame: Frame; i: number }) => {
         y2={Math.max(ya, yp)}
       />
       <circle className="fill-l4" cx={x} cy={yp} r={3} />
-      <circle className="fill-ink" cx={x} cy={ya} r={3} />
+      <circle className="fill-hero" cx={x} cy={ya} r={3} />
     </g>
   );
 };
@@ -204,7 +204,7 @@ const AreaDifferenceSvg = (props: SvgProps) => {
     >
       <title>{label}</title>
       <defs>
-        <CrossHatch ground="fill-paper" id={tex("lead")} tone="fill-ink" />
+        <CrossHatch ground="fill-paper" id={tex("lead")} tone="fill-hero" />
         <Hatch
           angle="rising"
           ground="fill-paper"

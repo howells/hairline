@@ -70,15 +70,18 @@ interface RingTip {
   y: number;
 }
 
-/** Lightness is data: the most collaborative group is brightest on the dark card. Ink is kept for the hero. */
+/**
+ * Lightness is data: the most collaborative groups are brightest on the dark
+ * card, a fill tone per pair of ranks. Ink is kept for the hero.
+ */
 const LADDER = [
-  "fill-l1",
   "fill-l2",
   "fill-l2",
   "fill-l3",
   "fill-l3",
   "fill-l4",
   "fill-l4",
+  "fill-l5",
   "fill-l5",
 ];
 
@@ -343,7 +346,7 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
       </g>
       {beads.map((b, i) => (
         <circle
-          className={`pop ${b.hero ? "fill-ink" : b.fill}`}
+          className={`pop ${b.hero ? "fill-hero" : b.fill}`}
           cx={b.x}
           cy={b.y}
           key={b.id}
@@ -390,14 +393,14 @@ const FocusLayer = (props: {
       </g>
       {near.map((n) => (
         <circle
-          className={n.hero ? "fill-ink" : n.fill}
+          className={n.hero ? "fill-hero" : n.fill}
           cx={n.x}
           cy={n.y}
           key={n.id}
           r={n.r}
         />
       ))}
-      <circle className="fill-ink" cx={bead.x} cy={bead.y} r={bead.r} />
+      <circle className="fill-hero" cx={bead.x} cy={bead.y} r={bead.r} />
       {!props.small &&
         near.map((n) => <BeadLabel bead={n} bright={false} key={n.id} />)}
       {/* The hero's name always fits: the ring is framed round it. */}

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { Hatch } from "../texture";
+import { Hatch, PlateLabel } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { rankStripDemo } from "./rank-strip.data";
@@ -36,21 +36,18 @@ interface Geometry {
   x0: number;
 }
 
-/** Tile corner (the radius scale's large step) and the rank's inset. */
+/** Tile corner (the radius scale's large step). */
 const TILE_RADIUS = 4;
-const INSET = 8;
 
 /**
- * The rank screens, top rank first: one rising hatch that opens from the
- * dense pitch to the wide one and lightens a step at each end. More ink per
- * tile = a higher rank.
+ * The rank screens, top rank first: the shared hatch density ladder (dense,
+ * hatch, wide pitch) in the mid tone, so pitch alone carries rank. More ink
+ * per tile = a higher rank.
  */
 const SCREENS = [
-  { name: "r1", pitch: TEXTURE_PITCH.dense, tone: "fill-l1" },
-  { name: "r2", pitch: TEXTURE_PITCH.dense, tone: "fill-l3" },
-  { name: "r3", pitch: TEXTURE_PITCH.hatch, tone: "fill-l3" },
-  { name: "r4", pitch: TEXTURE_PITCH.cross, tone: "fill-l3" },
-  { name: "r5", pitch: TEXTURE_PITCH.cross, tone: "fill-l5" },
+  { name: "r1", pitch: TEXTURE_PITCH.dense },
+  { name: "r2", pitch: TEXTURE_PITCH.hatch },
+  { name: "r3", pitch: TEXTURE_PITCH.cross },
 ] as const;
 
 /** The pattern defs for every rank screen. */
@@ -62,7 +59,7 @@ const ScreenDefs = (p: { tex: (name: string) => string }) => (
         ground="fill-paper"
         id={p.tex(sc.name)}
         pitch={sc.pitch}
-        tone={sc.tone}
+        tone="fill-l3"
       />
     ))}
   </defs>
@@ -140,13 +137,11 @@ const Row = (p: RowProps) => {
               fill={paint(p.screen(r))}
               strokeWidth={1}
             />
-            <text
-              className="t-value t-halo"
-              x={cx + INSET}
-              y={p.y + cell - INSET}
-            >
-              {r}
-            </text>
+            <PlateLabel
+              text={String(r)}
+              x={crisp(cx) + (Math.round(cell) - 1) / 2}
+              y={crisp(p.y) + (Math.round(cell) - 1) / 2}
+            />
           </g>
         );
       })}

@@ -255,7 +255,7 @@ export const FeatureRank = (props: FeatureRankProps) => {
                 <CrossHatch
                   ground="fill-paper"
                   id={tex("hero")}
-                  tone="fill-ink"
+                  tone="fill-hero"
                 />
               </defs>
               <Staff count={data.length} lay={lay} />

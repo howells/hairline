@@ -187,7 +187,7 @@ const Marker = (props: { label: string; layout: Layout; value: number }) => {
   return (
     <g className="fade" pointerEvents="none" style={stagger(10)}>
       <DottedLine
-        tone="fill-l1"
+        tone="fill-l2"
         x0={mx}
         x1={mx}
         y0={layout.top - 2}

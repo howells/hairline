@@ -40,7 +40,7 @@ interface PlaneGeometry {
 }
 
 /** Lightness is data: the first (most important) plane is the hero. */
-const TONES = ["fill-hero", "fill-l3", "fill-l4", "fill-l5", "fill-l6"];
+const TONES = ["fill-hero", "fill-l3", "fill-l4", "fill-l5"];
 
 const planeGeometry = (
   width: number,
@@ -84,7 +84,7 @@ const Plane = ({ dim, g, geo, group, onHover, radius, screen }: PlaneProps) => {
   const { a, b, cx, gap, halfW, n } = geo;
   const cy = geo.top + g * gap;
   const outline = `M${cx},${cy - halfW / 2}L${cx + halfW},${cy}L${cx},${cy + halfW / 2}L${cx - halfW},${cy}Z`;
-  const tone = TONES.at(g) ?? "fill-l6";
+  const tone = TONES.at(g) ?? "fill-l5";
   return (
     <g className={dimClass(dim)}>
       <g className="fade" style={{ "--i": g }}>

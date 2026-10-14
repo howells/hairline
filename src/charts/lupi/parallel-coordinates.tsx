@@ -150,7 +150,7 @@ const RowLine = ({ row, index, pts, hero, active, onEnter }: LineProps) => {
     <g className={dimClass(active === false)} onPointerEnter={onEnter}>
       <path className="fill-none stroke-transparent" d={d} strokeWidth={10} />
       <path
-        className={`draw cap-round fill-none ${strong ? "stroke-ink" : "stroke-l4"}`}
+        className={`draw cap-round fill-none ${strong ? "stroke-hero" : "stroke-l4"}`}
         d={d}
         pathLength={1}
         strokeWidth={strong ? 2 : 1}
@@ -159,7 +159,7 @@ const RowLine = ({ row, index, pts, hero, active, onEnter }: LineProps) => {
       {hero
         ? pts.map((p) => (
             <circle
-              className="fade fill-ink"
+              className="fade fill-hero"
               cx={p.x}
               cy={p.y}
               key={`${row.name}-${p.x}`}

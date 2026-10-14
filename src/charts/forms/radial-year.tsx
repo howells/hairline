@@ -5,7 +5,7 @@ import type { PointerEvent } from "react";
 
 import { fmtMonth, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
-import { DotRing, Hatch } from "../texture";
+import { DotRing, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
 import { signupMonthsDemo } from "./radial-year.data";
@@ -41,29 +41,60 @@ interface DialProps {
   outer: number;
 }
 
+/** Ring values sit this far inside their rings; a plate is 15px tall. */
+const RING_INSET = 10;
+const PLATE_HALF = 7.5;
+
+/**
+ * The year's radius along the ring labels' line, half a month past noon: the
+ * midpoint of the smooth curve between the first two months.
+ */
+const yearRadiusAtLabels = (props: DialProps) => {
+  const n = props.data.length;
+  const at = (i: number) => {
+    const k = (i + n) % n;
+    return polar(angleOf(k, n), props.r(props.data[k].value));
+  };
+  const [a, b, c, d] = [at(-1), at(0), at(1), at(2)];
+  return Math.hypot(
+    (9 * (b.x + c.x) - a.x - d.x) / 16,
+    (9 * (b.y + c.y) - a.y - d.y) / 16
+  );
+};
+
 /**
  * Evenly dotted rings, the chart's one dotted system, with their values up
- * the twelve o'clock line; months round the edge.
+ * the twelve o'clock line; months round the edge. A value that falls on the
+ * hatched year sits on a plate; off it, on its halo.
  */
 const Furniture = (props: DialProps) => {
   const n = props.data.length;
   const names = monthTickLabels(props.data.map((d) => d.date));
+  const year = yearRadiusAtLabels(props);
   return (
     <g>
-      {props.rings.map((v) => (
-        <g key={v}>
-          <DotRing cx={0} cy={0} r={props.r(v)} tone="fill-l4" />
-          <text
-            className="t-axis t-halo"
-            dy="0.34em"
-            textAnchor="middle"
-            x={polar(RING_LABEL, props.r(v) - 10).x}
-            y={polar(RING_LABEL, props.r(v) - 10).y}
-          >
-            {`${v}k`}
-          </text>
-        </g>
-      ))}
+      {props.rings.map((v) => {
+        const at = polar(RING_LABEL, props.r(v) - RING_INSET);
+        const onYear = year > props.r(v) - RING_INSET - PLATE_HALF;
+        return (
+          <g key={v}>
+            <DotRing cx={0} cy={0} r={props.r(v)} tone="fill-l4" />
+            {onYear ? (
+              <PlateLabel className="t-axis" text={`${v}k`} x={at.x} y={at.y} />
+            ) : (
+              <text
+                className="t-axis t-halo"
+                dy="0.34em"
+                textAnchor="middle"
+                x={at.x}
+                y={at.y}
+              >
+                {`${v}k`}
+              </text>
+            )}
+          </g>
+        );
+      })}
       {props.data.map((d, i) => {
         const p = polar(angleOf(i, n), props.outer + EDGE / 2);
         return (

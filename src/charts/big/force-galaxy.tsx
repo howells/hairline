@@ -6,7 +6,7 @@ import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { useReveal } from "../hooks";
 import { PlotNote } from "../plot-note";
-import { CrossHatch, Hatch } from "../texture";
+import { CrossHatch, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, noteSpace } from "../util";
 import {
@@ -15,6 +15,7 @@ import {
   drawGalaxy,
   fitHub,
   labelAt,
+  labelOnEngraving,
   makeSimulation,
   settle,
 } from "./force-galaxy-model";
@@ -41,14 +42,13 @@ interface ForceGalaxyProps {
 
 /** Class names per tone, written out so Tailwind sees them. */
 const TONE_CLASS: Record<Tone, { fill: string; stroke: string }> = {
-  ink: { fill: "fill-ink", stroke: "stroke-ink" },
-  l1: { fill: "fill-l1", stroke: "stroke-l1" },
+  ink: { fill: "fill-hero", stroke: "stroke-ink" },
   l2: { fill: "fill-l2", stroke: "stroke-l2" },
   l3: { fill: "fill-l3", stroke: "stroke-l3" },
   l4: { fill: "fill-l4", stroke: "stroke-l4" },
   l5: { fill: "fill-l5", stroke: "stroke-l5" },
 };
-const TONES: Tone[] = ["ink", "l1", "l2", "l3", "l4", "l5"];
+const TONES: Tone[] = ["ink", "l2", "l3", "l4", "l5"];
 /** Solid tones per link kind: the service mesh reads first, satellites quietly. */
 const EDGE_CLASS: Record<EdgeKind, string> = {
   cross: "stroke-grid",
@@ -222,22 +222,37 @@ const GalaxyMarks = (props: {
       <g className="pointer-events-none">
         {[...galaxy.rings.values()].map((ring) => {
           const spot = labelAt(galaxy, ring);
+          // On another hub's engraving the name sits on a plate; elsewhere,
+          // over lines and satellites, on its halo. drawGalaxy keeps both the
+          // position and the choice current as hubs move.
           return (
-            <text
-              className={`t-label t-halo ${DIM}`}
-              dy="0.35em"
+            <g
+              className={`group/hub ${DIM}`}
+              data-plate={String(labelOnEngraving(galaxy, ring, spot))}
               key={ring.hub.id}
               ref={(el) => {
                 if (el !== null) {
                   handles.labels.set(ring.hub.id, el);
                 }
               }}
-              textAnchor="middle"
-              x={spot.x}
-              y={spot.y}
+              transform={`translate(${Math.round(spot.x)} ${Math.round(spot.y)})`}
             >
-              {ring.hub.id}
-            </text>
+              <g className="hidden group-data-[plate=true]/hub:inline">
+                <PlateLabel
+                  className="t-label"
+                  text={ring.hub.id}
+                  x={0}
+                  y={0}
+                />
+              </g>
+              <text
+                className="t-label t-halo group-data-[plate=true]/hub:hidden"
+                dy="0.35em"
+                textAnchor="middle"
+              >
+                {ring.hub.id}
+              </text>
+            </g>
           );
         })}
       </g>

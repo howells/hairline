@@ -31,7 +31,7 @@ export const Control = (props: ControlProps) => (
     className={`group inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center border-0 bg-transparent p-0 focus-visible:outline-none ${props.className ?? ""}`}
   >
     <span
-      className={`group-focus-visible:outline-muted inline-flex h-7 items-center gap-1.5 rounded-full border px-3 font-sans text-xs font-medium transition-colors group-focus-visible:outline-1 group-focus-visible:outline-offset-2 ${faceTone(props.pressed)}`}
+      className={`group-focus-visible:outline-muted text-tick inline-flex h-7 items-center gap-1.5 rounded-full border px-3 font-sans font-medium transition-colors group-focus-visible:outline-1 group-focus-visible:outline-offset-2 ${faceTone(props.pressed)}`}
     >
       {props.children}
     </span>

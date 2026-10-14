@@ -1,6 +1,7 @@
 // What a time chart shows at its cursor: a lone value, one big figure, or a
 // name-and-value tag beside each dot.
 
+import { PlateLabel } from "../texture";
 import { relax } from "./spread";
 import { TICK, VALUE, VALUE_LG } from "./styles";
 
@@ -47,6 +48,8 @@ export const CursorTags = (props: {
   right: number;
   max: number;
   min: number;
+  /** The chart is engraved under its lines: each tag sits on a plate. */
+  plate?: boolean;
   tags: Tag[];
 }) => {
   const ys = relax(
@@ -56,6 +59,19 @@ export const CursorTags = (props: {
     props.max
   );
   const flip = props.cx > props.right - TAG_ROOM;
+  if (props.plate === true) {
+    return props.tags.map((t, i) => (
+      <PlateLabel
+        anchor={flip ? "end" : "start"}
+        className={VALUE}
+        key={t.id}
+        lead={t.name}
+        text={t.value}
+        x={flip ? props.cx - TAG_GAP : props.cx + TAG_GAP}
+        y={ys[i] ?? t.y}
+      />
+    ));
+  }
   return props.tags.map((t, i) => (
     <text
       key={t.id}

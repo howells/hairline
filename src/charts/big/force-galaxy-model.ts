@@ -17,7 +17,7 @@ import type { GalaxyData } from "./force-galaxy.data";
  */
 
 /** A ramp step for a domain, or ink for the hero. */
-export type Tone = "ink" | "l1" | "l2" | "l3" | "l4" | "l5";
+export type Tone = "ink" | "l2" | "l3" | "l4" | "l5";
 
 /** A node in the simulation. d3-force writes x, y, vx, vy, fx, fy. */
 export interface Star extends SimulationNodeDatum {
@@ -85,7 +85,7 @@ export interface Handles {
   edges: Map<string, SVGLineElement>;
   /** The <svg> itself, under the key "root". */
   frame: Map<"root", SVGSVGElement>;
-  labels: Map<string, SVGTextElement>;
+  labels: Map<string, SVGGElement>;
   stars: Map<string, SVGCircleElement>;
 }
 
@@ -93,7 +93,7 @@ export interface Handles {
  * Lightness is data: the domain with the most traffic is brightest. Ink is
  * kept for the hero, the busiest hub.
  */
-const LADDER: Tone[] = ["l1", "l2", "l2", "l3", "l3", "l4", "l4", "l5"];
+const LADDER: Tone[] = ["l2", "l2", "l3", "l3", "l4", "l4", "l5", "l5"];
 
 const domainFills = (data: GalaxyData) => {
   const totals = new Map<string, number>();
@@ -315,6 +315,24 @@ export const labelAt = (galaxy: Galaxy, ring: Ring): Point => {
   return { x: hx, y: above ? hy - out : hy + out - 1 };
 };
 
+/**
+ * Whether a hub's name, set at `spot`, lands on another hub's engraved disc:
+ * there it sits on a plate; over lines and satellites it keeps its halo.
+ */
+export const labelOnEngraving = (galaxy: Galaxy, ring: Ring, spot: Point) => {
+  // The plate's half extents: the name plus its 4px padding, 15px tall.
+  const halfW = ring.labelW / 2 + 4;
+  const halfH = 7.5;
+  return galaxy.stars.some((s) => {
+    if (!s.hub || s.id === ring.hub.id) {
+      return false;
+    }
+    const dx = Math.max(0, Math.abs((s.x ?? 0) - spot.x) - halfW);
+    const dy = Math.max(0, Math.abs((s.y ?? 0) - spot.y) - halfH);
+    return Math.hypot(dx, dy) < s.r;
+  });
+};
+
 /** The box a ring and its name cover, relative to the hub's centre. */
 const reachOf = (galaxy: Galaxy, ring: Ring) => {
   const hy = ring.hub.y ?? galaxy.cy;
@@ -382,8 +400,14 @@ export const drawGalaxy = (galaxy: Galaxy, handles: Handles) => {
   for (const ring of galaxy.rings.values()) {
     const label = handles.labels.get(ring.hub.id);
     const spot = labelAt(galaxy, ring);
-    label?.setAttribute("x", fixed(spot.x));
-    label?.setAttribute("y", fixed(spot.y));
+    // Whole pixels, so a plate's edges stay crisp.
+    label?.setAttribute(
+      "transform",
+      `translate(${Math.round(spot.x)} ${Math.round(spot.y)})`
+    );
+    if (label !== undefined) {
+      label.dataset.plate = String(labelOnEngraving(galaxy, ring, spot));
+    }
   }
   for (const e of galaxy.edges) {
     drawEdge(e, handles);

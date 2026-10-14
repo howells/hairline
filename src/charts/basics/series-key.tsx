@@ -6,7 +6,7 @@ export interface KeyItem {
   /** Pattern fill (`paint(id)`) for a textured swatch. */
   fill?: string;
   name: string;
-  /** Fill class for a solid swatch, e.g. "fill-ink". */
+  /** Fill class for a solid swatch, e.g. "fill-hero". */
   tone?: string;
 }
 

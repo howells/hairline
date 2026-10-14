@@ -113,6 +113,14 @@ An art-director review found the set gorgeous in patches but not yet one system.
 - **The house frame** is in the gallery cell: a short ink bar and the chart's name above every chart. Charts must not add their own title.
 - Baselines and zero lines use `hairline` (now full ink); leaders, connectors, tracks and per-row lines use the new quiet `rule` utility; gridlines use `grid-line`.
 
+## Amendment 4: one fill taxonomy (overrides every texture rule above)
+
+Every fill is one of the fills in `src/charts/fills.ts`, drawn in full on the Fills sheet (P1): a family in a tone, or a step on the halftone or hatch-density ladder. Heroes are `fill-hero`, never `fill-ink` (ink is for text). No private dot scales, pitches or tones; if a chart needs something new, add it to `fills.ts` so the sheet shows it.
+
+## Chrome and label type (overrides earlier type notes)
+
+All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; the wordmark differs by weight alone. Inside charts every label, value, tick and note is one size, 11px, told apart by weight and tone; the single big figure (`t-value-lg`) is the only exception. One 1px rule under the header; no bar above chart names.
+
 ## Per chart: what to do
 
 For each chart you own:

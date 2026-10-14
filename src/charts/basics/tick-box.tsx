@@ -206,7 +206,7 @@ const Group = (props: GroupProps) => {
         />
       ) : null}
       <rect
-        className={`grow-x ${props.hero ? "fill-hero" : "fill-l1"}`}
+        className={`grow-x ${props.hero ? "fill-hero" : "fill-l2"}`}
         height={2}
         style={stagger(index + 3, "series")}
         width={Math.max(2, boxR - 12)}

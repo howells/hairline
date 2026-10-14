@@ -266,7 +266,7 @@ const KEY_LINE = 20;
  */
 const keyEntries = (gap: string, us: string, span: number) => {
   const items = [
-    { name: us, tone: "fill-ink" },
+    { name: us, tone: "fill-hero" },
     { name: "Competitors", tone: "fill-paper" },
     { fill: paint(gap), name: "Gap to their mean" },
   ];

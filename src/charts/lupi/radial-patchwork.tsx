@@ -284,7 +284,7 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
                   id={levelIds[level] ?? ""}
                   key={`def-${pitch}`}
                   pitch={pitch}
-                  tone="fill-l4"
+                  tone="fill-l3"
                 />
               ))}
               <CrossHatch

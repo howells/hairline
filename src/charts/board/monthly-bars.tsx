@@ -65,9 +65,9 @@ const engraved = (tex: (name: string) => string, name: string): Paint => ({
 });
 
 const SOLID: Partial<Record<Grammar, Record<Phase, string | null>>> = {
-  gain: { active: "fill-s1-active", future: null, past: null },
-  loss: { active: "fill-s1-active", future: null, past: null },
-  s1: { active: "fill-s1-active", future: null, past: "fill-s1" },
+  gain: { active: "fill-hero", future: null, past: null },
+  loss: { active: "fill-hero", future: null, past: null },
+  s1: { active: "fill-hero", future: null, past: "fill-l2" },
 };
 
 /**
@@ -75,13 +75,13 @@ const SOLID: Partial<Record<Grammar, Record<Phase, string | null>>> = {
  * one solid tone per grammar, so they read as bars rather than as noise.
  */
 const THIN: Record<Grammar, Record<Phase, string>> = {
-  gain: { active: "fill-s1-active", future: "fill-l3", past: "fill-l3" },
-  loss: { active: "fill-s1-active", future: "fill-l5", past: "fill-l5" },
-  over: { active: "fill-ink", future: "fill-ink", past: "fill-ink" },
-  s1: { active: "fill-s1-active", future: "fill-s1-future", past: "fill-s1" },
-  s2: { active: "fill-l4", future: "fill-l4", past: "fill-l4" },
-  s3: { active: "fill-l5", future: "fill-l5", past: "fill-l5" },
-  s4: { active: "fill-l6", future: "fill-l6", past: "fill-l6" },
+  gain: { active: "fill-hero", future: "fill-l3", past: "fill-l3" },
+  loss: { active: "fill-hero", future: "fill-l5", past: "fill-l5" },
+  over: { active: "fill-hero", future: "fill-hero", past: "fill-hero" },
+  s1: { active: "fill-hero", future: "fill-l4", past: "fill-l2" },
+  s2: { active: "fill-l3", future: "fill-l3", past: "fill-l3" },
+  s3: { active: "fill-l4", future: "fill-l4", past: "fill-l4" },
+  s4: { active: "fill-l5", future: "fill-l5", past: "fill-l5" },
 };
 
 /** Narrower than this, px, a bar's engraving breaks up. */
@@ -117,8 +117,7 @@ const BarPatterns = (props: { tex: (name: string) => string }) => {
         angle="falling"
         ground="fill-paper"
         id={tex("over")}
-        pitch={TEXTURE_PITCH.dense}
-        tone="fill-ink"
+        tone="fill-hero"
       />
       <Hatch ground="fill-paper" id={tex("gain")} tone="fill-l2" />
       <Stipple
@@ -136,7 +135,7 @@ const keySwatch = (
   tone: Stack["tone"],
   tex: (name: string) => string
 ): Pick<KeyItem, "fill" | "tone"> =>
-  tone === "s1" ? { tone: "fill-s1" } : { fill: paint(tex(tone)) };
+  tone === "s1" ? { tone: "fill-l2" } : { fill: paint(tex(tone)) };
 
 export interface Stack {
   values: (number | null)[];
@@ -351,7 +350,7 @@ const placeSegment = (
   const small = bottom - capTop < MIN_HATCH || width < MIN_HATCH;
   return {
     bottom,
-    paint: small ? solid("fill-ink") : segmentPaint("over", tone, frame),
+    paint: small ? solid("fill-hero") : segmentPaint("over", tone, frame),
     top: capTop,
   };
 };

@@ -7,8 +7,13 @@ import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { DotScreen, KeySwatch } from "../texture";
-import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
+import { DotScreen, KeySwatch, PlateLabel } from "../texture";
+import {
+  HALFTONE_R,
+  TEXTURE_PITCH,
+  paint,
+  useTextureIds,
+} from "../texture-ids";
 import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { mainCentroid } from "./geo";
 import type { ChoroplethDatum, Region } from "./geo";
@@ -34,7 +39,7 @@ export interface ChoroplethProps {
   regions: Region[];
   /** Short form for legend and in-map labels, e.g. 96k. */
   short: (v: number) => string;
-  /** Four ascending breaks → five shades, heat-1 … heat-5. */
+  /** Four ascending breaks → five steps on the halftone ladder. */
   thresholds: [number, number, number, number];
   /** Unit after the value in the tooltip, e.g. "sign-ups". */
   unit?: string;
@@ -77,18 +82,16 @@ const KEY_GAP = 12;
 const HIT = 44;
 
 /**
- * The stepped dot screen for every step, on paper: the dots grow and the
- * screen tightens from pitch 4 to 3 as the value climbs. At the top step the
- * dots touch, leaving only pinholes of paper. Solid ink is the hero's alone.
+ * The stepped dot screen for every step, on paper: the shared halftone
+ * ladder, its dots growing a step per bin on a pitch-4 screen in the mid
+ * tone. Solid ink is the hero's alone.
  */
-const SCREENS = [
-  { pitch: TEXTURE_PITCH.screen, r: 0.75, tone: "fill-heat-2" },
-  { pitch: TEXTURE_PITCH.screen, r: 1.25, tone: "fill-heat-3" },
-  { pitch: TEXTURE_PITCH.dense, r: 1, tone: "fill-heat-4" },
-  { pitch: TEXTURE_PITCH.dense, r: 1.25, tone: "fill-heat-5" },
-  { pitch: TEXTURE_PITCH.dense, r: 1.5, tone: "fill-heat-5" },
-] as const;
-const SOLID = "fill-heat-5";
+const SCREENS = HALFTONE_R.map((r) => ({
+  pitch: TEXTURE_PITCH.screen,
+  r,
+  tone: "fill-l3",
+}));
+const SOLID = "fill-hero";
 
 interface StepFill {
   className: string;
@@ -208,10 +211,6 @@ const RegionLayer = (props: {
   </g>
 );
 
-/** Paper text when the label sits wholly on the solid hero; otherwise ink with the paper halo. */
-const labelClass = (onDark: boolean) =>
-  onDark ? "t-value fill-paper" : "t-value t-halo";
-
 const anchorFor = (dx: number) => {
   if (dx < 0) {
     return "end";
@@ -255,28 +254,36 @@ interface Box {
   y1: number;
 }
 
-/** Half the height of a `t-value` label box, and the steps tried when one collides. */
+/** Half the height of a label's plate, and the steps tried when one collides. */
 const LABEL_HALF = 8;
 const NUDGES = [0, -1, 1, -2, 2];
+/** A plate's padding either side of its text (PlateLabel). */
+const PLATE_PAD = 4;
 
+/** The label's plate: its text plus padding, anchored at x. */
 const boxOf = (p: PlacedLabel): Box => {
-  const w = sansWidth(p.text, 12);
+  const w = Math.ceil(sansWidth(p.text, 11)) + PLATE_PAD * 2;
   const shift = { end: w, middle: w / 2, start: 0 }[p.anchor];
   return {
-    x0: p.x - shift - 2,
-    x1: p.x - shift + w + 2,
+    x0: p.x - shift,
+    x1: p.x - shift + w,
     y0: p.y - LABEL_HALF,
     y1: p.y + LABEL_HALF,
   };
 };
 
-/** The glyphs' own box: the label box without its padding, x-height deep. */
+/** The glyphs' own box: the plate without its padding, x-height deep. */
 const glyphBox = (p: PlacedLabel): Box => {
   const b = boxOf(p);
-  return { x0: b.x0 + 2, x1: b.x1 - 2, y0: p.y - 4, y1: p.y + 4 };
+  return {
+    x0: b.x0 + PLATE_PAD,
+    x1: b.x1 - PLATE_PAD,
+    y0: p.y - 4,
+    y1: p.y + 4,
+  };
 };
 
-/** A label set in paper: unled, on the solid hero, its glyphs inside the region. */
+/** A label on the hero's plate: unled, on the solid hero, its glyphs inside the region. */
 const onDark = (p: PlacedLabel) =>
   !p.leader && p.solid && p.covers(glyphBox(p));
 
@@ -371,15 +378,25 @@ const MapLabels = (props: MapLabelsProps) => (
               y2={p.y + (p.dy < 0 ? 5 : -5)}
             />
           )}
-          <text
-            className={labelClass(onDark(p))}
-            dy="0.35em"
-            textAnchor={p.anchor}
-            x={p.x}
-            y={p.y}
-          >
-            {p.text}
-          </text>
+          {p.leader ? (
+            <text
+              className="t-value t-halo"
+              dy="0.35em"
+              textAnchor={p.anchor}
+              x={p.x}
+              y={p.y}
+            >
+              {p.text}
+            </text>
+          ) : (
+            <PlateLabel
+              anchor={p.anchor}
+              hero={onDark(p)}
+              text={p.text}
+              x={p.x}
+              y={p.y}
+            />
+          )}
         </g>
       </g>
     ))}

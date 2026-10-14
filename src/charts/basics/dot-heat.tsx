@@ -43,6 +43,36 @@ interface Grid {
 }
 
 /** Area carries the count; tone steps up the ramp in thirds; the hero is ink. */
+/** The ring's least clearance from any dot, and its dots' radius. */
+const RING_CLEAR = 2.5;
+const RING_DOT = 0.75;
+/** How far out the ring would like to sit from the peak dot. */
+const RING_GAP = 4;
+
+/**
+ * The peak's ring radius: RING_GAP outside its dot, pulled in so it never
+ * comes within RING_CLEAR of a neighbouring dot (diagonals included).
+ */
+const ringRadius = (
+  grid: { colW: number; radius: (v: number) => number; rowH: number },
+  values: readonly (readonly number[])[],
+  peakR: number,
+  peakC: number
+) => {
+  const own = grid.radius(values[peakR]?.[peakC] ?? 0);
+  let r = own + RING_GAP;
+  for (const dr of [-1, 0, 1]) {
+    for (const dc of [-1, 0, 1]) {
+      const v = values[peakR + dr]?.[peakC + dc];
+      if ((dr !== 0 || dc !== 0) && v !== undefined && v > 0) {
+        const dist = Math.hypot(dr * grid.rowH, dc * grid.colW);
+        r = Math.min(r, dist - grid.radius(v) - RING_CLEAR - RING_DOT);
+      }
+    }
+  }
+  return Math.max(own + RING_CLEAR + RING_DOT, r);
+};
+
 const dotClass = (share: number, hero: boolean): string => {
   if (hero) {
     return "fill-hero";
@@ -78,7 +108,12 @@ const buildGrid = (
   // Centre the labels and the grid together.
   const x0 = (width - labelW - colW * data.columns.length) / 2 + labelW;
   const cell = Math.min(colW, rowH);
-  const rMax = cell * 0.44;
+  // Room for the peak's ring between two full-size neighbours: the ring keeps
+  // RING_CLEAR from its own dot and from every neighbour.
+  const rMax = Math.min(
+    cell * 0.44,
+    (cell - RING_CLEAR * 2 - RING_DOT * 2) / 2
+  );
   return {
     cell,
     colW,
@@ -246,10 +281,10 @@ export const DotHeat = (props: DotHeatProps) => {
             />
             <DotRing
               className="fade pointer-events-none"
-              tone="fill-l1"
+              tone="fill-l2"
               cx={grid.cx(peakC)}
               cy={grid.cy(peakR)}
-              r={grid.radius(peakV) + 5}
+              r={ringRadius(grid, data.values, peakR, peakC)}
               step={3}
             />
             <PlotNote

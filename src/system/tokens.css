@@ -224,27 +224,30 @@
   --bg: var(--paper);
   --board-panel: var(--paper);
 
-  /* Series tones: solid ramp steps only (no mixes, no alpha). */
+  /*
+   * Series tones: the fill taxonomy's tones only (src/charts/fills.ts): hero,
+   * l2, l3, l4, l5 and alert. No mixes, no alpha, no l0, l1 or l6.
+   */
   --s1: var(--l2);
-  --s1-active: var(--l0);
+  --s1-active: var(--hero);
   --s1-future: var(--l4);
   --s2: var(--l4);
   --s2-active: var(--l3);
   --s2-future: var(--l5);
   --s3: var(--l5);
   --s3-active: var(--l4);
-  --s3-future: var(--l6);
+  --s3-future: var(--l5);
 
-  --line1: var(--l0);
+  --line1: var(--hero);
   --line1-future: var(--l4);
   --line2: var(--l3);
   --line2-future: var(--l5);
 
   --area1: var(--l5);
-  --area2: var(--l6);
-  --area3: var(--l6);
-  --band-past: var(--l6);
-  --band-future: var(--l6);
+  --area2: var(--l5);
+  --area3: var(--l5);
+  --band-past: var(--l5);
+  --band-future: var(--l5);
 
   /* Red marks one exceptional thing per chart: one solid alert tone. */
   --red: var(--alert);
@@ -256,14 +259,14 @@
   --board-bar: var(--l3);
   --board-label-2: var(--l3);
   --board-swatch-3: var(--l4);
-  --board-link: var(--l6);
-  --board-link-hot: var(--l5);
+  --board-link: var(--l5);
+  --board-link-hot: var(--l4);
   --board-hot: var(--alert);
-  --board-heat-1: var(--l6);
-  --board-heat-2: var(--l5);
-  --board-heat-3: var(--l4);
-  --board-heat-4: var(--l3);
-  --board-heat-5: var(--l2);
+  --board-heat-1: var(--l5);
+  --board-heat-2: var(--l4);
+  --board-heat-3: var(--l3);
+  --board-heat-4: var(--l2);
+  --board-heat-5: var(--hero);
 
   --panel: var(--board-panel);
   background: var(--grain), var(--bg);

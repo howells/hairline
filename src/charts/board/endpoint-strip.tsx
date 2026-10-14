@@ -94,7 +94,7 @@ type Tone = "hero" | "rest";
 
 /** Ink for the hero row, one grey for the rest. */
 const TONE: Record<Tone, { dot: string; tick: string; value: string }> = {
-  hero: { dot: "fill-ink", tick: "fill-ink", value: "fill-ink" },
+  hero: { dot: "fill-hero", tick: "fill-hero", value: "fill-ink" },
   rest: { dot: "fill-l3", tick: "fill-l2", value: "fill-muted" },
 };
 

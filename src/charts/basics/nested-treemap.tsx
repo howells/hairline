@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
-import { Hatch, Rules, Stipple } from "../texture";
+import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, sansWidth, stagger, sum } from "../util";
 import { nestedTreemapDemo } from "./nested-treemap.data";
@@ -55,6 +55,9 @@ interface TreeLayout {
 }
 
 const BAND = 30;
+
+/** A tile's 1px outline sits one pixel in; plates and group names align to it. */
+const INSET = 1;
 
 /** One engraving per parent, in parent order: stipple, hatch, rules. */
 const TEXTURES = ["stipple", "hatch", "rules"] as const;
@@ -118,7 +121,8 @@ const layoutTree = (
   const bands = (laid.children ?? []).map((g) => ({
     name: g.data.name,
     share: (g.value ?? 0) / total,
-    x: g.x0 + 12,
+    // Flush with the group's tiles: the name starts on their outline.
+    x: g.x0 + INSET,
     y: g.y0 + BAND - 12,
   }));
   const tiles = laid.leaves().map((leaf) => {
@@ -137,40 +141,20 @@ const layoutTree = (
   return { bands, tiles };
 };
 
-/** Inset of a tile's label from its edges, and the label's line pitch. */
+/** Room a tile keeps to spare around its label, and the label's line pitch. */
 const PAD = 10;
 const LINE = 16;
 
 /** How a tile carries its name: across, up its side, or not at all. */
 type Fit = "across" | "none" | "up";
 
-/** The plate sits just inside the tile's 1px outline. */
-const INSET = 1;
-
 /** Tile corners: 4 for a large tile, 2 for a small one. */
 const tileRx = (tile: Tile) => (tile.w < 48 || tile.h < 48 ? 2 : 4);
 
 /**
- * The plate a label sits on: paper cut out of the engraving, tucked into the
- * tile's top-left corner under its outline, so that corner is the tile's own
- * curve. Its one free corner is rounded 2, a step inside the tile's 4.
- */
-const Plate = (props: { h: number; hero: boolean; tile: Tile; w: number }) =>
-  props.hero ? null : (
-    <rect
-      className="fill-paper"
-      height={props.h}
-      rx={2}
-      width={props.w}
-      x={props.tile.x + INSET}
-      y={props.tile.y + INSET}
-    />
-  );
-
-/**
  * Every tile names itself: across the top when it is wide enough, up its
  * left side when it is a tall sliver, with its value under the name when
- * there is room. The label sits on a paper plate cut out of the engraving.
+ * there is room. The label sits on a plate cut out of the engraving.
  */
 const fitOf = (tile: Tile): Fit => {
   const nameW = sansWidth(tile.name, 12);
@@ -183,7 +167,13 @@ const fitOf = (tile: Tile): Fit => {
   return "none";
 };
 
-/** Name and value inside a tile, set across or up its side to fit. */
+/** A plate's height: name and value plates stack this far apart. */
+const PLATE = 15;
+
+/**
+ * Name and value inside a tile, set across or up its side to fit, each on a
+ * plate flush with the tile's top-left corner, just inside its outline.
+ */
 const TileLabel = (props: {
   format: (v: number) => string;
   hero: boolean;
@@ -192,56 +182,52 @@ const TileLabel = (props: {
 }) => {
   const { tile } = props;
   const fit = fitOf(tile);
-  const name = sansWidth(tile.name, 12);
   // Bare values in every tile: the chart's name carries the unit.
   const valueText = props.format(tile.value);
   const value = sansWidth(valueText, 11);
-  const nameClass = `t-label ${props.hero ? "fill-paper" : ""}`;
-  const valueClass = `t-axis ${props.hero ? "fill-l5" : ""}`;
   if (fit === "none") {
     return null;
   }
+  const x = tile.x + INSET;
+  const y = tile.y + INSET;
   if (fit === "up") {
-    const cx = tile.x + PAD + 9;
-    const top = tile.y + PAD;
     return (
-      <g className="fade" style={stagger(props.index, "series")}>
-        <Plate
-          h={top - tile.y - INSET + name + 8}
+      <g
+        className="fade"
+        style={stagger(props.index, "series")}
+        transform={`translate(${x} ${y}) rotate(-90)`}
+      >
+        <PlateLabel
+          anchor="end"
+          className="t-label"
           hero={props.hero}
-          tile={tile}
-          w={cx + 8 - tile.x - INSET}
+          text={tile.name}
+          x={0}
+          y={PLATE / 2}
         />
-        <text
-          className={nameClass}
-          textAnchor="end"
-          transform={`rotate(-90 ${cx} ${top})`}
-          x={cx}
-          y={top}
-        >
-          {tile.name}
-        </text>
       </g>
     );
   }
   const valueFits = tile.h >= LINE * 2 + PAD * 2 && tile.w >= value + PAD * 2;
-  const x = tile.x + PAD;
-  const y = tile.y + PAD;
   return (
     <g className="fade" style={stagger(props.index, "series")}>
-      <Plate
-        h={PAD - INSET + (valueFits ? LINE * 2 + 5 : LINE + 5)}
+      <PlateLabel
+        anchor="start"
+        className="t-label"
         hero={props.hero}
-        tile={tile}
-        w={(PAD - INSET) * 2 + Math.ceil(Math.max(name, valueFits ? value : 0))}
+        text={tile.name}
+        x={x}
+        y={y + PLATE / 2}
       />
-      <text className={nameClass} x={x} y={y + 12}>
-        {tile.name}
-      </text>
       {valueFits ? (
-        <text className={valueClass} x={x} y={y + 12 + LINE}>
-          {valueText}
-        </text>
+        <PlateLabel
+          anchor="start"
+          className="t-axis"
+          hero={props.hero}
+          text={valueText}
+          x={x}
+          y={y + PLATE + PLATE / 2}
+        />
       ) : null}
     </g>
   );

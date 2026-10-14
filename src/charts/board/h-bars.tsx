@@ -58,7 +58,7 @@ const Bar = (props: {
       style={{ "--i": props.i }}
     >
       <rect
-        className={`${MARK} ${inked ? "fill-ink" : ""}`}
+        className={`${MARK} ${inked ? "fill-hero" : ""}`}
         fill={inked ? undefined : props.hatch}
         x={x}
         y={y}

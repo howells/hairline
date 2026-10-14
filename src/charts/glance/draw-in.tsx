@@ -15,7 +15,7 @@ import { useReducedMotion, useReveal, useSvgId } from "../hooks";
 import { easeTravel } from "../motion";
 import { PlotNote } from "../plot-note";
 import { DotScreen } from "../texture";
-import { paint } from "../texture-ids";
+import { HALFTONE_R, paint } from "../texture-ids";
 import { noteSpace } from "../util";
 import { ValueGrid } from "../value-grid";
 import { ControlSlot } from "./control-slot";
@@ -124,8 +124,8 @@ const Curve = (p: CurveProps) => (
       <DotScreen
         ground="fill-paper"
         id={`${p.clip}-screen`}
-        r={1}
-        tone="fill-l5"
+        r={HALFTONE_R[0]}
+        tone="fill-l4"
       />
       <clipPath id={p.clip}>
         <rect x={0} y={0} width={Math.max(0, p.tipX + 2)} height={p.height} />
@@ -350,7 +350,7 @@ export const DrawIn = (props: DrawInProps) => {
               />
               {clock.p > 0 && hover === null ? (
                 <circle
-                  className="fill-ink"
+                  className="fill-hero"
                   cx={tipX}
                   cy={y(tipValue)}
                   r={4.5}

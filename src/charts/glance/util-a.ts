@@ -2,16 +2,18 @@ import { ranks } from "../util";
 
 /*
  * Importance ladder as Tailwind classes. Written out in full so Tailwind
- * finds every class; index = ladder step (0 = most important).
+ * finds every class; index = ladder step (0 = most important). Fills keep to
+ * the fill taxonomy's solid tones (fills.ts): step 0 is the ink tone, and the
+ * ramp's l1 and l6 fold onto their nearest fill tone.
  */
 export const LADDER_FILL = [
-  "fill-l0",
-  "fill-l1",
+  "fill-hero",
+  "fill-l2",
   "fill-l2",
   "fill-l3",
   "fill-l4",
   "fill-l5",
-  "fill-l6",
+  "fill-l5",
 ];
 export const LADDER_STROKE = [
   "stroke-l0",

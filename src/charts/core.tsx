@@ -95,7 +95,7 @@ export const Tooltip = (props: TooltipProps) => {
   return (
     <output
       ref={ref}
-      className={`rounded-tip bg-ink text-paper pointer-events-none absolute z-10 px-2.5 py-1.75 font-sans text-xs/normal whitespace-nowrap tabular-nums [&_b]:font-semibold ${props.below === true ? "-translate-x-1/2 translate-y-3" : "-mt-2.5 -translate-x-1/2 -translate-y-full"}`}
+      className={`rounded-tip bg-ink text-paper text-tick/normal pointer-events-none absolute z-10 px-2.5 py-1.75 font-sans whitespace-nowrap tabular-nums [&_b]:font-semibold ${props.below === true ? "-translate-x-1/2 translate-y-3" : "-mt-2.5 -translate-x-1/2 -translate-y-full"}`}
       style={{ left: props.x + shift, top: props.y }}
     >
       {props.children}
@@ -265,7 +265,7 @@ interface LegendProps {
 
 export const Legend = (props: LegendProps) => (
   <div
-    className={`flex min-h-3 justify-center gap-5 text-xs leading-none tabular-nums ${props.muted === true ? "text-muted font-light" : "text-text font-normal"} ${props.className ?? ""}`}
+    className={`text-tick flex min-h-3 justify-center gap-5 leading-none tabular-nums ${props.muted === true ? "text-muted font-light" : "text-text font-normal"} ${props.className ?? ""}`}
   >
     {props.items.map((item) => (
       <span

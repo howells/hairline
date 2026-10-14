@@ -16,7 +16,7 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useSvgId } from "../hooks";
 import { PlotNote } from "../plot-note";
-import { CrossHatch, Hatch, Rules, Stipple } from "../texture";
+import { CrossHatch, Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger, sum } from "../util";
 import { streamRibbonDemo } from "./stream-ribbon.data";
@@ -274,16 +274,14 @@ const Labels = (props: { data: StreamData; layout: Layout; river: River }) => {
     <g className="fade pointer-events-none" style={stagger(8)}>
       {labels.map((l) =>
         l.fits ? (
-          <text
-            className={`t-label t-halo ${l.hero ? "fill-ink" : ""}`}
-            dy="0.34em"
+          <PlateLabel
+            className="t-label"
+            hero={l.hero}
             key={l.name}
-            textAnchor="middle"
+            text={l.name}
             x={l.x}
             y={l.y}
-          >
-            {l.name}
-          </text>
+          />
         ) : null
       )}
     </g>
@@ -483,7 +481,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
               <CrossHatch
                 ground="fill-paper"
                 id={textures("cross")}
-                tone="fill-ink"
+                tone="fill-hero"
               />
               <Hatch
                 ground="fill-paper"

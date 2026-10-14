@@ -113,7 +113,7 @@ export const LINE_TONE = {
   1: { past: "var(--line1)" },
   2: { past: "var(--line2)" },
 } as const;
-export const DOT_TONE = { 1: "fill-l0", 2: "fill-l3" } as const;
+export const DOT_TONE = { 1: "fill-hero", 2: "fill-l3" } as const;
 
 /** A series is identified within its chart by its tone and dash. */
 export const seriesKey = (s: LineSeries) =>
