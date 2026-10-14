@@ -2,6 +2,8 @@
 
 An engraved chart library for React. Ninety charts, one hand: pixel-snapped hairlines, a single ink hero per chart, and texture made the way a banknote is made, with crosshatch, hatching, stipple and halftone screens laid on exact pixels over warm paper.
 
+See it at [hairline.danielhowells.com](https://hairline.danielhowells.com).
+
 The temperament is an old-fashioned broadsheet chart desk with modern tools: authority from hierarchy rather than ornament, the zero line sharply distinct from a faint grid, labels set on the marks, exact figures, and every chart in the same frame.
 
 ## Running it
