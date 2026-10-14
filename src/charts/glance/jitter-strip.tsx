@@ -1,0 +1,270 @@
+import { median } from "d3-array";
+import { scaleLinear } from "d3-scale";
+import type { ScaleLinear } from "d3-scale";
+import { useState } from "react";
+
+import { crisp } from "../axes";
+import { Plot, Tooltip } from "../core";
+import { PlotNote } from "../plot-note";
+import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { jitterStripDemo } from "./jitter-strip.data";
+import type { JitterGroup } from "./jitter-strip.data";
+
+interface JitterStripProps {
+  data?: JitterGroup[];
+  height?: number;
+  format?: (v: number) => string;
+  /** Axis caption, e.g. "hours to resolve". */
+  axisLabel?: string;
+  /** Unit for the tooltip noun, e.g. "ticket". */
+  unit?: string;
+  note?: string;
+  /** Index of the hero group (default the first: median and name in ink); a given one also inks its rings. */
+  highlight?: number;
+}
+
+interface Hit {
+  g: number;
+  k: number;
+  x: number;
+  y: number;
+}
+
+interface BandProps {
+  band: number;
+  dot: number;
+  g: number;
+  /** Ink the rings of this group (the highlight). */
+  hero: boolean;
+  /** The hero row: its median a 2px ink tick and its name in ink. */
+  heroRow: boolean;
+  group: JitterGroup;
+  hover: Hit | null;
+  med: number;
+  onEnter: (hit: Hit) => void;
+  top: number;
+  x: ScaleLinear<number, number>;
+  labelX: number;
+}
+
+const hours = (v: number) => `${Math.round(v * 10) / 10}h`;
+const tickHours = (v: number) => (v === 0 ? "0" : `${v}h`);
+
+/** Gridlines every half day: hours read best in twelves. */
+const halfDays = (max: number) =>
+  Array.from({ length: Math.ceil(max / 12) + 1 }, (_, k) => k * 12);
+
+interface Seat {
+  x: number;
+  y: number;
+}
+
+/**
+ * A dot plot on a lattice: each value snaps to a column `pitch` px wide and
+ * stacks outward from the band's centre line (centre, below, above, ...),
+ * one ring per seat. Rows tighten when a column would outgrow the band.
+ */
+const seats = (
+  px: number[],
+  pitch: number,
+  centre: number,
+  room: number,
+  /** Leftmost x a ring's centre may take: clear of the zero rule. */
+  floor: number
+): Seat[] => {
+  const first = Math.ceil(floor / pitch);
+  const cols = px.map((v) => Math.max(first, Math.round(v / pitch)));
+  const counts = new Map<number, number>();
+  for (const c of cols) {
+    counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  const tallest = Math.max(1, ...counts.values());
+  const row = Math.min(pitch, room / tallest);
+  const used = new Map<number, number>();
+  return cols.map((c) => {
+    const j = used.get(c) ?? 0;
+    used.set(c, j + 1);
+    const step = Math.ceil(j / 2) * (j % 2 === 0 ? -1 : 1);
+    return { x: c * pitch, y: centre + step * row };
+  });
+};
+
+/** One group: its label, a dot per record jittered across the band, and a median tick. */
+const Band = (p: BandProps) => {
+  const lattice = seats(
+    p.group.values.map((v) => p.x(v)),
+    p.dot * 2 + 2,
+    Math.round(p.top + p.band / 2),
+    p.band * 0.9,
+    p.x(0) + p.dot + 2
+  );
+  return (
+    <g className={dimClass(p.hover !== null && p.hover.g !== p.g)}>
+      <text
+        className={`t-label ${p.heroRow ? "fill-ink" : "fill-muted"}`}
+        x={p.labelX}
+        y={p.top + p.band / 2}
+        dy="0.35em"
+        textAnchor="end"
+      >
+        {p.group.label}
+      </text>
+      {p.group.values.map((_, k) => {
+        const seat = lattice[k];
+        const on = p.hover !== null && p.hover.g === p.g && p.hover.k === k;
+        return (
+          <circle
+            // Records carry no id; group + ordinal is their identity.
+            key={`${p.group.label}-${String(k)}`}
+            className={`pop fill-none ${on || p.hero ? "stroke-ink" : "stroke-l4"}`}
+            style={stagger(k, "dense")}
+            cx={seat.x}
+            cy={seat.y}
+            r={on ? 6 : p.dot}
+            strokeWidth={1}
+            pointerEvents="visible"
+            onPointerEnter={() => {
+              p.onEnter({ g: p.g, k, x: seat.x, y: seat.y - p.dot - 4 });
+            }}
+          />
+        );
+      })}
+      {p.heroRow ? (
+        <line
+          className="fade stroke-ink"
+          style={{ "--i": 8 + p.g }}
+          x1={Math.round(p.x(p.med))}
+          x2={Math.round(p.x(p.med))}
+          y1={Math.round(p.top + p.band * 0.04)}
+          y2={Math.round(p.top + p.band * 0.96)}
+          strokeWidth={2}
+        />
+      ) : (
+        <line
+          className="fade rule"
+          style={{ "--i": 8 + p.g }}
+          x1={crisp(p.x(p.med))}
+          x2={crisp(p.x(p.med))}
+          y1={Math.round(p.top + p.band * 0.04)}
+          y2={Math.round(p.top + p.band * 0.96)}
+        />
+      )}
+    </g>
+  );
+};
+
+/**
+ * G15 Time to close. One hollow ring per record, set on a lattice: values
+ * snap to equal-pitch columns and stack outward from each band's centre
+ * line, so pile-ups read as taller columns, evenly spaced, with no random
+ * jitter. The hero row's median (the first group, or the highlight) is a
+ * 2px ink tick; every other median is a quiet 1px rule.
+ */
+export const JitterStrip = (props: JitterStripProps) => {
+  const data = props.data ?? jitterStripDemo;
+  const height = props.height ?? 420;
+  const format = props.format ?? hours;
+  const unit = props.unit ?? "ticket";
+  const [hover, setHover] = useState<Hit | null>(null);
+  const max = Math.max(...data.flatMap((d) => d.values));
+  const medians = data.map((d) => median(d.values) ?? 0);
+  const label = `Jitter strip: ${data.map((d, i) => `${d.label}, ${d.values.length} records, median ${format(medians[i])}`).join("; ")}`;
+
+  return (
+    <Plot
+      overlay={
+        hover === null ? null : (
+          <Tooltip x={hover.x} y={hover.y}>
+            <b>{data[hover.g].label}</b> · this {unit}{" "}
+            {format(data[hover.g].values[hover.k])} · median{" "}
+            {format(medians[hover.g])}
+          </Tooltip>
+        )
+      }
+    >
+      {(width) => {
+        const narrow = width < 480;
+        const m = {
+          bottom: 40 + noteSpace(props.note, width - 16, 16),
+          // Room for the longest group name.
+          left:
+            Math.ceil(Math.max(...data.map((d) => sansWidth(d.label, 12)))) +
+            22,
+          right: narrow ? 12 : 24,
+          top: 10,
+        };
+        const ticks = halfDays(max);
+        const x = scaleLinear()
+          .domain([0, ticks.at(-1) ?? max])
+          .range([m.left + 6, width - m.right]);
+        const band = (height - m.top - m.bottom) / data.length;
+        const floor = height - m.bottom;
+
+        return (
+          <svg
+            width={width}
+            height={height}
+            aria-label={label}
+            onPointerLeave={() => {
+              setHover(null);
+            }}
+          >
+            <title>{label}</title>
+            {ticks.map((t) => (
+              <g key={t}>
+                <line
+                  className={t === 0 ? "hairline" : "grid-line"}
+                  x1={crisp(x(t))}
+                  x2={crisp(x(t))}
+                  y1={m.top}
+                  y2={floor}
+                />
+                <text
+                  className="t-axis"
+                  x={x(t)}
+                  y={floor + 16}
+                  textAnchor="middle"
+                >
+                  {tickHours(t)}
+                </text>
+              </g>
+            ))}
+            {props.axisLabel === undefined ? null : (
+              <text
+                className="t-note"
+                x={width - m.right}
+                y={floor + 34}
+                textAnchor="end"
+              >
+                {props.axisLabel}
+              </text>
+            )}
+            {data.map((d, g) => (
+              <Band
+                key={d.label}
+                band={band}
+                dot={narrow ? 3 : 4.5}
+                hero={props.highlight === g}
+                heroRow={(props.highlight ?? 0) === g}
+                g={g}
+                group={d}
+                hover={hover}
+                labelX={m.left - 10}
+                med={medians[g]}
+                onEnter={setHover}
+                top={m.top + band * g}
+                x={x}
+              />
+            ))}
+            <PlotNote
+              text={props.note}
+              width={width - 16}
+              x={width / 2}
+              y={height - 6}
+            />
+          </svg>
+        );
+      }}
+    </Plot>
+  );
+};

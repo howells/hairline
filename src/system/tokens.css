@@ -1,0 +1,299 @@
+/*
+ * Palettes. Charts never use hex values: only the semantic variables below.
+ *
+ *   --paper            page and card surface
+ *   --ink              strongest mark and headline colour
+ *   --text / --muted / --faint   text hierarchy
+ *   --grid / --rule    hairlines: the faint grid and quiet rules
+ *   --l0 … --l6        importance ladder, most important first ("lightness is data")
+ *   --hero             the one highlighted element per chart
+ *   --alert            thresholds, regressions, over-budget
+ *   --cat-1 … --cat-4  categorical series
+ *   --heat-1 … --heat-5  sequential ramp, low → high
+ *
+ * Three modes set these on <html data-palette>: paper, pink and dark.
+ * `.surface-dark` (the dark cell) remaps the same names, so a chart inverts
+ * without knowing it is on a dark card.
+ */
+
+:root,
+[data-palette="paper"] {
+  /* Paper: patternmode's paper and ink; the ramp steps evenly between them in OKLCH. */
+  --paper: #fbfbf9;
+  --ink: #1d1d1b;
+  --text: #1d1d1b;
+  --muted: #727068;
+  --faint: #9f9e9a;
+  --grid: #eeece7;
+  --rule: #e3e1dc;
+
+  --l0: #1d1d1b;
+  --l1: #41403c;
+  --l2: #5f5e5a;
+  --l3: #7e7d79;
+  --l4: #9f9e9a;
+  --l5: #bfbeb9;
+  --l6: #dad9d5;
+
+  --hero: #1d1d1b;
+  --alert: #c05951;
+
+  --cat-1: var(--l0);
+  --cat-2: var(--l2);
+  --cat-3: var(--l4);
+  --cat-4: var(--l6);
+
+  --heat-1: #dad9d5;
+  --heat-2: #9f9e9a;
+  --heat-3: #7e7d79;
+  --heat-4: #41403c;
+  --heat-5: #1d1d1b;
+
+  /* The paper's grain: noise in the ink's colour at a whisper of opacity. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.000 0 0 0 0 0.000 0 0 0 0 0.000 0 0 0 0.045 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url%28%23g%29'/%3E%3C/svg%3E");
+
+  --dk-paper: #1d1d1b;
+  --dk-ink: #fbfbf9;
+  --dk-muted: #9f9e9a;
+  --dk-faint: #5f5e5a;
+  --dk-grid: #34332f;
+  --dk-rule: #2b2a27;
+  --dk-l0: #fbfbf9;
+  --dk-l1: #dad9d5;
+  --dk-l2: #bfbeb9;
+  --dk-l3: #9f9e9a;
+  --dk-l4: #7e7d79;
+  --dk-l5: #5f5e5a;
+  --dk-l6: #41403c;
+  --dk-hero: #fbfbf9;
+  --dk-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1.000 0 0 0 0 0.980 0 0 0 0 0.941 0 0 0 0.036 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url%28%23g%29'/%3E%3C/svg%3E");
+}
+
+[data-palette="pink"] {
+  /* Pink: a dusty, dusky broadsheet pink (a greyed rose, deeper than any trademark salmon), with a warm ink ramp drawn toward its hue. */
+  --paper: #f1dfdc;
+  --ink: #27201e;
+  --text: #27201e;
+  --muted: #6c605e;
+  --faint: #a59895;
+  --grid: #e4d3cf;
+  --rule: #dccbc7;
+
+  --l0: #27201e;
+  --l1: #443b39;
+  --l2: #635856;
+  --l3: #837775;
+  --l4: #a59895;
+  --l5: #c4b5b2;
+  --l6: #dccbc8;
+
+  --hero: #27201e;
+  --alert: #9c433e;
+
+  --cat-1: var(--l0);
+  --cat-2: var(--l2);
+  --cat-3: var(--l4);
+  --cat-4: var(--l6);
+
+  --heat-1: #dccbc8;
+  --heat-2: #a59895;
+  --heat-3: #837775;
+  --heat-4: #443b39;
+  --heat-5: #27201e;
+
+  /* The paper's grain: noise in the ink's colour at a whisper of opacity. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.275 0 0 0 0 0.137 0 0 0 0 0.098 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url%28%23g%29'/%3E%3C/svg%3E");
+
+  --dk-paper: #1d1d1b;
+  --dk-ink: #fbfbf9;
+  --dk-muted: #9f9e9a;
+  --dk-faint: #5f5e5a;
+  --dk-grid: #34332f;
+  --dk-rule: #2b2a27;
+  --dk-l0: #fbfbf9;
+  --dk-l1: #dad9d5;
+  --dk-l2: #bfbeb9;
+  --dk-l3: #9f9e9a;
+  --dk-l4: #7e7d79;
+  --dk-l5: #5f5e5a;
+  --dk-l6: #41403c;
+  --dk-hero: #fbfbf9;
+  --dk-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1.000 0 0 0 0 0.980 0 0 0 0 0.941 0 0 0 0.036 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url%28%23g%29'/%3E%3C/svg%3E");
+}
+
+[data-palette="dark"] {
+  /* Dark: a warm near-black page; contrast rebuilt, not inverted. Light ink leads, the ramp descends toward the page. */
+  --paper: #181715;
+  --ink: #f0eeeb;
+  --text: #f0eeeb;
+  --muted: #888683;
+  --faint: #686663;
+  --grid: #242321;
+  --rule: #2c2b29;
+
+  --l0: #f0eeeb;
+  --l1: #cccac7;
+  --l2: #a9a7a4;
+  --l3: #888683;
+  --l4: #686663;
+  --l5: #4c4a47;
+  --l6: #373533;
+
+  /* A shade below the text ink, so large solid heroes glow rather than glare. */
+  --hero: #d8d6d2;
+  --alert: #d87a6e;
+
+  --cat-1: var(--l0);
+  --cat-2: var(--l2);
+  --cat-3: var(--l4);
+  --cat-4: var(--l6);
+
+  --heat-1: #373533;
+  --heat-2: #686663;
+  --heat-3: #888683;
+  --heat-4: #cccac7;
+  --heat-5: #f0eeeb;
+
+  /* The paper's grain: noise in the ink's colour at a whisper of opacity. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1.000 0 0 0 0 0.980 0 0 0 0 0.941 0 0 0 0.036 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url%28%23g%29'/%3E%3C/svg%3E");
+  --dk-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1.000 0 0 0 0 0.980 0 0 0 0 0.941 0 0 0 0.036 0'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url%28%23g%29'/%3E%3C/svg%3E");
+
+  /* The one dark cell sits a step deeper than the dark page. */
+  --dk-paper: #0e0d0b;
+  --dk-ink: #f0eeeb;
+  --dk-muted: #888683;
+  --dk-faint: #4c4a47;
+  --dk-grid: #1f1e1c;
+  --dk-rule: #262523;
+  --dk-l0: #f0eeeb;
+  --dk-l1: #cccac7;
+  --dk-l2: #a9a7a4;
+  --dk-l3: #888683;
+  --dk-l4: #686663;
+  --dk-l5: #4c4a47;
+  --dk-l6: #373533;
+  --dk-hero: #d8d6d2;
+}
+
+/* Dark cards: same names, inverted values. */
+.surface-dark {
+  --paper: var(--dk-paper);
+  --ink: var(--dk-ink);
+  --text: var(--dk-ink);
+  --muted: var(--dk-muted);
+  --faint: var(--dk-faint);
+  --grid: var(--dk-grid);
+  --rule: var(--dk-rule);
+  --l0: var(--dk-l0);
+  --l1: var(--dk-l1);
+  --l2: var(--dk-l2);
+  --l3: var(--dk-l3);
+  --l4: var(--dk-l4);
+  --l5: var(--dk-l5);
+  --l6: var(--dk-l6);
+  --hero: var(--dk-hero);
+  --cat-1: var(--dk-l0);
+  --cat-2: var(--dk-l2);
+  --cat-3: var(--dk-l4);
+  --cat-4: var(--dk-l6);
+  --grain: var(--dk-grain);
+  background: var(--grain), var(--paper);
+  color: var(--text);
+}
+
+/* Derived tones, valid in every palette (and on dark cards). */
+:root,
+[data-palette],
+.surface-dark {
+  --alert-soft: color-mix(in oklab, var(--alert) 22%, transparent);
+  --alert-faded: color-mix(in oklab, var(--alert) 45%, var(--paper));
+  --alert-rule: color-mix(in oklab, var(--alert) 55%, var(--paper));
+  --hero-soft: color-mix(in oklab, var(--hero) 25%, var(--paper));
+  --panel: color-mix(in oklab, var(--paper) 96%, var(--ink));
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Dashboard boards (the dense, scrubbable style). They sit on the same paper
+ * as every other chart and read the palette's own text, muted, faint, grid
+ * and rule. Series tones are steps on the ramp: past, the cursor's month
+ * (active) and future.
+ */
+.surface-board {
+  --bg: var(--paper);
+  --board-panel: var(--paper);
+
+  /* Series tones: solid ramp steps only (no mixes, no alpha). */
+  --s1: var(--l2);
+  --s1-active: var(--l0);
+  --s1-future: var(--l4);
+  --s2: var(--l4);
+  --s2-active: var(--l3);
+  --s2-future: var(--l5);
+  --s3: var(--l5);
+  --s3-active: var(--l4);
+  --s3-future: var(--l6);
+
+  --line1: var(--l0);
+  --line1-future: var(--l4);
+  --line2: var(--l3);
+  --line2-future: var(--l5);
+
+  --area1: var(--l5);
+  --area2: var(--l6);
+  --area3: var(--l6);
+  --band-past: var(--l6);
+  --band-future: var(--l6);
+
+  /* Red marks one exceptional thing per chart: one solid alert tone. */
+  --red: var(--alert);
+  --red-past: var(--alert);
+  --red-future: var(--alert);
+  --red-soft: var(--alert);
+  --red-rule: var(--alert);
+
+  --board-bar: var(--l3);
+  --board-label-2: var(--l3);
+  --board-swatch-3: var(--l4);
+  --board-link: var(--l6);
+  --board-link-hot: var(--l5);
+  --board-hot: var(--alert);
+  --board-heat-1: var(--l6);
+  --board-heat-2: var(--l5);
+  --board-heat-3: var(--l4);
+  --board-heat-4: var(--l3);
+  --board-heat-5: var(--l2);
+
+  --panel: var(--board-panel);
+  background: var(--grain), var(--bg);
+  color: var(--text);
+}
+
+/*
+ * Motion. Every chart moves with these and nothing else; charts/motion.ts
+ * mirrors them for the few charts animated from script.
+ */
+:root {
+  /* Arrivals: bars, dots and labels appearing in place (ease-out-quint). */
+  --ease-enter: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Crossing the chart: lines drawing on, wipes, marks moving (ease-in-out-quart). */
+  --ease-travel: cubic-bezier(0.77, 0, 0.175, 1);
+  /* Tone changes: hover dims, highlights, palettes. */
+  --ease-tone: ease;
+
+  --duration-hover: 150ms; /* dims and highlights under the pointer */
+  --duration-change: 400ms; /* data or palette changing in place */
+  --duration-enter: 600ms; /* dots and text arriving */
+  --duration-grow: 800ms; /* bars and areas rising from their baseline */
+  --duration-long: 1200ms; /* lines drawing on, marks crossing a chart */
+
+  /* Labels and furniture trail the marks they describe. */
+  --fade-lag: 150ms;
+
+  /* Steps between neighbours in a group, by how many there are. */
+  --stagger-dense: 8ms; /* hundreds: cells, ticks, dots */
+  --stagger-fine: 16ms; /* dozens */
+  --stagger-mark: 40ms; /* a handful of bars or points */
+  --stagger-series: 80ms; /* a few series, rows or phases */
+}
