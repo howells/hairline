@@ -4,3 +4,6 @@ dist
 tsconfig.tsbuildinfo
 .vercel
 .env*
+
+# Third-party screenshots the first versions were rebuilt from: kept locally, never published.
+reference/

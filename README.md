@@ -51,7 +51,7 @@ docs/
   REFINE.md    the design rules (the amendments are the current word)
   DATA.md      Fieldnote: the names and scale every chart's data uses
   BRIEF.md     the original build brief and the reference mapping
-reference/     the screenshots the first versions were rebuilt from
+reference/     (local only, git-ignored) the screenshots the first versions were rebuilt from
 reports/ and research_notes/   research on broadsheet chart craft, with public-domain example plates
 ```
 
