@@ -7,7 +7,22 @@ import type {
   RefObject,
 } from "react";
 
-/** Width of an element, kept current with a ResizeObserver. */
+/** A computed length, always resolved to "<n>px", as a number. */
+const px = (length: string) => Number(length.slice(0, -2));
+
+/** Content-box width of an element, padding excluded, as ResizeObserver reports it. */
+const contentWidth = (el: HTMLElement) => {
+  const style = getComputedStyle(el);
+  return Math.floor(
+    el.clientWidth - px(style.paddingLeft) - px(style.paddingRight)
+  );
+};
+
+/**
+ * Width of an element, kept current with a ResizeObserver. The first width is
+ * read during layout, so a chart is drawn at its final size in the first
+ * painted frame rather than one frame later, which would shift the page.
+ */
 export const useMeasure = <T extends HTMLElement>() => {
   const ref = useRef<T>(null);
   const [width, setWidth] = useState(0);
@@ -16,6 +31,7 @@ export const useMeasure = <T extends HTMLElement>() => {
       setWidth(Math.floor(entry.contentRect.width));
     });
     if (ref.current !== null) {
+      setWidth(contentWidth(ref.current));
       ro.observe(ref.current);
     }
     return () => {

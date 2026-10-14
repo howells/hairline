@@ -4,6 +4,70 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hairline</title>
+    <script>
+      // The mode goes on before first paint (Pink unless another was chosen),
+      // so no visit flashes the wrong paper while the bundle loads.
+      var mode = "pink";
+      try {
+        var stored = localStorage.getItem("hairline.palette");
+        if (stored === "paper" || stored === "dark") {
+          mode = stored;
+        }
+      } catch (e) {}
+      document.documentElement.dataset.palette = mode;
+    </script>
+    <style>
+      /* Boot plate: one hairline drawing across, in the mode's own paper and
+         ink. It covers the page itself, so html keeps app.css's paper. */
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #f1dfdc;
+        color: #27201e;
+      }
+      [data-palette="paper"] .boot {
+        background: #fbfbf9;
+        color: #1d1d1b;
+      }
+      [data-palette="dark"] .boot {
+        background: #181715;
+        color: #f0eeeb;
+      }
+      .boot i {
+        display: block;
+        width: 96px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.55;
+        transform-origin: left;
+        animation: boot-draw 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+      @keyframes boot-draw {
+        0% {
+          transform: scaleX(0);
+          transform-origin: left;
+        }
+        50% {
+          transform: scaleX(1);
+          transform-origin: left;
+        }
+        50.01% {
+          transform-origin: right;
+        }
+        100% {
+          transform: scaleX(0);
+          transform-origin: right;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot i {
+          animation: none;
+          opacity: 0.3;
+        }
+      }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,7 +76,9 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Loading"><i></i></div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

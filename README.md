@@ -21,7 +21,7 @@ pnpm lint:fix
 | `#/`           | The grid: every chart, each in the house frame  |
 | `#/chart/<ID>` | One chart on its own, for example `#/chart/L13` |
 
-Three modes, Paper, Pink and Dark, set the same ink on three papers. The switcher recolours everything with a cross-fade and is remembered between visits.
+Three modes, Pink (the default, after the salmon broadsheet), Paper and Dark, set the same ink on three papers. The switcher recolours everything with a cross-fade and is remembered between visits.
 
 ## The system
 
