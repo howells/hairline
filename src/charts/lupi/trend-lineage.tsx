@@ -149,7 +149,8 @@ const FeatureColumn = ({
       ? floorYear
       : (events.at(-1) ?? feature.shipped);
   const ly = floor + 14;
-  // The hero's 2px line sits on whole pixels, a 1px one on the half pixel.
+  // The hero's 2px line sits on whole pixels, a 1px one on the half pixel;
+  // its marks centre on the same x, and on the half-pixel year rules.
   const stemX = hero ? Math.round(x) : crisp(x);
   let labelTone = "fill-muted";
   if (hero) {
@@ -196,8 +197,8 @@ const FeatureColumn = ({
         <circle
           className="pop fill-l5"
           style={stagger(index * 3 + 4, "mark")}
-          cx={crisp(x)}
-          cy={y(feature.retired)}
+          cx={stemX}
+          cy={crisp(y(feature.retired))}
           r={2}
         />
       )}
@@ -206,8 +207,8 @@ const FeatureColumn = ({
           key={`rework-${e}`}
           className={`pop fill-paper ${hero ? "stroke-hero" : "stroke-l3"}`}
           style={stagger(index * 3 + 2, "mark")}
-          cx={crisp(x)}
-          cy={y(e)}
+          cx={stemX}
+          cy={crisp(y(e))}
           r={r}
           strokeWidth={1}
         />
@@ -215,8 +216,8 @@ const FeatureColumn = ({
       <circle
         className={`pop ${hero ? "fill-hero" : "fill-l3"}`}
         style={stagger(index * 3, "mark")}
-        cx={crisp(x)}
-        cy={y(feature.shipped)}
+        cx={stemX}
+        cy={crisp(y(feature.shipped))}
         r={r}
       />
       <text

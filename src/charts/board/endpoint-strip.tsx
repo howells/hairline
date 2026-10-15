@@ -108,7 +108,8 @@ const EndpointDot = (props: {
   active: boolean;
 }) => {
   const { cy, endpoint: e, frame } = props;
-  const cx = frame.x(e.p95);
+  // Whole pixels, as the range rule's ends are, so the outer dots cap it exactly.
+  const cx = Math.round(frame.x(e.p95));
   const named = props.active || props.red;
   // Near the right edge the label runs leftward from the dot.
   const anchor = cx > frame.width - frame.m.right - 60 ? "end" : "middle";
@@ -147,7 +148,9 @@ const StripRow = (props: {
 }) => {
   const { frame, row } = props;
   const { m, width, x, y } = frame;
-  const cy = Math.round((y(row.name) ?? 0) + y.bandwidth() / 2);
+  // The range is a 1px rule on the half pixel; the dots and the median tick
+  // centre on it.
+  const cy = crisp((y(row.name) ?? 0) + y.bandwidth() / 2);
   const ps = row.endpoints.map((e) => e.p95);
   const tone = TONE[props.tone];
   return (
@@ -169,15 +172,15 @@ const StripRow = (props: {
         className="rule"
         x1={Math.round(x(Math.min(...ps)))}
         x2={Math.round(x(Math.max(...ps)))}
-        y1={crisp(cy)}
-        y2={crisp(cy)}
+        y1={cy}
+        y2={cy}
       />
       <rect
         className={tone.tick}
         x={Math.round(x(row.median)) - 1}
-        y={cy - TICK_H}
+        y={Math.floor(cy) - TICK_H}
         width={2}
-        height={TICK_H * 2}
+        height={TICK_H * 2 + 1}
       />
       {row.endpoints.map((e) => (
         <EndpointDot

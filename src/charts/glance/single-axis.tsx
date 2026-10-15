@@ -59,10 +59,10 @@ const thousands = (v: number) => `${v}k`;
 
 /** One day: its own axis line, label and a circle per non-empty hour. */
 const Row = (p: RowProps) => {
-  const y = p.grid.cy(p.i);
+  const y = crisp(p.grid.cy(p.i));
   return (
     <g className={dimClass(p.dimmed)}>
-      <line className="rule" x1={p.x0} x2={p.x1} y1={crisp(y)} y2={crisp(y)} />
+      <line className="rule" x1={p.x0} x2={p.x1} y1={y} y2={y} />
       <text className={`t-label ${p.labelClass}`} x={0} y={y} dy="0.35em">
         {p.row.label}
       </text>

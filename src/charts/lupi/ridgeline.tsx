@@ -32,7 +32,11 @@ interface Ridge {
   n: number;
   median: number;
   peak: number;
-  /** Density at the peak. */
+  /**
+   * Height of the drawn crest at the peak. The B-spline passes through
+   * (d[k-1] + 4d[k] + d[k+1]) / 6 at sample k, not d[k], so the peak dot
+   * takes this to sit exactly on the outline.
+   */
   top: number;
   density: [number, number][];
 }
@@ -54,20 +58,24 @@ const toRidge = (s: RidgeSeries, d0: number, d1: number, bw: number): Ridge => {
       return [x, sum / (s.values.length * bw * Math.sqrt(2 * Math.PI))];
     }
   );
-  let [top] = density;
-  for (const p of density) {
-    if (p[1] > top[1]) {
-      top = p;
+  let k = 0;
+  for (const [i, p] of density.entries()) {
+    if (p[1] > density[k][1]) {
+      k = i;
     }
   }
+  const crest =
+    k === 0 || k === SAMPLES
+      ? density[k][1]
+      : (density[k - 1][1] + 4 * density[k][1] + density[k + 1][1]) / 6;
   const sorted = s.values.toSorted((a, b) => a - b);
   return {
     density,
     label: s.label,
     median: sorted[Math.floor(sorted.length / 2)] ?? 0,
     n: s.values.length,
-    peak: top[0],
-    top: top[1],
+    peak: density[k][0],
+    top: crest,
   };
 };
 

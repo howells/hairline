@@ -199,7 +199,8 @@ const Blob = ({
   screen,
 }: BlobProps) => {
   const cx = layout.colX(cell.category);
-  const cy = layout.rowY(cell.year);
+  // On the year rule, which sits on the half pixel.
+  const cy = crisp(layout.rowY(cell.year));
   const r = layout.radius(cell.value);
   const coreR = layout.core(cell.escalations);
   const beta = cell.beta === true;

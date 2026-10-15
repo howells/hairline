@@ -85,7 +85,7 @@ const spectrumAxis = (width: number): SpectrumAxis => {
 /** The rail's ruler: seven 1px upright ticks at one even pitch. */
 const Ruler = (props: { x0: number; x1: number; y: number }) => {
   const pitch = (props.x1 - props.x0) / (STOPS - 1);
-  const y = Math.round(props.y);
+  const y = Math.floor(props.y);
   return (
     <g className="fade stroke-l4">
       {Array.from({ length: STOPS }, (_, k) => {
@@ -152,7 +152,7 @@ const GapBar = ({ fill, from, lit, r, to, y }: GapBarProps) => {
         style={stagger(r, "series")}
         width={b - a + 1}
         x={a}
-        y={Math.round(y) - GAP_HALF}
+        y={Math.floor(y) - GAP_HALF}
       />
     </g>
   );
@@ -170,7 +170,8 @@ interface AxisRowProps {
 
 const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
   const { narrow, rowY, x0, x1 } = layout;
-  const y = rowY(r);
+  // The rail is a 1px rule on the half pixel; every mark centres on it.
+  const y = crisp(rowY(r));
   const at = (v: number) => x0 + (x1 - x0) * clamp(v, 0, 1);
   const lit = (series: number) => hover === null || hover.series === series;
   const ly = narrow ? y - 16 : y;
@@ -189,8 +190,8 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
         style={stagger(r, "series")}
         x1={x0}
         x2={x1}
-        y1={crisp(y)}
-        y2={crisp(y)}
+        y1={y}
+        y2={y}
       />
       <Ruler x0={x0} x1={x1} y={y} />
       <GapBar
