@@ -1,35 +1,55 @@
-import { normals } from "../util";
+/**
+ * O8 Hot year: the daily maximum Central England temperature through 2022.
+ * Source: Met Office Hadley Centre Central England Temperature (HadCET),
+ * v2.1.1.0 + provisional, https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html
+ * Fetched 2026-10-15.
+ * File: maxtemp_daily_totals.txt (date and value to 0.1 °C, -99.9 for a
+ * missing day; none are missing in 2022). Transform: the 365 values from
+ * 2022-01-01 to 2022-12-31, copied as they stand.
+ */
 
-/** One day's new sign-ups. */
+/** One day's maximum temperature, in °C. */
 export interface DayValue {
   date: Date;
   value: number;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const START = Date.UTC(2026, 0, 1);
-const DAYS = 365;
-/** Fieldnote 4 shipped on Tuesday 8 September (day 250 of the year). */
-const LAUNCH = 250;
-/** Weekend days sign up at about three quarters of a weekday. */
-const WEEKEND = 0.74;
+const START = Date.UTC(2022, 0, 1);
 
-const build = (): DayValue[] => {
-  const noise = normals(73, DAYS, 0, 1);
-  return noise.map((z, i) => {
-    const date = new Date(START + i * DAY_MS);
-    const t = i / (DAYS - 1);
-    const weekday = date.getUTCDay();
-    const weekend = weekday === 0 || weekday === 6;
-    // Steady growth, a spring lift, a summer lull, then the launch.
-    const trend = 900 + 520 * t;
-    const spring = 110 * Math.exp(-(((t - 0.27) / 0.07) ** 2));
-    const lull = -170 * Math.exp(-(((t - 0.62) / 0.05) ** 2));
-    const launch = i >= LAUNCH ? 1700 * Math.exp(-(i - LAUNCH) / 9) : 0;
-    const day = (trend + spring + lull) * (weekend ? WEEKEND : 1);
-    return { date, value: Math.round(day + launch + z * 35) };
-  });
-};
+/** Daily maximum CET in °C, 1 January to 31 December 2022. */
+const MAX_2022: number[] = [
+  14.5, 11.3, 10.1, 4.5, 5.8, 6.4, 6.7, 9.3, 7.8, 9.2, 9.5, 8, 7.7, 5, 5.6, 8.7,
+  8.6, 7.1, 9, 5.3, 5.5, 6.9, 5.3, 4.4, 5.1, 9.3, 11.6, 11, 12.9, 8.4, 9.5,
+  12.8, 11.4, 10.6, 7.4, 9.3, 9.3, 10.8, 11.8, 10.7, 7.6, 8.1, 9.2, 9.7, 8.3,
+  12.1, 15, 10.4, 8.2, 10.7, 12.2, 10.8, 11.9, 10.1, 6.6, 10.5, 10.4, 10.9,
+  10.9, 8.4, 7.3, 9.8, 8.6, 8, 8.1, 7.5, 11.2, 12.6, 14.5, 12.2, 12.4, 12.3,
+  12.8, 14, 10.7, 13, 15.3, 14.5, 11, 14.1, 18.1, 18.6, 18.2, 17.7, 18.1, 14.7,
+  15.4, 10.1, 8, 6.9, 8.3, 9.5, 10, 13.2, 12.6, 12.2, 10.7, 10.8, 11, 12.4,
+  15.7, 15, 16.3, 16.8, 20, 19.5, 18.9, 15, 14.3, 17, 17.4, 16, 15.9, 16.3,
+  13.9, 14.5, 11, 11.4, 12.8, 16.2, 12.8, 15.2, 14.7, 15.6, 18.2, 17.9, 17.9,
+  18, 19.4, 18.2, 15.5, 16.3, 17.9, 20.7, 19.2, 20.4, 22.7, 20.4, 18.8, 17.3,
+  18.2, 20.6, 16.6, 16, 17.4, 17.8, 16.9, 17, 14.4, 13.8, 14.6, 16.9, 19.4, 20,
+  16.5, 12.8, 16.3, 20.5, 19.2, 18.3, 21, 19.9, 18.3, 18.2, 21, 23.6, 25.7,
+  28.2, 16.6, 17.6, 19.7, 23.2, 24.1, 24.2, 20.4, 19.8, 19.5, 17.7, 18.6, 19.4,
+  19, 19.1, 19, 19.3, 19.2, 20, 21.5, 21.4, 23.8, 23.2, 26.4, 29, 26.4, 23.1,
+  21.2, 22.4, 25, 30, 34.8, 37.3, 22.4, 20.9, 20.9, 22.9, 25.4, 20.7, 19.9,
+  21.9, 20.5, 23.9, 21.5, 23.7, 24.4, 24.4, 24.1, 20.8, 20.3, 21.5, 23.7, 25.7,
+  27.4, 28.9, 30.9, 31.4, 31.4, 31.7, 25.9, 22.8, 20.9, 22.9, 21.8, 23.1, 22.2,
+  21.7, 23.8, 23.2, 19.3, 21.9, 23.5, 23, 20.6, 21.4, 22.4, 22.7, 21.9, 22.1,
+  23.3, 23, 21, 21.5, 19, 20.1, 20.1, 21.8, 22.1, 18.7, 19, 17, 15.7, 16.2,
+  17.3, 17, 18.4, 18.9, 18.5, 18, 17.5, 15.1, 14.5, 14.4, 14.2, 16.7, 14.8,
+  17.8, 16.9, 17, 17.5, 16.6, 17.7, 16.8, 15.6, 16.9, 14.6, 14.8, 14.9, 16.2,
+  14.9, 15.1, 15.6, 17.2, 16.6, 15.3, 15.1, 17, 16.8, 17.2, 15.7, 16.7, 17.7,
+  18.4, 17, 19.6, 16.3, 15.8, 14.3, 13.5, 12.2, 12, 12.7, 12.2, 14.2, 13.9,
+  13.7, 15, 15.8, 15.1, 14.5, 13.3, 12.2, 11.1, 10.4, 11, 10.6, 10.8, 8.2, 9.6,
+  11.1, 11.3, 11.5, 12.1, 11.3, 10.6, 5, 6.8, 5.9, 5.9, 7.3, 5.8, 7.2, 6, 4.5,
+  3, 3.5, 3.2, 0.7, 0.1, -0.4, 0.4, 0.5, 2.8, 4, 13, 13.5, 9.8, 9.4, 9, 10.2,
+  9.9, 10.6, 7.4, 9.9, 11.1, 8.8, 11.8, 11.3,
+];
 
-/** Fieldnote new sign-ups a day, 2026. */
-export const activeDaysDemo: DayValue[] = build();
+/** Central England daily maximum temperature, 2022. */
+export const activeDaysDemo: DayValue[] = MAX_2022.map((value, i) => ({
+  date: new Date(START + i * DAY_MS),
+  value,
+}));

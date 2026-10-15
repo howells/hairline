@@ -5,7 +5,7 @@ import { utcFormat } from "d3-time-format";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { dayTickLabels, fmtInt, monthTickLabels } from "../../lib/format";
+import { dayTickLabels, fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { paint, useTextureIds } from "../texture-ids";
@@ -17,7 +17,15 @@ import { activeDaysDemo } from "./brushed-overview.data";
 import type { DayValue } from "./brushed-overview.data";
 
 const fmtDay = utcFormat("%a %-d %b");
-const fmtSigned = (v: number) => `${v < 0 ? "−" : "+"}${fmtInt(Math.abs(v))}`;
+/** A difference in degrees, always signed ("+15.6 °C", "−2.1 °C"). */
+const fmtSigned = (v: number) => {
+  const t = Math.abs(v).toFixed(1);
+  return `${v < 0 && t !== "0.0" ? "−" : "+"}${t} °C`;
+};
+/** Value rules at whole degrees need no decimal ("30 °C"). */
+const fmtTick = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
+/** Days either side of the window's centre when it opens. */
+const OPEN_HALF = 31;
 
 /**
  * Left end of the detail and the strip: flush with the column. The start
@@ -99,7 +107,7 @@ interface StemsProps {
   y: ScaleLinear<number, number>;
 }
 
-/** One 1px stem a day, from its week's mean out to the day's count. */
+/** One 1px stem a day, from its 7-day average out to the day's maximum. */
 const Stems = (props: StemsProps) => (
   <g className="fade">
     {props.data.slice(props.span.a, props.span.b + 1).map((d, k) => {
@@ -146,7 +154,7 @@ const Detail = (props: DetailProps) => {
     const top = Math.min(y(props.data[i].value), y(props.mean[i]));
     props.setHover({ i, x: x(i), y: top - 6 });
   };
-  const label = `New sign-ups a day, ${fmtDay(props.data[a].date)} to ${fmtDay(props.data[b].date)}, with the 7-day mean: peak ${fmtInt(props.data[peak].value)} on ${fmtDay(props.data[peak].date)}`;
+  const label = `Daily maximum temperature, ${fmtDay(props.data[a].date)} to ${fmtDay(props.data[b].date)}, with the 7-day average: hottest ${fmtDegC(props.data[peak].value)} on ${fmtDay(props.data[peak].date)}`;
   return (
     <svg
       aria-label={label}
@@ -167,7 +175,7 @@ const Detail = (props: DetailProps) => {
       <ValueGrid
         floor={floor}
         ticks={y.ticks(4)}
-        format={fmtInt}
+        format={fmtTick}
         side="right"
         x0={X0}
         x1={props.width}
@@ -222,18 +230,19 @@ const Detail = (props: DetailProps) => {
         x={clamp(x(peak), X0 + 16, x1 - 16)}
         y={y(props.data[peak].value) - 10}
       >
-        {fmtInt(props.data[peak].value)}
+        {fmtDegC(props.data[peak].value)}
       </text>
     </svg>
   );
 };
 
 /**
- * O8 Overview and detail. A year of daily sign-ups as a thin strip, drawn
- * as its 7-day mean so the year reads as one smooth silhouette; the
- * outlined window on it chooses the days the detail above draws: the mean
- * as a calm line, each day a stem off it, the window's peak in ink, read
- * off a right-hand scale. Default: the last quarter.
+ * O8 Overview and detail. A year of daily maximum temperatures as a thin
+ * strip, drawn as its 7-day average so the year reads as one smooth
+ * silhouette; the outlined window on it chooses the days the detail above
+ * draws: the average as a calm line, each day a stem off it, the window's
+ * hottest day in ink, read off a right-hand scale. Opens on a two-month
+ * window centred on the year's hottest day.
  */
 export const BrushedOverview = (props: { data?: DayValue[] }) => {
   const data = props.data ?? activeDaysDemo;
@@ -242,9 +251,11 @@ export const BrushedOverview = (props: { data?: DayValue[] }) => {
     "trailing"
   );
   const last = data.length - 1;
+  const top = Math.max(...data.map((d) => d.value));
+  const hottest = data.findIndex((d) => d.value === top);
   const [span, setSpan] = useState<Span>({
-    a: Math.max(0, last - 91),
-    b: last,
+    a: clamp(hottest - OPEN_HALF, 0, last),
+    b: clamp(hottest + OPEN_HALF, 0, last),
   });
   const [hover, setHover] = useState<Hover | null>(null);
   return (
@@ -252,9 +263,8 @@ export const BrushedOverview = (props: { data?: DayValue[] }) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{fmtDay(data[hover.i].date)}</b> · {fmtInt(data[hover.i].value)}{" "}
-            sign-ups · {fmtSigned(data[hover.i].value - mean[hover.i])} vs 7-day
-            mean
+            <b>{fmtDay(data[hover.i].date)}</b> · {fmtDegC(data[hover.i].value)}{" "}
+            · {fmtSigned(data[hover.i].value - mean[hover.i])} vs 7-day average
           </Tooltip>
         )
       }

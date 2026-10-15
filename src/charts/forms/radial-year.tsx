@@ -3,7 +3,7 @@ import { curveCatmullRomClosed, lineRadial } from "d3-shape";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtMonth, monthTickLabels } from "../../lib/format";
+import { fmtDegC, fmtMonth, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { DotRing, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -11,7 +11,9 @@ import { stagger } from "../util";
 import { signupMonthsDemo } from "./radial-year.data";
 import type { MonthValue } from "./radial-year.data";
 
-const fmt = (v: number) => `${v.toFixed(1)}k`;
+const fmt = fmtDegC;
+/** Ring values are whole degrees ("20 °C"). */
+const fmtRing = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
 
 /** Room outside the outer ring for the month names. */
 const EDGE = 30;
@@ -80,7 +82,12 @@ const Furniture = (props: DialProps) => {
           <g key={v}>
             <DotRing cx={0} cy={0} r={props.r(v)} tone="fill-l4" />
             {onYear ? (
-              <PlateLabel className="t-axis" text={`${v}k`} x={at.x} y={at.y} />
+              <PlateLabel
+                className="t-axis"
+                text={fmtRing(v)}
+                x={at.x}
+                y={at.y}
+              />
             ) : (
               <text
                 className="t-axis t-halo"
@@ -89,7 +96,7 @@ const Furniture = (props: DialProps) => {
                 x={at.x}
                 y={at.y}
               >
-                {`${v}k`}
+                {fmtRing(v)}
               </text>
             )}
           </g>
@@ -184,7 +191,7 @@ export const RadialYear = (props: { data?: MonthValue[] }) => {
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
             <b>{fmtMonth(data[hover.i].date)}</b> · {fmt(data[hover.i].value)}{" "}
-            sign-ups
+            mean daily maximum
           </Tooltip>
         )
       }
@@ -199,7 +206,7 @@ export const RadialYear = (props: { data?: MonthValue[] }) => {
         const rings = scale.ticks(3).filter((v) => v > 0);
         const cx = Math.round(width / 2);
         const cy = Math.round(size / 2);
-        const label = `New sign-ups by month, 2026: peak ${fmt(data[peak].value)} in ${fmtMonth(data[peak].date)}`;
+        const label = `Mean daily maximum temperature by month, 2022: warmest ${fmt(data[peak].value)} in ${fmtMonth(data[peak].date)}`;
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const box = e.currentTarget.getBoundingClientRect();
           const dx = e.clientX - box.left - cx;

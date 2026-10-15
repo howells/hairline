@@ -3,6 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area, curveBasis, line } from "d3-shape";
 import { useState } from "react";
 
+import { fmtDegC } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
@@ -42,6 +43,10 @@ interface Ridge {
 }
 
 const SAMPLES = 120;
+
+/** Daily temperatures in °C: whole degrees need no decimal, zero no unit. */
+const fmtTemperature = (v: number) =>
+  v === 0 ? "0" : fmtDegC(v).replace(".0 °C", " °C");
 
 /** Gaussian kernel density on an even grid, plus the peak and median. */
 const toRidge = (s: RidgeSeries, d0: number, d1: number, bw: number): Ridge => {
@@ -245,19 +250,16 @@ const Axis = ({ x, y, ticks, format }: AxisProps) => {
 };
 
 /**
- * L19 Time to resolve. Three to eight distributions stacked with overlap.
+ * L19 January by decade. Three to eight distributions stacked with overlap.
  * Each crest is a density outline over paper and a 4px diagonal hatch, so
  * the rows overlap like terrain; the hero is crosshatched. A dot marks each
  * peak, and its value sits at the right-hand end of the ridge's baseline.
  */
 export const Ridgeline = (props: RidgelineProps) => {
   const data = props.data ?? ridgelineDemo;
-  const [d0, d1] = props.domain ?? [0, 40];
+  const [d0, d1] = props.domain ?? [-12, 12];
   const bw = props.bandwidth ?? (d1 - d0) / 26;
-  const format =
-    props.format ??
-    // Zero needs no unit.
-    ((v: number) => (v === 0 ? "0" : `${v.toFixed(1).replace(/\.0$/u, "")}h`));
+  const format = props.format ?? fmtTemperature;
   const height = props.height ?? 440;
   const ticks = props.ticks ?? 4;
   const [hover, setHover] = useState<number | null>(null);
@@ -303,7 +305,7 @@ export const Ridgeline = (props: RidgelineProps) => {
                 setHover(null);
               }}
             >
-              <title>Completion times</title>
+              <title>January daily mean temperature by decade</title>
               <defs>
                 <Hatch ground="fill-paper" id={hatchId} tone="fill-l5" />
                 <CrossHatch ground="fill-paper" id={heroId} tone="fill-hero" />

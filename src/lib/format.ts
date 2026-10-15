@@ -84,3 +84,9 @@ export const dayTickLabels = (dates: readonly Date[]) =>
       prev.getUTCFullYear() !== d.getUTCFullYear();
     return newMonth ? dayAndMonth(d) : dayOnly(d);
   });
+
+/** Temperature in degrees Celsius to one decimal place ("12.3 °C", "−2.2 °C"). */
+export const fmtDegC = (v: number) => {
+  const t = Math.abs(v).toFixed(1);
+  return `${v < 0 && t !== "0.0" ? "−" : ""}${t} °C`;
+};

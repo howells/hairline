@@ -1,5 +1,5 @@
 import type { GalleryEntry } from "../../gallery/types";
-import { fmtMoney } from "../../lib/format";
+import { fmtInt, fmtMoney } from "../../lib/format";
 import { Candlestick } from "./candlestick";
 import { DotHeat } from "./dot-heat";
 import { DumbbellQueue } from "./dumbbell-queue";
@@ -14,10 +14,8 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F10",
-    name: "Busy hours",
-    render: () => (
-      <DotHeat format={(v) => `${v} ticket${v === 1 ? "" : "s"}`} />
-    ),
+    name: "Hour of birth",
+    render: () => <DotHeat format={(v) => `${v.toFixed(1)}%`} labelEvery={4} />,
   },
   {
     family: "basics",
@@ -42,10 +40,8 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F14",
-    name: "Histogram",
-    render: () => (
-      <RungHistogram format={(v) => `${v}%`} formatX={(v) => `${v} min`} />
-    ),
+    name: "Finish times",
+    render: () => <RungHistogram format={fmtInt} unit={50} />,
   },
   {
     family: "basics",

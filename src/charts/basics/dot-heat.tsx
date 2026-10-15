@@ -261,7 +261,7 @@ const Dots = (props: DotsProps) => {
 };
 
 /**
- * F10 Busy hours. One dot per cell, area = count, tone stepping up the ramp
+ * F10 Hour of birth. One dot per cell, area = count, tone stepping up the ramp
  * in thirds; the peak is the one dot in ink, inside an evenly dotted ring.
  * Empty cells keep a pinpoint so silence stays visible. The tooltip sits
  * above the grid, over the hovered column, clear of every dot.
@@ -279,7 +279,7 @@ export const DotHeat = (props: DotHeatProps) => {
   const [peakR, peakC] = props.highlight ?? peakOf(cells);
   const peakV = data.values[peakR]?.[peakC] ?? 0;
   const peakId = `${data.rows[peakR]}-${data.columns[peakC]}`;
-  const label = `Counts by ${data.rows.length} rows by ${data.columns.length} columns; peak ${format(peakV)} at ${data.rows[peakR]} ${data.columns[peakC]}`;
+  const label = `Values by ${data.rows.length} rows by ${data.columns.length} columns; peak ${format(peakV)} at ${data.rows[peakR]} ${data.columns[peakC]}`;
 
   return (
     <Plot

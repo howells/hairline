@@ -18,7 +18,7 @@ import type { DayDatum } from "./calendar-heat.data";
 
 interface CalendarHeatProps {
   data?: DayDatum[];
-  /** Plural noun for the count, e.g. "deploys". */
+  /** Plural noun for the count, e.g. "births". */
   unit?: string;
   /** Ignored: the busiest-day callout text is no longer drawn. */
   annotation?: string;
@@ -323,7 +323,7 @@ const layout = (
 };
 
 /**
- * L17 Daily deploys. A year as an engraved almanac: week columns × weekday
+ * L17 A year of births. A year as an engraved almanac: week columns × weekday
  * rows in stacked bands of months, each day a square halftone whose dot
  * steps with its count (quieter on weekends, an empty box for none), each
  * month ringed by a stepped 1px contour, the busiest day crosshatched in ink.

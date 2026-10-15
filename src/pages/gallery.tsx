@@ -1,18 +1,6 @@
 import { ALL_ENTRIES, entryById } from "../gallery/registry";
 import type { GalleryEntry } from "../gallery/types";
 
-// "Rung Bars" → "Rung bars"; all-caps words such as "US" or "LR" stay as they are.
-const sentenceCase = (name: string) =>
-  name
-    .split(" ")
-    .map((word, i) => {
-      if (i === 0 || word === word.toUpperCase()) {
-        return word;
-      }
-      return word.toLowerCase();
-    })
-    .join(" ");
-
 const ground = (entry: GalleryEntry) => {
   if (entry.dark === true) {
     return "surface-dark";
@@ -33,9 +21,7 @@ const Cell = (props: { entry: GalleryEntry }) => (
     id={props.entry.id}
     className={`m-0 flex min-w-0 flex-col gap-8 p-6 md:p-10 ${ground(props.entry)} ${props.entry.span === "full" ? "col-span-full" : ""}`}
   >
-    <figcaption className="text-small text-text">
-      {sentenceCase(props.entry.name)}
-    </figcaption>
+    <figcaption className="text-small text-text">{props.entry.name}</figcaption>
     <div className="flex min-w-0 flex-1 flex-col justify-center">
       {props.entry.render()}
     </div>

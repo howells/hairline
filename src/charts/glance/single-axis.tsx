@@ -1,3 +1,4 @@
+import { format as d3format } from "d3-format";
 import { scaleSqrt } from "d3-scale";
 import type { ScalePower } from "d3-scale";
 import { useState } from "react";
@@ -19,9 +20,11 @@ interface SingleAxisProps {
   /** Column indices that get an axis label. */
   ticks?: number[];
   format?: (v: number) => string;
-  /** Unit shown in the tooltip, e.g. "tickets". */
+  /** Unit shown in the tooltip, e.g. "m". */
   unit?: string;
   note?: string;
+  /** Clock the hours are read on, shown after the axis and in the tooltip. */
+  zone?: string;
   /** Index of the row to draw in the hero colour. */
   highlight?: number;
 }
@@ -55,9 +58,9 @@ interface RowProps {
 }
 
 const hourLabel = (h: number) => `${String(h).padStart(2, "0")}:00`;
-const thousands = (v: number) => `${v}k`;
+const oneDp = d3format(".1f");
 
-/** One day: its own axis line, label and a circle per non-empty hour. */
+/** One station: its own axis line, label and a circle per non-empty hour. */
 const Row = (p: RowProps) => {
   const y = crisp(p.grid.cy(p.i));
   return (
@@ -114,11 +117,28 @@ const HitCells = (p: {
   </g>
 );
 
+/** Screen-reader summary: each station's highest hour. */
+const describe = (
+  data: SingleAxisRow[],
+  columns: string[],
+  format: (v: number) => string,
+  unit: string,
+  zone: string
+) =>
+  `Predicted tide height by hour at ${data.length} stations: ${data
+    .map((d) => {
+      const high = Math.max(...d.values);
+      return `${d.label} highest ${format(high)} ${unit} at ${columns[d.values.indexOf(high)]} ${zone}`;
+    })
+    .join(", ")}`;
+
 /**
- * G14 Syncs by hour (punch card). One row per region, each on its own
- * hairline hour axis (UTC); circle area = volume. The busiest region (or the
- * highlight) is solid ink; every other region's circles are hatched over a paper
- * ground inside a 1px outline, so neighbours overlap cleanly.
+ * G14 Up the Hudson (punch card). One row per station, each on its own
+ * hairline hour axis (local standard time); circle area = predicted tide
+ * height, rows in order up a river. The row with
+ * the highest tides (or the highlight) is solid ink; every other station's
+ * circles are hatched over a paper ground inside a 1px outline, so neighbours
+ * overlap cleanly.
  */
 export const SingleAxis = (props: SingleAxisProps) => {
   const data = props.data ?? singleAxisDemo;
@@ -127,15 +147,16 @@ export const SingleAxis = (props: SingleAxisProps) => {
   const columns =
     props.columns ?? Array.from({ length: n }, (_, h) => hourLabel(h));
   const ticks = props.ticks ?? [0, 6, 12, 18];
-  const format = props.format ?? thousands;
-  const unit = props.unit ?? "syncs";
+  const format = props.format ?? oneDp;
+  const unit = props.unit ?? "m";
+  const zone = props.zone ?? "EST";
   const [hover, setHover] = useState<Cell | null>(null);
   const totals = data.map((d) => d.values.reduce((s, v) => s + v, 0));
   const rank = ranks(totals);
   const heroIndex = props.highlight ?? rank.indexOf(0);
   const tex = useTextureIds("punch");
   const max = Math.max(...data.flatMap((d) => d.values));
-  const label = `Punch card of ${unit} per hour: ${data.map((d, i) => `${d.label} ${format(totals[i])} total`).join(", ")}`;
+  const label = describe(data, columns, format, unit, zone);
 
   return (
     <Plot
@@ -143,7 +164,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
             <b>
-              {data[hover.r].label} {columns[hover.c]} UTC
+              {data[hover.r].label} {columns[hover.c]} {zone}
             </b>{" "}
             · {format(data[hover.r].values[hover.c])} {unit}
           </Tooltip>
@@ -153,14 +174,16 @@ export const SingleAxis = (props: SingleAxisProps) => {
       {(width) => {
         const m = {
           bottom: 28 + noteSpace(props.note, width - 16, 18),
-          // Room for the longest region name.
+          // Room for the longest station name.
           left:
             Math.ceil(Math.max(...data.map((d) => sansWidth(d.label, 12)))) +
             12,
           right: 0,
           top: 14,
         };
-        const step = (width - m.left - m.right) / n;
+        // A circle may reach 0.95 of a step, so the last hour's overhangs its
+        // column by 0.45 of a step; the axis stops short to keep it inside.
+        const step = (width - m.left - m.right) / (n + 0.45);
         // Rows close up when the hours are narrow and the circles small.
         const pitch = Math.min(
           (height - m.top - m.bottom) / data.length,
@@ -228,7 +251,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
               y={floor + 16}
               textAnchor="end"
             >
-              UTC
+              {zone}
             </text>
             <PlotNote
               text={props.note}

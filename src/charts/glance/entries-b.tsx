@@ -21,8 +21,8 @@ export const entries: GalleryEntry[] = [
   {
     family: "glance",
     id: "G14",
-    name: "Syncs by hour",
-    render: () => <SingleAxis />,
+    name: "Up the Hudson",
+    render: () => <SingleAxis highlight={5} />,
   },
   {
     family: "glance",

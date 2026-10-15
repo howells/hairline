@@ -14,8 +14,8 @@ export const entries: GalleryEntry[] = [
   {
     family: "lupi",
     id: "L11",
-    name: "Feature lives",
-    render: () => <TrendLineage />,
+    name: "Sea areas",
+    render: () => <TrendLineage years={[1924, 2026]} />,
   },
   {
     family: "lupi",
@@ -50,15 +50,15 @@ export const entries: GalleryEntry[] = [
   {
     family: "lupi",
     id: "L17",
-    name: "Daily deploys",
-    render: () => <CalendarHeat unit="deploys" />,
+    name: "A year of births",
+    render: () => <CalendarHeat unit="births" />,
     span: "full",
   },
   {
     family: "lupi",
     id: "L19",
-    name: "Time to resolve",
-    render: () => <Ridgeline />,
+    name: "January by decade",
+    render: () => <Ridgeline highlight="2010s" />,
   },
   {
     family: "lupi",

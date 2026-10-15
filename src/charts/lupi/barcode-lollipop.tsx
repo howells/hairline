@@ -1,8 +1,9 @@
+import { format as d3format } from "d3-format";
 import { scaleLinear } from "d3-scale";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtKInt, monthTickLabels } from "../../lib/format";
+import { monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
@@ -28,7 +29,8 @@ interface DayTip {
   y: number;
 }
 
-const isWeekend = (d: Date) => d.getUTCDay() === 0 || d.getUTCDay() === 6;
+const twoDp = d3format(".2f");
+const metres = (v: number) => `${twoDp(v)} m`;
 const dayFmt = (d: Date) =>
   d.toLocaleString("en-GB", {
     day: "numeric",
@@ -86,14 +88,6 @@ const topLabel = (
   y: y(datum.value),
 });
 
-/** Dot tone: the peak in the hero colour, weekends hollow, the rest grey. */
-const toneOf = (hero: boolean, hollow: boolean) => {
-  if (hero) {
-    return "fill-hero";
-  }
-  return hollow ? "fill-paper stroke-l2" : "fill-l2";
-};
-
 interface DayMarkProps {
   datum: BarcodeDatum;
   dim: boolean;
@@ -123,7 +117,6 @@ const DayMark = ({
   x,
   y,
 }: DayMarkProps) => {
-  const hollow = isWeekend(datum.date) && !hero;
   const cy = y(datum.value);
   const r = hero ? 4.5 : dotR;
   // A 2px stem sits on whole pixels, a 1px one on the half pixel.
@@ -140,11 +133,10 @@ const DayMark = ({
         y2={y(low)}
       />
       <circle
-        className={`pop ${toneOf(hero, hollow)}`}
+        className={`pop ${hero ? "fill-hero" : "fill-l2"}`}
         cx={stemX}
         cy={cy}
         r={r}
-        strokeWidth={hollow ? 1 : 0}
         style={stagger(i, "dense")}
       />
       {isTop ? (
@@ -212,14 +204,15 @@ const Barcode = (props: {
 );
 
 /**
- * L3 Daily peaks. A vertical hairline for every day (the barcode), a
- * lollipop dot at each day's value with a stem down to its low. Weekends are
- * hollow; the top days are labelled.
+ * L3 Autumn tides. A vertical hairline for every day (the barcode), a
+ * lollipop dot at each day's high water with a stem down to its low water, so
+ * the stem is the day's range and the fortnightly spring and neap swell shows
+ * in the stem lengths. The highest high waters are labelled.
  */
 export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
   const data = props.data ?? barcodeLollipopDemo;
   const height = props.height ?? 440;
-  const format = props.format ?? fmtKInt;
+  const format = props.format ?? metres;
   const topN = props.top ?? 3;
   const [tip, setTip] = useState<DayTip | null>(null);
   const lows = data.map((d) => d.low ?? d.value * 0.9);
@@ -238,7 +231,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{dayFmt(data[tip.i].date)}</b> · peak {format(data[tip.i].value)}{" "}
+            <b>{dayFmt(data[tip.i].date)}</b> · high {format(data[tip.i].value)}{" "}
             · low {format(lows[tip.i])}
           </Tooltip>
         )
@@ -275,7 +268,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
 
         return (
           <svg
-            aria-label={`Daily readings over ${data.length} days. Highest: ${[...top].map((i) => `${dayFmt(data[i].date)} ${format(data[i].value)}`).join(", ")}`}
+            aria-label={`Daily high and low water over ${data.length} days. Highest high water: ${[...top].map((i) => `${dayFmt(data[i].date)} ${format(data[i].value)}`).join(", ")}`}
             height={height}
             onPointerLeave={() => {
               setTip(null);
@@ -284,7 +277,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
             width={width}
           >
             <title>
-              One hairline per day, a lollipop at each day&apos;s peak
+              One hairline per day, a lollipop at each day&apos;s high water
             </title>
             <Barcode
               data={data}

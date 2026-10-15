@@ -27,7 +27,7 @@ export const entries: GalleryEntry[] = [
   {
     family: "lupi",
     id: "L3",
-    name: "Daily peaks",
+    name: "Autumn tides",
     render: () => <BarcodeLollipop />,
   },
   {

@@ -133,7 +133,7 @@ const Pair = ({
 };
 
 /**
- * F6 Year on year. Per category, the earlier period is a quiet column of
+ * F6 Getting to work. Per category, the earlier period is a quiet column of
  * hatch on paper inside a 1px rule, and the current period a stack of grey
  * 2px rungs (one per unit, every fifth darker). Only the leader's current
  * stack is in ink; a two-swatch key names the periods.
@@ -143,7 +143,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
   const unit = props.unit ?? 1;
   const height = props.height ?? 440;
   const format = props.format ?? String;
-  const [prevName, curName] = props.periods ?? ["2025", "2026"];
+  const [prevName, curName] = props.periods ?? ["2011", "2021"];
   const hasNote = hasText(props.note);
   const { clear, hover, show, tip } = useHoverTip();
   const ids = useTextureIds("paired");

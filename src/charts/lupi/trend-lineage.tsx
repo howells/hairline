@@ -19,7 +19,7 @@ interface TrendLineageProps {
   years?: [number, number];
   height?: number;
   note?: string;
-  /** Feature drawn in the hero colour. Defaults to the oldest still alive. */
+  /** Area drawn in the hero colour. Defaults to the oldest still in use. */
   highlight?: string;
 }
 
@@ -30,25 +30,25 @@ interface Segment {
   dormant: boolean;
 }
 
-/** How far below the last year the floor (alive today) sits, in years. */
+/** How far below the last year the floor (in use today) sits, in years. */
 const FLOOR_PAD = 0.65;
 
 const yearOf = (v: number) => Math.floor(v);
 
 const describe = (d: LineageDatum) => {
-  const parts = [`shipped ${yearOf(d.shipped)}`];
+  const parts = [`added ${yearOf(d.shipped)}`];
   const reworked = d.reworked ?? [];
   const dormant = d.dormant ?? [];
   if (reworked.length > 0) {
-    parts.push(`reworked ${reworked.map(yearOf).join(", ")}`);
+    parts.push(`changed ${reworked.map(yearOf).join(", ")}`);
   }
   if (dormant.length > 0) {
     parts.push(
-      `dormant ${dormant.map(([a, b]) => `${yearOf(a)}–${yearOf(b)}`).join(", ")}`
+      `suspended ${dormant.map(([a, b]) => `${yearOf(a)}–${yearOf(b)}`).join(", ")}`
     );
   }
   parts.push(
-    d.retired === undefined ? "alive today" : `retired ${yearOf(d.retired)}`
+    d.retired === undefined ? "in use today" : `dropped ${yearOf(d.retired)}`
   );
   return parts.join(" · ");
 };
@@ -82,7 +82,9 @@ interface GridProps {
 }
 
 const YearGrid = ({ years, y, x0, x1, every }: GridProps) => {
-  const ticked = years.filter((yr) => (yr - (years[0] ?? 0)) % every === 0);
+  // Labels fall on whole multiples of `every`; once years are under 10px
+  // apart only those years carry a rule, so the grid stays a few fine lines.
+  const ticked = years.filter((yr) => yr % every === 0);
   const labels = new Map(
     yearTickLabels(ticked.map((yr) => new Date(Date.UTC(yr, 0, 1)))).map(
       (label, k) => [ticked[k], label]
@@ -90,7 +92,7 @@ const YearGrid = ({ years, y, x0, x1, every }: GridProps) => {
   );
   return (
     <g>
-      {years.map((yr) => (
+      {(every >= 5 ? ticked : years).map((yr) => (
         <g key={`year-${yr}`}>
           <line
             className="grid-line"
@@ -144,10 +146,7 @@ const FeatureColumn = ({
   const events = [feature.shipped, ...(feature.reworked ?? [])].toSorted(
     (a, b) => a - b
   );
-  const end =
-    feature.retired === undefined
-      ? floorYear
-      : (events.at(-1) ?? feature.shipped);
+  const end = feature.retired ?? floorYear;
   const ly = floor + 14;
   // The hero's 2px line sits on whole pixels, a 1px one on the half pixel;
   // its marks centre on the same x, and on the half-pixel year rules.
@@ -187,8 +186,8 @@ const FeatureColumn = ({
             style={stagger(index, "series")}
             x1={stemX}
             x2={stemX}
-            y1={y(s.a)}
-            y2={y(s.b)}
+            y1={crisp(y(s.a))}
+            y2={crisp(y(s.b))}
             strokeWidth={hero ? 2 : 1}
           />
         )
@@ -235,10 +234,10 @@ const FeatureColumn = ({
 };
 
 /**
- * L11 Feature lives. One column per feature, time running down the page.
- * Filled dot = shipped, hollow = reworked, dotted = dormant years; the line
- * runs on to the floor if the feature is still alive today, and stops at a
- * small dot where it was retired. The oldest living feature is the hero.
+ * L11 Sea areas. One column per sea area, time running down the page.
+ * Filled dot = added, hollow = renamed or redrawn, dotted = suspended years;
+ * the line runs on to the floor if the area is still in use today, and stops
+ * at a small dot where it was dropped. The oldest area in use is the hero.
  */
 export const TrendLineage = (props: TrendLineageProps) => {
   const data = props.data ?? trendLineageDemo;
@@ -298,8 +297,10 @@ export const TrendLineage = (props: TrendLineageProps) => {
           [
             { min: 34, out: 1 },
             { min: 10, out: 2 },
+            { min: 5, out: 5 },
+            { min: 2.5, out: 10 },
           ],
-          4
+          25
         );
         const tip = hover === null ? undefined : data[hover];
         return (
@@ -307,12 +308,12 @@ export const TrendLineage = (props: TrendLineageProps) => {
             <svg
               width={width}
               height={height}
-              aria-label={`Feature lineage ${y0}–${y1}: ${data.map((d) => `${d.name}, ${describe(d)}`).join("; ")}`}
+              aria-label={`Sea area lineage ${y0}–${y1}: ${data.map((d) => `${d.name}, ${describe(d)}`).join("; ")}`}
               onPointerLeave={() => {
                 setHover(null);
               }}
             >
-              <title>Feature lineage</title>
+              <title>Sea area lineage</title>
               <YearGrid
                 years={years}
                 y={y}

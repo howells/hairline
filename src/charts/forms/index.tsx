@@ -11,7 +11,7 @@ export const entries: GalleryEntry[] = [
   {
     family: "forms",
     id: "O5",
-    name: "Plan vs actual",
+    name: "Against normal",
     render: () => <AreaDifference />,
   },
   {
@@ -23,13 +23,13 @@ export const entries: GalleryEntry[] = [
   {
     family: "forms",
     id: "O7",
-    name: "Year in the round",
+    name: "A year by month",
     render: () => <RadialYear />,
   },
   {
     family: "forms",
     id: "O8",
-    name: "Overview and detail",
+    name: "Hot year",
     render: () => <BrushedOverview />,
   },
   {

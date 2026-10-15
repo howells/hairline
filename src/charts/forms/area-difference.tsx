@@ -5,7 +5,7 @@ import { utcFormat } from "d3-time-format";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtMoney, monthTickLabels } from "../../lib/format";
+import { fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { CrossHatch, Hatch } from "../texture";
@@ -19,8 +19,14 @@ import type { PlanWeek } from "./area-difference.data";
 const TICKS = 5;
 
 const fmtWeek = utcFormat("%-d %b");
-/** The data is in $k; money reads the house way ($118k, $1.2m). */
-const money = (v: number) => fmtMoney(v * 1000);
+/** The two lines' names, set at their right-hand ends. */
+const ACTUAL_NAME = "2022";
+const NORMAL_NAME = "Normal";
+
+/** Temperatures read in degrees, to a tenth ("12.3 °C"). */
+const degrees = fmtDegC;
+/** Value rules fall on whole degrees ("10 °C"). */
+const ruleDegrees = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
 
 interface Frame {
   bottom: number;
@@ -47,13 +53,13 @@ const makeFrame = (data: PlanWeek[], width: number, height: number) => {
       Math.max(
         ...y
           .ticks(TICKS)
-          .map((t) => sansWidth(money(t).replaceAll("1", "0"), 11))
+          .map((t) => sansWidth(ruleDegrees(t).replaceAll("1", "0"), 11))
       )
     ) + 8;
   const x1 =
     width -
     8 -
-    Math.ceil(Math.max(sansWidth("Actual", 11), sansWidth("Plan", 11)) * 0.92);
+    Math.ceil(Math.max(sansWidth(ACTUAL_NAME, 11), sansWidth(NORMAL_NAME, 11)));
   const x = scaleLinear()
     .domain([0, data.length - 1])
     .range([x0, x1]);
@@ -79,7 +85,7 @@ const EndLabels = (props: { data: PlanWeek[]; frame: Frame }) => {
         x={props.frame.x1 + 8}
         y={actualUp ? mid - half : mid + half}
       >
-        Actual
+        {ACTUAL_NAME}
       </text>
       <text
         className="t-axis"
@@ -87,7 +93,7 @@ const EndLabels = (props: { data: PlanWeek[]; frame: Frame }) => {
         x={props.frame.x1 + 8}
         y={actualUp ? mid + half : mid - half}
       >
-        Plan
+        {NORMAL_NAME}
       </text>
     </g>
   );
@@ -109,7 +115,7 @@ const Axes = (props: { data: PlanWeek[]; frame: Frame; width: number }) => {
       <ValueGrid
         floor={frame.bottom - 8}
         ticks={frame.y.ticks(TICKS)}
-        format={money}
+        format={ruleDegrees}
         x0={frame.x0}
         x1={frame.x1}
         y={frame.y}
@@ -191,7 +197,7 @@ const AreaDifferenceSvg = (props: SvgProps) => {
       .x(x)
       .y((d) => frame.y(d[key]))(data) ?? "";
   const ahead = data.filter((d) => d.actual >= d.plan).length;
-  const label = `New ARR booked a week against plan, 2026: ahead of plan in ${ahead} of ${data.length} weeks`;
+  const label = `Weekly mean temperature in Central England, 2022, against the 1991 to 2020 normal: above normal in ${ahead} of ${data.length} weeks`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
@@ -273,14 +279,17 @@ const AreaDifferenceSvg = (props: SvgProps) => {
 const gapText = (d: PlanWeek) => {
   const gap = d.actual - d.plan;
   if (gap === 0) {
-    return "on plan";
+    return "at normal";
   }
-  return gap > 0 ? `${money(gap)} ahead` : `${money(-gap)} behind`;
+  return gap > 0
+    ? `${degrees(gap)} above normal`
+    : `${degrees(-gap)} below normal`;
 };
 
 /**
- * O5 Plan vs actual. Two weekly lines; the gap between them is an ink
- * crosshatch where actual leads and a single grey hatch where the plan does.
+ * O5 Against normal. Two weekly lines; the gap between them is an ink
+ * crosshatch where 2022 runs above the normal and a single grey hatch where
+ * it runs below.
  */
 export const AreaDifference = (props: { data?: PlanWeek[] }) => {
   const data = props.data ?? planWeeksDemo;
@@ -291,7 +300,7 @@ export const AreaDifference = (props: { data?: PlanWeek[] }) => {
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
             <b>Week of {fmtWeek(data[hover.i].week)}</b> ·{" "}
-            {money(data[hover.i].actual)} · {gapText(data[hover.i])}
+            {degrees(data[hover.i].actual)} · {gapText(data[hover.i])}
           </Tooltip>
         )
       }

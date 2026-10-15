@@ -1,6 +1,16 @@
-import { utcFormat } from "d3-time-format";
-
-import { rnd } from "../../lib/random";
+/**
+ * Live births by date of birth, every day of 2016, England and Wales.
+ *
+ * Source: Office for National Statistics, "Number of live births by date,
+ * 1995 to 2016, in England and Wales" (ad hoc request 009036).
+ * Page: https://www.ons.gov.uk/aboutus/transparencyandgovernance/freedomofinformationfoi/dailybirthsdata
+ * File: https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/livebirths/adhocs/009036numberoflivebirthsbydate1995to2016inenglandandwales/adhocbirthsbydate1995to2016.xls
+ * Fetched 2026-10-15.
+ *
+ * Transform: sheet "Data", column "2016", rows 01/01 to 31/12 (366 rows,
+ * including 29/02), copied unchanged and grouped by month below. Code adds
+ * the ISO date of each value; no count is altered.
+ */
 
 /** One calendar day (ISO date) and its count. */
 export interface DayDatum {
@@ -8,58 +18,76 @@ export interface DayDatum {
   value: number;
 }
 
-const DAY = 86_400_000;
-const iso = utcFormat("%Y-%m-%d");
+/** Births on each day of 2016, one row per month, January first. */
+const BIRTHS_2016: readonly (readonly number[])[] = [
+  [
+    1653, 1648, 1570, 2002, 1982, 2064, 2044, 2043, 1672, 1607, 1907, 1809,
+    1927, 1970, 1930, 1625, 1581, 1898, 1911, 1944, 1978, 1961, 1661, 1701,
+    1914, 1962, 1962, 2062, 1903, 1689, 1608,
+  ],
+  [
+    2050, 1994, 1980, 2007, 2060, 1732, 1707, 1948, 2003, 1933, 2020, 1978,
+    1747, 1618, 1897, 1933, 1944, 2034, 1969, 1723, 1631, 1919, 1884, 1958,
+    2035, 2024, 1706, 1643, 1855,
+  ],
+  [
+    1994, 1995, 2082, 2012, 1691, 1637, 1913, 1999, 1825, 1934, 1926, 1662,
+    1610, 1852, 1906, 2008, 1994, 1982, 1701, 1611, 1857, 1973, 1952, 2093,
+    1713, 1652, 1545, 1569, 1971, 2012, 1912,
+  ],
+  [
+    2018, 1606, 1618, 1944, 2107, 1925, 1991, 2029, 1628, 1581, 1905, 1968,
+    2009, 2037, 1999, 1693, 1607, 1930, 2009, 1937, 1987, 2023, 1795, 1639,
+    2000, 1906, 1870, 2002, 2134, 1766,
+  ],
+  [
+    1644, 1599, 2049, 2036, 2083, 2080, 1734, 1747, 2044, 2024, 2047, 2077,
+    2050, 1747, 1635, 1943, 2046, 2005, 2040, 2019, 1799, 1664, 1938, 1989,
+    2026, 2124, 2074, 1684, 1738, 1630, 2012,
+  ],
+  [
+    2074, 2097, 2108, 1738, 1659, 1967, 1981, 2023, 2012, 2052, 1739, 1670,
+    1992, 1952, 2073, 2036, 2040, 1715, 1709, 1990, 2073, 2039, 2148, 2047,
+    1777, 1696, 1997, 2082, 2087, 2128,
+  ],
+  [
+    2048, 1717, 1693, 2005, 2093, 2160, 2197, 2151, 1807, 1734, 2115, 2154,
+    2109, 2153, 2091, 1755, 1690, 1976, 2105, 2128, 2114, 2094, 1782, 1723,
+    2009, 1974, 2072, 2089, 2084, 1800, 1678,
+  ],
+  [
+    1950, 2090, 1988, 2082, 2059, 1672, 1626, 1924, 2006, 1955, 2047, 2086,
+    1697, 1627, 1967, 1968, 1936, 2025, 2056, 1675, 1620, 1973, 2020, 2017,
+    2031, 2032, 1725, 1641, 1595, 2025, 2003,
+  ],
+  [
+    2097, 2091, 1710, 1609, 2032, 2078, 1969, 2121, 2156, 1834, 1701, 1962,
+    2104, 2119, 2175, 2071, 1750, 1706, 2136, 2166, 2078, 2202, 2200, 1815,
+    1719, 2048, 2139, 2107, 2131, 2126,
+  ],
+  [
+    1721, 1660, 1992, 2096, 1958, 2154, 2054, 1768, 1654, 1968, 1957, 2043,
+    2029, 1954, 1734, 1598, 1961, 1973, 2025, 1987, 2021, 1590, 1705, 1967,
+    1998, 2058, 2019, 1970, 1646, 1683, 1919,
+  ],
+  [
+    1992, 1933, 2038, 1991, 1689, 1668, 1936, 1924, 1997, 2044, 1962, 1705,
+    1594, 1864, 1993, 1944, 1968, 1964, 1666, 1642, 1885, 1965, 1864, 1933,
+    1964, 1684, 1572, 1885, 1889, 1830,
+  ],
+  [
+    1935, 1928, 1640, 1555, 1847, 1917, 1885, 1959, 1938, 1593, 1572, 1958,
+    1896, 2034, 1945, 1991, 1672, 1628, 1942, 1999, 2012, 2074, 1989, 1627,
+    1391, 1360, 1447, 1951, 2077, 2034, 1664,
+  ],
+];
 
-const bump = (x: number, at: number, width: number, height: number) =>
-  Math.exp(-((x - at) ** 2) / width) * height;
+const pad = (n: number) => String(n).padStart(2, "0");
 
-/**
- * A weekday's deploys, 6 to 20 on a normal day: a spring push, the long
- * build to the autumn release, and a quiet run into the holidays.
- */
-const weekdayDeploys = (k: number) => {
-  const yearFrac = k / 365;
-  const season =
-    bump(yearFrac, 0.3, 0.006, 5) +
-    bump(yearFrac, 0.68, 0.01, 7) -
-    bump(yearFrac, 0.98, 0.0015, 9);
-  if (rnd(k + 50, 3) < 0.03) {
-    return 0;
-  }
-  return Math.min(
-    20,
-    Math.max(
-      0,
-      Math.round(6 + season * (0.5 + rnd(k + 50, 4) * 0.7) + rnd(k + 50, 5) * 6)
-    )
-  );
-};
-
-/** Weekends are quiet: the odd hotfix. */
-const weekendDeploys = (k: number) =>
-  rnd(k + 50, 1) < 0.12 ? 1 + Math.floor(rnd(k + 50, 2) * 3) : 0;
-
-/** The autumn release week, ending in the busiest single day of the year. */
-const spike = new Map([
-  ["2026-09-21", 19],
-  ["2026-09-22", 21],
-  ["2026-09-23", 23],
-  ["2026-09-24", 17],
-  ["2026-09-25", 14],
-]);
-
-/** Fieldnote's deploys, every day of 2026. */
-export const calendarHeatDemo: DayDatum[] = Array.from(
-  { length: 365 },
-  (_, k) => {
-    const t = Date.UTC(2026, 0, 1) + k * DAY;
-    const date = iso(new Date(t));
-    const dow = (new Date(t).getUTCDay() + 6) % 7;
-    return {
-      date,
-      value:
-        spike.get(date) ?? (dow >= 5 ? weekendDeploys(k) : weekdayDeploys(k)),
-    };
-  }
+/** The births in England and Wales on every day of 2016. */
+export const calendarHeatDemo: DayDatum[] = BIRTHS_2016.flatMap((days, month) =>
+  days.map((value, day) => ({
+    date: `2016-${pad(month + 1)}-${pad(day + 1)}`,
+    value,
+  }))
 );

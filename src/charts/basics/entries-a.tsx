@@ -38,8 +38,8 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F6",
-    name: "Year on year",
-    render: () => <PairedRungs format={(v) => `${v}k`} unit={5} />,
+    name: "Getting to work",
+    render: () => <PairedRungs format={(v) => `${v}%`} unit={1} />,
   },
   {
     family: "basics",

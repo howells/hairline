@@ -17,10 +17,10 @@ import type { Tip } from "./util-b";
 interface RungHistogramProps {
   data?: HistBin[];
   format?: (v: number) => string;
-  /** Formats bin edges on the axis, e.g. 4 → "4h". */
+  /** Formats bin edges on the axis, e.g. 210 → "3:30". */
   formatX?: (v: number) => string;
   height?: number;
-  /** Label every nth bin edge. */
+  /** Label every nth bin edge (doubled when bins are under 34px wide). */
   labelEvery?: number;
   /** The marker's position; defaults to the median. Pass null to hide it. */
   marker?: number | null;
@@ -29,6 +29,10 @@ interface RungHistogramProps {
   /** Records per rung. */
   unit?: number;
 }
+
+/** Minutes as h:mm, so 210 reads 3:30. */
+const hoursMinutes = (v: number) =>
+  `${Math.floor(v / 60)}:${String(v % 60).padStart(2, "0")}`;
 
 interface Layout {
   floor: number;
@@ -206,14 +210,14 @@ const Marker = (props: { label: string; layout: Layout; value: number }) => {
 };
 
 /**
- * F14 Histogram. Binned counts drawn as stacks of 2px rungs at one pitch, one
+ * F14 Finish times. Binned counts drawn as stacks of 2px rungs at one pitch, one
  * per record, every fifth darker; the tallest bin in ink with its count, and an evenly dotted guide where half the records are in.
  */
 export const RungHistogram = (props: RungHistogramProps) => {
   const data = props.data ?? rungHistogramDemo;
   const height = props.height ?? 440;
   const unit = props.unit ?? 1;
-  const formatX = props.formatX ?? ((v: number) => `${v}h`);
+  const formatX = props.formatX ?? hoursMinutes;
   const format = props.format ?? String;
   const marker = props.marker === undefined ? binMedian(data) : props.marker;
   const peak = maxIndex(data.map((d) => d.count));
@@ -257,7 +261,7 @@ export const RungHistogram = (props: RungHistogramProps) => {
             <title>{label}</title>
             <Axis
               data={data}
-              every={props.labelEvery ?? 2}
+              every={props.labelEvery ?? 3}
               formatX={formatX}
               layout={layout}
             />
