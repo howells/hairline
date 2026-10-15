@@ -23,7 +23,7 @@ export const GRID_H = "grid-line";
 export const GRID_V = "grid-line";
 /** Baselines and zero rules. */
 export const RULE_ZERO = "hairline";
-/** A threshold, SLA or budget: the one dash, because it marks a target. */
+/** A limit or plan line: the one dash, because it marks a target. */
 export const RULE_TARGET = "stroke-l3 dash-rule shape-crisp";
 /** The scrub cursor: a solid hairline. */
 export const CURSOR = "stroke-faint shape-crisp";

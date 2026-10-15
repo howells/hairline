@@ -90,3 +90,19 @@ export const fmtDegC = (v: number) => {
   const t = Math.abs(v).toFixed(1);
   return `${v < 0 && t !== "0.0" ? "−" : ""}${t} °C`;
 };
+
+/** Mains frequency as published, to three decimal places ("49.275 Hz"). */
+export const fmtHz = (v: number) => `${v.toFixed(3)} Hz`;
+
+/** Carbon intensity, grams of CO₂ per kilowatt hour, whole grams ("142 g/kWh"). */
+export const fmtGCO2 = (v: number) => `${fmtInt(v)} g/kWh`;
+
+/** Signed change in carbon intensity with a true minus sign ("−85 g/kWh", "+12 g/kWh"). */
+export const fmtSignedGCO2 = (v: number) =>
+  `${v > 0 ? "+" : "−"}${fmtInt(Math.abs(v))} g/kWh`;
+
+/** Energy in gigawatt hours, whole ("3,521 GWh"). */
+export const fmtGWh = (v: number) => `${fmtInt(v)} GWh`;
+
+/** Energy in terawatt hours (the input is TWh), to one decimal place ("87.4 TWh"). */
+export const fmtTWh = (v: number) => `${v.toFixed(1)} TWh`;

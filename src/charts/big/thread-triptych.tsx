@@ -95,11 +95,12 @@ const layoutTriptych = (
   floor: number
 ): Triptych => {
   const wide = width >= 640;
-  const sx = Math.max(widest(data.sources) + LABEL_INSET + 2, width * 0.17);
-  const dx = Math.min(
-    width - widest(data.destinations) - LABEL_INSET - 2,
-    width * 0.8
-  );
+  // The label columns sit flush with both edges, so the composition is
+  // centred on its ink at any width.
+  // The estimate runs a little wide on the long genus names, so both columns
+  // move left by half the difference measured in the browser.
+  const sx = widest(data.sources) + LABEL_INSET - 0.5;
+  const dx = width - widest(data.destinations) - LABEL_INSET - 4.5;
   const px = (sx + dx) / 2;
   const ys: Record<Column, Map<string, number>> = {
     destination: spread(data.destinations, TOP + 26, floor - 30),
@@ -467,7 +468,7 @@ const TriptychSvg = (props: {
             `destination:${t.path.destination}`,
           ])
         );
-  const label = `Data paths: ${data.paths.length} paths from ${data.sources.length} sources through ${data.processors.length} processors to ${data.destinations.length} destinations`;
+  const label = `Mammal tree: ${data.paths.length} genera in ${data.processors.length} families in ${data.destinations.length} orders`;
 
   return (
     <svg
@@ -520,8 +521,8 @@ const TriptychSvg = (props: {
 };
 
 /**
- * B3 Data paths. Three columns (source → processor → destination), one
- * thread per data path. Hover a thread to trace its route or a label to pull
+ * B3 Mammal tree. Three columns (genus → family → order), one thread per
+ * genus. Hover a thread to trace its route or a label to pull
  * its whole bundle; click to pin, Escape or click empty space to release.
  * Each column heading carries its count: all stops at rest, the lit ones
  * under focus.
@@ -545,7 +546,7 @@ export const ThreadTriptych = (props: ThreadTriptychProps) => {
         <TriptychSvg
           data={data}
           focus={focus}
-          headings={props.headings ?? ["Inputs", "Steps", "Stores"]}
+          headings={props.headings ?? ["Genera", "Families", "Orders"]}
           height={props.height ?? 560}
           note={props.note}
           onHover={(f) => {

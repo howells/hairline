@@ -17,7 +17,7 @@ interface MatrixHeatGlanceProps {
   /** Value domain for the five screens; defaults to 0 – 100. */
   domain?: [number, number];
   format?: (v: number) => string;
-  /** Suffix for the tooltip value, e.g. "% of accounts". */
+  /** Suffix for the tooltip value, e.g. "% of households". */
   unit?: string;
   note?: string;
   /** [row, column] of the hero cell; defaults to the highest value. */
@@ -220,7 +220,7 @@ const peakOf = (values: number[][]): [number, number] => {
 };
 
 /**
- * G20 Feature adoption. One tile per row and column, each a halftone screen
+ * G20 Kit by income. One tile per row and column, each a halftone screen
  * on paper whose dot grows a step per bin (five bins, pitch 4), the number
  * centred on a paper plate. The one hero tile (the highest value) is solid
  * ink, its number in paper.
@@ -228,7 +228,7 @@ const peakOf = (values: number[][]): [number, number] => {
 export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
   const data = props.data ?? matrixHeatGlanceDemo;
   const format = props.format ?? round;
-  const unit = props.unit ?? "% of weekly users";
+  const unit = props.unit ?? "% of households";
   const nR = data.rows.length;
   const nC = data.columns.length;
   const domain = props.domain ?? [0, 100];
@@ -267,7 +267,10 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
         const x0 = Math.round(
           (width - names - labelGap - gridW) / 2 + names + labelGap
         );
-        const top = 26;
+        // Names wider than a tile alternate between two heights.
+        const crowded =
+          Math.max(...data.columns.map((c) => textWidth(c, "t-label"))) > cell;
+        const top = crowded ? 40 : 26;
         const pitch = snapTile(Math.min(cell * 0.86, 76));
         const keyY = top + nR * pitch + gap * (nR - 1) + 18;
         const height =
@@ -300,7 +303,7 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
                 key={c}
                 className="t-label fill-muted"
                 x={x0 + j * (cell + gap) + cell / 2}
-                y={top - 12}
+                y={top - 12 - (crowded && j % 2 === 0 ? 14 : 0)}
                 textAnchor="middle"
               >
                 {c}

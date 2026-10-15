@@ -14,7 +14,7 @@ interface CircularGraphProps {
   height?: number;
   /** Node id(s) labelled at rest; defaults to the two largest of each group. */
   highlight?: string | string[];
-  /** Word after the neighbour count in the tooltip, e.g. "repos linked". */
+  /** Word after the neighbour count in the tooltip, e.g. "borders shown". */
   linkUnit?: string;
   note?: string;
   /** Unit after a node's size in the tooltip. */
@@ -434,7 +434,7 @@ const RingSvg = (props: {
     () => <RingBase key={take} layout={layout} small={small} />,
     [layout, small, take]
   );
-  const label = `Repo network: ${data.nodes.length} nodes on a ring, ${data.links.length} links`;
+  const label = `Land borders: ${data.nodes.length} countries on a ring, ${data.links.length} shared borders`;
 
   const onMove = (e: PointerEvent<SVGGElement>) => {
     const { target } = e;
@@ -497,8 +497,8 @@ const RingSvg = (props: {
 };
 
 /**
- * B1 Repo network (big). Nodes sit on a ring grouped by org, dot area =
- * size; links curve inside the ring like chords. Hover a node to light up its
+ * B1 Land borders (big). Countries sit on a ring grouped by continent, dot area =
+ * land neighbours; links curve inside the ring like chords. Hover a node to light up its
  * neighbours; click anywhere to replay the entry.
  */
 export const CircularGraph = (props: CircularGraphProps) => {
@@ -514,8 +514,8 @@ export const CircularGraph = (props: CircularGraphProps) => {
         tip === null ? null : (
           <Tooltip below={tip.below} x={tip.x} y={tip.y}>
             <b>{tip.id}</b> · {format(tip.size)}{" "}
-            {props.sizeUnit ?? "contributors"} · {tip.linked}{" "}
-            {props.linkUnit ?? "linked"}
+            {props.sizeUnit ?? "land neighbours"} · {tip.linked}{" "}
+            {props.linkUnit ?? "shown"}
           </Tooltip>
         )
       }

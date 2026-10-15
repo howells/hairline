@@ -391,7 +391,7 @@ const geometryFor = (
 };
 
 /**
- * L16 Used together. Two discrete dimensions, one tile per pair: a halftone
+ * L16 Letter pairs. Two discrete dimensions, one tile per pair: a halftone
  * screen on paper whose dot grows in five steps with the value, the number
  * set on it. The strongest pair is the one ink crosshatch, its number
  * knocked out in paper; cells with no value (the diagonal) are a 4px hatch.
@@ -459,12 +459,12 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
             <svg
               width={width}
               height={height}
-              aria-label={`${rows.length} by ${cols.length} matrix; strongest ${rows[key[0]] ?? ""} and ${cols[key[1]] ?? ""} at ${format(keyV)}${unit}`}
+              aria-label={`${rows.length} by ${cols.length} matrix; strongest ${rows[key[0]] ?? ""} then ${cols[key[1]] ?? ""} at ${format(keyV)}${unit}`}
               onPointerLeave={() => {
                 setHover(null);
               }}
             >
-              <title>Used together</title>
+              <title>Letter pairs</title>
               <Headers
                 rows={rows}
                 cols={cols}
@@ -501,7 +501,7 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
                 y={g.top + cell * drawnRow(hover[0]) - 4}
               >
                 <b>
-                  {rows[hover[0]]} × {cols[hover[1]]}
+                  {rows[hover[0]]} then {cols[hover[1]]}
                 </b>{" "}
                 · {format(tipV)}
                 {unit}

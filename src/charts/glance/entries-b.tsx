@@ -10,12 +10,18 @@ import { RankStrip } from "./rank-strip";
 import { SingleAxis } from "./single-axis";
 import { Violin } from "./violin";
 
+/** Days after 21 March as a date: 0 is 21 March, 11 is 1 April. */
+const easterDate = (v: number) => {
+  const day = 21 + Math.round(v);
+  return day <= 31 ? `${day} Mar` : `${day - 31} Apr`;
+};
+
 /** Gallery entries owned by agent glance-b (G13–G22), in catalogue order. */
 export const entries: GalleryEntry[] = [
   {
     family: "glance",
     id: "G13",
-    name: "Time in product",
+    name: "Free time",
     render: () => <BigSlice intensityLabel="a day" />,
   },
   {
@@ -27,49 +33,49 @@ export const entries: GalleryEntry[] = [
   {
     family: "glance",
     id: "G15",
-    name: "Time to close",
-    render: () => <JitterStrip axisLabel="hours to close" />,
+    name: "Easter dates",
+    render: () => <JitterStrip format={easterDate} unit="year" />,
   },
   {
     family: "glance",
     id: "G16",
-    name: "Users by country",
+    name: "Busiest stations",
     render: () => <BarRace />,
   },
   {
     family: "glance",
     id: "G17",
-    name: "Live users",
+    name: "Rolling swell",
     render: () => <DynamicStream />,
   },
   {
     family: "glance",
     id: "G18",
-    name: "Bookings to date",
+    name: "Premier League goals",
     render: () => <DrawIn />,
   },
   {
     family: "glance",
     id: "G19",
-    name: "Reply times",
-    render: () => <Violin />,
+    name: "Tenor weights",
+    render: () => <Violin lowIsBest={false} />,
   },
   {
     family: "glance",
     id: "G20",
-    name: "Feature adoption",
-    render: () => <MatrixHeatGlance />,
+    name: "Kit by income",
+    render: () => <MatrixHeatGlance highlight={[0, 2]} />,
   },
   {
     family: "glance",
     id: "G21",
-    name: "Rank by quarter",
+    name: "Nobel countries",
     render: () => <RankStrip />,
   },
   {
     family: "glance",
     id: "G22",
-    name: "Channel to plan",
+    name: "Free vote",
     render: () => <AggregateSankey />,
   },
 ];

@@ -3,7 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area as d3area, curveMonotoneX, line as d3line } from "d3-shape";
 import { utcFormat } from "d3-time-format";
 
-import { fmtK, monthTickLabels } from "../../lib/format";
+import { fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useScrub } from "../hooks";
@@ -16,7 +16,12 @@ import type { DayCount } from "./daily-users.data";
 import { Key } from "./key";
 
 const fmtDay = utcFormat("%a %-d %b");
-const fmtSigned = (v: number) => `${v < 0 ? "−" : "+"}${fmtK(Math.abs(v))}`;
+const fmtSigned = (v: number) => {
+  const t = Math.abs(v).toFixed(1);
+  return `${v < 0 && t !== "0.0" ? "−" : "+"}${t} °C`;
+};
+/** Value rules at whole degrees need no decimal ("30 °C"). */
+const fmtTick = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
 
 interface Frame {
   floor: number;
@@ -41,7 +46,7 @@ const stemClass = (hero: boolean, hover: boolean) => {
   return hover ? "stroke-l1" : "stroke-l4";
 };
 
-/** One stem per day, from the week's mean out to the day's count. */
+/** One stem per day, from the week's mean out to the day's maximum. */
 const Stems = ({ data, frame, hero, hover, mean }: StemsProps) => (
   <g>
     {data.map((d, i) => {
@@ -142,7 +147,7 @@ const Axes = ({ data, frame, width }: AxesProps) => {
       <ValueGrid
         floor={frame.floor}
         ticks={frame.y.ticks(width < 420 ? 3 : 4)}
-        format={(t) => fmtK(t).replace(".0k", "k")}
+        format={fmtTick}
         side="right"
         x0={frame.x0}
         x1={width}
@@ -228,7 +233,7 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
       .x((_, i) => frame.x(i))
       .y((m) => frame.y(m))
       .curve(curveMonotoneX)(mean) ?? "";
-  const label = `Daily active users, ${fmtDay(data[0].date)} to ${fmtDay(data.at(-1)?.date ?? data[0].date)}: peak ${fmtK(values[hero])} on ${fmtDay(data[hero].date)}`;
+  const label = `Daily maximum temperature, ${fmtDay(data[0].date)} to ${fmtDay(data.at(-1)?.date ?? data[0].date)}: hottest ${fmtDegC(values[hero])} on ${fmtDay(data[hero].date)}`;
 
   return (
     <>
@@ -268,7 +273,7 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           x={frame.x(hero)}
           y={frame.y(values[hero]) - 10}
         >
-          {fmtK(values[hero])}
+          {fmtDegC(values[hero])}
         </text>
         {hover === null || hover === hero ? null : (
           <circle
@@ -285,7 +290,7 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           x={frame.x(hover)}
           y={Math.min(frame.y(values[hover]), frame.y(mean[hover])) - 6}
         >
-          <b>{fmtDay(data[hover].date)}</b> · {fmtK(values[hover])} ·{" "}
+          <b>{fmtDay(data[hover].date)}</b> · {fmtDegC(values[hover])} ·{" "}
           {fmtSigned(values[hover] - mean[hover])} vs mean
         </Tooltip>
       )}
@@ -299,9 +304,10 @@ interface DailyUsersProps {
 }
 
 /**
- * O1 Daily users. The 7-day mean as one quiet line, and every day hung from
- * it as a stem out to its own count: weekdays reach up, weekends drop below,
- * so the week's rhythm reads as a comb along the trend. The peak is in ink.
+ * O1 Summer of 1976. The 7-day mean as one quiet line, and every day hung from
+ * it as a stem out to its own maximum: each day reaches above the
+ * week or falls short of it, so the heatwave and the break in the weather read
+ * as a comb along the trend. The hottest day is in ink.
  */
 export const DailyUsers = (props: DailyUsersProps) => {
   const data = props.data ?? dailyUsers;

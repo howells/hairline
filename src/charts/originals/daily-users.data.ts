@@ -1,38 +1,36 @@
-import { mulberry32 } from "../../lib/random";
+/**
+ * O1 Summer of 1976: the daily maximum Central England temperature, June to
+ * August 1976.
+ * Source: Met Office Hadley Centre Central England Temperature (HadCET),
+ * v2.1.1.0 + provisional, https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html
+ * Fetched 2026-10-15.
+ * File: maxtemp_daily_totals.txt (date and value to 0.1 °C, -99.9 for a
+ * missing day; none are missing in 1976). Transform: the 92 values from
+ * 1976-06-01 to 1976-08-31, copied as they stand.
+ */
 
-/** One day's count. */
+/** One day's maximum temperature, in °C. */
 export interface DayCount {
   date: Date;
   value: number;
 }
 
 const DAY_MS = 86_400_000;
-const START = Date.UTC(2026, 6, 1);
-const DAYS = 91;
-/** Fieldnote 4 shipped on Tuesday 8 September. */
-const LAUNCH = 69;
+const START = Date.UTC(1976, 5, 1);
 
-const noise = mulberry32(2607);
+/** Daily maximum CET in °C, 1 June to 31 August 1976. */
+const MAX_1976: number[] = [
+  15.9, 16.3, 16, 18.9, 19.8, 23.5, 24.6, 28.4, 26.9, 19, 19.8, 19.8, 22.7,
+  21.6, 21.6, 15.4, 17.6, 20.1, 14.1, 18.1, 20.8, 24.1, 26.2, 25.8, 29, 29.3,
+  29.8, 30.3, 30.1, 29.7, 30.4, 31.8, 33.1, 31.3, 31.3, 31.6, 30.4, 29.5, 23.5,
+  23.4, 27.3, 26.3, 21.8, 21.9, 23.1, 21.7, 22.7, 24.4, 21.6, 18.4, 19.6, 20.5,
+  19.7, 20, 21.3, 21.1, 23.4, 20.5, 22.8, 19.3, 17.2, 19, 19.3, 20.2, 20, 20.7,
+  21.4, 21.8, 22.9, 23.2, 24.3, 25.2, 25.7, 25.2, 24, 25.3, 25.9, 26.4, 24,
+  25.2, 27.2, 24.9, 26.6, 27.2, 28.9, 28.8, 26.7, 20.6, 19.4, 21.4, 17.7, 19,
+];
 
-/** Weekdays run a little over the week's mean, weekends well under it. */
-const weekday = (day: number) => {
-  if (day === 0 || day === 6) {
-    return 0.79;
-  }
-  return day === 1 || day === 2 ? 1.08 : 1.05;
-};
-
-/** The launch lifts the following fortnight, fading as it goes. */
-const launchLift = (i: number) =>
-  i < LAUNCH ? 0 : 0.16 * Math.exp(-(i - LAUNCH) / 6);
-
-/** Fieldnote daily active users, July to September 2026. */
-export const dailyUsers: DayCount[] = Array.from({ length: DAYS }, (_, i) => {
-  const date = new Date(START + i * DAY_MS);
-  const trend = 37_800 + 7400 * (i / (DAYS - 1));
-  const summer = 3400 * Math.exp(-(((i - 45) / 10) ** 2));
-  const jitter = 1 + (noise() - 0.5) * 0.05;
-  const value =
-    (trend - summer) * weekday(date.getUTCDay()) * (1 + launchLift(i)) * jitter;
-  return { date, value: Math.round(value / 10) * 10 };
-});
+/** Daily maximum Central England temperature, June to August 1976. */
+export const dailyUsers: DayCount[] = MAX_1976.map((value, i) => ({
+  date: new Date(START + i * DAY_MS),
+  value,
+}));

@@ -15,13 +15,13 @@ export const entries: GalleryEntry[] = [
   {
     family: "lupi",
     id: "L1",
-    name: "Integration launches",
+    name: "Spring arrivals",
     render: () => <LaunchFan />,
   },
   {
     family: "lupi",
     id: "L2",
-    name: "Ranked causes",
+    name: "Named mates",
     render: () => <DotCascade />,
   },
   {
@@ -33,43 +33,43 @@ export const entries: GalleryEntry[] = [
   {
     family: "lupi",
     id: "L4",
-    name: "Features by city",
-    render: () => <ArcMatrix />,
+    name: "New woodland",
+    render: () => <ArcMatrix top={1} />,
   },
   {
     family: "lupi",
     id: "L5",
-    name: "Requests by theme",
+    name: "Named storms",
     render: () => <RadialConvergence />,
   },
   {
     family: "lupi",
     id: "L6",
-    name: "Contributor clusters",
+    name: "Grape families",
     render: () => <ClusterField />,
   },
   {
     family: "lupi",
     id: "L7",
-    name: "Brand traits",
+    name: "Four summits",
     render: () => <BrandSpectrum />,
   },
   {
     family: "lupi",
     id: "L8",
-    name: "Team weeks",
+    name: "Years gained",
     render: () => <DottyMatrix />,
   },
   {
     family: "lupi",
     id: "L9",
-    name: "Tickets by year",
-    render: () => <BubbleAlmanac />,
+    name: "Coffee growers",
+    render: () => <BubbleAlmanac height={400} />,
   },
   {
     family: "lupi",
     id: "L10",
-    name: "Deploy hours",
+    name: "Solar flares",
     render: () => <RadialPatchwork />,
   },
 ];

@@ -7,16 +7,14 @@ import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { DotScreen, KeySwatch, PlateLabel } from "../texture";
-import {
-  HALFTONE_R,
-  TEXTURE_PITCH,
-  paint,
-  useTextureIds,
-} from "../texture-ids";
+import { DotScreen, PlateLabel } from "../texture";
+import { HALFTONE_R, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { mainCentroid } from "./geo";
 import type { ChoroplethDatum, Region } from "./geo";
+import { Legend } from "./legend";
+import { stepFill } from "./step-fill";
+import type { StepFill } from "./step-fill";
 
 export interface ChoroplethProps {
   ariaLabel: string;
@@ -73,13 +71,6 @@ interface MapTip {
 const LEGEND_H = 52;
 /** The key row's centre, below the map. */
 const LEGEND_Y = 28;
-/** Side of a key swatch (KeySwatch), and the gap before its label. */
-const SWATCH = 12;
-const SWATCH_GAP = 6;
-/** Widest gap between keys. */
-const KEY_GAP = 12;
-/** Each key's pointer target: at least 44 by 44. */
-const HIT = 44;
 
 /**
  * The stepped dot screen for every step, on paper: the shared halftone
@@ -92,19 +83,6 @@ const SCREENS = HALFTONE_R.map((r) => ({
   tone: "fill-l3",
 }));
 const SOLID = "fill-hero";
-
-interface StepFill {
-  className: string;
-  fill?: string;
-}
-
-/** Fill for a shade step under the pattern id prefix `pid`; −1 (no value) is bare paper. */
-const stepFill = (bin: number, pid: string): StepFill => {
-  if (bin < 0) {
-    return { className: "fill-paper" };
-  }
-  return { className: "", fill: paint(`${pid}-${bin}`) };
-};
 
 /** A region's fill: the hero solid, every other region its step's screen. */
 const territoryFill = (t: Territory, pid: string): StepFill =>
@@ -402,119 +380,6 @@ const MapLabels = (props: MapLabelsProps) => (
     ))}
   </g>
 );
-
-interface LegendProps {
-  active: number | null;
-  pid: string;
-  /** Label for the no-value key; omitted when every region has a value. */
-  emptyLabel?: string;
-  onStep: (bin: number | null) => void;
-  short: (v: number) => string;
-  thresholds: ChoroplethProps["thresholds"];
-  width: number;
-  y: number;
-}
-
-/** A key as laid out: its step, label, drawn width and slot (the touch target). */
-interface Key {
-  bin: number;
-  label: string;
-  slot: number;
-  w: number;
-  x: number;
-}
-
-/** Keys left to right: no value (when shown), under the first break, then each break and up. */
-const keysFor = (props: LegendProps): Key[] => {
-  const t = props.thresholds;
-  const rows = [
-    ...(props.emptyLabel === undefined
-      ? []
-      : [{ bin: -1, label: props.emptyLabel }]),
-    { bin: 0, label: `<${props.short(t[0])}` },
-    ...t.map((v, i) => ({ bin: i + 1, label: `${props.short(v)}+` })),
-  ];
-  const sized = rows.map((r) => {
-    const w = SWATCH + SWATCH_GAP + sansWidth(r.label, 11);
-    return { ...r, slot: Math.max(HIT, Math.ceil(w)), w };
-  });
-  // The gap closes up on narrow plots so the row always fits on one line.
-  const room = props.width - sized.reduce((acc, k) => acc + k.slot, 0);
-  const gap = clamp(room / Math.max(1, sized.length - 1), 0, KEY_GAP);
-  const keys: Key[] = [];
-  let x = 0;
-  for (const k of sized) {
-    keys.push({ ...k, x });
-    x += k.slot + gap;
-  }
-  return keys;
-};
-
-/** One key with its 44px pointer target; hovering it isolates its step. */
-const LegendKey = (props: {
-  active: number | null;
-  k: Key;
-  onStep: (bin: number | null) => void;
-  pid: string;
-}) => {
-  const { k } = props;
-  const f = stepFill(k.bin, props.pid);
-  const left = k.x + (k.slot - k.w) / 2;
-  return (
-    <g
-      className={dimClass(props.active !== null && props.active !== k.bin)}
-      onPointerEnter={() => {
-        props.onStep(k.bin);
-      }}
-      onPointerLeave={() => {
-        props.onStep(null);
-      }}
-    >
-      <rect
-        className="fill-transparent"
-        height={HIT}
-        width={k.slot}
-        x={k.x}
-        y={-HIT / 2}
-      />
-      <KeySwatch
-        fill={f.fill}
-        tone={f.fill === undefined ? f.className : undefined}
-        x={left}
-        y={-SWATCH / 2}
-      />
-      <text
-        className="t-axis pointer-events-none"
-        dy="0.35em"
-        x={left + SWATCH + SWATCH_GAP}
-        y={0}
-      >
-        {k.label}
-      </text>
-    </g>
-  );
-};
-
-/** The key row, centred under the map: one KeySwatch per step. */
-const Legend = (props: LegendProps) => {
-  const keys = keysFor(props);
-  const last = keys.at(-1);
-  const total = last === undefined ? 0 : last.x + last.slot;
-  const left = Math.round(Math.max(0, (props.width - total) / 2));
-  return (
-    <g transform={`translate(${left}, ${Math.round(props.y)})`}>
-      {keys.map((k) => (
-        <LegendKey
-          active={props.active}
-          k={k}
-          key={k.bin}
-          onStep={props.onStep}
-          pid={props.pid}
-        />
-      ))}
-    </g>
-  );
-};
 
 /** The regions in focus, redrawn above the dimmed map inside an ink rule. */
 const LitLayer = (props: { lit: Territory[]; pid: string }) => (

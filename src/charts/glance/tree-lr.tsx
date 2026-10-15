@@ -128,7 +128,7 @@ const TreeNode = ({ n, x, y, k, tone, lit, hitRight, onEnter }: NodeProps) => {
 };
 
 /**
- * G7 Product tree. A two- or three-level hierarchy laid out left to right
+ * G7 Indo-European. A two- or three-level hierarchy laid out left to right
  * with smooth 1px hairline links; leaves are bare ends, named where the
  * link stops. One branch (the highlight, else the first) is inked; the
  * others share one grey. Hover any node to trace its path back to the root.
@@ -137,7 +137,7 @@ export const TreeLR = (props: TreeLRProps) => {
   const data = props.data ?? treeLRDemo;
   const height = props.height ?? 360;
   const [tip, setTip] = useState<Tip | null>(null);
-  const label = `Hierarchy: ${(data.children ?? []).map((c) => `${c.name} (${(c.children ?? []).map((g) => g.name).join(", ")})`).join("; ")}`;
+  const label = `Language family: ${(data.children ?? []).map((c) => `${c.name} (${(c.children ?? []).map((g) => g.name).join(", ")})`).join("; ")}`;
 
   return (
     <Plot
@@ -147,7 +147,7 @@ export const TreeLR = (props: TreeLRProps) => {
             <b>{pathOf(tip.node)}</b>
             {tip.node.children === undefined
               ? ""
-              : ` · ${tip.node.leaves().length} features`}
+              : ` · ${tip.node.leaves().length} languages`}
           </Tooltip>
         )
       }

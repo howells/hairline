@@ -19,7 +19,7 @@ interface RungBarsProps {
   height?: number;
   /** Index of the bar to emphasise in the hero colour. Defaults to the largest. */
   highlight?: number;
-  /** Footnote under the axis, e.g. "One rung = $1k". */
+  /** Footnote under the axis, e.g. "One rung = 100 rings". */
   note?: string;
   /** Units per rung. */
   unit?: number;

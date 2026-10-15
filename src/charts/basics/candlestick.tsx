@@ -27,8 +27,8 @@ interface CandlestickProps {
   format?: (v: number) => string;
   /**
    * Formats an exact price: the labelled highest high and lowest low, the
-   * tooltip and the description. Defaults to dollars and cents, which a
-   * share price needs and the whole-dollar money format would round away.
+   * tooltip and the description. Defaults to dollars and cents, which an
+   * exact price needs and the whole-dollar money format would round away.
    */
   formatPrice?: (v: number) => string;
   height?: number;

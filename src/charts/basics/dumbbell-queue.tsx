@@ -12,6 +12,8 @@ import { inkWidth, isActive, maxIndex } from "./util-b";
 import type { Tip } from "./util-b";
 
 interface DumbbellQueueProps {
+  /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
+  alert?: "fall" | "rise";
   data?: DumbbellDatum[];
   /** Axis end labels: [low end, high end]. */
   ends?: readonly [string, string];
@@ -33,6 +35,8 @@ interface Layout {
 }
 
 interface RowProps {
+  /** Which direction of change draws its rungs in the alert colour. */
+  alert: "fall" | "rise";
   datum: DumbbellDatum;
   format: (v: number) => string;
   hero: boolean;
@@ -104,6 +108,7 @@ const RUNG_H = 8;
  * dots (so none hide under a dot), on whole pixels.
  */
 const ChangeRungs = (props: {
+  alert: "fall" | "rise";
   datum: DumbbellDatum;
   index: number;
   layout: Layout;
@@ -117,7 +122,10 @@ const ChangeRungs = (props: {
   const gap0 = xb + dir * (layout.dotR + 3);
   const gap1 = xa - dir * (layout.dotR + 3);
   const count = Math.round(Math.abs(datum.before - datum.after) / props.unit);
-  const worse = datum.after > datum.before;
+  const worse =
+    props.alert === "rise"
+      ? datum.after > datum.before
+      : datum.after < datum.before;
   const rungs = Array.from({ length: count }, (_, k) => ({
     id: `${datum.label}-rung-${k}`,
     k,
@@ -185,6 +193,7 @@ const Row = (props: RowProps) => {
         {datum.label}
       </text>
       <ChangeRungs
+        alert={props.alert}
         datum={datum}
         index={props.index}
         layout={layout}
@@ -230,19 +239,20 @@ const Row = (props: RowProps) => {
 
 const describe = (d: DumbbellDatum, format: (v: number) => string): string =>
   d.after <= d.before
-    ? `${format(d.before - d.after)} saved`
-    : `${format(d.after - d.before)} lost`;
+    ? `${format(d.before - d.after)} less`
+    : `${format(d.after - d.before)} more`;
 
 /**
  * F12 Before and after. Hollow dot = before, solid dot = after, and the gap
  * between them holds one 2px rung per unit of change, so it can be counted.
- * The biggest change is in ink; a row that got worse rungs in the alert colour.
+ * The biggest change is in ink; a row that changed the alert way (a rise by default) rungs in the alert colour.
  */
 export const DumbbellQueue = (props: DumbbellQueueProps) => {
   const data = props.data ?? dumbbellQueueDemo;
   const height = props.height ?? 380;
   const format = props.format ?? String;
   const unit = props.unit ?? 1;
+  const alert = props.alert ?? "rise";
   const ends = props.ends ?? ["0", "Units"];
   const hero =
     props.highlight ??
@@ -284,6 +294,7 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
             <title>{label}</title>
             {data.map((d, i) => (
               <Row
+                alert={alert}
                 datum={d}
                 format={format}
                 hero={hero === d.label}

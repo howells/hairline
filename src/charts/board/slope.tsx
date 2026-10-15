@@ -2,7 +2,6 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
-import { fmtMs } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart } from "../core";
 import { nameWidth } from "./room";
@@ -40,13 +39,16 @@ const Columns = (props: {
 /** The labels carry semibold values, so less is shaved off their width. */
 const LABEL_SHAVE = 0.95;
 
+/** Below this width the narrow format is used, px. */
+const NARROW = 520;
+
 /** Gap between a column and its row labels, px. */
 const LABEL_GAP = 14;
 
 type Role = "lead" | "worst" | "rest";
 
 /**
- * The biggest gain in ink, the single worst regression in red, every other
+ * The biggest fall in ink, the single biggest rise in red, every other
  * row grey. Values stay in text tones: ink for the two marked rows.
  */
 const ROW_TONE: Record<Role, { stroke: string; value: string }> = {
@@ -55,7 +57,7 @@ const ROW_TONE: Record<Role, { stroke: string; value: string }> = {
   worst: { stroke: "var(--alert)", value: "fill-ink" },
 };
 
-/** One endpoint's before/after segment with a label at each end. */
+/** One row's before/after segment with a label at each end. */
 const SlopeRow = (props: {
   row: Row;
   i: number;
@@ -63,8 +65,9 @@ const SlopeRow = (props: {
   labelYs: [number, number];
   y: ScaleLinear<number, number>;
   dim: boolean;
-  /** The biggest improvement, the worst regression, or neither. */
+  /** The biggest fall, the biggest rise, or neither. */
   role: Role;
+  format: (v: number) => string;
   onHover: (name: string) => void;
 }) => {
   const { i, row, y } = props;
@@ -119,7 +122,7 @@ const SlopeRow = (props: {
         className={LABEL}
       >
         <tspan fill="var(--muted)">{name} </tspan>
-        <tspan className={valueClass}>{fmtMs(row.from)}</tspan>
+        <tspan className={valueClass}>{props.format(row.from)}</tspan>
       </text>
       <text
         x={xb + LABEL_GAP}
@@ -127,14 +130,14 @@ const SlopeRow = (props: {
         dy="0.34em"
         className={LABEL}
       >
-        <tspan className={valueClass}>{fmtMs(row.to)}</tspan>
+        <tspan className={valueClass}>{props.format(row.to)}</tspan>
         <tspan fill="var(--muted)"> {name}</tspan>
       </text>
     </g>
   );
 };
 
-/** The row's role: the biggest gain, the worst regression, or neither. */
+/** The row's role: the biggest fall, the biggest rise, or neither. */
 const roleOf = (row: Row, rows: Row[]): Role => {
   const change = (r: Row) => r.to - r.from;
   const best = Math.min(...rows.map(change));
@@ -145,9 +148,13 @@ const roleOf = (row: Row, rows: Row[]): Role => {
   return worst > 0 && change(row) === worst ? "worst" : "rest";
 };
 
-/** Before/after slope chart; the biggest gain inked, the worst regression red. */
+/** Before/after slope chart; the biggest fall inked, the biggest rise red. */
 export const Slope = (props: {
   rows: Row[];
+  /** Values at the two ends of each row. */
+  format: (v: number) => string;
+  /** The same on a phone, where a unit would crowd the columns together. */
+  narrowFormat?: (v: number) => string;
   height: number;
   labels: [string, string];
   domain: [number, number];
@@ -158,6 +165,10 @@ export const Slope = (props: {
   return (
     <Chart>
       {(width) => {
+        const format =
+          width < NARROW && props.narrowFormat !== undefined
+            ? props.narrowFormat
+            : props.format;
         const top = 40;
         const bottom = 24;
         const h = props.height;
@@ -165,13 +176,14 @@ export const Slope = (props: {
         const xs: [number, number] = [
           LABEL_GAP +
             nameWidth(
-              props.rows.map((r) => `${r.name} ${fmtMs(r.from)}`),
+              props.rows.map((r) => `${r.name} ${format(r.from)}`),
               LABEL_SHAVE
             ),
           width -
             LABEL_GAP -
+            3 -
             nameWidth(
-              props.rows.map((r) => `${fmtMs(r.to)} ${r.name}`),
+              props.rows.map((r) => `${format(r.to)} ${r.name}`),
               LABEL_SHAVE
             ),
         ];
@@ -212,6 +224,7 @@ export const Slope = (props: {
                 y={y}
                 dim={hover !== null && hover !== r.name}
                 role={roleOf(r, props.rows)}
+                format={format}
                 onHover={setHover}
               />
             ))}

@@ -1,0 +1,828 @@
+[
+  {
+    "id": "F1",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "U.S. Geological Survey",
+    "title": "Earthquake Catalog, FDSN event web service, count method",
+    "url": "https://earthquake.usgs.gov/fdsnws/event/1/count"
+  },
+  {
+    "id": "F2",
+    "licence": "Public domain (US government publication)",
+    "publisher": "Board of Governors of the Federal Reserve System",
+    "title": "Foreign Exchange Rates - H.10, historical rates for the Great British Pound",
+    "url": "https://www.federalreserve.gov/releases/h10/hist/dat00_uk.htm"
+  },
+  {
+    "id": "F3",
+    "licence": "Public domain (US government publication)",
+    "publisher": "U.S. Naval Observatory, Astronomical Applications Department",
+    "title": "Rise, Set and Transit API",
+    "url": "https://aa.usno.navy.mil/api/rstt/oneday"
+  },
+  {
+    "id": "F4",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "Ofgem",
+    "title": "Energy price cap (default tariff) update from 1 October 2025, Annex 1 Direct Debit Price Cap Cost Breakdown",
+    "url": "https://www.ofgem.gov.uk/sites/default/files/2025-08/summary-of-changes-to-energy-price-cap-1-october-to-31-december-2025.pdf"
+  },
+  {
+    "id": "F5",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "RSPB",
+    "title": "Big Garden Birdwatch results, 2026",
+    "url": "https://www.rspb.org.uk/whats-happening/big-garden-birdwatch/results"
+  },
+  {
+    "id": "F6",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics (via Nomis)",
+    "title": "Census 2021, TS061 Method used to travel to work",
+    "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_2078_1.data.csv"
+  },
+  {
+    "id": "F6",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics (via Nomis)",
+    "title": "Census 2011, QS703EW Method of travel to work (2001 specification)",
+    "url": "https://www.nomisweb.co.uk/api/v01/dataset/NM_576_1.data.csv"
+  },
+  {
+    "id": "F7",
+    "licence": "CC BY-SA 4.0",
+    "publisher": "Wikipedia",
+    "title": "Great Britain at the 2012 Summer Olympics",
+    "url": "https://en.wikipedia.org/wiki/Great_Britain_at_the_2012_Summer_Olympics"
+  },
+  {
+    "id": "F7",
+    "licence": "CC BY-SA 4.0",
+    "publisher": "Wikipedia",
+    "title": "Great Britain at the 2016 Summer Olympics",
+    "url": "https://en.wikipedia.org/wiki/Great_Britain_at_the_2016_Summer_Olympics"
+  },
+  {
+    "id": "F7",
+    "licence": "CC BY-SA 4.0",
+    "publisher": "Wikipedia",
+    "title": "Great Britain at the 2020 Summer Olympics",
+    "url": "https://en.wikipedia.org/wiki/Great_Britain_at_the_2020_Summer_Olympics"
+  },
+  {
+    "id": "F7",
+    "licence": "CC BY-SA 4.0",
+    "publisher": "Wikipedia",
+    "title": "Great Britain at the 2024 Summer Olympics",
+    "url": "https://en.wikipedia.org/wiki/Great_Britain_at_the_2024_Summer_Olympics"
+  },
+  {
+    "id": "F8",
+    "licence": "CC BY 4.0",
+    "publisher": "Food and Agriculture Organization of the United Nations (FAOSTAT)",
+    "title": "Crops and livestock products, apples, 2024",
+    "url": "https://www.fao.org/faostat/en/#data/QCL"
+  },
+  {
+    "id": "F9",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Estimates of the population for England and Wales, mid-2011 to mid-2025 detailed time series",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales"
+  },
+  {
+    "id": "F10",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "CDC National Center for Health Statistics",
+    "title": "2013 natality public use file (Nat2013us)",
+    "url": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/natality/Nat2013us.zip"
+  },
+  {
+    "id": "F10",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "CDC National Center for Health Statistics",
+    "title": "Data Brief 200, When Are Babies Born: Morning, Noon, or Night? Birth Certificate Data for 2013",
+    "url": "https://www.cdc.gov/nchs/products/databriefs/db200.htm"
+  },
+  {
+    "id": "F11",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office",
+    "title": "Historic station data, Oxford, monthly",
+    "url": "https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data"
+  },
+  {
+    "id": "F12",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Culture, Media and Sport",
+    "title": "Monthly and Quarterly Visits to DCMS-sponsored Museums and Galleries, to June 2026",
+    "url": "https://www.gov.uk/government/statistical-data-sets/museums-and-galleries-monthly-visits"
+  },
+  {
+    "id": "F13",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Environment, Food and Rural Affairs (Defra)",
+    "title": "Milk utilisation by dairies in England and Wales",
+    "url": "https://www.gov.uk/government/statistics/milk-utilisation-by-dairies-in-england-and-wales"
+  },
+  {
+    "id": "F14",
+    "licence": "MIT licence",
+    "publisher": "AndrewMillerOnline",
+    "title": "marathon-results, London results 2014 to 2018",
+    "url": "https://github.com/AndrewMillerOnline/marathon-results"
+  },
+  {
+    "id": "F15",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office",
+    "title": "Historic station data, Oxford, monthly",
+    "url": "https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data"
+  },
+  {
+    "id": "F16",
+    "licence": "Open Data Commons Attribution License v1.0",
+    "publisher": "Cricsheet",
+    "title": "Indian Premier League ball-by-ball data, CSV format",
+    "url": "https://cricsheet.org/downloads/ipl_csv2.zip"
+  },
+  {
+    "id": "L1",
+    "licence": "CC BY 4.0",
+    "publisher": "Cornell Lab of Ornithology (eBird Observation Dataset)",
+    "title": "eBird Observation Dataset, via GBIF",
+    "url": "https://doi.org/10.15468/aomfnb"
+  },
+  {
+    "id": "L1",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "GBIF",
+    "title": "Occurrence search, country GB, birds, weekly counts",
+    "url": "https://api.gbif.org/v1/occurrence/search"
+  },
+  {
+    "id": "L2",
+    "licence": "CC0",
+    "publisher": "Lichess",
+    "title": "Lichess open database, puzzles",
+    "url": "https://database.lichess.org/"
+  },
+  {
+    "id": "L3",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "NOAA Center for Operational Oceanographic Products and Services (CO-OPS)",
+    "title": "Tide predictions, station 8410140 (Eastport, Maine), 1 October to 31 December 2026",
+    "url": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=hairline&begin_date=20261001&end_date=20261231&datum=MLLW&station=8410140&time_zone=lst&units=metric&interval=hilo&format=json"
+  },
+  {
+    "id": "L4",
+    "licence": "Crown copyright, Open Government Licence v3.0",
+    "publisher": "Forest Research",
+    "title": "Provisional Woodland Statistics 2026, Data_for_Figure_3",
+    "url": "https://cdn.forestresearch.gov.uk/2026/07/pws_2026-06-25.ods"
+  },
+  {
+    "id": "L5",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office",
+    "title": "UK Storm Centre, storm season pages 2020/21 to 2025/26",
+    "url": "https://weather.metoffice.gov.uk/warnings-and-advice/uk-storm-centre/uk-storm-season-2020-21"
+  },
+  {
+    "id": "L6",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "University of Adelaide (Kym Anderson and Signe Nelgen)",
+    "title": "Which winegrape varieties are grown where? Database of winegrape bearing areas by variety, 2000 to 2023",
+    "url": "https://economics.adelaide.edu.au/wine-economics/databases"
+  },
+  {
+    "id": "L6",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "Vitis International Variety Catalogue (VIVC)",
+    "title": "Passport data, prime names of parents",
+    "url": "https://www.vivc.de/"
+  },
+  {
+    "id": "L7",
+    "licence": "CC BY 4.0",
+    "publisher": "The Database of British and Irish Hills",
+    "title": "The Database of British and Irish Hills v18.6",
+    "url": "https://www.hill-bagging.co.uk/dobih/downloads/"
+  },
+  {
+    "id": "L8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "National life tables, England reference tables",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesenglandreferencetables"
+  },
+  {
+    "id": "L8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "National life tables, Wales reference tables",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetableswalesreferencetables"
+  },
+  {
+    "id": "L8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "National life tables, Scotland reference tables",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesscotlandreferencetables"
+  },
+  {
+    "id": "L8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "National life tables, Northern Ireland reference tables",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesnorthernirelandreferencetables"
+  },
+  {
+    "id": "L9",
+    "licence": "CC BY 4.0",
+    "publisher": "Food and Agriculture Organization of the United Nations (FAOSTAT)",
+    "title": "Crops and livestock products, green coffee, 2016 to 2024",
+    "url": "https://www.fao.org/faostat/en/#data/QCL"
+  },
+  {
+    "id": "L10",
+    "licence": "Public domain (US government work)",
+    "publisher": "NOAA Space Weather Prediction Center",
+    "title": "GOES X-ray flare list, last seven days",
+    "url": "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json"
+  },
+  {
+    "id": "L17",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Number of live births by date, 1995 to 2016, in England and Wales (ad hoc request 009036)",
+    "url": "https://www.ons.gov.uk/aboutus/transparencyandgovernance/freedomofinformationfoi/dailybirthsdata"
+  },
+  {
+    "id": "L12",
+    "licence": "CC BY-SA",
+    "publisher": "Wikipedia",
+    "title": "List of lighthouses in England",
+    "url": "https://en.wikipedia.org/wiki/List_of_lighthouses_in_England"
+  },
+  {
+    "id": "L13",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "British Library",
+    "title": "Public Lending Right, earnings by pay band, 2024/25",
+    "url": "https://www.bl.uk/plr"
+  },
+  {
+    "id": "L14",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "NHS Blood and Transplant",
+    "title": "Blood types, percentage of donors with each blood type",
+    "url": "https://www.blood.co.uk/why-give-blood/blood-types/"
+  },
+  {
+    "id": "L15",
+    "licence": "Eurostat reuse policy (Commission Decision 2011/833/EU), with attribution",
+    "publisher": "Eurostat",
+    "title": "ilc_scp03, Persons participating in cultural or sport activities in the last 12 months (EU-SILC 2015 ad hoc module)",
+    "url": "https://ec.europa.eu/eurostat/databrowser/view/ilc_scp03/"
+  },
+  {
+    "id": "L16",
+    "licence": "Used under the author's published terms",
+    "publisher": "Peter Norvig",
+    "title": "English Letter Frequency Counts: Mayzner Revisited",
+    "url": "https://norvig.com/mayzner.html"
+  },
+  {
+    "id": "L16",
+    "licence": "Used under the author's published terms",
+    "publisher": "Peter Norvig",
+    "title": "Two-letter sequence counts (count_2l.txt)",
+    "url": "https://norvig.com/ngrams/count_2l.txt"
+  },
+  {
+    "id": "L11",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office, National Meteorological Library and Archive",
+    "title": "Factsheet 8, The Shipping Forecast",
+    "url": "https://www.metoffice.gov.uk/api/assets/file/factsheet_8_shipping_forecast_2025pdf?prefix=assets"
+  },
+  {
+    "id": "L11",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office",
+    "title": "Tragedy and warnings: the origins of the shipping forecast",
+    "url": "https://www.metoffice.gov.uk/about-us/who-we-are/our-history/tragedy-and-warnings-the-origins-of-the-shipping-forecast"
+  },
+  {
+    "id": "L11",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "Royal Museums Greenwich",
+    "title": "History of the Shipping Forecast",
+    "url": "https://www.rmg.co.uk/stories/maritime-history/shipping-forecast"
+  },
+  {
+    "id": "L19",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office Hadley Centre",
+    "title": "Central England Temperature (HadCET), daily mean",
+    "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html"
+  },
+  {
+    "id": "L20",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Public Health England",
+    "title": "McCance and Widdowson's The Composition of Foods Integrated Dataset (CoFID) 2021",
+    "url": "https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid"
+  },
+  {
+    "id": "G3",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "RPI: Ave price - Draught lager, per pint (series CZMS, dataset MM23)",
+    "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/czms/mm23"
+  },
+  {
+    "id": "G4",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Contains data supplied by UK Centre for Ecology & Hydrology",
+    "title": "Data describing pollen identified from honey samples originating from the UKCEH National Honey Monitoring Scheme for 2019 (Woodcock et al. 2022)",
+    "url": "https://doi.org/10.5285/e9ec63be-3f2b-4d1b-b9bf-77ca2b96c7f5"
+  },
+  {
+    "id": "G5",
+    "licence": "Public domain; Project Gutenberg licence",
+    "publisher": "Project Gutenberg",
+    "title": "War and Peace, translated by Aylmer Maude (ebook 2600)",
+    "url": "https://www.gutenberg.org/cache/epub/2600/pg2600.txt"
+  },
+  {
+    "id": "G5",
+    "licence": "Public domain; Project Gutenberg licence",
+    "publisher": "Project Gutenberg",
+    "title": "Les Misérables, translated by Isabel Florence Hapgood (ebook 135)",
+    "url": "https://www.gutenberg.org/cache/epub/135/pg135.txt"
+  },
+  {
+    "id": "G5",
+    "licence": "Public domain; Project Gutenberg licence",
+    "publisher": "Project Gutenberg",
+    "title": "Don Quixote, translated by John Ormsby (ebook 996)",
+    "url": "https://www.gutenberg.org/cache/epub/996/pg996.txt"
+  },
+  {
+    "id": "G5",
+    "licence": "Public domain; Project Gutenberg licence",
+    "publisher": "Project Gutenberg",
+    "title": "Middlemarch, by George Eliot (ebook 145)",
+    "url": "https://www.gutenberg.org/cache/epub/145/pg145.txt"
+  },
+  {
+    "id": "G6",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Internal migration in England and Wales, year ending June 2025",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/internalmigrationinenglandandwales"
+  },
+  {
+    "id": "G7",
+    "licence": "CC BY 4.0",
+    "publisher": "Max Planck Institute for Evolutionary Anthropology (Hammarström, Forkel, Haspelmath and Bank)",
+    "title": "Glottolog 5.3",
+    "url": "https://glottolog.org/meta/downloads"
+  },
+  {
+    "id": "G8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Environment Agency",
+    "title": "Hydrology API, River Ure at Kilgram Bridge daily mean flow and Sedbusk rain gauge daily rain",
+    "url": "https://environment.data.gov.uk/hydrology/"
+  },
+  {
+    "id": "G9",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "NASA/JPL Solar System Dynamics",
+    "title": "Small-Body Database (SBDB) Query API",
+    "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html"
+  },
+  {
+    "id": "G10",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Baby names in England and Wales from 1996",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/livebirths/datasets/babynamesinenglandandwalesfrom1996"
+  },
+  {
+    "id": "G11",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Environment Agency",
+    "title": "Hydrology API, daily mean flow of the Thames at Kingston and seven tributaries",
+    "url": "https://environment.data.gov.uk/hydrology/"
+  },
+  {
+    "id": "G12",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office Hadley Centre",
+    "title": "Central England Temperature (HadCET), daily mean",
+    "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html"
+  },
+  {
+    "id": "G13",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Time use in the UK: 9 to 17 March 2024",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/incomeandwealth/datasets/timeuseintheuk"
+  },
+  {
+    "id": "G14",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "NOAA Center for Operational Oceanographic Products and Services (CO-OPS)",
+    "title": "Tide predictions, six stations up the Hudson River, Sandy Hook to Albany, October 2026",
+    "url": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&application=hairline&begin_date=20261001&end_date=20261031&datum=MLLW&station=8531680&time_zone=lst&units=metric&interval=h&format=json"
+  },
+  {
+    "id": "G15",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "GOV.UK",
+    "title": "UK bank holidays, England and Wales (Good Friday dates used as a check)",
+    "url": "https://www.gov.uk/bank-holidays.json"
+  },
+  {
+    "id": "G15",
+    "licence": "Published figures; reuse terms not stated",
+    "publisher": "Jean Meeus",
+    "title": "Astronomical Algorithms (1991), Gregorian rule for the date of Easter",
+    "url": "https://en.wikipedia.org/wiki/Date_of_Easter#Anonymous_Gregorian_algorithm"
+  },
+  {
+    "id": "G16",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office of Rail and Road",
+    "title": "Estimates of station usage, Table 1415, entries and exits by station",
+    "url": "https://dataportal.orr.gov.uk/statistics/usage/estimates-of-station-usage/"
+  },
+  {
+    "id": "G18",
+    "licence": "CC0 1.0 Universal",
+    "publisher": "openfootball",
+    "title": "English Premier League 2024/25",
+    "url": "https://github.com/openfootball/england/blob/master/2024-25/1-premierleague.txt"
+  },
+  {
+    "id": "G19",
+    "licence": "CC BY-SA 4.0",
+    "publisher": "Central Council of Church Bell Ringers",
+    "title": "Dove's Guide for Church Bell Ringers (dove.csv)",
+    "url": "https://dove.cccbr.org.uk/downloads"
+  },
+  {
+    "id": "G20",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Family spending workbook 4: expenditure by household characteristic, financial years ending 2001 to 2019",
+    "url": "https://www.ons.gov.uk/peoplepopulationandcommunity/personalandhouseholdfinances/expenditure/datasets/familyspendingworkbook4expenditurebyhouseholdcharacteristic"
+  },
+  {
+    "id": "G21",
+    "licence": "CC0",
+    "publisher": "Nobel Prize Outreach",
+    "title": "Nobel Prize API v2.1, laureates",
+    "url": "https://api.nobelprize.org/2.1/laureates?limit=1200&format=json"
+  },
+  {
+    "id": "G22",
+    "licence": "Open Parliament Licence v3.0",
+    "publisher": "UK Parliament",
+    "title": "Commons Votes API, division 1877",
+    "url": "https://commonsvotes-api.parliament.uk/data/division/1877.json"
+  },
+  {
+    "id": "O1",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office Hadley Centre",
+    "title": "Central England Temperature (HadCET), daily maximum",
+    "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html"
+  },
+  {
+    "id": "O2",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Office for National Statistics",
+    "title": "Average prices (RPI), dataset MM23: draught lager, white loaf, pasteurised milk, tea bags",
+    "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/czms/mm23"
+  },
+  {
+    "id": "O3",
+    "licence": "Open Government Licence",
+    "publisher": "Department for Environment, Food and Rural Affairs (Defra)",
+    "title": "Agricultural land use in the United Kingdom",
+    "url": "https://www.gov.uk/government/statistics/agricultural-land-use-in-the-united-kingdom"
+  },
+  {
+    "id": "O4",
+    "licence": "Open Parliament Licence",
+    "publisher": "House of Commons Library",
+    "title": "UK Parliament Election Results website, 2024 general election",
+    "url": "https://electionresults.parliament.uk/general-elections/6"
+  },
+  {
+    "id": "O5",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office Hadley Centre",
+    "title": "Central England Temperature (HadCET), daily mean",
+    "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html"
+  },
+  {
+    "id": "O7",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office Hadley Centre",
+    "title": "Central England Temperature (HadCET), daily maximum",
+    "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html"
+  },
+  {
+    "id": "O8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office Hadley Centre",
+    "title": "Central England Temperature (HadCET), daily maximum",
+    "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/download.html"
+  },
+  {
+    "id": "O9",
+    "licence": "CC BY-SA 4.0",
+    "publisher": "Central Council of Church Bell Ringers",
+    "title": "Dove's Guide for Church Bell Ringers (dove.csv)",
+    "url": "https://dove.cccbr.org.uk/downloads"
+  },
+  {
+    "id": "O10",
+    "licence": "CC BY 4.0",
+    "publisher": "UK Centre for Ecology and Hydrology (Marston et al., Earth System Science Data)",
+    "title": "Land Cover Map 2021 (LCM2021), Table 5",
+    "url": "https://essd.copernicus.org/articles/15/4631/2023/essd-15-4631-2023.pdf"
+  },
+  {
+    "id": "M1",
+    "licence": "Public domain (US government publication)",
+    "publisher": "USDA National Agricultural Statistics Service",
+    "title": "2022 Census of Agriculture, Table 35, Cultivated Christmas Trees",
+    "url": "https://www.nass.usda.gov/Publications/AgCensus/2022/Full_Report/Volume_1,_Chapter_2_US_State_Level/st99_2_035_035.pdf"
+  },
+  {
+    "id": "M2",
+    "licence": "CC BY 4.0",
+    "publisher": "World Health Organization, Global Health Observatory, via Our World in Data",
+    "title": "Wine consumption per person",
+    "url": "https://ourworldindata.org/grapher/wine-consumption-per-capita"
+  },
+  {
+    "id": "B1",
+    "licence": "Public domain",
+    "publisher": "Central Intelligence Agency",
+    "title": "The World Factbook, country profiles, Land boundaries (factbook.json mirror)",
+    "url": "https://github.com/factbook/factbook.json"
+  },
+  {
+    "id": "B2",
+    "licence": "TfL Open Data; Powered by TfL Open Data",
+    "publisher": "Transport for London",
+    "title": "Annual station counts 2025",
+    "url": "https://crowding.data.tfl.gov.uk/"
+  },
+  {
+    "id": "B2",
+    "licence": "TfL Open Data; Powered by TfL Open Data",
+    "publisher": "Transport for London",
+    "title": "Unified API, Line StopPoints",
+    "url": "https://api.tfl.gov.uk/Line/{id}/StopPoints"
+  },
+  {
+    "id": "D1",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D1",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D2",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D2",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D3",
+    "licence": "CC BY 4.0",
+    "publisher": "National Energy SO (NESO)",
+    "title": "Carbon Intensity API, national intensity",
+    "url": "https://api.carbonintensity.org.uk"
+  },
+  {
+    "id": "D4",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D4",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D5",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D6",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Energy Security and Net Zero",
+    "title": "Digest of UK Energy Statistics (DUKES) 2026, table 5.6, generation by fuel",
+    "url": "https://assets.publishing.service.gov.uk/media/6a6a3616862aaf18d9c629eb/DUKES_5.6.xlsx"
+  },
+  {
+    "id": "D7",
+    "licence": "CC BY 4.0",
+    "publisher": "National Energy SO (NESO)",
+    "title": "Carbon Intensity API, regional intensity",
+    "url": "https://api.carbonintensity.org.uk"
+  },
+  {
+    "id": "D8",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Energy Security and Net Zero",
+    "title": "Digest of UK Energy Statistics (DUKES) 2026, table 5.11, power stations",
+    "url": "https://assets.publishing.service.gov.uk/media/6a6a365b0ddb7e4831c629f3/DUKES_5.11.xlsx"
+  },
+  {
+    "id": "D9",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Energy Security and Net Zero",
+    "title": "Energy Flow Chart 2024, terawatt hours",
+    "url": "https://assets.publishing.service.gov.uk/media/6887aa04be2291b14d11b01d/Energy_Flow_Chart_TWh_2024.pdf"
+  },
+  {
+    "id": "D10",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D10",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D10",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Met Office",
+    "title": "Past UK weather events, named storms of 2024",
+    "url": "https://www.metoffice.gov.uk/weather/learn-about/past-uk-weather-events"
+  },
+  {
+    "id": "D11",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D12",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D13",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D13",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D13",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Energy Security and Net Zero and National Energy SO (NESO)",
+    "title": "Clean Power 2030 Action Plan, technical annex",
+    "url": "https://assets.publishing.service.gov.uk/media/6776727f6a79200ddfa21b81/clean-power-2030-action-plan-technical-annex.pdf"
+  },
+  {
+    "id": "D14",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D14",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D15",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "D15",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "D15",
+    "licence": "CC BY 4.0",
+    "publisher": "National Energy SO (NESO)",
+    "title": "Carbon Intensity API, national intensity",
+    "url": "https://api.carbonintensity.org.uk"
+  },
+  {
+    "id": "D15",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "System Frequency, one-second data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/system-frequency-data"
+  },
+  {
+    "id": "D15",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Energy Security and Net Zero and National Energy SO (NESO)",
+    "title": "Clean Power 2030 Action Plan, technical annex",
+    "url": "https://assets.publishing.service.gov.uk/media/6776727f6a79200ddfa21b81/clean-power-2030-action-plan-technical-annex.pdf"
+  },
+  {
+    "id": "D16",
+    "licence": "CC BY 4.0",
+    "publisher": "National Energy SO (NESO)",
+    "title": "Carbon Intensity API, regional intensity",
+    "url": "https://api.carbonintensity.org.uk"
+  },
+  {
+    "id": "D17",
+    "licence": "CC BY 4.0",
+    "publisher": "National Energy SO (NESO)",
+    "title": "Carbon Intensity API, regional intensity",
+    "url": "https://api.carbonintensity.org.uk"
+  },
+  {
+    "id": "D18",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "System Frequency, one-second data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/system-frequency-data"
+  },
+  {
+    "id": "D19",
+    "licence": "Open Government Licence v3.0",
+    "publisher": "Department for Energy Security and Net Zero",
+    "title": "Digest of UK Energy Statistics (DUKES) 2026, table 5.11, power stations",
+    "url": "https://assets.publishing.service.gov.uk/media/6a6a365b0ddb7e4831c629f3/DUKES_5.11.xlsx"
+  },
+  {
+    "id": "O6",
+    "publisher": "Office for National Statistics",
+    "title": "Trade in goods: country by commodity, exports, 2025",
+    "url": "https://api.beta.ons.gov.uk/v1/datasets/trade/editions/time-series/versions/65",
+    "licence": "Open Government Licence v3.0"
+  },
+  {
+    "id": "B3",
+    "publisher": "GBIF Secretariat",
+    "title": "GBIF Backbone Taxonomy, living mammal species",
+    "url": "https://api.gbif.org/v1/species/search?highertaxonKey=359&rank=SPECIES&status=ACCEPTED&isExtinct=false",
+    "licence": "CC BY 4.0"
+  }
+]

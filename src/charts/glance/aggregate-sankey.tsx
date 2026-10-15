@@ -7,22 +7,16 @@ import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import {
-  dimClass,
-  noteSpace,
-  ranks,
-  sansWidth,
-  stagger,
-  wrapWords,
-} from "../util";
+import { dimClass, noteSpace, ranks, stagger, wrapWords } from "../util";
 import { aggregateSankeyDemo } from "./aggregate-sankey.data";
 import type { AggregateSankeyData, SankeyFlow } from "./aggregate-sankey.data";
+import { textWidth } from "./util-a";
 
 interface AggregateSankeyProps {
   data?: AggregateSankeyData;
   height?: number;
   format?: (v: number) => string;
-  /** Unit noun for the tooltip, e.g. "accounts". */
+  /** Unit noun for the tooltip, e.g. "MPs". */
   unit?: string;
   note?: string;
   /** Source label to keep in the hero colour. */
@@ -51,7 +45,7 @@ interface Focus {
 
 type Graph = SankeyGraph<NodeExtra, LinkExtra>;
 
-const round = (v: number) => `${Math.round(v)}`;
+const round = (v: number) => Math.round(v).toLocaleString("en-GB");
 
 /**
  * Engraving grammar for the sources after the hero, top to bottom: each
@@ -64,8 +58,8 @@ const LABEL_GAP = 12;
 const LABEL_EDGE = 4;
 const LABEL_LINE = 13;
 
-/** Width of a node label in the 12px label role. */
-const labelWidth = (text: string) => sansWidth(text, 12);
+/** Width of a node label in the label role, measured. */
+const labelWidth = (text: string) => textWidth(text, "t-label");
 
 interface Margins {
   left: number;
@@ -76,7 +70,8 @@ interface Margins {
 
 /**
  * Side margins sized from the labels: never less than the defaults (128 and
- * 92, or 84 and 52 narrow), and grown to fit the longest name. Source labels
+ * 92, or 84 and 52 narrow), and grown to fit the longest name, with the same
+ * spare room on both sides. Source labels
  * that would take more than ~40% of the width wrap, the value on its own line.
  */
 const labelMargins = (
@@ -106,15 +101,17 @@ const labelMargins = (
     0,
     ...data.targets.map((t) => labelWidth(`${t} ${valueOf(t)}`) + 6)
   );
+  // Each side needs its labels; any spare room is split so the ink is centred.
+  const needLeft = Math.ceil(widest) + LABEL_GAP + LABEL_EDGE;
+  const needRight = Math.ceil(widestTarget) + LABEL_GAP + LABEL_EDGE;
+  const spare = Math.max(
+    0,
+    (narrow ? 84 : 128) - needLeft,
+    (narrow ? 52 : 92) - needRight
+  );
   return {
-    left: Math.max(
-      narrow ? 84 : 128,
-      Math.ceil(widest) + LABEL_GAP + LABEL_EDGE
-    ),
-    right: Math.max(
-      narrow ? 52 : 92,
-      Math.ceil(widestTarget) + LABEL_GAP + LABEL_EDGE
-    ),
+    left: needLeft + spare,
+    right: needRight + spare,
     sourceLines,
   };
 };
@@ -379,7 +376,7 @@ const GrainDefs = ({ tex }: { tex: (name: string) => string }) => (
 );
 
 /**
- * G22 Channel to plan. Two columns: sources on the left, destinations on
+ * G22 Free vote. Two columns: sources on the left, destinations on
  * the right; ribbon width = amount. Each source's ribbons are engraved in
  * its own grain on paper (hatches leaning alternately, then stipple and
  * rules), keyed by its node bar; the biggest source (or the highlight) is
@@ -392,7 +389,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
   const data = props.data ?? aggregateSankeyDemo;
   const height = props.height ?? 420;
   const format = props.format ?? round;
-  const unit = props.unit ?? "accounts";
+  const unit = props.unit ?? "MPs";
   const [focus, setFocus] = useState<Focus | null>(null);
   const srcRank = ranks(
     data.sources.map((s) =>

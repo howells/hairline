@@ -1,9 +1,12 @@
 import { rnd } from "../../lib/random";
 
-/** A live feed: the reading for step n (n ≥ 0). Must be deterministic. */
+/** A rolling line: the value for step n (n ≥ 0). Must be deterministic. */
 export type StreamFeed = (step: number) => number;
 
-/** Fieldnote users online right now (thousands): a slow swell plus a little noise. Pure in `step`. */
+/**
+ * A slow swell with a quicker ripple and a little noise. Pure in `step`; not
+ * measured data.
+ */
 export const dynamicStreamDemo: StreamFeed = (step) =>
   21 +
   2.8 * Math.sin(step / 19) +

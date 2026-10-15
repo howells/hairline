@@ -19,13 +19,13 @@ import type { StreamFeed } from "./dynamic-stream.data";
 import { CONTROL_SLOT_H, useInView } from "./util-b";
 
 interface DynamicStreamProps {
-  /** Reading for step n (n ≥ 0). Must be deterministic. */
+  /** Value for step n (n ≥ 0). Must be deterministic. */
   feed?: StreamFeed;
-  /** Readings visible at once. */
+  /** Values visible at once. */
   window?: number;
-  /** Milliseconds between readings. */
+  /** Milliseconds between values. */
   interval?: number;
-  /** Fixed value domain; defaults to the range of the first 400 readings. */
+  /** Fixed value domain; defaults to the range of the first 400 values. */
   domain?: [number, number];
   height?: number;
   format?: (v: number) => string;
@@ -38,7 +38,7 @@ interface Hit {
   y: number;
 }
 
-const thousands = (v: number) => `${Math.round(v)}k`;
+const whole = (v: number) => `${Math.round(v)}`;
 
 const domainOf = (feed: StreamFeed): [number, number] => {
   let lo = Number.POSITIVE_INFINITY;
@@ -53,8 +53,8 @@ const domainOf = (feed: StreamFeed): [number, number] => {
 };
 
 /**
- * Stream clock in ms. Runs while revealed, on screen and not paused. Under
- * reduced motion it starts paused, and when played it steps a whole reading
+ * Clock in ms. Runs while revealed, on screen and not paused. Under
+ * reduced motion it starts paused, and when played it steps a whole value
  * at a time without scrolling.
  */
 const useStreamClock = (
@@ -100,7 +100,7 @@ const useStreamClock = (
   return { elapsed, handleToggle, playing, reduced };
 };
 
-/** Solid while live, hollow while paused. */
+/** Solid while running, hollow while paused. */
 const LiveDot = (props: { playing: boolean }) => (
   <svg width={8} height={8} viewBox="0 0 8 8" aria-hidden>
     <circle
@@ -129,7 +129,7 @@ interface LayerProps {
 
 /**
  * The stippled area and its line over a solid value grid, the baseline, and
- * the head: its dot on the plot's edge and its reading beside it. The scale
+ * the head: its dot on the plot's edge and its value beside it. The scale
  * reads at the right, each value on its rule, next to the latest data.
  */
 const StreamLayer = (p: LayerProps) => (
@@ -177,10 +177,10 @@ const StreamLayer = (p: LayerProps) => (
 );
 
 /**
- * G17 Live users. A live series: a new reading arrives every `interval`
- * ms and the window scrolls left to make room. The latest reading is printed
- * beside the head, and the scale reads at the right, each value on its rule. Runs only while
- * on screen; the Live control pauses and resumes.
+ * G17 Rolling swell. A line that keeps moving: a new value arrives every
+ * `interval` ms and the window scrolls left to make room. The latest value is
+ * printed beside the head, and the scale reads at the right, each value on its
+ * rule. Runs only while on screen; the Running control pauses and resumes.
  */
 export const DynamicStream = (props: DynamicStreamProps) => {
   const feed = props.feed ?? dynamicStreamDemo;
@@ -188,7 +188,7 @@ export const DynamicStream = (props: DynamicStreamProps) => {
   const interval = props.interval ?? 300;
   // The plot's share of the height, under the control slot.
   const height = (props.height ?? 320) - CONTROL_SLOT_H;
-  const format = props.format ?? thousands;
+  const format = props.format ?? whole;
   const clip = useSvgId("stream");
   const box = useRef<HTMLDivElement>(null);
   const clock = useStreamClock(box, interval);
@@ -197,21 +197,21 @@ export const DynamicStream = (props: DynamicStreamProps) => {
   const [lo, hi] = props.domain ?? auto;
   const head = win + Math.floor(clock.elapsed / interval);
   const frac = clock.reduced ? 0 : (clock.elapsed % interval) / interval;
-  // One extra reading past each edge so the scroll never shows a gap.
+  // One extra value past each edge so the scroll never shows a gap.
   const steps = Array.from({ length: win + 2 }, (_, k) => head - win + k);
-  // The newest reading still sliding in sits past the edge; the edge shows the one before it.
+  // The newest value still sliding in sits past the edge; the edge shows the one before it.
   const latest = feed(head - 1);
-  const label = `Live series, latest reading ${format(latest)}, window of ${win} readings`;
+  const label = `Rolling line, latest value ${format(latest)}, last ${win} values`;
 
   return (
     <div ref={box} className="relative">
       <ControlSlot>
         <Control
           onClick={clock.handleToggle}
-          label={clock.playing ? "Pause the live feed" : "Resume the live feed"}
+          label={clock.playing ? "Pause the swell" : "Resume the swell"}
         >
           <LiveDot playing={clock.playing} />
-          {clock.playing ? "Live" : "Paused"}
+          {clock.playing ? "Running" : "Paused"}
         </Control>
       </ControlSlot>
       <Plot
@@ -230,13 +230,13 @@ export const DynamicStream = (props: DynamicStreamProps) => {
           const m = {
             bottom: 12 + noteSpace(props.note, width - 16, 18),
             left: 4,
-            // The gutter holds the head reading, then the scale flush right.
+            // The gutter holds the head value, then the scale flush right.
             right: 64,
             top: 14,
           };
           const right = width - m.right;
           const dx = (right - m.left) / (win - 1);
-          // The newest reading sits one step past the right edge and slides in.
+          // The newest value sits one step past the right edge and slides in.
           const xOf = (s: number) => right - (head - s - 1 + frac) * dx;
           const y = scaleLinear()
             .domain([lo, hi])

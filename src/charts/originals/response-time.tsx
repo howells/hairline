@@ -1,5 +1,5 @@
-import { scaleLog } from "d3-scale";
-import type { ScaleLogarithmic } from "d3-scale";
+import { scaleLinear } from "d3-scale";
+import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
 import { crisp } from "../axes";
@@ -12,19 +12,19 @@ import {
   useTextureIds,
 } from "../texture-ids";
 import { dimClass, sansWidth, stagger } from "../util";
-import { fmtDuration } from "./format";
+import { fmtPercent } from "./format";
 import { Key } from "./key";
 import { LEVELS, MEDIAN, responseTimes } from "./response-time.data";
 import type { ChannelTimes } from "./response-time.data";
 
 const TOP = 30;
-/** One channel per row: a 44px-plus touch row. */
+/** One party per row: a 44px-plus touch row. */
 const ROW = 80;
 const GAP = 16;
 const DECILE = 14;
 const MEDIAN_H = 18;
-const DOMAIN: [number, number] = [1, 2880];
-/** The halftone: the shared ladder's dot sizes, largest where tickets crowd. */
+const DOMAIN: [number, number] = [0, 60];
+/** The halftone: the shared ladder's dot sizes, largest where constituencies crowd. */
 const DOT_R = HALFTONE_R;
 /**
  * The band, centred on its row: 21px inside the outline, a whole number of
@@ -32,16 +32,16 @@ const DOT_R = HALFTONE_R;
  */
 const BAND_UP = 11;
 const BAND_H = 23;
-const TICKS_WIDE = [1, 5, 15, 60, 240, 1440];
-const TICKS_NARROW = [1, 10, 60, 1440];
+const TICKS_WIDE = [0, 10, 20, 30, 40, 50, 60];
+const TICKS_NARROW = [0, 20, 40, 60];
 
 interface Frame {
   rowY: (k: number) => number;
-  x: ScaleLogarithmic<number, number>;
+  x: ScaleLinear<number, number>;
   x1: number;
 }
 
-/** Share of tickets per pixel in each step between kept percentiles. */
+/** Share of constituencies per pixel in each step between kept percentiles. */
 const densities = (q: number[], x: (v: number) => number) =>
   q
     .slice(0, -1)
@@ -66,8 +66,8 @@ interface RowProps {
 }
 
 /**
- * One channel: name, a halftone band from the 5th to the 95th percentile
- * whose dots grow where tickets crowd, a tick at every tenth percentile,
+ * One party: name, a halftone band from the 5th to the 95th percentile
+ * whose dots grow where constituencies crowd, a tick at every tenth percentile,
  * and the median.
  */
 const ChannelRow = ({
@@ -167,7 +167,7 @@ const ChannelRow = ({
         x={width}
         y={y}
       >
-        {fmtDuration(median)}
+        {fmtPercent(median)}
       </text>
     </g>
   );
@@ -189,7 +189,7 @@ const keyItems = (tex: (name: string) => string) => [
   { label: "Median", mark: tickMark(6, "stroke-l1") },
   { label: "Deciles", mark: tickMark(4, "stroke-l2") },
   {
-    label: "Tickets",
+    label: "Seats",
     mark: (
       <KeySwatch fill={paint(tex(String(DOT_R.length - 1)))} x={0} y={-6} />
     ),
@@ -217,31 +217,31 @@ interface ResponseTimeProps {
 }
 
 /**
- * O4 Response time. Each channel's first-response times as a comb on one
- * log scale: a tick at every tenth percentile over a halftone band whose
- * dots swell where tickets crowd. The fastest median is in ink.
+ * O4 Vote share. Each party's constituency vote shares as a comb on one
+ * percentage scale: a tick at every tenth percentile over a halftone band
+ * whose dots swell where constituencies crowd. The highest median is in ink.
  */
 export const ResponseTime = (props: ResponseTimeProps) => {
   const data = props.data ?? responseTimes;
   const [hover, setHover] = useState<number | null>(null);
   const tex = useTextureIds("response-time");
   const medians = data.map((d) => d.q[MEDIAN]);
-  const hero = medians.indexOf(Math.min(...medians));
+  const hero = medians.indexOf(Math.max(...medians));
   const floor = TOP + data.length * ROW;
   const height = floor + 26;
-  const label = `First response by channel, median: ${data.map((d) => `${d.channel} ${fmtDuration(d.q[MEDIAN])}`).join(", ")}`;
+  const label = `Vote share by constituency at the 2024 general election, median: ${data.map((d) => `${d.channel} ${fmtPercent(d.q[MEDIAN])}`).join(", ")}`;
 
   return (
     <Plot>
       {(width) => {
         const nameW = Math.max(...data.map((d) => sansWidth(d.channel, 12)));
         const valueW = Math.max(
-          ...medians.map((m) => sansWidth(fmtDuration(m), 12))
+          ...medians.map((m) => sansWidth(fmtPercent(m), 12))
         );
         const x1 = width - valueW - GAP;
         const frame: Frame = {
           rowY: (k) => TOP + k * ROW + ROW / 2,
-          x: scaleLog()
+          x: scaleLinear()
             .domain(DOMAIN)
             .range([nameW + GAP, x1]),
           x1,
@@ -277,7 +277,7 @@ export const ResponseTime = (props: ResponseTimeProps) => {
                     x={frame.x(t)}
                     y={floor + 18}
                   >
-                    {fmtDuration(t)}
+                    {fmtPercent(t)}
                   </text>
                 </g>
               ))}
@@ -302,8 +302,8 @@ export const ResponseTime = (props: ResponseTimeProps) => {
                 x={frame.x(tip.q[MEDIAN])}
                 y={frame.rowY(hover) - MEDIAN_H - 2}
               >
-                <b>{tip.channel}</b> · median {fmtDuration(tip.q[MEDIAN])} · p90{" "}
-                {fmtDuration(tip.q[9])}
+                <b>{tip.channel}</b> · median {fmtPercent(tip.q[MEDIAN])} · one
+                in ten above {fmtPercent(tip.q[9])}
               </Tooltip>
             )}
           </>

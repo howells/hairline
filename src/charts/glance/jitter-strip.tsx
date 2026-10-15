@@ -1,4 +1,4 @@
-import { median } from "d3-array";
+import { median, tickStep } from "d3-array";
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
@@ -15,9 +15,11 @@ interface JitterStripProps {
   data?: JitterGroup[];
   height?: number;
   format?: (v: number) => string;
-  /** Axis caption, e.g. "hours to resolve". */
+  /** Axis caption, e.g. "days after 21 March". */
   axisLabel?: string;
-  /** Unit for the tooltip noun, e.g. "ticket". */
+  /** Formats the labels on the scale; defaults to `format`. */
+  tickFormat?: (v: number) => string;
+  /** Unit for the tooltip noun when a record has no name, e.g. "year". */
   unit?: string;
   note?: string;
   /** Index of the hero group (default the first: median and name in ink); a given one also inks its rings. */
@@ -48,12 +50,13 @@ interface BandProps {
   labelX: number;
 }
 
-const hours = (v: number) => `${Math.round(v * 10) / 10}h`;
-const tickHours = (v: number) => (v === 0 ? "0" : `${v}h`);
+const plain = (v: number) => `${Math.round(v * 10) / 10}`;
 
-/** Gridlines every half day: hours read best in twelves. */
-const halfDays = (max: number) =>
-  Array.from({ length: Math.ceil(max / 12) + 1 }, (_, k) => k * 12);
+/** Gridlines at round steps, ending on the first one at or past the largest value. */
+const gridTicks = (max: number) => {
+  const step = tickStep(0, max, 4);
+  return Array.from({ length: Math.ceil(max / step) + 1 }, (_, k) => k * step);
+};
 
 interface Seat {
   x: number;
@@ -154,7 +157,7 @@ const Band = (p: BandProps) => {
 };
 
 /**
- * G15 Time to close. One hollow ring per record, set on a lattice: values
+ * G15 Easter dates. One hollow ring per record, set on a lattice: values
  * snap to equal-pitch columns and stack outward from each band's centre
  * line, so pile-ups read as taller columns, evenly spaced, with no random
  * jitter. The hero row's median (the first group, or the highlight) is a
@@ -163,8 +166,9 @@ const Band = (p: BandProps) => {
 export const JitterStrip = (props: JitterStripProps) => {
   const data = props.data ?? jitterStripDemo;
   const height = props.height ?? 420;
-  const format = props.format ?? hours;
-  const unit = props.unit ?? "ticket";
+  const format = props.format ?? plain;
+  const unit = props.unit ?? "record";
+  const tickFormat = props.tickFormat ?? format;
   const [hover, setHover] = useState<Hit | null>(null);
   const max = Math.max(...data.flatMap((d) => d.values));
   const medians = data.map((d) => median(d.values) ?? 0);
@@ -175,7 +179,8 @@ export const JitterStrip = (props: JitterStripProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data[hover.g].label}</b> · this {unit}{" "}
+            <b>{data[hover.g].label}</b> ·{" "}
+            {data[hover.g].names?.[hover.k] ?? `this ${unit}`}{" "}
             {format(data[hover.g].values[hover.k])} · median{" "}
             {format(medians[hover.g])}
           </Tooltip>
@@ -184,14 +189,14 @@ export const JitterStrip = (props: JitterStripProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        const ticks = halfDays(max);
+        const ticks = gridTicks(max);
         const m = {
           bottom: 40 + noteSpace(props.note, width - 16, 16),
           // Room for the longest group name.
           left: labelRoom(data.map((d) => d.label)) + 10,
           // Half the last tick label hangs past its gridline.
           right: Math.ceil(
-            textWidth(tickHours(ticks.at(-1) ?? 0), "t-axis") / 2
+            textWidth(tickFormat(ticks.at(-1) ?? 0), "t-axis") / 2
           ),
           top: 10,
         };
@@ -226,7 +231,7 @@ export const JitterStrip = (props: JitterStripProps) => {
                   y={floor + 16}
                   textAnchor="middle"
                 >
-                  {tickHours(t)}
+                  {tickFormat(t)}
                 </text>
               </g>
             ))}

@@ -211,7 +211,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
           .domain(data.map((d) => d.label))
           .range([x0, x0 + plotW])
           .paddingInner(0.3)
-          .paddingOuter(0.1);
+          .paddingOuter(0.3);
         const band = x.bandwidth();
         const labelRoom = width < 440 ? 18 : 26;
         const bw = Math.round(Math.min(56, band - labelRoom - 6));

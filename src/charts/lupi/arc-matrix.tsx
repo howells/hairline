@@ -1,6 +1,7 @@
 import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
+import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { clamp, noteSpace, sansWidth, stagger } from "../util";
@@ -11,7 +12,7 @@ interface ArcMatrixProps {
   data?: ArcMatrixData;
   height?: number;
   format?: (v: number) => string;
-  /** Noun for the tooltip, e.g. "paying accounts". */
+  /** Words after the value in the tooltip, e.g. "of new woodland". */
   noun?: string;
   note?: string;
   /** How many top cells to label; the largest is inked. Default 3. */
@@ -80,7 +81,7 @@ const arcLayout = (
     const left = labelW + 8 + rad;
     const right = Math.max(
       pitch * (nC - 1) + rad,
-      ...colW.map((w, c) => c * pitch + 3 + w * run + 3 * rise)
+      ...colW.map((w, c) => c * pitch + 8 + w * run + 3 * rise)
     );
     return { head, left, right, rows, tilt };
   };
@@ -169,15 +170,15 @@ const Frame = (props: {
 };
 
 /**
- * L4 Features by city. Category × category with a magnitude. Each row bows like a
+ * L4 New woodland. Category × category with a magnitude. Each row bows like a
  * horizon; the bubble at each crossing has area proportional to the value.
  * The top few cells are labelled; only the largest is inked.
  */
 export const ArcMatrix = (props: ArcMatrixProps) => {
   const data = props.data ?? arcMatrixDemo;
   const height = props.height ?? 440;
-  const format = props.format ?? ((v: number) => `${v}k`);
-  const noun = props.noun ?? "weekly users";
+  const format = props.format ?? ((v: number) => `${fmtInt(v)} ha`);
+  const noun = props.noun ?? "of new woodland";
   const [hover, setHover] = useState<CellHover | null>(null);
   const cells: MatrixCell[] = data.values.flatMap((row, r) =>
     row.map((v, c) => ({ c, id: `${data.rows[r]}-${data.cols[c]}`, r, v }))

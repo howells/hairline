@@ -8,6 +8,7 @@ import { PictorialBar } from "./pictorial-bar";
 import { RainfallDualArea } from "./rainfall-dual-area";
 import { ScatterMorph } from "./scatter-morph";
 import { StaggerWave } from "./stagger-wave";
+import { staggerWaveColdest } from "./stagger-wave.data";
 import { TreeLR } from "./tree-lr";
 
 /** Gallery entries owned by agent glance-a, in catalogue order. */
@@ -15,61 +16,61 @@ export const entries: GalleryEntry[] = [
   {
     family: "glance",
     id: "G3",
-    name: "MRR by plan",
+    name: "A pint over time",
     render: () => <ChunkyBars />,
   },
   {
     family: "glance",
     id: "G4",
-    name: "Sign-ups by platform",
-    render: () => <DotWaffle />,
+    name: "Pollen in honey",
+    render: () => <DotWaffle highlight={0} />,
   },
   {
     family: "glance",
     id: "G5",
-    name: "Notes by platform",
+    name: "Long novels",
     render: () => <PictorialBar />,
   },
   {
     family: "glance",
     id: "G6",
-    name: "Team links",
+    name: "Moving between regions",
     render: () => <CircularGraph />,
   },
   {
     family: "glance",
     id: "G7",
-    name: "Feature tree",
+    name: "Indo-European",
     render: () => <TreeLR />,
   },
   {
     family: "glance",
     id: "G8",
-    name: "Spend and sign-ups",
+    name: "Rain and river",
     render: () => <RainfallDualArea />,
   },
   {
     family: "glance",
     id: "G9",
-    name: "Three views",
+    name: "Largest asteroids",
     render: () => <ScatterMorph />,
   },
   {
     family: "glance",
     id: "G10",
-    name: "Net change",
+    name: "Names rising, falling",
     render: () => <DivergingBar />,
   },
   {
     family: "glance",
     id: "G11",
-    name: "Integrations",
+    name: "Into the Thames",
     render: () => <ForceGraph />,
   },
   {
     family: "glance",
     id: "G12",
-    name: "Daily sign-ups",
-    render: () => <StaggerWave />,
+    name: "Cold December",
+    render: () => <StaggerWave highlight={staggerWaveColdest} />,
   },
 ];

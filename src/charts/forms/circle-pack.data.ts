@@ -1,47 +1,58 @@
-/** A node in the org: a group with children, or a team with a headcount. */
+/**
+ * O9 Towers by county: church towers with a ring of bells hung for full-circle
+ * ringing, by country and county.
+ * Source: Dove's Guide for Church Bell Ringers (Central Council of Church Bell
+ * Ringers), https://dove.cccbr.org.uk/downloads (CC BY-SA 4.0; changes made:
+ * counted and trimmed, below).
+ * Fetched 2026-10-15.
+ * File: dove.csv (one row per full-circle or lightweight ring). Transform:
+ * rows with RingType "Full-circle ring" only; the distinct TowerID values
+ * counted for each Country and County. Three countries are shown: England
+ * (the six counties with most towers, of 49 with any; 6,656 towers in all),
+ * Wales (the four with most, of 22; 228 in all) and Australia (the four with
+ * most, of 8; 70 in all). Each cut falls where the next county has fewer
+ * towers than the last one kept.
+ */
+
+/** A node in the hierarchy: a country with counties, or a county with its tower count. */
 export interface OrgNode {
   children?: OrgNode[];
   name: string;
   value?: number;
 }
 
-/**
- * Fieldnote headcount by department and team, end of 2026: 120 engineers in
- * eight teams, and the company around them.
- */
+/** Towers with a full-circle ring in the largest counties of England, Wales and Australia. */
 export const orgDemo: OrgNode = {
   children: [
     {
       children: [
-        { name: "Product", value: 24 },
-        { name: "Platform", value: 20 },
-        { name: "Growth", value: 16 },
-        { name: "Data", value: 14 },
-        { name: "Infra", value: 14 },
-        { name: "Mobile", value: 13 },
-        { name: "Design", value: 10 },
-        { name: "Support", value: 9 },
+        { name: "Devon", value: 415 },
+        { name: "Somerset", value: 384 },
+        { name: "Lincolnshire", value: 347 },
+        { name: "Suffolk", value: 279 },
+        { name: "Norfolk", value: 251 },
+        { name: "Kent", value: 238 },
       ],
-      name: "Engineering",
+      name: "England",
     },
     {
       children: [
-        { name: "Sales", value: 17 },
-        { name: "Success", value: 13 },
-        { name: "Marketing", value: 10 },
-        { name: "Partners", value: 4 },
+        { name: "Powys", value: 54 },
+        { name: "Monmouthshire", value: 30 },
+        { name: "The Vale of Glamorgan", value: 21 },
+        { name: "Carmarthenshire", value: 13 },
       ],
-      name: "Go to market",
+      name: "Wales",
     },
     {
       children: [
-        { name: "People", value: 6 },
-        { name: "Finance", value: 5 },
-        { name: "IT", value: 4 },
-        { name: "Legal", value: 3 },
+        { name: "New South Wales", value: 36 },
+        { name: "Victoria", value: 12 },
+        { name: "Western Australia", value: 8 },
+        { name: "South Australia", value: 5 },
       ],
-      name: "Operations",
+      name: "Australia",
     },
   ],
-  name: "Fieldnote",
+  name: "Dove",
 };

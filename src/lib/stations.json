@@ -1,0 +1,744 @@
+[
+  {
+    "name": "Drax Power Station Biomass Units",
+    "fuel": "Biomass",
+    "mw": 2640,
+    "year": 2013,
+    "country": "England"
+  },
+  {
+    "name": "Pembroke",
+    "fuel": "Gas",
+    "mw": 2199,
+    "year": 2012,
+    "country": "Wales"
+  },
+  {
+    "name": "Ratcliffe (Steam)",
+    "fuel": "Coal",
+    "mw": 2021,
+    "year": 1967,
+    "country": "England"
+  },
+  {
+    "name": "Staythorpe",
+    "fuel": "Gas",
+    "mw": 1828,
+    "year": 2010,
+    "country": "England"
+  },
+  {
+    "name": "Dinorwig Power Station",
+    "fuel": "Pumped hydro",
+    "mw": 1800,
+    "year": 1984,
+    "country": "Wales"
+  },
+  {
+    "name": "Didcot B",
+    "fuel": "Gas",
+    "mw": 1450,
+    "year": 1998,
+    "country": "England"
+  },
+  {
+    "name": "Hornsea 02",
+    "fuel": "Wind",
+    "mw": 1386,
+    "year": 2022,
+    "country": "England"
+  },
+  {
+    "name": "Connahs Quay",
+    "fuel": "Gas",
+    "mw": 1380,
+    "year": 1996,
+    "country": "Wales"
+  },
+  {
+    "name": "EP SHB LTD",
+    "fuel": "Gas",
+    "mw": 1365,
+    "year": 1997,
+    "country": "England"
+  },
+  {
+    "name": "Grain",
+    "fuel": "Gas",
+    "mw": 1365,
+    "year": 2011,
+    "country": "England"
+  },
+  {
+    "name": "West Burton CCGT",
+    "fuel": "Gas",
+    "mw": 1332,
+    "year": 2013,
+    "country": "England"
+  },
+  {
+    "name": "VPI",
+    "fuel": "Gas",
+    "mw": 1268,
+    "year": 2004,
+    "country": "England"
+  },
+  {
+    "name": "Heysham 2",
+    "fuel": "Nuclear",
+    "mw": 1240,
+    "year": 1988,
+    "country": "England"
+  },
+  {
+    "name": "Seabank Power Ltd",
+    "fuel": "Gas",
+    "mw": 1234,
+    "year": 2000,
+    "country": "England"
+  },
+  {
+    "name": "Hornsea 01",
+    "fuel": "Wind",
+    "mw": 1218,
+    "year": 2019,
+    "country": "England"
+  },
+  {
+    "name": "Saltend Power Station",
+    "fuel": "Gas",
+    "mw": 1200,
+    "year": 2000,
+    "country": "England"
+  },
+  {
+    "name": "Torness",
+    "fuel": "Nuclear",
+    "mw": 1200,
+    "year": 1988,
+    "country": "Scotland"
+  },
+  {
+    "name": "Sizewell B",
+    "fuel": "Nuclear",
+    "mw": 1198,
+    "year": 1995,
+    "country": "England"
+  },
+  {
+    "name": "Hartlepool",
+    "fuel": "Nuclear",
+    "mw": 1185,
+    "year": 1983,
+    "country": "England"
+  },
+  {
+    "name": "Peterhead",
+    "fuel": "Gas",
+    "mw": 1180,
+    "year": 1980,
+    "country": "Scotland"
+  },
+  {
+    "name": "Seagreen",
+    "fuel": "Wind",
+    "mw": 1075,
+    "year": 2022,
+    "country": "Scotland"
+  },
+  {
+    "name": "Heysham 1",
+    "fuel": "Nuclear",
+    "mw": 1060,
+    "year": 1983,
+    "country": "England"
+  },
+  {
+    "name": "Moray Offshore Windfarm East Limited",
+    "fuel": "Wind",
+    "mw": 950,
+    "year": 2021,
+    "country": "Scotland"
+  },
+  {
+    "name": "Spalding Energy Company Ltd",
+    "fuel": "Gas",
+    "mw": 950,
+    "year": 2004,
+    "country": "England"
+  },
+  {
+    "name": "Carrington Power",
+    "fuel": "Gas",
+    "mw": 910,
+    "year": 2016,
+    "country": "England"
+  },
+  {
+    "name": "EP Langage Ltd",
+    "fuel": "Gas",
+    "mw": 905,
+    "year": 2010,
+    "country": "England"
+  },
+  {
+    "name": "Marchwood Power",
+    "fuel": "Gas",
+    "mw": 898,
+    "year": 2009,
+    "country": "England"
+  },
+  {
+    "name": "Triton Knoll",
+    "fuel": "Wind",
+    "mw": 857,
+    "year": 2021,
+    "country": "England"
+  },
+  {
+    "name": "Severn Power Ltd",
+    "fuel": "Gas",
+    "mw": 850,
+    "year": 2010,
+    "country": "England"
+  },
+  {
+    "name": "Keadby 2",
+    "fuel": "Gas",
+    "mw": 840,
+    "year": 2023,
+    "country": "England"
+  },
+  {
+    "name": "Rocksavage Power Company Ltd",
+    "fuel": "Gas",
+    "mw": 810,
+    "year": 1998,
+    "country": "England"
+  },
+  {
+    "name": "Damhead Creek",
+    "fuel": "Gas",
+    "mw": 805,
+    "year": 2000,
+    "country": "England"
+  },
+  {
+    "name": "Coryton Energy Company Ltd",
+    "fuel": "Gas",
+    "mw": 800,
+    "year": 2002,
+    "country": "England"
+  },
+  {
+    "name": "Medway",
+    "fuel": "Gas",
+    "mw": 755,
+    "year": 1995,
+    "country": "England"
+  },
+  {
+    "name": "Keadby",
+    "fuel": "Gas",
+    "mw": 735,
+    "year": 1982,
+    "country": "England"
+  },
+  {
+    "name": "Little Barford",
+    "fuel": "Gas",
+    "mw": 723,
+    "year": 1995,
+    "country": "England"
+  },
+  {
+    "name": "Rye House",
+    "fuel": "Gas",
+    "mw": 715,
+    "year": 1993,
+    "country": "England"
+  },
+  {
+    "name": "East Anglia One",
+    "fuel": "Wind",
+    "mw": 714,
+    "year": 2019,
+    "country": "England"
+  },
+  {
+    "name": "London Array",
+    "fuel": "Wind",
+    "mw": 630,
+    "year": 2013,
+    "country": "England"
+  },
+  {
+    "name": "EP Ballylumford CCGT",
+    "fuel": "Gas",
+    "mw": 616,
+    "year": 2003,
+    "country": "Northern Ireland"
+  },
+  {
+    "name": "Killingholme",
+    "fuel": "Gas",
+    "mw": 600,
+    "year": 1992,
+    "country": "England"
+  },
+  {
+    "name": "Beatrice Offshore windfarm",
+    "fuel": "Wind",
+    "mw": 588,
+    "year": 2018,
+    "country": "Scotland"
+  },
+  {
+    "name": "Gwynt y Mor",
+    "fuel": "Wind",
+    "mw": 576,
+    "year": 2013,
+    "country": "Wales"
+  },
+  {
+    "name": "Race Bank",
+    "fuel": "Wind",
+    "mw": 573,
+    "year": 2018,
+    "country": "England"
+  },
+  {
+    "name": "Greater Gabbard",
+    "fuel": "Wind",
+    "mw": 504,
+    "year": 2011,
+    "country": "England"
+  },
+  {
+    "name": "Cottam Development Centre",
+    "fuel": "Gas",
+    "mw": 445,
+    "year": 1998,
+    "country": "England"
+  },
+  {
+    "name": "Cruachan",
+    "fuel": "Pumped hydro",
+    "mw": 440,
+    "year": 1965,
+    "country": "Scotland"
+  },
+  {
+    "name": "Great Yarmouth",
+    "fuel": "Gas",
+    "mw": 420,
+    "year": 2001,
+    "country": "England"
+  },
+  {
+    "name": "Lynemouth Power Limited",
+    "fuel": "Biomass",
+    "mw": 420,
+    "year": 2018,
+    "country": "England"
+  },
+  {
+    "name": "Shoreham",
+    "fuel": "Gas",
+    "mw": 420,
+    "year": 2000,
+    "country": "England"
+  },
+  {
+    "name": "CoolkeeraghESB C30",
+    "fuel": "Gas",
+    "mw": 413,
+    "year": 2004,
+    "country": "Northern Ireland"
+  },
+  {
+    "name": "Enfield",
+    "fuel": "Gas",
+    "mw": 408,
+    "year": 1999,
+    "country": "England"
+  },
+  {
+    "name": "Corby Power Station",
+    "fuel": "Gas",
+    "mw": 407,
+    "year": 1994,
+    "country": "England"
+  },
+  {
+    "name": "Rampion",
+    "fuel": "Wind",
+    "mw": 400,
+    "year": 2018,
+    "country": "England"
+  },
+  {
+    "name": "Kings Lynn",
+    "fuel": "Gas",
+    "mw": 395,
+    "year": 1997,
+    "country": "England"
+  },
+  {
+    "name": "West of Duddon Sands",
+    "fuel": "Wind",
+    "mw": 389,
+    "year": 2014,
+    "country": "England"
+  },
+  {
+    "name": "Ffestiniog Power Station",
+    "fuel": "Pumped hydro",
+    "mw": 360,
+    "year": 1963,
+    "country": "Wales"
+  },
+  {
+    "name": "Galloper",
+    "fuel": "Wind",
+    "mw": 353,
+    "year": 2017,
+    "country": "England"
+  },
+  {
+    "name": "Walney 03",
+    "fuel": "Wind",
+    "mw": 330,
+    "year": 2017,
+    "country": "England"
+  },
+  {
+    "name": "Walney 04",
+    "fuel": "Wind",
+    "mw": 329,
+    "year": 2018,
+    "country": "England"
+  },
+  {
+    "name": "Whitelee I",
+    "fuel": "Wind",
+    "mw": 322,
+    "year": 2007,
+    "country": "Scotland"
+  },
+  {
+    "name": "Foyers Pumped Storage",
+    "fuel": "Pumped hydro",
+    "mw": 300,
+    "year": 1974,
+    "country": "Scotland"
+  },
+  {
+    "name": "Spalding Expansion OCGT",
+    "fuel": "Gas",
+    "mw": 300,
+    "year": 2019,
+    "country": "England"
+  },
+  {
+    "name": "Thanet",
+    "fuel": "Wind",
+    "mw": 300,
+    "year": 2010,
+    "country": "England"
+  },
+  {
+    "name": "Lincs",
+    "fuel": "Wind",
+    "mw": 270,
+    "year": 2013,
+    "country": "England"
+  },
+  {
+    "name": "Burbo Extension",
+    "fuel": "Wind",
+    "mw": 259,
+    "year": 2016,
+    "country": "England"
+  },
+  {
+    "name": "Peterborough Power Station",
+    "fuel": "Gas",
+    "mw": 245,
+    "year": 1993,
+    "country": "England"
+  },
+  {
+    "name": "South Kyle",
+    "fuel": "Wind",
+    "mw": 240,
+    "year": 2023,
+    "country": "Scotland"
+  },
+  {
+    "name": "Kilgallioch",
+    "fuel": "Wind",
+    "mw": 239,
+    "year": 2016,
+    "country": "Scotland"
+  },
+  {
+    "name": "Pen Y Cymoedd",
+    "fuel": "Wind",
+    "mw": 228,
+    "year": 2016,
+    "country": "Wales"
+  },
+  {
+    "name": "Stronelairg Wind Farm",
+    "fuel": "Wind",
+    "mw": 228,
+    "year": 2018,
+    "country": "Scotland"
+  },
+  {
+    "name": "Humber Gateway",
+    "fuel": "Wind",
+    "mw": 219,
+    "year": 2015,
+    "country": "England"
+  },
+  {
+    "name": "Whitelee II",
+    "fuel": "Wind",
+    "mw": 217,
+    "year": 2012,
+    "country": "Scotland"
+  },
+  {
+    "name": "Westermost Rough",
+    "fuel": "Wind",
+    "mw": 210,
+    "year": 2015,
+    "country": "England"
+  },
+  {
+    "name": "Clyde Windfarm (North)",
+    "fuel": "Wind",
+    "mw": 198,
+    "year": 2012,
+    "country": "Scotland"
+  },
+  {
+    "name": "Clyde Windfarm (Central)",
+    "fuel": "Wind",
+    "mw": 196,
+    "year": 2011,
+    "country": "Scotland"
+  },
+  {
+    "name": "Griffin Wind Farm",
+    "fuel": "Wind",
+    "mw": 189,
+    "year": 2011,
+    "country": "Scotland"
+  },
+  {
+    "name": "Walney 01",
+    "fuel": "Wind",
+    "mw": 183,
+    "year": 2011,
+    "country": "England"
+  },
+  {
+    "name": "Walney 02",
+    "fuel": "Wind",
+    "mw": 183,
+    "year": 2012,
+    "country": "England"
+  },
+  {
+    "name": "Dorenell",
+    "fuel": "Wind",
+    "mw": 177,
+    "year": 2018,
+    "country": "Scotland"
+  },
+  {
+    "name": "Sheringham Shoal BMU 1",
+    "fuel": "Wind",
+    "mw": 158,
+    "year": 2012,
+    "country": "England"
+  },
+  {
+    "name": "Sheringham Shoal BMU 2",
+    "fuel": "Wind",
+    "mw": 158,
+    "year": 2012,
+    "country": "England"
+  },
+  {
+    "name": "Sloy",
+    "fuel": "Hydro",
+    "mw": 152,
+    "year": 1950,
+    "country": "Scotland"
+  },
+  {
+    "name": "Ormonde",
+    "fuel": "Wind",
+    "mw": 150,
+    "year": 2011,
+    "country": "England"
+  },
+  {
+    "name": "Fallago Rig",
+    "fuel": "Wind",
+    "mw": 144,
+    "year": 2013,
+    "country": "Scotland"
+  },
+  {
+    "name": "Taylors Lane",
+    "fuel": "Oil",
+    "mw": 144,
+    "year": 1979,
+    "country": "England"
+  },
+  {
+    "name": "Cowes",
+    "fuel": "Oil",
+    "mw": 140,
+    "year": 1982,
+    "country": "England"
+  },
+  {
+    "name": "Indian Queens Power Ltd",
+    "fuel": "Oil",
+    "mw": 140,
+    "year": 1996,
+    "country": "England"
+  },
+  {
+    "name": "Crystal Rig II",
+    "fuel": "Wind",
+    "mw": 138,
+    "year": 2003,
+    "country": "Scotland"
+  },
+  {
+    "name": "Harestanes",
+    "fuel": "Wind",
+    "mw": 136,
+    "year": 2013,
+    "country": "Scotland"
+  },
+  {
+    "name": "Clyde Windfarm (South)",
+    "fuel": "Wind",
+    "mw": 129,
+    "year": 2011,
+    "country": "Scotland"
+  },
+  {
+    "name": "Black Law I",
+    "fuel": "Wind",
+    "mw": 124,
+    "year": 2005,
+    "country": "Scotland"
+  },
+  {
+    "name": "Arecleoch",
+    "fuel": "Wind",
+    "mw": 120,
+    "year": 2010,
+    "country": "Scotland"
+  },
+  {
+    "name": "Hadyard Hill Windfarm - A,C",
+    "fuel": "Wind",
+    "mw": 120,
+    "year": 2005,
+    "country": "Scotland"
+  },
+  {
+    "name": "Wilton International",
+    "fuel": "Gas",
+    "mw": 120,
+    "year": 1952,
+    "country": "England"
+  },
+  {
+    "name": "EP Ballylumford",
+    "fuel": "Oil",
+    "mw": 116,
+    "year": 1974,
+    "country": "Northern Ireland"
+  },
+  {
+    "name": "Bhlaraidh Wind Farm",
+    "fuel": "Wind",
+    "mw": 110,
+    "year": 2017,
+    "country": "Scotland"
+  },
+  {
+    "name": "Beinneun Wind Farm",
+    "fuel": "Wind",
+    "mw": 109,
+    "year": 2017,
+    "country": "Scotland"
+  },
+  {
+    "name": "Dudgeon BMU 1",
+    "fuel": "Wind",
+    "mw": 108,
+    "year": 2017,
+    "country": "England"
+  },
+  {
+    "name": "Gunfleet Sands 01",
+    "fuel": "Wind",
+    "mw": 108,
+    "year": 2010,
+    "country": "England"
+  },
+  {
+    "name": "Fellside CHP",
+    "fuel": "Gas",
+    "mw": 105,
+    "year": 1995,
+    "country": "England"
+  },
+  {
+    "name": "Dudgeon BMU 3",
+    "fuel": "Wind",
+    "mw": 102,
+    "year": 2017,
+    "country": "England"
+  },
+  {
+    "name": "Dudgeon BMU 4",
+    "fuel": "Wind",
+    "mw": 102,
+    "year": 2017,
+    "country": "England"
+  },
+  {
+    "name": "Didcot GT",
+    "fuel": "Oil",
+    "mw": 100,
+    "year": 1972,
+    "country": "England"
+  },
+  {
+    "name": "Glendoe Hydro Power Station",
+    "fuel": "Hydro",
+    "mw": 100,
+    "year": 2008,
+    "country": "Scotland"
+  },
+  {
+    "name": "Heartlands",
+    "fuel": "Gas",
+    "mw": 100,
+    "year": 1998,
+    "country": "England"
+  }
+]

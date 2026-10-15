@@ -10,7 +10,7 @@ import { TimeLines } from "./time-lines";
 const MAX_CELLS = 9;
 
 interface SparkGridProps {
-  /** Up to nine small multiples, read left to right. Defaults to the board's vitals. */
+  /** Up to nine small multiples, read left to right. Defaults to the board's nine vitals. */
   cells?: SparkCell[];
   /** Plot height of every cell, px. */
   height?: number;
@@ -35,9 +35,9 @@ const BarCell = (props: CellProps & { cell: SparkBarCell }) => {
       months={cell.months}
       stacks={[{ tone: "s1", values: cell.values }]}
       rest={cell.rest === undefined ? cell.values.length - 1 : cell.rest}
-      budget={
-        cell.kind === "budget" && cell.budget !== undefined
-          ? { value: cell.budget }
+      plan={
+        cell.kind === "plan" && cell.plan !== undefined
+          ? { value: cell.plan }
           : undefined
       }
       diverging={cell.kind === "diverging"}

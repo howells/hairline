@@ -7,13 +7,16 @@ import type { PointerEvent } from "react";
 import { Plot, Tooltip } from "../core";
 import { Hatch } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { dimClass, stagger, sum } from "../util";
+import { dimClass, sansWidth, stagger, sum } from "../util";
 import { sharedWorkDemo } from "./chord-ring.data";
 import type { SharedWork } from "./chord-ring.data";
 
-/** Room outside the ring for the horizontal team names. */
+/** Millions of pounds as billions ("£59.2bn"). */
+const fmtBn = (v: number) => `£${(v / 1000).toFixed(1)}bn`;
+
+/** Room outside the ring for the horizontal group names. */
 const LABEL_ROOM = 66;
-/** Thickness of a team's ring segment. */
+/** Thickness of a group's ring segment. */
 const RING = 3;
 /** Where ribbons and threads meet the ring: just inside its inner edge. */
 const GAP = 3;
@@ -101,6 +104,36 @@ const anchorAt = (angle: number) => {
   return s > 0 ? "start" : "end";
 };
 
+/** The ring's groups, as drawn: the same chord layout the ring uses. */
+const layoutOf = (matrix: number[][]) =>
+  chord()
+    .padAngle(0.035)
+    .sortSubgroups((a, b) => b - a)(matrix);
+
+/**
+ * The ring's centre across the plot, so that the ring and its names, taken
+ * together, sit the same distance from either side.
+ */
+const centreOf = (data: SharedWork, r: number, width: number) => {
+  let lo = -r;
+  let hi = r;
+  for (const g of layoutOf(data.matrix).groups) {
+    const mid = (g.startAngle + g.endAngle) / 2;
+    const x = Math.sin(mid) * (r + 12);
+    const w = sansWidth(data.teams[g.index], 12);
+    const side = anchorAt(mid);
+    if (side === "start") {
+      hi = Math.max(hi, x + w);
+    } else if (side === "end") {
+      lo = Math.min(lo, x - w);
+    } else {
+      lo = Math.min(lo, x - w / 2);
+      hi = Math.max(hi, x + w / 2);
+    }
+  }
+  return Math.round((width - (hi - lo)) / 2 - lo);
+};
+
 /** Names sit just outside the ring, set horizontally, hugging their side. */
 const TeamLabel = (props: {
   group: ChordGroup;
@@ -135,18 +168,16 @@ const touches = (c: Chord, team: number) =>
 
 interface RingProps {
   data: SharedWork;
-  /** Id of the ink hatch the focused team's ribbons are engraved with. */
+  /** Id of the ink hatch the focused group's ribbons are engraved with. */
   hatch: string;
   focus: number;
   hover: number | null;
   r: number;
 }
 
-/** Threads first, the focused team's ribbons over them, then the ring and names. */
+/** Threads first, the focused group's ribbons over them, then the ring and names. */
 const Ring = (props: RingProps) => {
-  const chords = chord()
-    .padAngle(0.035)
-    .sortSubgroups((a, b) => b - a)(props.data.matrix);
+  const chords = layoutOf(props.data.matrix);
   const inner = props.r - RING;
   const mine = chords.filter((c) => touches(c, props.focus));
   const others = chords.filter((c) => !touches(c, props.focus));
@@ -198,7 +229,7 @@ const Ring = (props: RingProps) => {
   );
 };
 
-/** The team whose ring segment spans the pointer's angle, if any. */
+/** The group whose ring segment spans the pointer's angle, if any. */
 const teamAt = (data: SharedWork, angle: number) => {
   const { groups } = chord().padAngle(0.035)(data.matrix);
   const turn = (angle + Math.PI * 2) % (Math.PI * 2);
@@ -206,17 +237,17 @@ const teamAt = (data: SharedWork, angle: number) => {
 };
 
 /**
- * O6 Shared work. Teams on a thin ring; every pair that shared projects is
+ * O6 Goods exports. Partners and kinds of goods on a thin ring; every pair that trades is
  * tied by a bundle of one to three hairlines through the centre, more
- * threads for more projects, so the ring reads as an engraved web on paper.
- * The busiest team is the ink hero, its pairs drawn as ribbons in an ink
- * hatch on paper; hovering another team moves the hatch to its pairs and
+ * threads for more pounds, so the ring reads as an engraved web on paper.
+ * The busiest group is the ink hero, its pairs drawn as ribbons in an ink
+ * hatch on paper; hovering another group moves the hatch to its pairs and
  * dims the threads.
  */
 export const ChordRing = (props: { data?: SharedWork }) => {
   const data = props.data ?? sharedWorkDemo;
   const [hover, setHover] = useState<Hover | null>(null);
-  const hatch = useTextureIds("shared")("hatch");
+  const hatch = useTextureIds("exports")("hatch");
   const totals = data.matrix.map((row) => sum(row));
   const busiest = totals.indexOf(Math.max(...totals));
   const focus = hover?.team ?? busiest;
@@ -225,8 +256,7 @@ export const ChordRing = (props: { data?: SharedWork }) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data.teams[hover.team]}</b> · {totals[hover.team]} shared
-            projects
+            <b>{data.teams[hover.team]}</b> · {fmtBn(totals[hover.team])}
           </Tooltip>
         )
       }
@@ -234,9 +264,9 @@ export const ChordRing = (props: { data?: SharedWork }) => {
       {(width) => {
         const size = Math.min(width, 460);
         const r = size / 2 - LABEL_ROOM;
-        const cx = Math.round(width / 2);
+        const cx = centreOf(data, r, width);
         const cy = Math.round(size / 2);
-        const label = `Projects shared between ${data.teams.length} teams in 2026; ${data.teams[busiest]} shared the most, ${totals[busiest]}`;
+        const label = `UK goods exports in 2025 between ${data.teams.length} partners and kinds of goods; ${data.teams[busiest]} is the largest, ${fmtBn(totals[busiest])}`;
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const box = e.currentTarget.getBoundingClientRect();
           const dx = e.clientX - box.left - cx;

@@ -12,9 +12,7 @@ import { clock, sectorPath } from "./util-a";
 interface RadialPatchworkProps {
   data?: PatchworkEvent[];
   height?: number;
-  /** Noun for the size, e.g. "files". */
-  noun?: string;
-  /** What a flagged (crosshatched) wedge means, e.g. "triggered an incident". */
+  /** What a flagged (crosshatched) wedge means, e.g. "class M or stronger". */
   outlined?: string;
   note?: string;
 }
@@ -92,7 +90,7 @@ const spanOf = (dial: Dial, event: PatchworkEvent, maxSize: number): Span => {
   return {
     a0,
     a1: a0 + Math.max(4, event.minutes / 4),
-    reach: dial.r0 + (dial.R - dial.r0) * Math.sqrt(event.size / maxSize),
+    reach: dial.r0 + ((dial.R - dial.r0) * event.size) / maxSize,
   };
 };
 
@@ -161,7 +159,7 @@ const levelPath = (dial: Dial, slices: Slice[], level: number) => {
 };
 
 /**
- * The deploys as a density map: where one wedge lies the hatch is open, where
+ * The events as a density map: where one wedge lies the hatch is open, where
  * two overlap it tightens, where three or more pile up it is densest. Each
  * level is hatch on paper inside a 1px rule.
  */
@@ -221,21 +219,19 @@ const HitWedges = (props: {
 };
 
 /**
- * L10 Deploy hours. Events overlaid on a 24-hour dial: wedge angle = time
- * of day, angular width = duration, reach = size (by area). Overlap is read
- * by hatch pitch, open to dense; the one flagged wedge is the hero,
- * crosshatched in ink.
+ * L10 Solar flares. Events overlaid on a 24-hour dial: wedge angle = time
+ * of day, angular width = duration, reach = size (linear in `size`, which is
+ * already on a log scale). Overlap is read by hatch pitch, open to dense;
+ * flagged wedges are crosshatched in ink.
  */
 export const RadialPatchwork = (props: RadialPatchworkProps) => {
   const data = props.data ?? radialPatchworkDemo;
   const height = props.height ?? 460;
-  const noun = props.noun ?? "files";
-  const outlined = props.outlined ?? "triggered an incident";
+  const outlined = props.outlined ?? "class M or stronger";
   const [tip, setTip] = useState<TipState | null>(null);
   const maxSize = Math.max(1, ...data.map((d) => d.size));
   const id = useTextureIds("patch");
   const levelIds = DENSITY.map((pitch) => id(`hatch-${pitch}`));
-  const hero = data.findIndex((d) => d.incident === true);
   const tipEvent = tip === null ? undefined : data.at(tip.i);
 
   return (
@@ -243,9 +239,9 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
       overlay={
         tip === null || tipEvent === undefined ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{hhmm(tipEvent.hour)}</b> · {tipEvent.size} {noun} ·{" "}
+            <b>{hhmm(tipEvent.hour)} UTC</b> · {tipEvent.label} ·{" "}
             {tipEvent.minutes} min
-            {tipEvent.incident === true ? ` · ${outlined}` : ""}
+            {tipEvent.flagged === true ? ` · ${outlined}` : ""}
           </Tooltip>
         )
       }
@@ -266,17 +262,17 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
         };
         const svgH = Math.min(height, Math.round(2 * R + 88 + noteH));
         const spans = data.map((event) => spanOf(dial, event, maxSize));
-        const heroSpan = spans.at(hero);
+        const flagged = spans.filter((_, i) => data[i]?.flagged === true);
         return (
           <svg
-            aria-label={`${data.length} events on a 24-hour dial, ${hero === -1 ? 0 : 1} flagged`}
+            aria-label={`${data.length} solar flares on a 24-hour dial in UTC, ${flagged.length} of ${outlined}`}
             height={svgH}
             onPointerLeave={() => {
               setTip(null);
             }}
             width={width}
           >
-            <title>Events overlaid on a 24-hour dial</title>
+            <title>Solar flares overlaid on a 24-hour dial</title>
             <defs>
               {DENSITY.map((pitch, level) => (
                 <Hatch
@@ -295,23 +291,24 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
             </defs>
             <DialFace dial={dial} />
             <Density dial={dial} ids={levelIds} slices={slicesOf(spans)} />
-            {heroSpan === undefined ? null : (
+            {flagged.map((span, k) => (
               <path
                 className="fade stroke-hero"
                 d={sectorPath(
                   dial.cx,
                   dial.cy,
                   dial.r0,
-                  heroSpan.reach,
-                  heroSpan.a0,
-                  heroSpan.a1
+                  span.reach,
+                  span.a0,
+                  span.a1
                 )}
                 fill={paint(id("hero"))}
+                key={`flag-${span.a0}-${span.a1}`}
                 strokeLinejoin="round"
                 strokeWidth={1}
-                style={stagger(DENSITY.length)}
+                style={stagger(DENSITY.length + k)}
               />
-            )}
+            ))}
             <HitWedges dial={dial} onEnter={setTip} spans={spans} tip={tip} />
             <PlotNote
               text={props.note}

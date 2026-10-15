@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { fmtKInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { PixelLine } from "../texture";
@@ -9,13 +10,13 @@ import type { DotCascadeDatum } from "./dot-cascade.data";
 
 interface DotCascadeProps {
   data?: DotCascadeDatum[];
-  /** Records per dot. */
+  /** Puzzles per tick. */
   unit?: number;
   /** Sort ascending (the staircase). Default true. */
   sort?: boolean;
   height?: number;
   format?: (v: number) => string;
-  /** Noun for the tooltip, e.g. "incidents". */
+  /** Words after the value in the tooltip, e.g. "puzzles". */
   noun?: string;
   note?: string;
   /** Label of the column drawn in ink. Defaults to the last (largest). */
@@ -159,18 +160,18 @@ const Column = ({
 };
 
 /**
- * L2 Ranked causes. Ranked counts as columns of 1px unit ticks (one tick =
- * `unit` records) at one even pitch, rising off a slanted floor, so the
+ * L2 Named mates. Ranked counts as columns of 1px unit ticks (one tick =
+ * `unit` puzzles) at one even pitch, rising off a slanted floor, so the
  * ranking reads as a staircase. A 2px cap tops each column, its value above.
  */
 export const DotCascade = (props: DotCascadeProps) => {
   const raw = props.data ?? dotCascadeDemo;
   const data =
     props.sort === false ? raw : raw.toSorted((a, b) => a.value - b.value);
-  const unit = props.unit ?? 2;
+  const unit = props.unit ?? 10_000;
   const height = props.height ?? 440;
-  const format = props.format ?? String;
-  const noun = props.noun ?? "incidents";
+  const format = props.format ?? fmtKInt;
+  const noun = props.noun ?? "puzzles";
   const [tip, setTip] = useState<{ i: number; x: number; y: number } | null>(
     null
   );
@@ -199,14 +200,14 @@ export const DotCascade = (props: DotCascadeProps) => {
         const fx1 = layout.colX(data.length - 1) + layout.pitch * 0.7;
         return (
           <svg
-            aria-label={`Ranked counts: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
+            aria-label={`Puzzles by mate: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
             height={layout.height}
             onPointerLeave={() => {
               setTip(null);
             }}
             width={width}
           >
-            <title>Ranked counts as stacked unit ticks</title>
+            <title>Puzzles by named mate as stacked unit ticks</title>
             <PixelLine
               className="fade"
               tone="fill-l5"

@@ -1,15 +1,15 @@
 import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
-import { fmtKInt, fmtMonth, monthTickLabels } from "../../lib/format";
+import { fmtDay, fmtMonth, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { PixelLine } from "../texture";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import {
-  LAUNCH_MONTHS,
+  ARRIVAL_WEEKS,
+  arrivalWeekDate,
   launchFanDemo,
-  launchMonthDate,
 } from "./launch-fan.data";
 import type { LaunchFanDatum } from "./launch-fan.data";
 import { arcPath, clock } from "./util-a";
@@ -20,11 +20,11 @@ export type FanUnit = "month" | "week";
 
 interface LaunchFanProps {
   data?: LaunchFanDatum[];
-  /** The current week: where every spoke ends. Same as `periods`. */
+  /** The last week: where every spoke ends. Same as `periods`. */
   weeks?: number;
   /**
-   * The current period, in `unit`s: where every spoke ends. Defaults to
-   * `weeks`, else 20 weeks or 24 months.
+   * The last period, in `unit`s: where every spoke ends. Defaults to
+   * `weeks`, else the demo's 24 weeks, else 20 weeks or 24 months.
    */
   periods?: number;
   /**
@@ -33,9 +33,9 @@ interface LaunchFanProps {
    */
   unit?: FanUnit;
   /**
-   * The calendar month of a period, for month fans: rings then read in the
-   * broadsheet style ("Jun 2025 · Dec · Jun 2026") and tooltips name the
-   * month. Without it periods read "W14" or "M14".
+   * The calendar date of a period: rings then read in the broadsheet style
+   * ("Mar 2025 · Apr · May") and tooltips name the day (weeks) or month
+   * (months). Without it periods read "W14" or "M14".
    */
   periodDate?: (period: number) => Date;
   height?: number;
@@ -68,7 +68,7 @@ interface FanLayout {
 }
 
 /** How far a spoke's name runs out from the last ring: its gap, then its text. */
-const nameRun = (d: LaunchFanDatum) => 10 + sansWidth(d.name, 11);
+const nameRun = (d: LaunchFanDatum) => 10 + sansWidth(d.name, 10.4);
 
 const fanLayout = (
   width: number,
@@ -129,6 +129,17 @@ const fanLayout = (
     rungR: (v) => 1.5 + 3.5 * Math.sqrt(v / weeklyMax),
     sizeR: (v) => sizeR(v),
   };
+};
+
+/** A reading as a per cent of all bird records. */
+const fmtShare = (v: number) => `${v.toFixed(2)}%`;
+
+/** The span when none is given: the demo's weeks, else 20 weeks or 24 months. */
+const defaultPeriods = (kind: "demo" | FanUnit) => {
+  if (kind === "demo") {
+    return ARRIVAL_WEEKS;
+  }
+  return kind === "week" ? 20 : 24;
 };
 
 /** Periods between rings: five weeks, or 3, 6 or 12 months by span. */
@@ -283,28 +294,34 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
 const UNIT_WORD = { month: "month", week: "week" } as const;
 const UNIT_TAG = { month: "M", week: "W" } as const;
 
+/** The unit, span and calendar for a fan: the demo's weeks unless given. */
+const spanOf = (props: LaunchFanProps) => {
+  const demo = props.data === undefined;
+  const unit = props.unit ?? (demo ? "week" : "month");
+  return {
+    periodDate: props.periodDate ?? (demo ? arrivalWeekDate : undefined),
+    unit,
+    weeks: props.periods ?? props.weeks ?? defaultPeriods(demo ? "demo" : unit),
+  };
+};
+
 /**
- * L1 Integration launches. One spoke per entity, fanned through a quarter turn and
- * ordered by launch. Distance along the spoke is time: the big dot sits at the
- * launch week or month (area = size today), and a 1px rung crosses the spoke
+ * L1 Spring arrivals. One spoke per entity, fanned through a quarter turn and
+ * ordered by arrival. Distance along the spoke is time: the big dot sits at the
+ * arrival week or month (area = peak reading), and a 1px rung crosses the spoke
  * at every one since, as long as that period's reading.
  */
 export const LaunchFan = (props: LaunchFanProps) => {
   const data = (props.data ?? launchFanDemo).toSorted(
     (a, b) => a.launch - b.launch
   );
-  const demo = props.data === undefined;
-  const unit = props.unit ?? "month";
-  const weeks =
-    props.periods ?? props.weeks ?? (unit === "week" ? 20 : LAUNCH_MONTHS);
+  const { periodDate, unit, weeks } = spanOf(props);
   const height = props.height ?? 460;
-  const format = props.format ?? ((v: number) => `${fmtKInt(v)} connected`);
+  const format = props.format ?? fmtShare;
   const word = UNIT_WORD[unit];
-  const periodDate = props.periodDate ?? (demo ? launchMonthDate : undefined);
+  const stamp = unit === "week" ? fmtDay : fmtMonth;
   const name = (n: number) =>
-    periodDate === undefined
-      ? `${UNIT_TAG[unit]}${n}`
-      : fmtMonth(periodDate(n));
+    periodDate === undefined ? `${UNIT_TAG[unit]}${n}` : stamp(periodDate(n));
   const rings = ringsOf(unit, weeks);
   const ringLabels =
     periodDate === undefined
@@ -318,7 +335,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
   const tipText = (t: FanTip) => {
     const d = data[t.i];
     if (t.week === undefined) {
-      return `${format(d.size)} today`;
+      return `peak ${format(d.size)}`;
     }
     return `${name(d.launch + t.week)} · ${format(d.weekly?.[t.week] ?? 0)}`;
   };
@@ -328,7 +345,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].name}</b> · launched {name(data[tip.i].launch)} ·{" "}
+            <b>{data[tip.i].name}</b> · arrived {name(data[tip.i].launch)} ·{" "}
             {tipText(tip)}
           </Tooltip>
         )
@@ -341,7 +358,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
         const svgH = Math.min(height, Math.round(layout.bottom + 6 + noteH));
         return (
           <svg
-            aria-label={`Launch fan: ${data.map((d) => `${d.name} launched ${name(d.launch)}, ${format(d.size)}`).join("; ")}`}
+            aria-label={`Arrival fan: ${data.map((d) => `${d.name} arrived ${name(d.launch)}, peak ${format(d.size)}`).join("; ")}`}
             height={svgH}
             onPointerLeave={() => {
               setTip(null);
@@ -349,7 +366,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
             width={width}
           >
             <title>
-              Launch {word} and size of each integration, one spoke each
+              Arrival {word} and peak reporting of each migrant, one spoke each
             </title>
             <Rings labels={ringLabels} layout={layout} rings={rings} />
             {data.map((d, i) => (

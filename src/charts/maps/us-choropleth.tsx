@@ -9,28 +9,38 @@ import type { StateDatum } from "./us-choropleth.data";
 
 interface USChoroplethProps {
   data?: StateDatum[];
+  /** Legend and tooltip text for states with no value. */
+  emptyLabel?: string;
   format?: (v: number) => string;
   /** Upper cap on the map height; otherwise the map keeps its own aspect. */
   height?: number;
-  /** Postal code(s) printed on the map; defaults to "CA". */
+  /** Postal code(s) printed on the map; defaults to the three states that cut most. */
   highlight?: string | string[];
   note?: string;
   /** Short value for legend and labels, e.g. 96k. */
   short?: (v: number) => string;
   /** Four ascending breaks between the five shades. */
   thresholds?: [number, number, number, number];
-  /** Unit after the tooltip value, e.g. "sign-ups". */
+  /** Unit after the tooltip value, e.g. "trees". */
   unit?: string;
 }
 
-/** Doubling breaks: each step twice the last. */
-const BREAKS: [number, number, number, number] = [2000, 4000, 8000, 16_000];
+/** Breaks for trees cut: ten thousand, fifty thousand, a quarter of a million, a million. */
+const BREAKS: [number, number, number, number] = [
+  10_000, 50_000, 250_000, 1_000_000,
+];
+/** The states printed on the map by default, most trees first. */
+const LABELLED = ["OR", "NC", "MI"];
 const project = (size: [number, number], outlines: FeatureCollection) =>
   geoAlbersUsa().fitSize(size, outlines);
-const kShort = (v: number) => `${Math.round(v / 1000)}k`;
+/** Trees in thousands or millions ("10k", "4.8m"). */
+const treesShort = (v: number) =>
+  v >= 1_000_000
+    ? `${Number((v / 1_000_000).toFixed(1))}m`
+    : `${Math.round(v / 1000)}k`;
 
 /**
- * M1 States. Real state outlines (Alaska and Hawaii inset lower left),
+ * M1 Christmas trees. Real state outlines (Alaska and Hawaii inset lower left),
  * value as a dot screen in five steps, 1px outlines, a hover tooltip
  * and a legend scale that isolates a step.
  */
@@ -42,23 +52,24 @@ export const USChoropleth = (props: USChoroplethProps) => {
     [data]
   );
   const labels =
-    props.highlight === undefined ? ["CA"] : [props.highlight].flat();
+    props.highlight === undefined ? LABELLED : [props.highlight].flat();
   const top = data
     .toSorted((a, b) => b.value - a.value)
     .slice(0, 5)
     .map((d) => `${d.state} ${format(d.value)}`);
   return (
     <Choropleth
-      ariaLabel={`US choropleth, highest: ${top.join(", ")}`}
+      ariaLabel={`Christmas trees cut in 2022 by state, most: ${top.join(", ")}`}
       aspect={0.7}
       data={rows}
+      emptyLabel={props.emptyLabel ?? "No data"}
       format={format}
       labels={labels}
       maxHeight={props.height ?? 420}
       note={props.note}
       project={project}
       regions={usStates}
-      short={props.short ?? kShort}
+      short={props.short ?? treesShort}
       thresholds={props.thresholds ?? BREAKS}
       unit={props.unit}
     />

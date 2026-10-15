@@ -41,7 +41,7 @@ interface Thread {
 const PITCH = TEXTURE_PITCH.hatch;
 
 /**
- * A stage's barcode: one 1px bar per handful of people, all strips on the
+ * A stage's barcode: one 1px bar per handful of payments, all strips on the
  * same even pitch and centred on one axis, so widths compare directly.
  */
 const stripFor = (
@@ -61,7 +61,7 @@ const stripFor = (
 };
 
 /**
- * Threads carry people from each strip down to the next: one from every
+ * Threads carry payments from each strip down to the next: one from every
  * other bar of the lower strip, rising from the evenly matching bar above,
  * so each step is a smooth, ordered fan rather than a tangle.
  */
@@ -207,8 +207,8 @@ const StepShares = ({ data, left, strips, yOf }: StepProps) => (
 );
 
 /**
- * L13 Signup funnel. A funnel poured top to bottom: each stage is a
- * barcode strip of evenly pitched bars whose width is the people at that
+ * L13 Library earnings. A funnel poured top to bottom: each stage is a
+ * barcode strip of evenly pitched bars whose width is the count at that
  * stage, ordered fans of hairline threads pour from one strip to the next,
  * and the share that gets through each step sits in the left margin, its
  * leader running into that step's fan.
@@ -226,11 +226,10 @@ export const HourglassStream = (props: HourglassStreamProps) => {
         const narrow = width < 460;
         const blockW = Math.min(width, 640);
         const left = (width - blockW) / 2;
-        // The stage names and figures end at the block's edge (sansWidth
-        // rounds each glyph up, so names are sized a little under the real 11).
+        // The stage names and figures end at the block's edge.
         const labelW = Math.max(
           ...data.flatMap((d) => [
-            sansWidth(d.label, 10.4),
+            sansWidth(d.label, 11),
             sansWidth(format(d.value), 11),
           ])
         );
@@ -257,12 +256,12 @@ export const HourglassStream = (props: HourglassStreamProps) => {
             <svg
               width={width}
               height={height}
-              aria-label={`Funnel: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
+              aria-label={`Payments by size: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
               onPointerLeave={() => {
                 setHover(null);
               }}
             >
-              <title>Funnel</title>
+              <title>Library earnings</title>
               <g className="stroke-l5 fill-none">
                 {threadsFor(strips, yOf, h).map((t) => (
                   <path

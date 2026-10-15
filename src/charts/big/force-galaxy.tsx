@@ -2,7 +2,6 @@ import type { Simulation } from "d3-force";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent, RefObject } from "react";
 
-import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { useReveal } from "../hooks";
 import { PlotNote } from "../plot-note";
@@ -30,6 +29,9 @@ import type {
 } from "./force-galaxy-model";
 import { forceGalaxyDemo } from "./force-galaxy.data";
 import type { GalaxyData } from "./force-galaxy.data";
+
+/** Millions a year to one decimal ("84.6m"). */
+const fmtMillions = (v: number) => `${v.toFixed(1)}m`;
 
 interface ForceGalaxyProps {
   data?: GalaxyData;
@@ -434,7 +436,7 @@ const GalaxySvg = (props: {
     [galaxy, handles, pid]
   );
   const domains = new Set(data.nodes.map((n) => n.domain)).size;
-  const label = `Service calls: ${data.nodes.length} services in ${domains} groups`;
+  const label = `Underground lines and stations: ${data.nodes.length} nodes in ${domains} lines`;
 
   return (
     <div
@@ -469,7 +471,7 @@ const GalaxySvg = (props: {
 };
 
 /**
- * B2 Service calls. ~180 services in domains: d3-force lays out the hubs,
+ * B2 Lines and stations. Stations round the lines they sit on: d3-force lays out the hubs,
  * and each hub carries its satellites on one ring at an even angular pitch,
  * busiest first from noon. Drag a hub (or any of its satellites) and it
  * springs back when released; hover to focus a node and its neighbours;
@@ -477,15 +479,15 @@ const GalaxySvg = (props: {
  */
 export const ForceGalaxy = (props: ForceGalaxyProps) => {
   const data = props.data ?? forceGalaxyDemo;
-  const format = props.format ?? fmtInt;
+  const format = props.format ?? fmtMillions;
   const [tip, setTip] = useState<StarTip | null>(null);
   return (
     <Plot
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.id}</b> · {format(tip.volume)} {props.unit ?? "calls/min"} ·{" "}
-            {tip.degree} links
+            <b>{tip.id}</b> · {format(tip.volume)}{" "}
+            {props.unit ?? "entries and exits a year"} · {tip.degree} links
           </Tooltip>
         )
       }

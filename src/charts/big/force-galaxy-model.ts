@@ -242,14 +242,23 @@ const slotsFor = (
   const across = width / 2 - EDGE_PAD - Math.max(ringR, nameW / 2);
   const down = floor / 2 - EDGE_PAD - ringR - LABEL_GAP - LABEL_HALF * 2;
   const R = Math.max(20, Math.min(across, down));
+  const homes = hubs.map((ring, i) => {
+    const a = (i / hubs.length) * Math.PI * 2;
+    return { a, half: Math.max(ringRadius(ring), ring.labelW / 2), ring };
+  });
+  // Slide the circle sideways so the rings and names, taken together, sit
+  // the same distance from either edge.
+  const lo = Math.min(...homes.map((h) => R * Math.sin(h.a) - h.half));
+  const hi = Math.max(...homes.map((h) => R * Math.sin(h.a) + h.half));
+  const shift = -(lo + hi) / 2;
   return new Map(
-    hubs.map((ring, i) => {
-      const a = (i / hubs.length) * Math.PI * 2;
-      return [
-        ring.hub.id,
-        { x: width / 2 + R * Math.sin(a), y: floor / 2 - R * Math.cos(a) },
-      ];
-    })
+    homes.map((h) => [
+      h.ring.hub.id,
+      {
+        x: width / 2 + shift + R * Math.sin(h.a),
+        y: floor / 2 - R * Math.cos(h.a),
+      },
+    ])
   );
 };
 

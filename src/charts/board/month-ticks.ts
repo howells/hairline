@@ -55,7 +55,7 @@ export const monthTickIndices = (months: Date[]) => {
 
 /**
  * Thin the ticks to fit, then label what is left: the year on the first
- * label and wherever it changes ("Jan 2025 · Jul · Jan 2026 · Jul").
+ * label and wherever it changes ("Jan 2023 · Jul · Jan 2024 · Jul").
  */
 export const labelledTicks = <T>(
   ticks: T[],

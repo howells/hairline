@@ -9,25 +9,25 @@ export const entries: GalleryEntry[] = [
   {
     family: "originals",
     id: "O1",
-    name: "Daily users",
+    name: "Summer of 1976",
     render: () => <DailyUsers />,
   },
   {
     family: "originals",
     id: "O2",
-    name: "Revenue by plan",
+    name: "Everyday prices",
     render: () => <RevenueByPlan />,
   },
   {
     family: "originals",
     id: "O3",
-    name: "Feature rank",
+    name: "Arable crops",
     render: () => <FeatureRank />,
   },
   {
     family: "originals",
     id: "O4",
-    name: "Response time",
+    name: "Vote share",
     render: () => <ResponseTime />,
   },
 ];

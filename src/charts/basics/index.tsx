@@ -1,4 +1,5 @@
 import type { GalleryEntry } from "../../gallery/types";
+import { fmtInt } from "../../lib/format";
 import { entries as a } from "./entries-a";
 import { entries as b } from "./entries-b";
 import { RungBars } from "./rung-bars";
@@ -8,8 +9,8 @@ const f1: GalleryEntry[] = [
   {
     family: "basics",
     id: "F1",
-    name: "Counted bars",
-    render: () => <RungBars format={(v) => `${v}k`} />,
+    name: "Major earthquakes",
+    render: () => <RungBars format={fmtInt} />,
   },
 ];
 

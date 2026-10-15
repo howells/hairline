@@ -66,8 +66,7 @@ const labelLeft = (n: SimNode) => {
   return !n.hub && dx < -0.4 * Math.hypot(dx, dy);
 };
 
-const defaultFormat = (v: number) =>
-  `${v.toLocaleString("en-US")}k syncs a month`;
+const defaultFormat = (v: number) => `${v.toFixed(1)} m³/s`;
 
 /** Nodes sized by sqrt(value); the hub is the biggest. */
 const buildGraph = (nodes: ForceNode[], links: ForceLink[]): Graph => {
@@ -376,7 +375,7 @@ const ForceField = (props: FieldProps) => {
     }
   }
   const hub = graph.nodes.find((n) => n.hub);
-  const label = `${hub?.datum.id ?? "Hub"} linked to ${graph.nodes.length - 1} integrations: ${graph.nodes
+  const label = `${hub?.datum.id ?? "Hub"} linked to ${graph.nodes.length - 1} tributaries: ${graph.nodes
     .flatMap((n) =>
       n.hub ? [] : [`${n.datum.id} ${props.format(n.datum.value)}`]
     )
@@ -452,8 +451,8 @@ const ForceField = (props: FieldProps) => {
 };
 
 /**
- * G11 Integrations. A hub and its satellites in a d3-force layout, node
- * area = volume, each link a bundle of 1–4 hairlines by strength. The hub is
+ * G11 Into the Thames. A hub and its satellites in a d3-force layout, node
+ * area = flow, each link a bundle of 1–4 hairlines by strength. The hub is
  * the one solid node and its strongest link the one ink bundle; satellites
  * are hollow rings. Drag a node: the springs pull it back when you let go.
  */

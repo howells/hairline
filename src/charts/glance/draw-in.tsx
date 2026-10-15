@@ -7,7 +7,7 @@ import { utcFormat } from "d3-time-format";
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent, RefObject } from "react";
 
-import { fmtMoney, monthTickLabels } from "../../lib/format";
+import { monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
@@ -27,7 +27,7 @@ interface DrawInProps {
   data?: DrawInDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** Caption under the big number, e.g. "ARR · H1 2026". */
+  /** Caption under the big number, e.g. "2024-25". */
   caption?: string;
   /** Draw duration in ms. */
   duration?: number;
@@ -41,6 +41,9 @@ interface Hit {
 }
 
 const fmtDate = utcFormat("%-d %b");
+
+const plain = (v: number) => Math.round(v).toLocaleString("en-GB");
+const goalsOf = (v: number) => `${plain(v)} goals`;
 
 /** Progress 0 → 1 of the draw. Runs once revealed and on screen; reduced motion starts at 1. */
 const useDrawClock = (
@@ -139,7 +142,7 @@ const Curve = (p: CurveProps) => (
     <ValueGrid
       floor={p.floor}
       ticks={p.y.ticks(4)}
-      format={fmtMoney}
+      format={plain}
       side="right"
       x0={p.left}
       x1={p.width}
@@ -239,7 +242,7 @@ const valueAt = (data: DrawInDatum[], e: number) => {
 };
 
 /**
- * G18 Bookings to date. One cumulative 2px line over a dot-screened area,
+ * G18 Premier League goals. One cumulative 2px line over a dot-screened area,
  * drawn left to right while the big number counts up in step with the tip of
  * the line. The scale reads at the right, each value on its rule.
  * Plays once when scrolled into view; Replay runs it again. Reduced motion
@@ -247,7 +250,7 @@ const valueAt = (data: DrawInDatum[], e: number) => {
  */
 export const DrawIn = (props: DrawInProps) => {
   const data = props.data ?? drawInDemo;
-  const format = props.format ?? fmtMoney;
+  const format = props.format ?? goalsOf;
   const clip = useSvgId("drawin");
   const box = useRef<HTMLDivElement>(null);
   const clock = useDrawClock(box, props.duration ?? 2200);

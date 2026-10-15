@@ -17,7 +17,7 @@ export const entries: GalleryEntry[] = [
   {
     family: "forms",
     id: "O6",
-    name: "Shared work",
+    name: "Goods exports",
     render: () => <ChordRing />,
   },
   {
@@ -35,13 +35,13 @@ export const entries: GalleryEntry[] = [
   {
     family: "forms",
     id: "O9",
-    name: "Teams by size",
+    name: "Towers by county",
     render: () => <CirclePack />,
   },
   {
     family: "forms",
     id: "O10",
-    name: "Hatched shares",
+    name: "Land by nation",
     render: () => <HatchedStack />,
   },
 ];

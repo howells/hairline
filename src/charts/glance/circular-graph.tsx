@@ -13,8 +13,6 @@ interface CircularGraphProps {
   links?: CircleLink[];
   height?: number;
   format?: (v: number) => string;
-  /** Unit for link totals in the tooltip, e.g. "shared projects". */
-  linkUnit?: string;
   note?: string;
   /** Node id to draw in the hero colour. */
   highlight?: string;
@@ -29,11 +27,22 @@ interface Placed {
   r: number;
 }
 
-const defaultFormat = (v: number) => `${v} people`;
+const defaultFormat = (v: number) => `${v}k moves`;
 
 const linkKey = (l: CircleLink) => `${l.source}→${l.target}`;
 const touches = (id: string, l: CircleLink) =>
   l.source === id || l.target === id;
+
+/** The region a node swaps the most people with, among the links drawn. */
+const partnerOf = (links: CircleLink[], id: string) => {
+  const [best] = links
+    .filter((l) => touches(id, l))
+    .toSorted((a, b) => b.value - a.value);
+  if (best === undefined) {
+    return "";
+  }
+  return best.source === id ? best.target : best.source;
+};
 
 interface LinksProps {
   links: CircleLink[];
@@ -128,18 +137,17 @@ const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
 };
 
 /**
- * G6 Team links. Up to a dozen nodes on a ring, area = size, links bowed
- * through the middle, each a bundle of 1–4 hairlines by shared projects.
- * Hover a node to trace it. The biggest team is the one solid node and its
- * strongest link the one ink bundle; the rest are hollow rings and l4
- * hairlines.
+ * G6 Moving between regions. Up to a dozen nodes on a ring, area = size,
+ * links bowed through the middle, each a bundle of 1–4 hairlines by the moves
+ * between the pair. Hover a node to trace it. The biggest region is the one
+ * solid node and its strongest link the one ink bundle; the rest are hollow
+ * rings and l4 hairlines.
  */
 export const CircularGraph = (props: CircularGraphProps) => {
   const nodes = props.nodes ?? circularGraphDemo.nodes;
   const links = props.links ?? circularGraphDemo.links;
   const height = props.height ?? 460;
   const format = props.format ?? defaultFormat;
-  const linkUnit = props.linkUnit ?? "shared projects";
   const [focus, setFocus] = useState<Placed | null>(null);
   const maxNode = Math.max(...nodes.map((n) => n.value));
   // The hero: the given node, else the biggest.
@@ -155,17 +163,15 @@ export const CircularGraph = (props: CircularGraphProps) => {
       focusId !== null && touches(focusId, l) ? [l.source, l.target] : []
     )
   );
-  const total = (id: string) =>
-    links.filter((l) => touches(id, l)).reduce((a, l) => a + l.value, 0);
-  const label = `Network of ${nodes.length} teams: ${links.map((l) => `${l.source}–${l.target} ${l.value}`).join(", ")}`;
+  const label = `Moves between ${nodes.length} regions: ${links.map((l) => `${l.source}–${l.target} ${format(l.value)}`).join(", ")}`;
 
   return (
     <Plot
       overlay={
         focus === null ? null : (
           <Tooltip x={focus.x} y={focus.y - focus.r - 4}>
-            <b>{focus.node.id}</b> · {format(focus.node.value)} ·{" "}
-            {total(focus.node.id)} {linkUnit}
+            <b>{focus.node.id}</b> · {format(focus.node.value)} · most with{" "}
+            {partnerOf(links, focus.node.id)}
           </Tooltip>
         )
       }
@@ -174,14 +180,11 @@ export const CircularGraph = (props: CircularGraphProps) => {
         const narrow = width < 460;
         const noteH = noteSpace(props.note, width - 16, 16);
         const rMax = narrow ? 18 : 26;
-        const R = Math.min(
+        const R0 = Math.min(
           height / 2 - rMax - 12,
           width / 2 - (narrow ? 70 : 96)
         );
-        // Width-bound rings (narrow screens) trim the unused height.
-        const svgH = Math.min(height, Math.round(2 * (R + rMax + 12) + noteH));
-        const cy = (svgH - noteH) / 2;
-        const ring = (cx: number): Placed[] =>
+        const ring = (cx: number, R: number, cy: number): Placed[] =>
           nodes.map((node, i) => {
             const a =
               -Math.PI / 2 +
@@ -196,16 +199,25 @@ export const CircularGraph = (props: CircularGraphProps) => {
               y: cy + R * Math.sin(a),
             };
           });
+        // How far the ring and its names reach either side of the centre.
+        const reachOf = (R: number) =>
+          ring(width / 2, R, 0).flatMap((p) => {
+            const { right, x } = labelOf(p);
+            const end = right
+              ? x + sansWidth(p.node.id, 11)
+              : x - sansWidth(p.node.id, 11);
+            return [p.x - p.r, p.x + p.r, end];
+          });
+        // Long names shrink the ring until the whole composition fits the plot.
+        const span0 = Math.max(...reachOf(R0)) - Math.min(...reachOf(R0));
+        const R = Math.max(40, R0 - Math.max(0, span0 - (width - 8)) / 2);
+        // Width-bound rings (narrow screens) trim the unused height.
+        const svgH = Math.min(height, Math.round(2 * (R + rMax + 12) + noteH));
+        const cy = (svgH - noteH) / 2;
         // Centre the ring with its names: the names reach further on one side.
-        const reach = ring(width / 2).flatMap((p) => {
-          const { right, x } = labelOf(p);
-          const end = right
-            ? x + sansWidth(p.node.id, 11)
-            : x - sansWidth(p.node.id, 11);
-          return [p.x - p.r, p.x + p.r, end];
-        });
+        const reach = reachOf(R);
         const cx = width - (Math.min(...reach) + Math.max(...reach)) / 2;
-        const placed = ring(cx);
+        const placed = ring(cx, R, cy);
         const at = new Map(placed.map((p) => [p.node.id, p]));
 
         return (

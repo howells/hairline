@@ -38,9 +38,11 @@ const LABEL_GAP = 10;
 interface HeatmapProps {
   rows: string[];
   values: number[][];
-  /** The rate from which a cell takes the densest screen. */
+  /** The value from which a cell takes the densest screen: the scale's top step. */
   threshold: number;
   domain: [number, number];
+  /** The ends of the key and the hovered cell's value. */
+  format: (v: number) => string;
   label: string;
 }
 
@@ -229,7 +231,7 @@ export const Heatmap = (props: HeatmapProps) => {
   const readout =
     hover === null
       ? null
-      : `${props.rows[hover[0]]} · ${hour(hover[1])} · ${props.values[hover[0]][hover[1]].toFixed(2)}%`;
+      : `${props.rows[hover[0]]} · ${hour(hover[1])} · ${props.format(props.values[hover[0]][hover[1]])}`;
 
   return (
     <Chart
@@ -239,7 +241,7 @@ export const Heatmap = (props: HeatmapProps) => {
         >
           {readout === null ? (
             <>
-              <span>{props.domain[0]}%</span>
+              <span>{props.format(props.domain[0])}</span>
               <Key
                 scale
                 items={[
@@ -247,7 +249,7 @@ export const Heatmap = (props: HeatmapProps) => {
                   { fill: paint(tex("hero")) },
                 ]}
               />
-              <span>{props.domain[1]}%</span>
+              <span>{props.format(props.domain[1])}</span>
             </>
           ) : (
             <span className="text-text">{readout}</span>

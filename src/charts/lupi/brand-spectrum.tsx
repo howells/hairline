@@ -17,7 +17,7 @@ interface BrandSpectrumProps {
   data?: SpectrumRow[];
   /** Names for the `others` positions, in order. */
   competitors?: string[];
-  /** Name for our own position. */
+  /** Name for the inked position. */
   us?: string;
   height?: number;
   note?: string;
@@ -25,7 +25,7 @@ interface BrandSpectrumProps {
 
 interface SpectrumHover {
   row: number;
-  /** 0 = us, k + 1 = competitor k. */
+  /** 0 = the inked hill, k + 1 = other k. */
   series: number;
   x: number;
   y: number;
@@ -57,7 +57,7 @@ const TICK_MINOR = 3;
 /** Half-height of the gap bar, so it spans 7 whole pixels on the rail. */
 const GAP_HALF = 3;
 
-/** A competitor: a hollow 1px ring, well under our dot. */
+/** Another hill: a hollow 1px ring, well under the inked dot. */
 const Ring = (props: { cx: number; cy: number; style?: CSSProperties }) => (
   <circle
     className="pop fill-paper stroke-l5"
@@ -73,12 +73,16 @@ const Ring = (props: { cx: number; cy: number; style?: CSSProperties }) => (
  * The rail's span, a whole multiple of the ruler's six intervals so every
  * tick falls on a whole pixel at one even pitch.
  */
-const spectrumAxis = (width: number): SpectrumAxis => {
+const spectrumAxis = (width: number, data: SpectrumRow[]): SpectrumAxis => {
   const narrow = width < 520;
   const labelW = narrow ? 0 : clamp(width * 0.2, 96, 140);
   const room = narrow ? width - 28 : Math.min(width - labelW * 2 - 60, 420);
   const axisW = Math.floor(room / (STOPS - 1)) * (STOPS - 1);
-  const x0 = Math.round((width - axisW) / 2);
+  // The longer end labels pull the rail toward the shorter side, so the ink
+  // of both label columns is centred, not the rail.
+  const leftW = Math.max(0, ...data.map((r) => sansWidth(r.left, 11)));
+  const rightW = Math.max(0, ...data.map((r) => sansWidth(r.right, 11)));
+  const x0 = Math.round((width - axisW + (narrow ? 0 : leftW - rightW)) / 2);
   return { narrow, x0, x1: x0 + axisW };
 };
 
@@ -137,8 +141,8 @@ interface GapBarProps {
 }
 
 /**
- * The story of the row: a short hatched bar on the rail from our position to
- * the competitors' mean, so the gap between them is drawn, not inferred.
+ * The story of the row: a short hatched bar on the rail from the inked position to
+ * the others' mean, so the gap between them is drawn, not inferred.
  */
 const GapBar = ({ fill, from, lit, r, to, y }: GapBarProps) => {
   const a = Math.round(Math.min(from, to));
@@ -262,13 +266,13 @@ const entryWidth = (name: string) => 18 + sansWidth(name, 12) + 20;
 const KEY_LINE = 20;
 
 /**
- * The key: our swatch in ink, a hollow swatch for the competitors and the
+ * The key: the inked hill's swatch, a hollow swatch for the others and the
  * gap bar's hatch, wrapping onto a second line when the row is too narrow.
  */
 const keyEntries = (gap: string, us: string, span: number) => {
   const items = [
     { name: us, tone: "fill-hero" },
-    { name: "Competitors", tone: "fill-paper" },
+    { name: "Others", tone: "fill-paper" },
     { fill: paint(gap), name: "Gap to their mean" },
   ];
   let cx = 0;
@@ -312,20 +316,20 @@ const SpectrumKey = (props: {
 );
 
 /**
- * L7 Brand traits. Bipolar scales where both ends are valid: one row per
- * pair of opposing traits, each rail a seven-stop ruler. Us (ink dot) and
- * competitors (hollow 1px rings, named on hover) sit along it, and a short
- * hatched bar draws the gap from us to the competitors' mean.
+ * L7 Four summits. Bipolar scales where both ends are valid: one row per
+ * pair of opposing poles, each rail a seven-stop ruler. One hill (ink dot)
+ * and the others (hollow 1px rings, named on hover) sit along it, and a short
+ * hatched bar draws the gap from the first to the others' mean.
  */
 export const BrandSpectrum = (props: BrandSpectrumProps) => {
   const data = props.data ?? brandSpectrumDemo;
   const competitors = props.competitors ?? brandSpectrumCompetitors;
-  const usName = props.us ?? "Fieldnote";
+  const usName = props.us ?? "Ben Nevis";
   const height = props.height ?? 440;
   const [hover, setHover] = useState<SpectrumHover | null>(null);
   const gap = useTextureIds("brand")("gap");
   const seriesName = (s: number) =>
-    s === 0 ? usName : (competitors.at(s - 1) ?? `Competitor ${s}`);
+    s === 0 ? usName : (competitors.at(s - 1) ?? `Other ${s}`);
   const tipValue = (h: SpectrumHover) => {
     const row = data[h.row];
     return lean(
@@ -345,7 +349,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
       }
     >
       {(width) => {
-        const axis = spectrumAxis(width);
+        const axis = spectrumAxis(width, data);
         // The key starts under the rail and may run on under the right-hand labels.
         const key = keyEntries(gap, usName, width - axis.x0 - 8);
         const footH =
@@ -357,7 +361,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
         const legendY = layout.rowY(data.length - 1) + 54;
         return (
           <svg
-            aria-label={`Brand positions: ${data.map((row) => `${usName} ${lean(row, row.us)}`).join("; ")}`}
+            aria-label={`Positions between opposing poles: ${data.map((row) => `${usName} ${lean(row, row.us)}`).join("; ")}`}
             height={layout.height}
             onPointerLeave={() => {
               setHover(null);
@@ -365,7 +369,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
             width={width}
           >
             <title>
-              Where we sit between opposing traits, against competitors
+              Where one hill sits between opposing poles, against others
             </title>
             <defs>
               <Hatch ground="fill-paper" id={gap} tone="fill-l4" />

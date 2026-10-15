@@ -1,11 +1,11 @@
 import { useState } from "react";
 
-import { fmtMoney, fmtSignedPct } from "../../lib/format";
+import { fmtSignedPct } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { CrossHatch, DotScreen, EngravedRect, Hatch } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, stagger, sum } from "../util";
+import { clamp, dimClass, sansWidth, stagger, sum } from "../util";
 import { planRevenue } from "./revenue-by-plan.data";
 import type { PlanRevenue } from "./revenue-by-plan.data";
 
@@ -14,7 +14,7 @@ const SCALE_Y = 10;
 const RULE_Y = 24;
 const TICK = 8;
 const TICK_TENTH = 14;
-/** The slim engraved bar under the ticks, one texture per plan. */
+/** The slim engraved bar under the ticks, one texture per good. */
 const BAR_Y = RULE_Y + TICK_TENTH + 6;
 /** The dimension mark: a gap under the bar, then a 1px tick down to the label. */
 const DIM_GAP = 4;
@@ -30,7 +30,7 @@ const VALUE_ROOM = 20;
 /** Room under the growth baseline for its note. */
 const NOTE_ROOM = 22;
 
-/** Ruler tick tones by rank: the largest plan in ink, the rest down the ramp. */
+/** Ruler tick tones by rank: the dearest good in ink, the rest down the ramp. */
 const TONES = ["stroke-ink", "stroke-l2", "stroke-l3", "stroke-l4"];
 
 /** The 0% and 100% labels sit inside the ruler's ends. */
@@ -42,7 +42,7 @@ const scaleAnchor = (f: number) => {
 };
 
 /**
- * Each plan's texture on paper, by rank: the largest crosshatched in ink,
+ * Each good's texture on paper, by rank: the largest crosshatched in ink,
  * then hatches that turn and lighten, and a dot screen for the smallest.
  */
 const Textures = ({ tex }: { tex: (name: string) => string }) => (
@@ -55,6 +55,8 @@ const Textures = ({ tex }: { tex: (name: string) => string }) => (
 );
 
 const fmtShare = (v: number) => `${Math.round(v * 100)}%`;
+/** A price in pounds and pence ("£4.77"). */
+const fmtPounds = (v: number) => `£${v.toFixed(2)}`;
 
 interface Segment extends PlanRevenue {
   end: number;
@@ -108,7 +110,7 @@ const layoutOf = (width: number): Layout => {
   };
 };
 
-/** Which tick (0–100) belongs to which plan: the one its first percent falls in. */
+/** Which tick (0–100) belongs to which good: the one its first percent falls in. */
 const ticksOf = (seg: Segment, last: boolean) =>
   Array.from({ length: 101 }, (_, i) => i).filter((i) => {
     const at = (Math.min(i, 99) + 0.5) / 100;
@@ -127,8 +129,8 @@ interface GrowthProps {
 }
 
 /**
- * The plan's growth on 2025 as a slim engraved column standing on a shared
- * baseline, hung from the plan's edge by a fine plumb line.
+ * The good's rise on 2014 as a slim engraved column standing on a shared
+ * baseline, hung from the good's edge by a fine plumb line.
  */
 const GrowthColumn = ({
   fill,
@@ -138,7 +140,10 @@ const GrowthColumn = ({
   outline,
   seg,
   tone,
+  width,
 }: GrowthProps) => {
+  const rise = fmtSignedPct(seg.growth * 100);
+  const flip = left + sansWidth(rise, 13) > width;
   const top = lay.base + COL_TOP;
   const h = Math.max(4, Math.round(((lay.floor - top) * seg.growth) / gMax));
   const y = lay.floor - h;
@@ -155,10 +160,11 @@ const GrowthColumn = ({
       <text
         className={`fade t-value ${tone}`}
         style={stagger(seg.k + 6)}
-        x={left}
+        textAnchor={flip ? "end" : "start"}
+        x={flip ? width : left}
         y={y - 7}
       >
-        {fmtSignedPct(seg.growth * 100)}
+        {rise}
       </text>
       <EngravedRect
         className={`grow-y ${outline}`}
@@ -178,7 +184,7 @@ const GrowthColumn = ({
 
 interface SegmentProps {
   dim: boolean;
-  /** The pattern fill for the plan's stretch of the bar. */
+  /** The pattern fill for the good's stretch of the bar. */
   fill: string;
   gMax: number;
   lay: Layout;
@@ -189,8 +195,8 @@ interface SegmentProps {
 }
 
 /**
- * One plan: its run of ruler ticks, its stretch of the bar, a dimension tick
- * down to its name, share and revenue, and its growth on the year before.
+ * One good: its run of ruler ticks, its stretch of the bar, a dimension tick
+ * down to its name, share and price, and its rise on 2014.
  */
 const SegmentMarks = ({
   dim,
@@ -204,10 +210,19 @@ const SegmentMarks = ({
 }: SegmentProps) => {
   const { base, x } = lay;
   const hero = seg.k === 0;
-  // Whole-pixel bar cell with a 2px paper gap after the plan before it.
+  // Whole-pixel bar cell with a 2px paper gap after the good before it.
   const left = Math.round(x(seg.start)) + (hero ? 0 : 2);
   const tone = hero ? "" : "fill-muted";
   const outline = hero ? "stroke-ink" : "stroke-l5";
+  // A narrow last segment would run its text past the plot: end it at the edge.
+  const textW = Math.max(
+    sansWidth(seg.plan, 13),
+    sansWidth(fmtShare(seg.share), 13),
+    sansWidth(fmtPounds(seg.revenue), 13)
+  );
+  const flip = left + textW > width;
+  const textX = flip ? width : left;
+  const anchor = flip ? "end" : "start";
   return (
     <g className={dimClass(dim)} onPointerEnter={onEnter}>
       <rect
@@ -251,14 +266,29 @@ const SegmentMarks = ({
         y2={base + DIM_GAP + DIM_LEN}
       />
       <g className="fade" style={stagger(seg.k + 4)}>
-        <text className={`t-label ${tone}`} x={left} y={base + NAME_Y}>
+        <text
+          className={`t-label ${tone}`}
+          textAnchor={anchor}
+          x={textX}
+          y={base + NAME_Y}
+        >
           {seg.plan}
         </text>
-        <text className={`t-value ${tone}`} x={left} y={base + SHARE_Y}>
+        <text
+          className={`t-value ${tone}`}
+          textAnchor={anchor}
+          x={textX}
+          y={base + SHARE_Y}
+        >
           {fmtShare(seg.share)}
         </text>
-        <text className="t-value fill-muted" x={left} y={base + MONEY_Y}>
-          {fmtMoney(seg.revenue * 1e6)}
+        <text
+          className="t-value fill-muted"
+          textAnchor={anchor}
+          x={textX}
+          y={base + MONEY_Y}
+        >
+          {fmtPounds(seg.revenue)}
         </text>
       </g>
       <GrowthColumn
@@ -304,10 +334,10 @@ interface RevenueByPlanProps {
 }
 
 /**
- * O2 Revenue by plan. Recurring revenue as one 0–100% ruler over a slim
- * engraved bar, each plan called out below like a dimension on a drawing:
- * a fine tick down to its name, share and revenue. Under that, each plan's
- * growth on the year before. The largest plan is crosshatched in ink.
+ * O2 Everyday prices. Four prices as one 0–100% ruler over a slim engraved
+ * bar, each good called out below like a dimension on a drawing: a fine tick
+ * down to its name, share and price. Under that, each price's rise on ten
+ * years earlier. The dearest good is crosshatched in ink.
  */
 export const RevenueByPlan = (props: RevenueByPlanProps) => {
   const segments = segmentsOf(props.data ?? planRevenue);
@@ -317,10 +347,10 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
   const label = segments
     .map(
       (s) =>
-        `${s.plan} ${fmtShare(s.share)}, ${fmtSignedPct(s.growth * 100)} on 2025`
+        `${s.plan} ${fmtShare(s.share)}, ${fmtSignedPct(s.growth * 100)} on 2014`
     )
     .join("; ");
-  const title = `Annual recurring revenue by plan, end of 2026: ${label}`;
+  const title = `Average shop prices in 2024 as shares of the four, with the rise on 2014: ${label}`;
 
   return (
     <Plot>
@@ -353,7 +383,7 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
                 x={width}
                 y={lay.floor + 16}
               >
-                Growth on 2025
+                Rise on 2014
               </text>
               {segments.map((seg) => (
                 <SegmentMarks
@@ -376,9 +406,9 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
                 x={lay.x((tipSeg.start + tipSeg.end) / 2)}
                 y={RULE_Y - 2}
               >
-                <b>{tipSeg.plan}</b> · {fmtMoney(tipSeg.revenue * 1e6)} ·{" "}
+                <b>{tipSeg.plan}</b> · {fmtPounds(tipSeg.revenue)} ·{" "}
                 {(tipSeg.share * 100).toFixed(1)}% ·{" "}
-                {fmtSignedPct(tipSeg.growth * 100)} on 2025
+                {fmtSignedPct(tipSeg.growth * 100)} on 2014
               </Tooltip>
             )}
           </>

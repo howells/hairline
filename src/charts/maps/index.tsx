@@ -7,14 +7,14 @@ export const entries: GalleryEntry[] = [
   {
     family: "maps",
     id: "M1",
-    name: "States",
-    render: () => <USChoropleth unit="sign-ups" />,
+    name: "Christmas trees",
+    render: () => <USChoropleth unit="trees" />,
   },
   {
     family: "maps",
     id: "M2",
-    name: "Countries",
-    render: () => <WorldChoropleth unit="active accounts" />,
+    name: "Wine drinking",
+    render: () => <WorldChoropleth unit="litres of pure alcohol a year" />,
     span: "full",
   },
 ];

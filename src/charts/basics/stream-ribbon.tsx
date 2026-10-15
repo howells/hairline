@@ -8,10 +8,11 @@ import {
   stackOffsetWiggle,
   stackOrderNone,
 } from "d3-shape";
+import { utcFormat } from "d3-time-format";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtDay, fmtInt, fmtK, monthTickLabels } from "../../lib/format";
+import { fmtDay, fmtInt, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useSvgId } from "../hooks";
@@ -28,6 +29,8 @@ interface StreamRibbonProps {
   format?: (v: number) => string;
   height?: number;
   note?: string;
+  /** Each date stands for a whole year (dated 1 January): ticks, tooltips and the description say years, not periods. */
+  yearly?: boolean;
 }
 
 /** One band's lower and upper edge at one date, in data units. */
@@ -145,13 +148,14 @@ const buildLayout = (
   height: number,
   data: StreamData,
   river: River,
-  hasNote: boolean
+  hasNote: boolean,
+  format: (v: number) => string
 ): Layout => {
   const narrow = width < 560;
   // The axis rule reaches 10px past the river on each side, and the latest
   // total sits 10px past its mouth; both stay EDGE inside the svg.
   const totalW = Math.max(
-    inkWidth(fmtK(river.totals.at(-1) ?? 0)),
+    inkWidth(format(river.totals.at(-1) ?? 0)),
     inkWidth("Total")
   );
   const left = EDGE + 10;
@@ -298,8 +302,12 @@ const Labels = (props: { data: StreamData; layout: Layout; river: River }) => {
 };
 
 /** The latest total, set at the river's mouth. */
-const Total = (props: { layout: Layout; river: River }) => {
-  const { layout, river } = props;
+const Total = (props: {
+  format: (v: number) => string;
+  layout: Layout;
+  river: River;
+}) => {
+  const { format, layout, river } = props;
   const last = river.totals.length - 1;
   const top = layout.y(river.layers.at(-1)?.[last]?.y1 ?? 0);
   const bottom = layout.y(river.layers[0]?.[last]?.y0 ?? 0);
@@ -308,7 +316,7 @@ const Total = (props: { layout: Layout; river: River }) => {
   return (
     <g className="fade" style={stagger(9)}>
       <text className="t-value" x={x + 10} y={mid - 2}>
-        {fmtK(river.totals.at(-1) ?? 0)}
+        {format(river.totals.at(-1) ?? 0)}
       </text>
       <text className="t-note" x={x + 10} y={mid + 12}>
         Total
@@ -317,19 +325,42 @@ const Total = (props: { layout: Layout; river: River }) => {
   );
 };
 
-/** A tick at the first week of every third month (sixth when narrow); the year on the first and where it changes. */
-const TimeAxis = (props: { data: StreamData; layout: Layout; y: number }) => {
-  const { layout, data } = props;
+const yearOnly = utcFormat("%Y");
+
+/** Ticks spaced at least this far apart, in px, so no two labels meet. */
+const TICK_GAP = 80;
+
+/**
+ * A tick at the first period of every third month (sixth when narrow), the
+ * year on the first and where it changes; or, for yearly data, a year tick
+ * every so often. A tick that would crowd the last one kept is left out.
+ */
+const TimeAxis = (props: {
+  data: StreamData;
+  layout: Layout;
+  y: number;
+  yearly: boolean;
+}) => {
+  const { layout, data, yearly } = props;
   const every = layout.narrow ? 6 : 3;
-  const ticks = data.dates.flatMap((d, i) => {
+  const all = data.dates.flatMap((d, i) => {
     const prev = data.dates[i - 1];
     const newMonth =
       prev === undefined || prev.getUTCMonth() !== d.getUTCMonth();
-    return newMonth && d.getUTCMonth() % every === 0
+    return yearly || (newMonth && d.getUTCMonth() % every === 0)
       ? [{ date: d, x: layout.xs[i] ?? 0 }]
       : [];
   });
-  const labels = monthTickLabels(ticks.map((t) => t.date));
+  const ticks: typeof all = [];
+  for (const tick of all) {
+    const kept = ticks.at(-1);
+    if (kept === undefined || tick.x - kept.x >= TICK_GAP) {
+      ticks.push(tick);
+    }
+  }
+  const labels = yearly
+    ? ticks.map((t) => yearOnly(t.date))
+    : monthTickLabels(ticks.map((t) => t.date));
   return (
     <g>
       <line
@@ -364,7 +395,7 @@ const TimeAxis = (props: { data: StreamData; layout: Layout; y: number }) => {
   );
 };
 
-/** Nearest week to the pointer, and which band (if any) sits under it. */
+/** Nearest period to the pointer, and which band (if any) sits under it. */
 const hoverAt = (
   e: PointerEvent<SVGSVGElement>,
   layout: Layout,
@@ -395,16 +426,18 @@ const HoverTip = (props: {
   format: (v: number) => string;
   hover: Hover;
   river: River;
+  yearly: boolean;
 }) => {
   const { data, format, hover } = props;
   const date = data.dates[hover.i] ?? new Date(0);
+  const when = props.yearly ? yearOnly(date) : `Period from ${fmtDay(date)}`;
   const total = format(props.river.totals[hover.i] ?? 0);
   if (hover.narrow) {
-    // Narrow: the week, then only the band under the pointer and the total.
+    // Narrow: the period, then only the band under the pointer and the total.
     const series = hover.s === null ? undefined : data.series[hover.s];
     return (
       <Tooltip x={hover.x} y={hover.y}>
-        <b>Week of {fmtDay(date)}</b>
+        <b>{when}</b>
         <br />
         {series === undefined
           ? ""
@@ -415,7 +448,7 @@ const HoverTip = (props: {
   }
   return (
     <Tooltip x={hover.x} y={hover.y}>
-      <b>Week of {fmtDay(date)}</b>
+      <b>{when}</b>
       {data.series.toReversed().map((s) => {
         const k = data.series.indexOf(s);
         return (
@@ -449,19 +482,25 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
   const textures = useTextureIds("stream");
   const [hover, setHover] = useState<Hover | null>(null);
   const river = buildRiver(data);
-  const label = `Stream of ${data.series.map((s) => s.name).join(", ")} over ${data.dates.length} weeks; latest total ${format(river.totals.at(-1) ?? 0)}`;
+  const label = `Stream of ${data.series.map((s) => s.name).join(", ")} over ${data.dates.length} ${props.yearly === true ? "years" : "periods"}; latest total ${format(river.totals.at(-1) ?? 0)}`;
 
   return (
     <Plot
       overlay={
         hover === null ? null : (
-          <HoverTip data={data} format={format} hover={hover} river={river} />
+          <HoverTip
+            data={data}
+            format={format}
+            hover={hover}
+            river={river}
+            yearly={props.yearly === true}
+          />
         )
       }
     >
       {(width) => {
         const hasNote = props.note !== undefined;
-        const layout = buildLayout(width, height, data, river, hasNote);
+        const layout = buildLayout(width, height, data, river, hasNote, format);
         return (
           <svg
             aria-label={label}
@@ -516,10 +555,11 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
               textures={textures}
             />
             <Labels data={data} layout={layout} river={river} />
-            <Total layout={layout} river={river} />
+            <Total format={format} layout={layout} river={river} />
             <TimeAxis
               data={data}
               layout={layout}
+              yearly={props.yearly === true}
               y={layout.height - (hasNote ? 84 : 42) + 10}
             />
             <PlotNote

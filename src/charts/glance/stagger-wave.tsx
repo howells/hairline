@@ -3,7 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { utcFormat } from "d3-time-format";
 import { useState } from "react";
 
-import { fmtInt } from "../../lib/format";
+import { fmtDegC } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
@@ -31,7 +31,8 @@ interface Tip {
 
 interface WaveBarProps {
   bw: number;
-  floor: number;
+  /** Where the bar stands: the zero line. */
+  zero: number;
   /** Pattern id of the hatch fill. */
   hatch: string;
   hero: boolean;
@@ -40,29 +41,31 @@ interface WaveBarProps {
   top: number;
 }
 
-/** The peak in solid ink; every other bar hatched inside a crisp outline. */
-const WaveBar = (p: WaveBarProps) =>
-  p.hero ? (
-    <path
-      className="grow-y fill-hero"
-      style={stagger(p.i, "fine")}
-      d={barPath(p.left, p.top, p.bw, p.floor - p.top, "up")}
-    />
-  ) : (
-    <path
-      className="grow-y stroke-l5 shape-crisp"
-      style={stagger(p.i, "fine")}
-      d={barPath(
-        crisp(p.left),
-        crisp(p.top),
-        Math.round(p.bw) - 1,
-        Math.round(p.floor) - Math.round(p.top),
-        "up"
-      )}
-      fill={paint(p.hatch)}
-      strokeWidth={1}
-    />
-  );
+/** The path of a bar: up from the zero line for a positive value, down for a negative one. */
+const wavePath = (p: WaveBarProps) => {
+  const up = p.top <= p.zero;
+  if (p.hero) {
+    return up
+      ? barPath(p.left, p.top, p.bw, p.zero - p.top, "up")
+      : barPath(p.left, p.zero, p.bw, p.top - p.zero, "down");
+  }
+  const w = Math.round(p.bw) - 1;
+  const z = Math.round(p.zero);
+  return up
+    ? barPath(crisp(p.left), crisp(p.top), w, z - Math.round(p.top), "up")
+    : barPath(crisp(p.left), crisp(z), w, Math.round(p.top) - z, "down");
+};
+
+/** The extreme in solid ink; every other bar hatched inside a crisp outline. */
+const WaveBar = (p: WaveBarProps) => (
+  <path
+    className={`grow-y ${p.top <= p.zero ? "" : "from-top"} ${p.hero ? "fill-hero" : "stroke-l5 shape-crisp"}`}
+    style={stagger(p.i, "fine")}
+    d={wavePath(p)}
+    fill={p.hero ? undefined : paint(p.hatch)}
+    strokeWidth={p.hero ? undefined : 1}
+  />
+);
 
 /** Gridlines with their values: a hairline at zero, the grid above it. */
 const YGrid = (p: {
@@ -111,18 +114,39 @@ const dayTickLabels = (dates: Date[]) =>
       : dayOnly(d);
   });
 
-const defaultFormat = (v: number) => fmtInt(v);
-const axisFormat = (v: number) => (v === 0 ? "0" : `${v / 1000}k`);
+const defaultFormat = (v: number) => fmtDegC(v);
+const axisFormat = (v: number) => `${v < 0 ? "−" : ""}${Math.abs(v)} °C`;
 
 /** Room for the value labels, flush left of the plot. */
 const axisRoom = (ticks: number[]) =>
   labelRoom(ticks.map(axisFormat), "t-axis") + 10;
 
+/** Day labels under the bars; the first is set flush with its bar's left edge. */
+const DayTicks = (props: {
+  bw: number;
+  labels: string[];
+  ticks: { at: number; d: WaveDatum }[];
+  y: number;
+}) =>
+  props.ticks.map((t, k) => (
+    <text
+      key={t.d.date.toISOString()}
+      className="t-axis"
+      x={t.at + props.bw / 2}
+      y={props.y}
+      textAnchor={k === 0 ? "start" : "middle"}
+      dx={k === 0 ? -props.bw / 2 : 0}
+    >
+      {props.labels[k]}
+    </text>
+  ));
+
 /**
- * G12 Daily sign-ups. Thirty to sixty narrow bars, one a day, squared off with a 2px
- * corner, that enter as a wave, left to right. The peak (or the highlight)
- * is solid ink; every other bar is hatched inside a crisp 1px outline. The
- * card's Replay re-runs it.
+ * G12 Cold December. Thirty to sixty narrow bars, one a day, squared off with
+ * a 2px corner, that enter as a wave, left to right. Bars stand on a zero
+ * line: up for a positive value, down for a negative one. The peak (or the
+ * highlight) is solid ink; every other bar is hatched inside a crisp 1px
+ * outline. The card's Replay re-runs it.
  */
 export const StaggerWave = (props: StaggerWaveProps) => {
   const data = props.data ?? staggerWaveDemo;
@@ -133,15 +157,15 @@ export const StaggerWave = (props: StaggerWaveProps) => {
   const heroIndex = props.highlight ?? data.findIndex((d) => d.value === max);
   const tex = useTextureIds("wave");
   const hatch = tex("hatch");
-  const label = `Sign-ups a day over ${data.length} days, from ${format(Math.min(...data.map((d) => d.value)))} to ${format(max)}.`;
+  const lowest = Math.min(...data.map((d) => d.value));
+  const label = `Daily mean temperature over ${data.length} days, from ${format(lowest)} to ${format(max)}.`;
 
   return (
     <Plot
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{weekday(data[tip.i].date)}</b> · {format(data[tip.i].value)}{" "}
-            sign-ups
+            <b>{weekday(data[tip.i].date)}</b> · {format(data[tip.i].value)}
           </Tooltip>
         )
       }
@@ -149,7 +173,10 @@ export const StaggerWave = (props: StaggerWaveProps) => {
       {(width) => {
         const bottom = 24 + noteSpace(props.note, width - 16, 16);
         const floor = height - bottom;
-        const y = scaleLinear().domain([0, max]).nice(6).range([floor, 8]);
+        const y = scaleLinear()
+          .domain([Math.min(0, lowest), Math.max(0, max)])
+          .nice(6)
+          .range([floor, 8]);
         const m = { bottom, left: axisRoom(y.ticks(6)), right: 0, top: 8 };
         const x = scaleBand<number>()
           .domain(data.map((_, i) => i))
@@ -187,12 +214,17 @@ export const StaggerWave = (props: StaggerWaveProps) => {
               {data.map((d, i) => {
                 const left = x(i) ?? 0;
                 const top = y(d.value);
+                const zero = y(0);
                 return (
                   <g
                     key={d.date.toISOString()}
                     className={dimClass(tip !== null && tip.i !== i)}
                     onPointerEnter={() => {
-                      setTip({ i, x: left + bw / 2, y: top - 4 });
+                      setTip({
+                        i,
+                        x: left + bw / 2,
+                        y: Math.min(top, zero) - 4,
+                      });
                     }}
                   >
                     <rect
@@ -205,7 +237,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
                     {/* The wave: grow-y re-timed to overshoot and settle, 32ms after its left neighbour. */}
                     <WaveBar
                       bw={bw}
-                      floor={floor}
+                      zero={zero}
                       hatch={hatch}
                       hero={heroIndex === i}
                       i={i}
@@ -216,18 +248,12 @@ export const StaggerWave = (props: StaggerWaveProps) => {
                 );
               })}
             </g>
-            {ticks.map((t, k) => (
-              <text
-                key={t.d.date.toISOString()}
-                className="t-axis"
-                x={(x(t.i) ?? 0) + bw / 2}
-                y={floor + 16}
-                textAnchor={k === 0 ? "start" : "middle"}
-                dx={k === 0 ? -bw / 2 : 0}
-              >
-                {tickLabels[k]}
-              </text>
-            ))}
+            <DayTicks
+              bw={bw}
+              labels={tickLabels}
+              ticks={ticks.map((t) => ({ at: x(t.i) ?? 0, d: t.d }))}
+              y={floor + 16}
+            />
             <PlotNote
               text={props.note}
               width={width - 16}

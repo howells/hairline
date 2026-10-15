@@ -1,7 +1,8 @@
+import { format as d3Format } from "d3-format";
 import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
-import { fmtInt, yearTickLabels } from "../../lib/format";
+import { yearTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
@@ -61,6 +62,8 @@ const VEIL = 0.18;
 /** Height a figure needs above a circle: its cap height plus air. */
 const LABEL_ROOM = 11;
 
+const twoDecimals = d3Format(".2f");
+
 const cellId = (d: { category: string; year: number }) =>
   `${d.category}-${d.year}`;
 
@@ -70,11 +73,12 @@ const headTilt = (colPitch: number) => (colPitch < 50 ? -60 : -24);
 /** Gap between a circle's top and its figure's baseline. */
 const lift = (hero: boolean) => (hero ? 7 : 5);
 
-/** Radius a cell draws at: betas are dotted rings of at least 6px. */
+/** Air between a flagged circle and the dotted ring around it. */
+const RING_GAP = 3;
+
+/** Radius a cell draws at, counting the dotted ring of a flagged one. */
 const drawnR = (layout: AlmanacLayout, d: AlmanacCell) =>
-  d.beta === true
-    ? Math.min(Math.max(layout.radius(d.value), 6), layout.maxR)
-    : layout.radius(d.value);
+  layout.radius(d.value) + (d.flag === true ? RING_GAP : 0);
 
 /** Whether a cell's figure fits between its circle and the one above it. */
 const fitsAbove = (
@@ -136,7 +140,7 @@ const almanacLayout = (
     .domain([0, Math.max(1, ...data.map((d) => d.value))])
     .range([0, maxR]);
   const core = scaleSqrt()
-    .domain([0, Math.max(1, ...data.map((d) => d.escalations))])
+    .domain([0, Math.max(1, ...data.map((d) => d.core))])
     .range([0, maxR * 0.16]);
   return {
     categories,
@@ -228,37 +232,36 @@ const Blob = ({
   // On the year rule, which sits on the half pixel.
   const cy = crisp(layout.rowY(cell.year));
   const r = layout.radius(cell.value);
-  const coreR = layout.core(cell.escalations);
-  const beta = cell.beta === true;
+  const coreR = layout.core(cell.core);
+  const flag = cell.flag === true;
   return (
     <g
       className={dimClass(dim)}
       onPointerEnter={() => {
-        onEnter(cx, cy - r - 4);
+        onEnter(cx, cy - drawnR(layout, cell) - 4);
       }}
     >
       <g className="pop" style={stagger(i, "dense")}>
-        {beta ? (
-          // Dotted at pitch 3 means beta: not yet generally available.
+        <circle
+          className={hero ? "stroke-hero" : "fill-l4 stroke-l5"}
+          cx={cx}
+          cy={cy}
+          fill={hero ? paint(screen) : undefined}
+          // One tone at one opacity (VEIL): the year rule shows through.
+          fillOpacity={hero ? 1 : VEIL}
+          r={r}
+          strokeWidth={hero ? 2 : 1}
+        />
+        {flag ? (
+          // Dotted at pitch 3 means the crop fell on the year before.
           <DotRing
             cx={cx}
             cy={cy}
-            r={Math.min(Math.max(r, 6), layout.maxR)}
+            r={r + RING_GAP}
             step={TEXTURE_PITCH.dense}
             tone="fill-l4"
           />
-        ) : (
-          <circle
-            className={hero ? "stroke-hero" : "fill-l4 stroke-l5"}
-            cx={cx}
-            cy={cy}
-            fill={hero ? paint(screen) : undefined}
-            // One tone at one opacity (VEIL): the year rule shows through.
-            fillOpacity={hero ? 1 : VEIL}
-            r={r}
-            strokeWidth={hero ? 2 : 1}
-          />
-        )}
+        ) : null}
         {coreR > 0 ? (
           <circle
             className={hero ? "fill-hero" : "fill-l3"}
@@ -268,14 +271,14 @@ const Blob = ({
           />
         ) : null}
       </g>
-      {labelled ? (
+      {labelled && labelAbove ? (
         <text
           className={`fade t-halo ${hero ? "t-value" : "t-axis"}`}
           textAnchor="middle"
           x={cx}
-          // Above the circle (clear of the hero's 2px outline) when the row
-          // above leaves room, else inside, over the core.
-          y={labelAbove ? cy - r - lift(hero) : cy - coreR - 3}
+          // Above the circle, clear of the hero's 2px outline; with no room
+          // above, no figure is drawn (it hid in the halftone).
+          y={cy - drawnR(layout, cell) - lift(hero)}
         >
           {format(cell.value)}
         </text>
@@ -285,16 +288,16 @@ const Blob = ({
 };
 
 /**
- * L9 Tickets by year. Category × year with an amount and a status, over a
- * long span: veiled circles (area = amount) that build up where years overlap, a
- * solid core for escalations and rings dotted at pitch 3 for betas. The largest cell is
- * the hero, filled with a fine halftone screen.
+ * L9 Coffee growers. Category × year with an amount and a status: veiled
+ * circles (area = amount) that build up where years overlap, a solid core
+ * sized by the yield and a ring dotted at pitch 3 round the
+ * flagged. The largest cell is the hero, filled with a fine halftone screen.
  */
 export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
   const data = props.data ?? bubbleAlmanacDemo;
   const height = props.height ?? 470;
-  const format = props.format ?? fmtInt;
-  const noun = props.noun ?? "tickets";
+  const format = props.format ?? twoDecimals;
+  const noun = props.noun ?? "Mt of green coffee";
   const labelled = new Set(props.labelled ?? bubbleAlmanacLabelled);
   const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(
     null
@@ -309,8 +312,8 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
         tip === null || tipCell === undefined ? null : (
           <Tooltip x={tip.x} y={tip.y}>
             <b>{tipCell.category}</b> · {tipCell.year} · {format(tipCell.value)}{" "}
-            {noun} · {format(tipCell.escalations)} escalations
-            {tipCell.beta === true ? " · beta" : ""}
+            {noun} · yield {format(tipCell.core)} t/ha
+            {tipCell.flag === true ? " · down on the year before" : ""}
           </Tooltip>
         )
       }
@@ -323,14 +326,14 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
         const heroId = order.length > 0 ? cellId(order[0]) : "";
         return (
           <svg
-            aria-label={`${noun} by area and year, ${layout.years[0]} to ${layout.years.at(-1) ?? ""}`}
+            aria-label={`${noun} by country and year, ${layout.years[0]} to ${layout.years.at(-1) ?? ""}`}
             height={height}
             onPointerLeave={() => {
               setTip(null);
             }}
             width={width}
           >
-            <title>Circles of {noun} per area per year</title>
+            <title>Circles of {noun} by country and year</title>
             <defs>
               <DotScreen
                 ground="fill-paper"

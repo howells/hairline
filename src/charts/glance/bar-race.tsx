@@ -39,7 +39,7 @@ interface Standing {
   v: number;
 }
 
-const thousands = (v: number) => `${Math.round(v)}k`;
+const millions = (v: number) => `${Math.round(v)}m`;
 
 /**
  * Period labels in the broadsheet style, for the stops that show: "Q1 2025"
@@ -386,7 +386,7 @@ const margins = (data: RaceData, format: (v: number) => string) => ({
 });
 
 /**
- * G16 Users by country. A ranking that re-sorts as the values animate through
+ * G16 Busiest stations. A ranking that re-sorts as the values animate through
  * the periods. Bars are squared with a 2px corner; the leader is solid ink
  * and the rest are hatched inside a crisp 1px outline. The scrubber's current period is the only date. Starts
  * when scrolled into view, pauses off-screen, and shows the final period
@@ -396,7 +396,7 @@ export const BarRace = (props: BarRaceProps) => {
   const data = props.data ?? barRaceDemo;
   // The plot's share of the height, under the control slot.
   const height = (props.height ?? 460) - CONTROL_SLOT_H;
-  const format = props.format ?? thousands;
+  const format = props.format ?? millions;
   const last = data.periods.length - 1;
   const box = useRef<HTMLDivElement>(null);
   const tex = useTextureIds("race");

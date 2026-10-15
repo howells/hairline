@@ -1,47 +1,54 @@
 import type { ReactNode } from "react";
 
 import {
-  ENDPOINT_TARGET,
-  ERROR_SERVICES,
-  ERROR_THRESHOLD,
+  FREQUENCY_LIMIT,
+  GAS_PLAN_SHARE,
   HALF_YEAR_WEEKS,
-  SEARCH_TARGET,
-  SPEND_BUDGET,
-  assistantUsers,
-  cityLatency,
-  cloudSpend,
-  endpoints,
-  errorRates,
-  funnel,
-  monthIndex,
-  monthlyActive,
-  planShare,
-  platformSessions,
-  platformUsers,
-  searchP50,
-  searchP95,
-  serviceLatency,
-  serviceRequests,
-  signupChange,
-  signupGrowth,
-  syncUptime,
-  weekIndex,
-  weeklyActive,
+  HEAT_ROWS,
+  STORMS,
+  carbonMean,
+  carbonPeak,
+  cleanerRegions,
+  demand2023,
+  demand2024,
+  demandChange,
+  energyFlow,
+  fuelsIn2024,
+  halfYearGeneration,
+  hourlyIntensity,
+  lowestFrequency,
+  monthlyGeneration,
+  monthlyShare,
+  regionChange,
+  stations,
+  weeklyDemand,
+  weeklyNuclear,
+  weeklyWind,
+  windYearOnYear,
 } from "../../lib/data";
 import type { Point } from "../../lib/data";
-import { fmtInt, fmtK, fmtMoney, fmtMs, fmtSignedPct } from "../../lib/format";
+import {
+  fmtGCO2,
+  fmtGWh,
+  fmtHz,
+  fmtInt,
+  fmtSignedGCO2,
+  fmtSignedPct,
+  fmtTWh,
+} from "../../lib/format";
 import { Dumbbell } from "./dumbbell";
-import { EndpointStrip } from "./endpoint-strip";
+import { highestIndex, lowestIndex } from "./extremes";
 import { HBars } from "./h-bars";
 import { Heatmap } from "./heatmap";
 import { MonthlyBars } from "./monthly-bars";
 import { Sankey } from "./sankey";
 import { Scatter } from "./scatter";
+import type { ScatterPoint } from "./scatter";
 import { Slope } from "./slope";
 import { SparkGrid } from "./spark-grid";
 import { StackedArea } from "./stacked-area";
+import { StationStrip } from "./station-strip";
 import { TimeLines } from "./time-lines";
-import { fmtCountTick, fmtM } from "./units";
 
 /** Steps of `step` from `from` to `to`, inclusive. */
 const range = (from: number, to: number, step: number) =>
@@ -50,42 +57,58 @@ const range = (from: number, to: number, step: number) =>
     (_, i) => from + i * step
   );
 
-const USER_TICKS = range(0, 300_000, 50_000);
-const LAUNCH_MONTH = monthIndex("2025-06");
+const values = (points: Point[]) => points.map((p) => p.value);
 
-/** The week uptime fell furthest below its SLA: where the cursor rests. */
-const lowestWeek = (points: Point[]) => {
-  let low = 0;
-  for (const [i, d] of points.entries()) {
-    if (d.value < points[low].value) {
-      low = i;
-    }
+/** The week of the lowest frequency of the two years, 18 December 2023. */
+const LOWEST_FREQUENCY_WEEK = lowestIndex(values(lowestFrequency));
+
+/** The windiest week of 2023: the same week the frequency was lowest. */
+const WINDIEST_WEEK = highestIndex(values(weeklyWind).slice(0, 52));
+
+/** Where 2024 and 2023 part furthest, either way, after the first ten weeks. */
+const GAP_FROM = 10;
+const WIDEST_GAP =
+  GAP_FROM +
+  highestIndex(
+    demand2024
+      .slice(GAP_FROM)
+      .map((p, i) => Math.abs(p.value - demand2023[GAP_FROM + i].value))
+  );
+
+/** The month gas gave the least of the generation. */
+const LEAST_GAS_MONTH = lowestIndex(monthlyShare.gas);
+
+/** The month gas gave the most of the generation. */
+const MOST_GAS_MONTH = highestIndex(monthlyShare.gas);
+
+/** The month demand moved furthest from the one before. */
+const BIGGEST_MOVE_MONTH = highestIndex(
+  demandChange.map((v) => (v === null ? 0 : Math.abs(v)))
+);
+
+const tickGWh = (v: number) => fmtInt(v);
+
+/** The sites too long to print beside their dot, as DUKES names them. */
+const SHORT_NAMES = new Map([
+  ["Drax Power Station Biomass Units", "Drax"],
+  ["Ratcliffe (Steam)", "Ratcliffe"],
+]);
+
+const FOSSIL = new Set(["Coal", "Gas", "Oil"]);
+
+/** Stations of 1,000 MW or more: capacity against age, fossil hollow. */
+const gigawattStations: ScatterPoint[] = [];
+for (const s of stations) {
+  if (s.mw >= 1000) {
+    gigawattStations.push({
+      group: FOSSIL.has(s.fuel) ? "hollow" : "filled",
+      name: SHORT_NAMES.get(s.name),
+      title: s.name,
+      x: s.age,
+      y: s.mw,
+    });
   }
-  return low;
-};
-
-/**
- * 2026 from its first full week to mid-December, and the same weeks of 2025
- * set on 2026's dates: the holiday weeks at either end are left out.
- */
-const FIRST_OF_2026 = weekIndex("2026-01-05");
-const YEAR_WEEKS = 50;
-const thisYear = weeklyActive.slice(FIRST_OF_2026, FIRST_OF_2026 + YEAR_WEEKS);
-const lastYear = weeklyActive
-  .slice(1, 1 + YEAR_WEEKS)
-  .map((p, i) => ({ date: thisYear[i].date, value: p.value }));
-
-/** Endpoints as scatter points: reads filled, writes hollow, two named. */
-const NAMED = new Set(["POST /export/pdf", "POST /assistant/draft"]);
-const endpointPoints = endpoints.map((e) => ({
-  group: e.route.startsWith("GET") ? ("filled" as const) : ("hollow" as const),
-  name: NAMED.has(e.route) ? e.route : undefined,
-  x: e.rps,
-  y: e.p95,
-}));
-
-/** Thousands of sessions on the scale: "300k", "1.2m". */
-const sessionsTick = (v: number) => fmtCountTick(v * 1000);
+}
 
 export interface BoardPreset {
   name: string;
@@ -97,142 +120,119 @@ export interface BoardPresetMap {
   [id: string]: BoardPreset;
 }
 
-/** The dashboard charts, configured as on the boards. D1–D19. */
+/** The grid's charts, configured as on the boards. D1–D19. */
 export const BOARD_PRESETS: BoardPresetMap = {
   D1: {
-    name: "Assistant uptake",
+    name: "Wind and demand",
     render: () => (
       <TimeLines
-        label="Weekly Assistant users against all weekly active users"
+        label="Weekly wind generation against national demand"
         height={440}
-        rest={weekIndex("2025-09-01")}
+        rest={WINDIEST_WEEK}
         readout="tags"
         fill="gap"
         future="none"
         series={[
-          { data: assistantUsers, format: fmtInt, name: "Assistant", tone: 1 },
-          {
-            data: weeklyActive,
-            format: fmtInt,
-            name: "Weekly active",
-            tone: 2,
-          },
+          { data: weeklyWind, format: fmtGWh, name: "Wind", tone: 1 },
+          { data: weeklyDemand, format: fmtGWh, name: "Demand", tone: 2 },
         ]}
-        y={{ domain: [0, 300_000], format: fmtCountTick, ticks: USER_TICKS }}
+        y={{ domain: [0, 6000], format: tickGWh, ticks: range(0, 6000, 1000) }}
       />
     ),
   },
   D10: {
-    name: "Annual sign-up growth",
+    name: "Wind, year on year",
     render: () => (
       <TimeLines
-        label="Weekly sign-ups, change on the same week a year before"
+        label="Weekly wind generation, change on the same week a year before"
         height={440}
-        rest={signupGrowth.length - 1}
+        rest={windYearOnYear.length - 1}
         cursorAtRest={false}
         readout="none"
-        bands={[
-          {
-            from: new Date(Date.UTC(2025, 6, 21)),
-            label: "Summer",
-            to: new Date(Date.UTC(2025, 7, 31)),
-          },
-          {
-            from: new Date(Date.UTC(2026, 6, 20)),
-            label: "Summer",
-            to: new Date(Date.UTC(2026, 7, 30)),
-          },
-        ]}
+        bands={STORMS}
+        zero
         series={[
-          { data: signupGrowth, format: (v) => fmtSignedPct(v), tone: 1 },
+          { data: windYearOnYear, format: (v) => fmtSignedPct(v), tone: 1 },
         ]}
         y={{
-          domain: [0, 70],
+          domain: [-100, 200],
           format: (v) => fmtSignedPct(v),
           side: "right",
-          ticks: range(0, 70, 10),
+          ticks: range(-100, 200, 50),
         }}
       />
     ),
   },
   D11: {
-    name: "This year and last",
+    name: "2024 against 2023",
     render: () => (
       <TimeLines
-        label="Weekly active users, 2026 against the same weeks of 2025"
+        label="Weekly national demand, 2024 against the same weeks of 2023"
         height={410}
-        rest={weekIndex("2026-04-20") - FIRST_OF_2026}
+        rest={WIDEST_GAP}
         series={[
-          { data: thisYear, format: fmtInt, name: "2026", tone: 1 },
-          { data: lastYear, format: fmtInt, name: "2025", tone: 2 },
+          { data: demand2024, format: fmtGWh, name: "2024", tone: 1 },
+          { data: demand2023, format: fmtGWh, name: "2023", tone: 2 },
         ]}
-        y={{ domain: [0, 300_000], format: fmtCountTick, ticks: USER_TICKS }}
+        y={{ domain: [0, 6000], format: tickGWh, ticks: range(0, 6000, 1000) }}
       />
     ),
   },
   D12: {
-    name: "Active users",
+    name: "Nuclear output",
     render: () => (
       <TimeLines
-        label="Monthly active users, measured weekly"
+        label="Weekly nuclear generation"
         height={440}
-        rest={weekIndex("2026-01-26")}
+        rest={lowestIndex(values(weeklyNuclear))}
         readout="figure"
         fill="area"
         texture="stipple"
-        series={[{ data: monthlyActive, format: fmtInt, tone: 1 }]}
+        series={[{ data: weeklyNuclear, format: fmtGWh, tone: 1 }]}
         y={{
-          domain: [0, 450_000],
-          format: fmtCountTick,
+          domain: [0, 1000],
+          format: tickGWh,
           side: "right",
-          ticks: range(0, 450_000, 50_000),
+          ticks: range(0, 1000, 200),
         }}
       />
     ),
   },
   D13: {
-    name: "Cloud spend",
+    name: "Gas against the plan",
     render: () => (
       <MonthlyBars
-        label="Cloud spend a month against budget"
+        label="Gas's share of generation a month against the Clean Power 2030 plan"
         height={440}
-        rest={LAUNCH_MONTH}
+        rest={MOST_GAS_MONTH}
         readout="value"
-        budget={{
-          label: `Budget ${fmtMoney(SPEND_BUDGET)}`,
-          value: SPEND_BUDGET,
+        plan={{
+          label: `2030 plan ${GAS_PLAN_SHARE}%`,
+          value: GAS_PLAN_SHARE,
         }}
-        stacks={[{ tone: "s1", values: cloudSpend }]}
+        stacks={[{ tone: "s1", values: monthlyShare.gas }]}
         y={{
-          domain: [0, 200_000],
-          format: fmtMoney,
+          domain: [0, 50],
+          format: (v) => `${v}%`,
           side: "right",
-          ticks: range(0, 200_000, 50_000),
+          ticks: range(0, 50, 10),
         }}
-        format={fmtMoney}
+        format={(v) => `${v.toFixed(0)}%`}
       />
     ),
   },
   D14: {
-    name: "Revenue by plan",
+    name: "Share by fuel",
     render: () => (
       <MonthlyBars
-        label="Share of recurring revenue by plan"
+        label="Share of generation by fuel"
         height={440}
-        rest={planShare.length - 1}
+        rest={monthlyShare.gas.length - 1}
         stacks={[
-          {
-            label: "Enterprise",
-            tone: "s1",
-            values: planShare.map((d) => d.enterprise),
-          },
-          {
-            label: "Business",
-            tone: "s2",
-            values: planShare.map((d) => d.business),
-          },
-          { label: "Pro", tone: "s3", values: planShare.map((d) => d.pro) },
-          { label: "Plus", tone: "s4", values: planShare.map((d) => d.plus) },
+          { label: "Gas", tone: "s1", values: monthlyShare.gas },
+          { label: "Wind", tone: "s2", values: monthlyShare.wind },
+          { label: "Nuclear", tone: "s3", values: monthlyShare.nuclear },
+          { label: "Other", tone: "s4", values: monthlyShare.other },
         ]}
         y={{
           domain: [0, 100],
@@ -248,231 +248,244 @@ export const BOARD_PRESETS: BoardPresetMap = {
     render: () => <SparkGrid height={100} />,
   },
   D16: {
-    name: "Latency by city",
+    name: "Intensity by region",
     render: () => (
       <Dumbbell
-        label="Page load P95 by city, January 2025 against December 2026"
+        label="Carbon intensity by region, January 2023 against December 2024"
         height={410}
-        rows={cityLatency}
-        ticks={range(0, 450, 150)}
-        ends={["Jan 2025", "Dec 2026"]}
+        rows={regionChange}
+        ticks={range(0, 300, 100)}
+        tickFormat={(t) => (t === 0 ? "0" : fmtGCO2(t))}
+        deltaFormat={fmtSignedGCO2}
+        ends={["Jan 2023", "Dec 2024"]}
       />
     ),
   },
   D17: {
-    name: "Errors by hour",
+    name: "Dirty hours",
     render: () => (
       <Heatmap
-        label="Error rate by service and hour of the day"
-        rows={ERROR_SERVICES}
-        values={errorRates}
-        threshold={ERROR_THRESHOLD}
-        domain={[0.1, 2.4]}
+        label="Carbon intensity by region and hour of the day"
+        rows={HEAT_ROWS}
+        values={hourlyIntensity}
+        threshold={300}
+        domain={[0, 300]}
+        format={fmtGCO2}
       />
     ),
   },
   D18: {
-    name: "Sync uptime",
+    name: "Frequency",
     render: () => (
       <TimeLines
-        label="Weekly uptime of sync"
+        label="Weekly lowest system frequency against the statutory limit"
         height={440}
-        rest={lowestWeek(syncUptime)}
+        rest={LOWEST_FREQUENCY_WEEK}
         readout="value"
         dateReadout
         fill="area"
         texture="screen"
-        series={[
-          { data: syncUptime, format: (v) => `${v.toFixed(2)}%`, tone: 1 },
-        ]}
-        threshold={{ alert: "below", label: "SLA 99.9%", value: 99.9 }}
+        series={[{ data: lowestFrequency, format: fmtHz, tone: 1 }]}
+        threshold={{
+          alert: "below",
+          label: `Limit ${FREQUENCY_LIMIT} Hz`,
+          value: FREQUENCY_LIMIT,
+        }}
         y={{
-          domain: [99.4, 100],
-          format: (v) => (v === 100 ? "100%" : `${v.toFixed(1)}%`),
+          domain: [49.2, 49.9],
+          format: (v) => v.toFixed(1),
           side: "right",
-          ticks: [99.4, 99.6, 99.8, 100],
+          ticks: [49.2, 49.4, 49.6, 49.8],
         }}
       />
     ),
   },
   D19: {
-    name: "Every endpoint",
+    name: "Stations by fuel",
     render: () => (
-      <EndpointStrip
-        label="P95 latency of every endpoint, by service"
+      <StationStrip
+        label="Age of every power station of 100 MW or more, by fuel"
         height={440}
-        endpoints={endpoints}
-        target={ENDPOINT_TARGET}
-        ticks={range(0, 700, 100)}
+        stations={stations.map((s) => ({
+          group: s.fuel,
+          name: s.name,
+          value: s.age,
+        }))}
+        format={(v) => `${v} yr`}
+        medianTitle="Median"
+        ticks={range(0, 70, 10)}
       />
     ),
   },
   D2: {
-    name: "Sessions by platform",
+    name: "Generation by fuel",
     render: () => (
       <StackedArea
-        label="Weekly sessions by platform, second half of 2026"
+        label="Weekly generation by fuel, second half of 2024"
         height={440}
         dates={HALF_YEAR_WEEKS}
-        format={(v) => `${v}k`}
+        format={fmtGWh}
         y={{
-          domain: [0, 1200],
-          format: sessionsTick,
-          ticks: range(0, 1200, 300),
+          domain: [0, 6000],
+          format: tickGWh,
+          ticks: range(0, 6000, 2000),
         }}
         layers={[
           {
             fill: "var(--area1)",
-            label: "Web",
+            label: "Nuclear",
             stroke: "var(--l3)",
             text: "var(--muted)",
             texture: "hatch",
-            values: platformSessions.web,
+            values: halfYearGeneration.nuclear,
           },
           {
             fill: "var(--area2)",
-            label: "Desktop",
+            label: "Gas",
             stroke: "var(--l3)",
             text: "var(--muted)",
             texture: "upright",
-            values: platformSessions.desktop,
+            values: halfYearGeneration.gas,
           },
           {
             fill: "var(--area2)",
-            label: "iOS",
+            label: "Imports",
             stroke: "var(--l3)",
             text: "var(--muted)",
             texture: "stipple",
-            values: platformSessions.ios,
+            values: halfYearGeneration.imports,
           },
           {
             fill: "var(--area3)",
-            label: "Android",
+            label: "Wind",
             stroke: "var(--ink)",
             text: "var(--text)",
             texture: "rules",
-            values: platformSessions.android,
+            values: halfYearGeneration.wind,
           },
         ]}
       />
     ),
   },
   D3: {
-    name: "Search latency",
+    name: "Carbon intensity",
     render: () => (
       <TimeLines
-        label="Search P95 and P50 latency"
+        label="Weekly peak and mean carbon intensity"
         height={410}
-        rest={weekIndex("2025-11-24")}
+        rest={highestIndex(values(carbonPeak))}
         fill="band"
         texture="rules"
         series={[
-          { data: searchP95, format: fmtMs, name: "P95", tone: 1 },
-          { data: searchP50, format: fmtMs, name: "P50", tone: 2 },
+          { data: carbonPeak, format: fmtGCO2, name: "Peak", tone: 1 },
+          { data: carbonMean, format: fmtGCO2, name: "Mean", tone: 2 },
         ]}
-        threshold={{ label: "Target", value: SEARCH_TARGET }}
         y={{
-          domain: [0, 360],
-          format: fmtMs,
-          ticks: range(0, 360, 60),
+          domain: [0, 350],
+          format: fmtInt,
+          ticks: range(0, 350, 50),
         }}
       />
     ),
   },
   D4: {
-    name: "Users by platform",
+    name: "Monthly mix",
     render: () => (
       <MonthlyBars
-        label="Monthly active users by platform"
+        label="Monthly generation by fuel"
         height={410}
-        rest={monthIndex("2025-09")}
+        rest={LEAST_GAS_MONTH}
         readout="legend"
         stacks={[
-          { label: "Web", tone: "s1", values: platformUsers.web },
-          { label: "Desktop", tone: "s2", values: platformUsers.desktop },
-          { label: "iOS", tone: "s3", values: platformUsers.ios },
-          { label: "Android", tone: "s4", values: platformUsers.android },
+          { label: "Gas", tone: "s1", values: monthlyGeneration.gas },
+          { label: "Wind", tone: "s2", values: monthlyGeneration.wind },
+          { label: "Nuclear", tone: "s3", values: monthlyGeneration.nuclear },
+          { label: "Other", tone: "s4", values: monthlyGeneration.other },
         ]}
         y={{
-          domain: [0, 500_000],
-          format: fmtCountTick,
-          ticks: range(0, 500_000, 100_000),
+          domain: [0, 25],
+          format: fmtInt,
+          ticks: range(0, 25, 5),
         }}
-        format={fmtK}
+        format={fmtTWh}
       />
     ),
   },
   D5: {
-    name: "Monthly sign-up change",
+    name: "Demand change",
     render: () => (
       <MonthlyBars
-        label="New accounts, change on the month before"
+        label="Mean daily national demand, change on the month before"
         height={440}
-        rest={LAUNCH_MONTH}
+        rest={BIGGEST_MOVE_MONTH}
         readout="value"
         diverging
-        stacks={[{ tone: "s1", values: signupChange }]}
+        stacks={[{ tone: "s1", values: demandChange }]}
         y={{
-          domain: [-20, 40],
+          domain: [-20, 20],
           format: (v) => fmtSignedPct(v),
           side: "right",
-          ticks: range(-20, 40, 10),
+          ticks: range(-20, 20, 10),
         }}
         format={(v) => fmtSignedPct(v)}
       />
     ),
   },
   D6: {
-    name: "Requests by service",
+    name: "A year by fuel",
     render: () => (
       <HBars
-        label="Requests a day by service"
+        label="Electricity generated in 2024 by fuel"
         height={440}
-        rows={serviceRequests}
-        ticks={range(0, 80_000_000, 20_000_000)}
-        format={fmtM}
-        tickFormat={fmtCountTick}
+        rows={fuelsIn2024}
+        ticks={range(0, 120, 20)}
+        format={(v) => v.toFixed(1)}
+        tickFormat={(v) => (v === 120 ? `${v} TWh` : fmtInt(v))}
       />
     ),
   },
   D7: {
-    name: "Service latency",
+    name: "Cleaner regions",
     render: () => (
       <Slope
-        label="Service P95 latency, January 2025 against December 2026"
+        label="Carbon intensity, January 2023 against December 2024, the five regions that fell most"
         height={420}
-        rows={serviceLatency}
-        labels={["Jan 2025", "Dec 2026"]}
-        domain={[40, 680]}
+        rows={cleanerRegions}
+        labels={["Jan 2023", "Dec 2024"]}
+        domain={[60, 300]}
+        format={fmtGCO2}
+        narrowFormat={fmtInt}
       />
     ),
   },
   D8: {
-    name: "Throughput and latency",
+    name: "Gigawatt stations",
     render: () => (
       <Scatter
-        label="Endpoint peak throughput against P95 latency"
+        label="Capacity against age of every power station of 1,000 MW or more"
         height={410}
-        points={endpointPoints}
-        groups={{ filled: "Reads", hollow: "Writes" }}
-        sla={ENDPOINT_TARGET}
-        thresholdLabel="Target"
-        xDomain={[0, 1200]}
-        xTicks={range(0, 1200, 300)}
-        xTitle="Peak requests/s"
-        yTitle="P95 latency"
-        yDomain={[0, 700]}
-        yTicks={range(0, 700, 100)}
+        points={gigawattStations}
+        groups={{ filled: "Not fossil", hollow: "Fossil" }}
+        xDomain={[0, 70]}
+        xTicks={range(0, 70, 10)}
+        xTickFormat={fmtInt}
+        xFormat={(v) => `${v} yr`}
+        xTitle="Age"
+        yDomain={[0, 3000]}
+        yTicks={range(0, 3000, 1000)}
+        yTickFormat={(v) => (v === 0 ? "0" : `${fmtInt(v)} MW`)}
+        yFormat={(v) => `${fmtInt(v)} MW`}
+        yTitle="Capacity"
       />
     ),
   },
   D9: {
-    name: "Trial funnel",
+    name: "Where energy goes",
     render: () => (
       <Sankey
-        label="One month's visitors, from first visit to day 90"
+        label="Primary energy demand in 2024, from supply to final use"
         height={440}
-        data={funnel}
+        data={energyFlow}
       />
     ),
   },

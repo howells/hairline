@@ -35,8 +35,8 @@ const strokeOf = (n: Circle, hot: boolean) => {
 };
 
 /**
- * The company is open, departments carry an engraved stipple, and teams sit
- * on it as paper discs. Department fills come from the stipple pattern.
+ * The root is open, countries carry an engraved stipple, and counties sit on
+ * it as paper discs. Country fills come from the stipple pattern.
  */
 const fillOf = (n: Circle) => {
   if (n.depth === 0) {
@@ -85,25 +85,25 @@ const layout = (data: OrgNode, size: number) =>
   pack<OrgNode>()
     .size([size, size])
     .padding((n) => (n.depth === 0 ? 10 : 4))(
-    // The demo lists every level largest first, so pack keeps that order.
+    // The data lists every level largest first, so pack keeps that order.
     hierarchy(data).sum((d) => d.value ?? 0)
   );
 
 /**
- * O9 Teams by size. Departments as stippled hairline circles, teams as
- * paper discs on them; the largest team is the only ink mark. Hover any
- * circle for its headcount.
+ * O9 Towers by county. Countries as stippled hairline circles, counties as
+ * paper discs on them; the county with most towers is the only ink mark.
+ * Hover any circle for its count.
  */
 export const CirclePack = (props: { data?: OrgNode }) => {
   const data = props.data ?? orgDemo;
   const [hover, setHover] = useState<Hover | null>(null);
-  const stipple = useTextureIds("org")("stipple");
+  const stipple = useTextureIds("towers")("stipple");
   return (
     <Plot
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{hover.name}</b> · {hover.value} people
+            <b>{hover.name}</b> · {hover.value} towers
           </Tooltip>
         )
       }
@@ -120,7 +120,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
           }
         }
         const dx = Math.round((width - size) / 2);
-        const label = `Headcount by team, ${root.value} people; largest team ${hero.data.name}, ${hero.value}`;
+        const label = `Towers with a ring of bells, by county, ${root.value} in all; most in ${hero.data.name}, ${hero.value}`;
         return (
           <svg
             aria-label={label}

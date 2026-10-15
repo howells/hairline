@@ -3,13 +3,13 @@ import type { ScaleLinear } from "d3-scale";
 import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { monthTickLabels } from "../../lib/format";
+import { fmtInt, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { stagger } from "../util";
+import { sansWidth, stagger } from "../util";
 import { ValueGrid } from "../value-grid";
 import { hairlineAreaDemo } from "./hairline-area.data";
 import type { DailyDatum } from "./hairline-line.data";
@@ -41,8 +41,6 @@ interface Frame {
   y: ScaleLinear<number, number>;
 }
 
-const fmtThousands = (v: number) =>
-  v === 0 ? "0" : `${Math.round(v / 1000)}k`;
 const dayKey = (d: DailyDatum) => d.date.toISOString();
 
 const stemClass = (hero: boolean, hovered: boolean) => {
@@ -156,6 +154,8 @@ const HairlineAreaSvg = ({
   const hero = highlight ?? peak;
   const last = data.length - 1;
   const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
+  const half = Math.ceil(sansWidth(format(values[hero]), 12) / 2) + 2;
+  const start = hero === 0 ? Math.max(8, half) : 8;
   const x0 = Math.round((width - frameW) / 2);
   const x1 = x0 + frameW;
   const floor = dailyFloor(height, note, width);
@@ -164,7 +164,7 @@ const HairlineAreaSvg = ({
     floor,
     x: scaleLinear()
       .domain([0, last])
-      .range([x0 + 8, x1 - VALUE_AXIS_ROOM]),
+      .range([x0 + start, x1 - VALUE_AXIS_ROOM]),
     y,
   };
   const path =
@@ -260,11 +260,12 @@ const HairlineAreaSvg = ({
 /**
  * F3 Daily area. The area under the line is an engraved stipple, one 1px dot
  * per 4px cell, with a 2px stem every seventh day. The peak stands in ink,
- * labelled; hovering a day raises its stem.
+ * labelled, with its label kept inside the frame when it is the first day;
+ * hovering a day raises its stem.
  */
 export const HairlineArea = (props: HairlineAreaProps) => {
   const data = props.data ?? hairlineAreaDemo;
-  const format = props.format ?? fmtThousands;
+  const format = props.format ?? fmtInt;
   const fmtDate = props.formatDate ?? fmtMonthDay;
   const { clear, hover, show, tip } = useHoverTip();
   const stipple = useTextureIds("daily")("stipple");

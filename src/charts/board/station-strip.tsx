@@ -3,32 +3,36 @@ import type { ScaleBand, ScaleLinear } from "d3-scale";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtMs } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart, VGrid } from "../core";
 import { nameWidth } from "./room";
-import { LABEL, POINT, RULE_TARGET, TICK, VALUE } from "./styles";
+import { LABEL, POINT, TICK, VALUE } from "./styles";
 import { labelGap, thinTicks } from "./thin-ticks";
 
-export interface StripEndpoint {
-  service: string;
-  /** Method and path, as routed. */
-  route: string;
-  /** P95 latency, ms. */
-  p95: number;
+export interface StripStation {
+  /** The row it sits in. */
+  group: string;
+  /** Its name; unique within the chart. */
+  name: string;
+  /** Where it falls on the scale. */
+  value: number;
 }
 
-interface ServiceRow {
+interface GroupRow {
   name: string;
-  endpoints: StripEndpoint[];
+  stations: StripStation[];
   median: number;
 }
 
-interface EndpointStripProps {
-  endpoints: StripEndpoint[];
-  /** The latency target, ms: a dashed rule; the worst endpoint over it is red. */
-  target: number;
+interface StationStripProps {
+  stations: StripStation[];
   ticks: number[];
+  /** Scale labels and the readouts. */
+  format: (v: number) => string;
+  /** Scale labels. Defaults to `format`. */
+  tickFormat?: (v: number) => string;
+  /** The heading over the median column. */
+  medianTitle: string;
   height: number;
   label: string;
 }
@@ -39,32 +43,22 @@ const median = (values: number[]) => {
   return v.length % 2 === 1 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
 };
 
-/** One row per service, slowest median first. */
-const serviceRows = (endpoints: StripEndpoint[]): ServiceRow[] => {
-  const names = [...new Set(endpoints.map((e) => e.service))];
+/** One row per group, highest median first. */
+const groupRows = (stations: StripStation[]): GroupRow[] => {
+  const names = [...new Set(stations.map((e) => e.group))];
   return names
     .map((name) => {
-      const own = endpoints.filter((e) => e.service === name);
-      return { endpoints: own, median: median(own.map((e) => e.p95)), name };
+      const own = stations.filter((e) => e.group === name);
+      return { median: median(own.map((e) => e.value)), name, stations: own };
     })
     .toSorted((a, b) => b.median - a.median);
 };
 
-/** The slowest endpoint over the target: the one red. */
-const worstOver = (endpoints: StripEndpoint[], target: number) =>
-  endpoints.filter((e) => e.p95 > target).toSorted((a, b) => b.p95 - a.p95)[0]
-    ?.route;
-
 /**
- * The endpoint under the pointer: the row's band is the target, and within
+ * The station under the pointer: the row's band is the target, and within
  * it the dot nearest in x, so every row is a full-height hit area.
  */
-const nearestIn = (
-  rows: ServiceRow[],
-  frame: Frame,
-  px: number,
-  py: number
-) => {
+const nearestIn = (rows: GroupRow[], frame: Frame, px: number, py: number) => {
   const row = rows.find((r) => {
     const top = frame.y(r.name) ?? 0;
     return py >= top && py < top + frame.y.bandwidth();
@@ -72,15 +66,15 @@ const nearestIn = (
   if (row === undefined) {
     return null;
   }
-  const dist = (e: StripEndpoint) => Math.abs(frame.x(e.p95) - px);
-  return row.endpoints.toSorted((a, b) => dist(a) - dist(b))[0].route;
+  const dist = (e: StripStation) => Math.abs(frame.x(e.value) - px);
+  return row.stations.toSorted((a, b) => dist(a) - dist(b))[0].name;
 };
 
-/** Gap between a service's name and the plot, px. */
+/** Gap between a row's name and the plot, px. */
 const NAME_GAP = 20;
 /** Room at the right for each row's median, px. */
 const MEDIAN_W = 60;
-/** Room above the plot for the target's and the median column's names, px. */
+/** Room above the plot for the median column's name, px. */
 const TOP = 22;
 /** Half the height of a row's median tick, px. */
 const TICK_H = 6;
@@ -101,25 +95,25 @@ const TONE: Record<Tone, { dot: string; tick: string; value: string }> = {
   rest: { dot: "fill-l3", tick: "fill-l2", value: "fill-muted" },
 };
 
-/** One endpoint: a dot, with its route and value while hovered or red. */
-const EndpointDot = (props: {
-  endpoint: StripEndpoint;
+/** One station: a dot, with its name and value while hovered. */
+const StationDot = (props: {
+  station: StripStation;
+  format: (v: number) => string;
   frame: Frame;
   cy: number;
   tone: Tone;
-  red: boolean;
   active: boolean;
 }) => {
-  const { cy, endpoint: e, frame } = props;
+  const { cy, station: e, frame } = props;
   // Whole pixels, as the range rule's ends are, so the outer dots cap it exactly.
-  const cx = Math.round(frame.x(e.p95));
-  const named = props.active || props.red;
+  const cx = Math.round(frame.x(e.value));
+  const named = props.active;
   // Near the right edge the label runs leftward from the dot.
   const anchor = cx > frame.width - frame.m.right - 60 ? "end" : "middle";
   return (
     <g>
       <circle
-        className={`${POINT} ${props.red ? "fill-alert" : TONE[props.tone].dot}`}
+        className={`${POINT} ${TONE[props.tone].dot}`}
         cx={cx}
         cy={cy}
         r={props.active ? 4.5 : 3}
@@ -131,21 +125,20 @@ const EndpointDot = (props: {
           y={cy - 10}
           textAnchor={anchor}
         >
-          {e.route}
-          {props.active ? ` ${fmtMs(e.p95)}` : ""}
+          {e.name} {props.format(e.value)}
         </text>
       )}
     </g>
   );
 };
 
-/** A service: its name, a rule spanning its endpoints, the dots, its median. */
+/** A group: its name, a rule spanning its stations, the dots, its median. */
 const StripRow = (props: {
-  row: ServiceRow;
+  row: GroupRow;
   i: number;
+  format: (v: number) => string;
   frame: Frame;
   tone: Tone;
-  red: string | undefined;
   active: string | null;
   dim: boolean;
 }) => {
@@ -154,7 +147,7 @@ const StripRow = (props: {
   // The range is a 1px rule on the half pixel; the dots and the median tick
   // centre on it.
   const cy = crisp((y(row.name) ?? 0) + y.bandwidth() / 2);
-  const ps = row.endpoints.map((e) => e.p95);
+  const ps = row.stations.map((e) => e.value);
   const tone = TONE[props.tone];
   return (
     <g
@@ -185,15 +178,15 @@ const StripRow = (props: {
         width={2}
         height={TICK_H * 2 + 1}
       />
-      {row.endpoints.map((e) => (
-        <EndpointDot
-          key={e.route}
-          endpoint={e}
+      {row.stations.map((e) => (
+        <StationDot
+          key={e.name}
+          station={e}
+          format={props.format}
           frame={frame}
           cy={cy}
           tone={props.tone}
-          red={e.route === props.red}
-          active={e.route === props.active}
+          active={e.name === props.active}
         />
       ))}
       <text
@@ -203,26 +196,28 @@ const StripRow = (props: {
         dy="0.34em"
         textAnchor="end"
       >
-        {fmtMs(row.median)}
+        {props.format(row.median)}
       </text>
     </g>
   );
 };
 
-const msTick = (t: number) => (t === 0 ? "0" : `${t} ms`);
-
-/** The ms scale along the bottom, the target rule and the column names. */
+/** The scale along the bottom and the median column's name. */
 const StripAxes = (props: {
   frame: Frame;
   ticks: number[];
-  target: number;
+  tickFormat: (v: number) => string;
+  medianTitle: string;
 }) => {
   const { height: h, m, width, x } = props.frame;
-  const tx = crisp(x(props.target));
   return (
     <>
       <VGrid xs={props.ticks.map(x)} y0={m.top} y1={h - m.bottom} />
-      {thinTicks(props.ticks, x, labelGap(props.ticks.map(msTick))).map((t) => (
+      {thinTicks(
+        props.ticks,
+        x,
+        labelGap(props.ticks.map(props.tickFormat))
+      ).map((t) => (
         <text
           key={t}
           className={TICK}
@@ -231,44 +226,38 @@ const StripAxes = (props: {
           dy="0.71em"
           textAnchor="middle"
         >
-          {msTick(t)}
+          {props.tickFormat(t)}
         </text>
       ))}
-      <line
-        className={`${RULE_TARGET} fade`}
-        x1={tx}
-        x2={tx}
-        y1={m.top - 4}
-        y2={h - m.bottom}
-      />
-      <text className={TICK} x={tx} y={m.top - 10} textAnchor="middle">
-        Target
-      </text>
       <text className={TICK} x={width} y={m.top - 10} textAnchor="end">
-        Median
+        {props.medianTitle}
       </text>
     </>
   );
 };
 
 /**
- * Every endpoint's P95, one row per service, slowest service first: each
- * service's endpoints as dots along a rule, its median ticked and printed.
- * The slowest service is inked; the worst endpoint over target is red.
+ * Every station on one scale, one row per group, highest median first: each
+ * group's stations as dots along a rule, its median ticked and printed.
+ * The row with the highest median is inked.
  */
-export const EndpointStrip = (props: EndpointStripProps) => {
+export const StationStrip = (props: StationStripProps) => {
   const [hover, setHover] = useState<string | null>(null);
-  const rows = serviceRows(props.endpoints);
-  const red = worstOver(props.endpoints, props.target);
-  const hoverRow =
-    props.endpoints.find((e) => e.route === hover)?.service ?? null;
+  const rows = groupRows(props.stations);
+  const hoverRow = props.stations.find((e) => e.name === hover)?.group ?? null;
+  const tickFormat = props.tickFormat ?? props.format;
 
   return (
     <Chart>
       {(width) => {
         const m = {
           bottom: 28,
-          left: NAME_GAP + nameWidth(rows.map((r) => r.name)),
+          left:
+            NAME_GAP +
+            nameWidth(
+              rows.map((r) => r.name),
+              0.97
+            ),
           right: MEDIAN_W,
           top: TOP,
         };
@@ -304,16 +293,17 @@ export const EndpointStrip = (props: EndpointStripProps) => {
             <StripAxes
               frame={frame}
               ticks={props.ticks}
-              target={props.target}
+              tickFormat={tickFormat}
+              medianTitle={props.medianTitle}
             />
             {rows.map((row, i) => (
               <StripRow
                 key={row.name}
                 row={row}
                 i={i}
+                format={props.format}
                 frame={frame}
                 tone={i === 0 ? "hero" : "rest"}
-                red={red}
                 active={hover}
                 dim={hoverRow !== null && hoverRow !== row.name}
               />

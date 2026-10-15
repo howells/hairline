@@ -12,9 +12,11 @@ import type {
 
 interface ClusterFieldProps {
   data?: ClusterFieldData;
-  /** Noun for one member, e.g. "engineer". */
+  /** Noun for one member, e.g. "variety". */
   noun?: string;
-  /** Noun for a member's size, e.g. "commits". */
+  /** Plural of `noun`, e.g. "varieties". */
+  nouns?: string;
+  /** Unit of a member's size, e.g. "ha". */
   sizeNoun?: string;
   /** Defaults to a height that fits the poster at the measured width. */
   height?: number;
@@ -226,7 +228,7 @@ const Paths = (props: {
 };
 
 /**
- * L6 Contributor clusters. A core-plus-satellites network: a big core
+ * L6 Grape families. A core-plus-satellites network: a big core
  * cluster with radial spokes, satellite islands around hollow hubs, and pale
  * arcs between them. Spokes sit at an even angular pitch around each hub.
  * Hovering a cluster names it, with its members and their total size.
@@ -237,8 +239,9 @@ export const ClusterField = (props: ClusterFieldProps) => {
     .toSorted((a, b) => b.members.length - a.members.length)
     .at(0);
   const coreId = core === undefined ? "" : core.id;
-  const noun = props.noun ?? "engineer";
-  const sizeNoun = props.sizeNoun ?? "commits";
+  const noun = props.noun ?? "variety";
+  const sizeNoun = props.sizeNoun ?? "ha";
+  const nouns = props.nouns ?? "varieties";
   const maxSize = Math.max(1, ...data.clusters.flatMap((c) => c.members));
   const [tip, setTip] = useState<{
     cluster: ClusterDatum;
@@ -251,7 +254,8 @@ export const ClusterField = (props: ClusterFieldProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.cluster.label}</b> · {tip.cluster.members.length} {noun}s ·{" "}
+            <b>{tip.cluster.label}</b> · {tip.cluster.members.length}{" "}
+            {tip.cluster.members.length === 1 ? noun : nouns} ·{" "}
             {fmtInt(sum(tip.cluster.members))} {sizeNoun}
           </Tooltip>
         )
@@ -263,14 +267,16 @@ export const ClusterField = (props: ClusterFieldProps) => {
           props.height ?? layout.height + noteSpace(props.note, width - 16, 24);
         return (
           <svg
-            aria-label={`Cluster field: ${data.clusters.map((c) => `${c.label} ${c.members.length}`).join(", ")}`}
+            aria-label={`Grape families: ${data.clusters.map((c) => `${c.label} ${c.members.length}`).join(", ")}`}
             height={height}
             onPointerLeave={() => {
               setTip(null);
             }}
             width={width}
           >
-            <title>A core cluster with satellite islands</title>
+            <title>
+              Grape families as a core cluster with satellite islands
+            </title>
             <Paths links={data.links} placed={layout.placed} />
             {layout.placed.map((p) => (
               <Cluster

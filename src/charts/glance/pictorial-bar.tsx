@@ -5,10 +5,10 @@ import { useSvgId } from "../hooks";
 import { PlotNote } from "../plot-note";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { dimClass, noteSpace, stagger } from "../util";
 import { pictorialBarDemo } from "./pictorial-bar.data";
 import type { PictorialDatum } from "./pictorial-bar.data";
-import { rankTones } from "./util-a";
+import { labelRoom, rankTones } from "./util-a";
 
 interface PictorialBarProps {
   data?: PictorialDatum[];
@@ -16,7 +16,7 @@ interface PictorialBarProps {
   unit?: number;
   height?: number;
   format?: (v: number) => string;
-  /** Footnote, e.g. "one page = 2m notes". */
+  /** Footnote. */
   note?: string;
   /** Index of the row to draw in the hero colour. */
   highlight?: number;
@@ -59,7 +59,34 @@ const LINE_GAP = 4;
 const ICON_W = 18;
 const ICON_H = 24;
 const FOLD = 7.5 / 18;
-const defaultFormat = (v: number) => `${v}m`;
+/** Room for the longest row name and the gap before the icons. */
+const nameRoom = (data: PictorialDatum[]) =>
+  labelRoom(
+    data.map((d) => d.label),
+    "t-label"
+  ) + 18;
+
+/**
+ * Where the icons start: after the names, moved right so the whole row (names,
+ * icons and values) is centred when the icons stop growing before the plot ends.
+ */
+const rowOrigin = (
+  width: number,
+  names: number,
+  track: number,
+  valueW: number
+) =>
+  names +
+  Math.max(0, Math.floor((width - names - track - 10 - valueW - 4) / 2));
+
+/** Width of the widest value label. */
+const valueWidth = (data: PictorialDatum[], format: (v: number) => string) =>
+  labelRoom(
+    data.map((d) => format(d.value)),
+    "t-value"
+  );
+
+const defaultFormat = (v: number) => `${v}k words`;
 
 /**
  * A page outline in a `w` × `h` box of whole pixels: a 1px rule on the
@@ -227,14 +254,14 @@ const TrackClips = (p: { g: Geometry; id: string; rows: Row[] }) => {
 };
 
 /**
- * G5 Notes by platform. Each row is a track of page glyphs; one page =
+ * G5 Long novels. Each row is a track of page glyphs; one page =
  * `unit`. Every page is a 1px outline; the counted pages are filled with
  * the row's hatch and the last is cut to the remainder. Only the biggest
  * row is inked; the others are engraved in one grey.
  */
 export const PictorialBar = (props: PictorialBarProps) => {
   const data = props.data ?? pictorialBarDemo;
-  const unit = props.unit ?? 2;
+  const unit = props.unit ?? 50;
   const height = props.height ?? 320;
   const format = props.format ?? defaultFormat;
   const id = useSvgId("pict");
@@ -248,7 +275,7 @@ export const PictorialBar = (props: PictorialBarProps) => {
   const isHero = (i: number) =>
     props.highlight === undefined ? tones[i] === 0 : props.highlight === i;
   const slots = Math.ceil(Math.max(...data.map((d) => d.value)) / unit);
-  const label = `One icon = ${unit}. ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
+  const label = `One page = ${unit}k words. ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
 
   return (
     <Plot
@@ -262,14 +289,14 @@ export const PictorialBar = (props: PictorialBarProps) => {
     >
       {(width) => {
         // Room for the longest row label, set flush right against the icons.
-        const x0 = Math.ceil(
-          Math.max(...data.map((d) => sansWidth(d.label, 12))) + 18
-        );
+        const names = nameRoom(data);
         // The values stand in one column after the track.
-        const right = 48;
+        const valueW = valueWidth(data, format);
+        const right = Math.max(48, valueW + 18);
         const lines = width < 460 ? 2 : 1;
         const perLine = Math.ceil(slots / lines);
-        const pitch = Math.min(30, (width - x0 - right) / perLine);
+        const pitch = Math.min(30, (width - names - right) / perLine);
+        const x0 = rowOrigin(width, names, perLine * pitch, valueW);
         const scale = Math.min(1.1, (pitch * 0.82) / ICON_W);
         const noteH = noteSpace(props.note, width - 16, 22);
         // Small icons on a phone sit closer together, so the rows close up.

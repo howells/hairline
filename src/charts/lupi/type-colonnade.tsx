@@ -14,7 +14,7 @@ interface TypeColonnadeProps {
   height?: number;
   /** How many of the largest owners to draw in the hero colour. Default 1. */
   strong?: number;
-  /** Noun for the tooltip count, e.g. "repos". */
+  /** Noun for the tooltip count, e.g. "lights". */
   unit?: string;
   note?: string;
   /** Owner to draw in the hero colour. */
@@ -35,14 +35,14 @@ interface OwnerNode {
 interface Layout {
   left: number;
   blockW: number;
-  /** Left edge of the repo column, each repo's dot centre, and where its line starts. */
+  /** Left edge of the light column, each light's dot centre, and where its line starts. */
   xTick0: number;
   xDot: number;
   xTick1: number;
   xOwner: number;
   pitch: number;
   rMax: number;
-  /** Each repo's row, grouped by owner (whole px). */
+  /** Each light's row, grouped by keeper (whole px). */
   yItem: (i: number) => number;
   yOwner: (o: string) => number;
   rOf: (c: number) => number;
@@ -56,12 +56,15 @@ interface Layout {
 const OWNER_LINE = 12;
 const OWNER_GAP = 10;
 const OWNER_EDGE = 4;
-/** Empty rows between two owners' stacks; radius of one repo's hollow dot. */
+/** Empty rows between two owners' stacks; radius of one light's hollow dot. */
 const GROUP_GAP = 2;
 const DOT_R = 2;
 
-/** Width of an owner label in `t-label`. */
-const labelWidth = (s: string) => sansWidth(s.replaceAll(" ", " "), 11);
+/**
+ * Width of an owner label in `t-label`. sansWidth rounds each glyph up, so the
+ * label is sized a little under the real 11 to end at the block's edge.
+ */
+const labelWidth = (s: string) => sansWidth(s.replaceAll(" ", " "), 10.4);
 
 /** "Name · count", the count glued to the last word so it never wraps alone. */
 const ownerText = (o: OwnerNode) => `${o.owner}\u00A0·\u00A0${o.count}`;
@@ -95,7 +98,7 @@ const tally = (data: OwnershipDatum[]): OwnerNode[] => {
     .map(([owner, count], rank) => ({ count, owner, rank }));
 };
 
-/** Each repo's row slot: grouped by owner rank, a gap between groups. */
+/** Each light's row slot: grouped by owner rank, a gap between groups. */
 const slotsOf = (data: OwnershipDatum[], owners: OwnerNode[]) => {
   const rank = new Map(owners.map((o) => [o.owner, o.rank]));
   const order = [...data.keys()].toSorted(
@@ -215,11 +218,11 @@ const ownerLit = (
 };
 
 /**
- * One row per repo: a hollow dot in its owner's string, at one even pitch,
+ * One row per light: a hollow dot in its keeper's string, at one even pitch,
  * and a straight hairline from it to the owner, so each owner gathers an
  * even fan. The hero owner's dots and lines are ink.
  */
-const Repos = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
+const Lights = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
   <g>
     {data.map((d, i) => {
       const lit = itemLit(data, focus, i);
@@ -350,10 +353,10 @@ const Owners = ({
 );
 
 /**
- * L12 Repo owners. Many-to-one ownership: every repo is a hollow dot, strung
+ * L12 Lights by keeper. Many-to-one keeping: every light is a hollow dot, strung
  * at one even pitch and grouped by owner, and each dot runs a straight
  * hairline to its owner on the right, so every owner gathers a clean fan.
- * Owner disc area = how many it owns, engraved; repo names are on hover.
+ * Owner disc area = how many it owns, engraved; light names are on hover.
  */
 export const TypeColonnade = (props: TypeColonnadeProps) => {
   const data = props.data ?? typeColonnadeDemo;
@@ -397,12 +400,12 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
             <svg
               width={width}
               height={at.height}
-              aria-label={`${data.length} ${unit} across ${owners.length} owners: ${owners.map((o) => `${o.owner} ${o.count}`).join(", ")}`}
+              aria-label={`${data.length} ${unit} across ${owners.length} keepers: ${owners.map((o) => `${o.owner} ${o.count}`).join(", ")}`}
               onPointerLeave={() => {
                 setFocus(null);
               }}
             >
-              <title>Ownership</title>
+              <title>Lights by keeper</title>
               <defs>
                 <Hatch ground="fill-paper" id={fills.hatch} tone="fill-l4" />
                 <CrossHatch
@@ -411,7 +414,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
                   tone="fill-hero"
                 />
               </defs>
-              <Repos {...layer} />
+              <Lights {...layer} />
               <Owners {...layer} />
               <PlotNote
                 text={props.note}
@@ -437,7 +440,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
             )}
             {focusItem !== undefined && focus?.item !== undefined && (
               <Tooltip x={at.xTick1} y={at.yItem(focus.item) - 6}>
-                <b>{focusItem.name}</b> · owned by {focusItem.owner}
+                <b>{focusItem.name}</b> · kept by {focusItem.owner}
               </Tooltip>
             )}
           </div>

@@ -19,9 +19,9 @@ interface ViolinProps {
   data?: ViolinGroup[];
   height?: number;
   format?: (v: number) => string;
-  /** Unit noun for the tooltip, e.g. "tickets". */
+  /** Unit noun for the tooltip, e.g. "towers". */
   unit?: string;
-  /** Darkest = lowest median (true, e.g. wait times) or highest (false). */
+  /** Darkest = lowest median (true) or highest (false, e.g. the heaviest bells). */
   lowIsBest?: boolean;
   note?: string;
   /** Index of the group to draw in the hero colour. */
@@ -64,7 +64,10 @@ interface FigureProps {
   y: ScaleLinear<number, number>;
 }
 
-const hours = (v: number) => `${Math.round(v * 10) / 10}h`;
+const hundredweight = (v: number) => `${Math.round(v * 10) / 10}`;
+
+/** The unit, printed once on the scale's top label and after each value in the tooltip. */
+const UNIT = "cwt";
 
 const statsOf = (g: ViolinGroup): GroupStats => {
   const sorted = g.values.toSorted((a, b) => a - b);
@@ -212,17 +215,17 @@ const Figure = (p: FigureProps) => {
 };
 
 /**
- * G19 Reply times. One filled density silhouette per group, mirrored around
+ * G19 Tenor weights. One filled density silhouette per group, mirrored around
  * its centre line; width = how many records sit at that value. A 2px
- * paper-coloured rung marks the median, printed beside it. The fastest group
- * (lowest median, or the highlight) is solid ink; the rest are hatched inside
+ * paper-coloured rung marks the median, printed beside it. The lowest-median group
+ * (or the highlight, or the highest median when `lowIsBest` is false) is solid ink; the rest are hatched inside
  * a 1px outline.
  */
 export const Violin = (props: ViolinProps) => {
   const data = props.data ?? violinDemo;
   const height = props.height ?? 420;
-  const format = props.format ?? hours;
-  const unit = props.unit ?? "tickets";
+  const format = props.format ?? hundredweight;
+  const unit = props.unit ?? "towers";
   const [hover, setHover] = useState<Hit | null>(null);
   const stats = useMemo(() => data.map((g) => statsOf(g)), [data]);
   const order = ranks(
@@ -232,15 +235,16 @@ export const Violin = (props: ViolinProps) => {
   const maxV = Math.max(...stats.map((s) => s.hi));
   const heroIndex = props.highlight ?? order.indexOf(0);
   const tex = useTextureIds("violin");
-  const label = `Violins: ${data.map((g, i) => `${g.label} median ${format(stats[i].med)}`).join(", ")}`;
+  const label = `Violins: ${data.map((g, i) => `${g.label} median ${format(stats[i].med)} ${UNIT}`).join(", ")}`;
 
   return (
     <Plot
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data[hover.i].label}</b> · median {format(stats[hover.i].med)} ·
-            90% within {format(stats[hover.i].p90)} · {stats[hover.i].n} {unit}
+            <b>{data[hover.i].label}</b> · median {format(stats[hover.i].med)}{" "}
+            {UNIT} · 90% under {format(stats[hover.i].p90)} {UNIT} ·{" "}
+            {stats[hover.i].n} {unit}
           </Tooltip>
         )
       }
@@ -257,7 +261,11 @@ export const Violin = (props: ViolinProps) => {
           labels: data.map((g) => g.label),
           narrow,
           stats,
-          ticks: y.ticks(4).map((t) => format(t)),
+          ticks: y
+            .ticks(4)
+            .map((t, k, all) =>
+              k === all.length - 1 ? `${format(t)} ${UNIT}` : format(t)
+            ),
           width,
         });
         const m = { bottom, left, right, top: 12 };
@@ -298,7 +306,7 @@ export const Violin = (props: ViolinProps) => {
                   dy="0.34em"
                   textAnchor="end"
                 >
-                  {format(t)}
+                  {t === y.ticks(4).at(-1) ? `${format(t)} ${UNIT}` : format(t)}
                 </text>
               </g>
             ))}

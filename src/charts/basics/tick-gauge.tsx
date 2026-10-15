@@ -10,7 +10,7 @@ import { polar } from "./util-b";
 import type { Tip } from "./util-b";
 
 interface TickGaugeProps {
-  /** Line under the big number; receives the ticks still to go. Defaults to the amount to go. */
+  /** Line under the big number; receives the ticks still to come. Defaults to the amount to come. */
   caption?: (remaining: number) => string;
   data?: TickGaugeDatum;
   /** Formats the raw value and target for the tooltip. */
@@ -242,7 +242,7 @@ export const TickGauge = (props: TickGaugeProps) => {
   const earned = Math.round(share * n);
   const caption =
     props.caption?.(n - earned) ??
-    `${format(Math.max(0, data.target - data.value))} to go`;
+    `${format(Math.max(0, data.target - data.value))} to come`;
   const pct = Math.round(share * 100);
   const label = `${pct}% of target: ${format(data.value)} of ${format(data.target)}`;
   const [tip, setTip] = useState<Tip<Part> | null>(null);
@@ -250,11 +250,11 @@ export const TickGauge = (props: TickGaugeProps) => {
   const tooltip =
     tip?.item === "earned" ? (
       <>
-        <b>Earned</b> · {format(data.value)} of {format(data.target)}
+        <b>Fallen</b> · {format(data.value)} of {format(data.target)}
       </>
     ) : (
       <>
-        <b>To go</b> · {format(Math.max(0, data.target - data.value))}
+        <b>To come</b> · {format(Math.max(0, data.target - data.value))}
       </>
     );
 

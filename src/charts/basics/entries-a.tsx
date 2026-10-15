@@ -1,5 +1,5 @@
 import type { GalleryEntry } from "../../gallery/types";
-import { fmtMoney } from "../../lib/format";
+import { fmtInt, fmtKInt } from "../../lib/format";
 import { HairlineArea } from "./hairline-area";
 import { HairlineLine } from "./hairline-line";
 import { PairedRungs } from "./paired-rungs";
@@ -9,31 +9,45 @@ import { StackedRungs } from "./stacked-rungs";
 import { TickDonut } from "./tick-donut";
 import { TickRows } from "./tick-rows";
 
+/** Dollars to the pound, to the cent. */
+const fmtDollars = (v: number) => `$${v.toFixed(2)}`;
+
+/** A length of daylight in hours, as 15h 25m. */
+const fmtDaylight = (v: number) => {
+  const minutes = Math.round(v * 60);
+  const rest = minutes % 60;
+  const hours = `${Math.floor(minutes / 60)}h`;
+  return rest === 0 ? hours : `${hours} ${rest}m`;
+};
+
+const fmtPounds = (v: number) => `£${fmtInt(v)}`;
+const fmtMillions = (v: number) => `${(v / 1e6).toFixed(2)}m`;
+
 /** Gallery entries owned by agent basics-a, in catalogue order. */
 export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F2",
-    name: "Daily line",
-    render: () => <HairlineLine />,
+    name: "Sterling in September",
+    render: () => <HairlineLine emphasis="trough" format={fmtDollars} />,
   },
   {
     family: "basics",
     id: "F3",
-    name: "Daily area",
-    render: () => <HairlineArea />,
+    name: "Shrinking days",
+    render: () => <HairlineArea format={fmtDaylight} />,
   },
   {
     family: "basics",
     id: "F4",
-    name: "Share ring",
-    render: () => <TickDonut format={(v) => `${v}k`} unit="sign-ups" />,
+    name: "Where the bill goes",
+    render: () => <TickDonut format={fmtPounds} unit="a year" />,
   },
   {
     family: "basics",
     id: "F5",
-    name: "Count rows",
-    render: () => <TickRows format={(v) => `${v}k`} />,
+    name: "Birds counted",
+    render: () => <TickRows format={fmtMillions} unit={50_000} />,
   },
   {
     family: "basics",
@@ -44,26 +58,27 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F7",
-    name: "Stacked counts",
+    name: "Medals by Games",
     render: () => <StackedRungs />,
   },
   {
     family: "basics",
     id: "F8",
-    name: "Stem scatter",
+    name: "Apple orchards",
     render: () => (
       <PlumbScatter
-        formatX={(v) => `${v}% use it`}
-        xDomain={[0, 100]}
-        xLabels={["Fewer users", "More users"]}
-        yLabel="Satisfaction ↑"
+        format={(v) => `${v} t/ha`}
+        formatX={(v) => `${v}k ha`}
+        xDomain={[0, 340]}
+        xLabels={["Smaller", "Larger"]}
+        yLabel="Yield ↑"
       />
     ),
   },
   {
     family: "basics",
     id: "F9",
-    name: "Waterfall",
-    render: () => <RungWaterfall format={(v) => fmtMoney(v * 1e3)} unit={50} />,
+    name: "Population change",
+    render: () => <RungWaterfall format={fmtKInt} unit={20_000} />,
   },
 ];

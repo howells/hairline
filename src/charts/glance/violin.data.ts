@@ -1,4 +1,4 @@
-import { mulberry32 } from "../../lib/random";
+import tenors from "./violin.tenors.json";
 
 export interface ViolinGroup {
   label: string;
@@ -6,30 +6,28 @@ export interface ViolinGroup {
   values: number[];
 }
 
-/** Skewed samples between `lo` and `hi`, peaking near `mode`. Deterministic. */
-const skewed = (
-  seed: number,
-  n: number,
-  lo: number,
-  mode: number,
-  hi: number
-) => {
-  const r = mulberry32(seed);
-  const c = (mode - lo) / (hi - lo);
-  const triangular = () => {
-    const u = r();
-    return u < c
-      ? lo + Math.sqrt(u * (hi - lo) * (mode - lo))
-      : hi - Math.sqrt((1 - u) * (hi - lo) * (hi - mode));
-  };
-  // Blend of two triangular draws: a rounder hump than one alone.
-  return Array.from({ length: n }, () => (triangular() * 2 + triangular()) / 3);
-};
+/** Pounds in a hundredweight. */
+const LB_PER_CWT = 112;
 
-/** Fieldnote email support, December 2026: hours to first reply, one value per ticket, by plan. */
-export const violinDemo: ViolinGroup[] = [
-  { label: "Enterprise", values: skewed(41, 120, 0, 0.8, 3.2) },
-  { label: "Business", values: skewed(42, 210, 0, 1.9, 5.8) },
-  { label: "Plus", values: skewed(43, 260, 0.3, 4.6, 10.5) },
-  { label: "Free", values: skewed(44, 300, 0.8, 11, 22) },
-];
+/**
+ * Tenor weights: the weight of the heaviest bell, in hundredweight (cwt), for
+ * every full-circle ring of 6, 8, 10 and 12 bells, one value per tower.
+ *
+ * Source: Dove's Guide for Church Bell Ringers, Central Council of Church Bell
+ * Ringers, dove.csv, licensed Creative Commons Attribution-ShareAlike 4.0
+ * (credit the Central Council; data derived from it shares alike):
+ * https://dove.cccbr.org.uk/dove.csv (download page https://dove.cccbr.org.uk/downloads)
+ * Fetched 2026-10-15.
+ *
+ * Transform: rows with RingType "Full-circle ring" and Bells 6, 8, 10 or 12
+ * (2,958, 1,892, 303 and 139 towers); the column Wt, which is the tenor in
+ * pounds, was kept as given (blank weights dropped) and is in
+ * violin.tenors.json, sorted. Divided here by 112 to give hundredweight.
+ * Sanity: the heaviest tenor is Liverpool Cathedral's, 9,195 lb or 82 cwt, in
+ * the ring of 12; the median tenor is 10 cwt for six bells and 25.7 cwt for
+ * twelve. Dove marks some weights as approximate or estimated.
+ */
+export const violinDemo: ViolinGroup[] = tenors.map((g) => ({
+  label: g.label,
+  values: g.lb.map((lb) => lb / LB_PER_CWT),
+}));

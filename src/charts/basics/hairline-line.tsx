@@ -27,15 +27,18 @@ interface HairlineLineProps {
   format?: (v: number) => string;
   /** Footnote under the axis, e.g. "one dot = one day · hollow = weekend". */
   note?: string;
-  /** Index drawn in the hero colour. Defaults to the peak. */
+  /** Index drawn in the hero colour. Defaults to the emphasised extreme. */
   highlight?: number;
+  /** Which extreme the hero marks when `highlight` is not given. Defaults to the peak. */
+  emphasis?: "peak" | "trough";
   /** Date label for axis and tooltip. */
   formatDate?: (d: Date) => string;
 }
 
 interface Frame {
   floor: number;
-  x: ScaleLinear<number, number>;
+  /** Where record `i` stands: by its date, so a missing day leaves a gap. */
+  x: (i: number) => number;
   /** The frame's left and right edges: gridlines and baseline span them. */
   x0: number;
   x1: number;
@@ -43,6 +46,8 @@ interface Frame {
 }
 
 const dayKey = (d: DailyDatum) => d.date.toISOString();
+
+const DAY_MS = 86_400_000;
 
 const dotClass = (hollow: boolean, hero: boolean) => {
   if (hero) {
@@ -152,6 +157,7 @@ const Stems = ({ data, floor, frame, hero }: StemsProps) => (
 interface SvgProps {
   clear: () => void;
   data: DailyDatum[];
+  emphasis: "peak" | "trough";
   fmtDate: (d: Date) => string;
   format: (v: number) => string;
   height: number;
@@ -186,6 +192,7 @@ const DayAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
 const HairlineLineSvg = ({
   clear,
   data,
+  emphasis,
   fmtDate,
   format,
   height,
@@ -199,8 +206,9 @@ const HairlineLineSvg = ({
   const lo = Math.min(...values);
   const hi = Math.max(...values);
   const peak = values.indexOf(hi);
+  const trough = values.indexOf(lo);
   const last = data.length - 1;
-  const hero = highlight ?? peak;
+  const hero = highlight ?? (emphasis === "trough" ? trough : peak);
   const frameW = Math.min(width - 16, 680);
   const x0 = Math.round((width - frameW) / 2);
   const x1 = x0 + frameW;
@@ -209,11 +217,15 @@ const HairlineLineSvg = ({
     .domain([lo - (hi - lo) * 0.25, hi])
     .nice(5)
     .range([floor, 40]);
+  const first = data[0].date.getTime();
+  const dayAt = (i: number) =>
+    Math.round((data[i].date.getTime() - first) / DAY_MS);
+  const xScale = scaleLinear()
+    .domain([0, Math.max(1, dayAt(last))])
+    .range([x0 + 8, x1 - VALUE_AXIS_ROOM]);
   const frame: Frame = {
     floor,
-    x: scaleLinear()
-      .domain([0, last])
-      .range([x0 + 8, x1 - VALUE_AXIS_ROOM]),
+    x: (i) => xScale(dayAt(i)),
     x0,
     x1,
     y,
@@ -222,11 +234,17 @@ const HairlineLineSvg = ({
     d3line<DailyDatum>()
       .x((_, i) => crisp(frame.x(i)))
       .y((d) => frame.y(d.value))(data) ?? "";
-  const label = `Daily values, ${fmtDate(data[0].date)} to ${fmtDate(data[last].date)}: peak ${format(hi)} on ${fmtDate(data[peak].date)}, latest ${format(values[last])}`;
+  const label = `Daily values, ${fmtDate(data[0].date)} to ${fmtDate(data[last].date)}: high ${format(hi)} on ${fmtDate(data[peak].date)}, low ${format(lo)} on ${fmtDate(data[trough].date)}, latest ${format(values[last])}`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
-    const i = Math.max(0, Math.min(last, Math.round(frame.x.invert(px))));
+    const day = xScale.invert(px);
+    let i = 0;
+    for (let k = 1; k < data.length; k += 1) {
+      if (Math.abs(dayAt(k) - day) < Math.abs(dayAt(i) - day)) {
+        i = k;
+      }
+    }
     show(i, frame.x(i), frame.y(data[i].value) - 16);
   };
 
@@ -286,9 +304,11 @@ const HairlineLineSvg = ({
 };
 
 /**
- * F2 Daily line. One dot per day on a grey line. Weekend days are hollow
- * rings on an evenly dotted stem to the floor; the peak is in ink on a solid
- * ink stem, with its value. The latest day carries its value quietly.
+ * F2 Daily line. One dot per reading on a grey line, placed by its date so a
+ * missing day leaves a gap. Weekend days are hollow rings on an evenly dotted
+ * stem to the floor; the peak (or, with `emphasis="trough"`, the lowest) is in
+ * ink on a solid ink stem, with its value. The latest day carries its value
+ * quietly.
  */
 export const HairlineLine = (props: HairlineLineProps) => {
   const data = props.data ?? hairlineLineDemo;
@@ -311,6 +331,7 @@ export const HairlineLine = (props: HairlineLineProps) => {
         <HairlineLineSvg
           clear={clear}
           data={data}
+          emphasis={props.emphasis ?? "peak"}
           fmtDate={fmtDate}
           format={format}
           height={props.height ?? 440}

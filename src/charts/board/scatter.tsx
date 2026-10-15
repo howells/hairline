@@ -3,7 +3,6 @@ import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart, HGrid, VGrid } from "../core";
 import { PlateLabel, Stipple } from "../texture";
@@ -23,6 +22,8 @@ export interface ScatterPoint {
   group: "filled" | "hollow";
   /** Named points carry a label until hovered. */
   name?: string;
+  /** The point's name in the hover readout, when it has no standing label. */
+  title?: string;
 }
 /** Pointer snaps to the nearest point within this many pixels. */
 const SNAP = 24;
@@ -33,43 +34,40 @@ interface ScatterProps {
   points: ScatterPoint[];
   /** The key's names for the filled and the hollow group. */
   groups: { filled: string; hollow: string };
-  /** Threshold on y: the zone over it is stippled, its slowest point red. */
-  sla: number;
+  /**
+   * A limit on y, if there is a real one: the zone over it is stippled and
+   * its highest point is red. Without one the plot has neither.
+   */
+  limit?: number;
   height: number;
   label: string;
-  /** Defaults to [0, 1000]. */
-  xDomain?: [number, number];
-  /** Defaults to [0, 500]. */
-  yDomain?: [number, number];
-  /** Defaults to every 200 from 0 to 1,000. */
-  xTicks?: number[];
-  /** Defaults to every 100 from 0 to 500. */
-  yTicks?: number[];
-  /** Defaults to "1,000". */
-  xTickFormat?: Format;
-  /** Defaults to "300 ms". */
-  yTickFormat?: Format;
-  /** Under the x axis, right-aligned. Defaults to "Requests/s". */
-  xTitle?: string;
-  /** Over the plot, right-aligned. Defaults to "P95". */
-  yTitle?: string;
-  /** Beside the threshold rule. Defaults to "SLA"; "" hides it. */
-  thresholdLabel?: string;
-  /** x in the hover readout. Defaults to "320/s". */
-  xFormat?: Format;
-  /** y in the hover readout. Defaults to "300 ms". */
-  yFormat?: Format;
+  xDomain: [number, number];
+  yDomain: [number, number];
+  xTicks: number[];
+  yTicks: number[];
+  xTickFormat: Format;
+  yTickFormat: Format;
+  /** Under the x axis, right-aligned. */
+  xTitle: string;
+  /** Over the plot, right-aligned. */
+  yTitle: string;
+  /** Beside the limit's rule; "" or unset hides it. */
+  limitLabel?: string;
+  /** x in the hover readout. */
+  xFormat: Format;
+  /** y in the hover readout. */
+  yFormat: Format;
 }
 
 /** Axis settings with every default filled in. */
 interface AxisConfig {
+  limitLabel: string;
   xTicks: number[];
   yTicks: number[];
   xTickFormat: Format;
   yTickFormat: Format;
   xTitle: string;
   yTitle: string;
-  thresholdLabel: string;
   xFormat: Format;
   yFormat: Format;
 }
@@ -86,18 +84,16 @@ interface Frame {
 /** Gap between the value labels and the plot, px. */
 const TICK_GAP = 14;
 
-const fmtMsTick = (v: number) => `${v} ms`;
-
 const axisConfig = (props: ScatterProps): AxisConfig => ({
-  thresholdLabel: props.thresholdLabel ?? "SLA",
-  xFormat: props.xFormat ?? ((v) => `${v}/s`),
-  xTickFormat: props.xTickFormat ?? fmtInt,
-  xTicks: props.xTicks ?? [0, 200, 400, 600, 800, 1000],
-  xTitle: props.xTitle ?? "Requests/s",
-  yFormat: props.yFormat ?? fmtMsTick,
-  yTickFormat: props.yTickFormat ?? fmtMsTick,
-  yTicks: props.yTicks ?? [0, 100, 200, 300, 400, 500],
-  yTitle: props.yTitle ?? "P95",
+  limitLabel: props.limitLabel ?? "",
+  xFormat: props.xFormat,
+  xTickFormat: props.xTickFormat,
+  xTicks: props.xTicks,
+  xTitle: props.xTitle,
+  yFormat: props.yFormat,
+  yTickFormat: props.yTickFormat,
+  yTicks: props.yTicks,
+  yTitle: props.yTitle,
 });
 
 const hasName = (p: ScatterPoint) => p.name !== undefined && p.name !== "";
@@ -172,14 +168,14 @@ const Axes = (props: { frame: Frame }) => {
   );
 };
 
-/** The zone over the SLA, stippled on paper inside a rule, and the SLA line. */
-const SlaRule = (props: { frame: Frame; zone: string; sla: number }) => {
+/** The zone over the limit, stippled on paper inside a rule, and the limit's line. */
+const LimitRule = (props: { frame: Frame; zone: string; limit: number }) => {
   const { axis, m, width, y } = props.frame;
   const top = Math.round(m.top);
-  const slaY = Math.round(y(props.sla));
+  const limitY = Math.round(y(props.limit));
   const left = Math.round(m.left);
   const zoneW = Math.round(width - m.right) - left;
-  const zoneH = Math.max(0, slaY - top);
+  const zoneH = Math.max(0, limitY - top);
   return (
     <>
       <rect
@@ -201,24 +197,24 @@ const SlaRule = (props: { frame: Frame; zone: string; sla: number }) => {
         className={`${RULE_TARGET} fade`}
         x1={m.left}
         x2={width - m.right}
-        y1={crisp(y(props.sla))}
-        y2={crisp(y(props.sla))}
+        y1={crisp(y(props.limit))}
+        y2={crisp(y(props.limit))}
       />
-      {axis.thresholdLabel !== "" && (
+      {axis.limitLabel !== "" && (
         <text
           className={`${TICK} t-halo`}
           x={width - m.right - 8}
-          y={y(props.sla) + 16}
+          y={y(props.limit) + 16}
           textAnchor="end"
         >
-          {axis.thresholdLabel}
+          {axis.limitLabel}
         </text>
       )}
     </>
   );
 };
 
-/** The worst point: red. Hovered: ink. Otherwise the one grey. */
+/** The point over the limit by most: red. Hovered: ink. Otherwise the one grey. */
 const pointTone = (worst: boolean, active: boolean) => {
   if (active) {
     return "var(--hero)";
@@ -240,21 +236,22 @@ const MID = 4;
 
 /**
  * A label set on its baseline: on a plate where it falls inside the
- * stippled zone over the SLA, on its halo everywhere else.
+ * stippled zone over the limit, on its halo everywhere else.
  */
 const ZoneText = (props: {
   anchor: "end" | "middle" | "start";
   baseline: number;
   className: string;
   frame: Frame;
-  sla: number;
+  limit: number | undefined;
   text: string;
   x: number;
 }) => {
   const { frame } = props;
   const mid = props.baseline - MID;
   const inZone =
-    mid - 7.5 < Math.round(frame.y(props.sla)) &&
+    props.limit !== undefined &&
+    mid - 7.5 < Math.round(frame.y(props.limit)) &&
     mid + 7.5 > Math.round(frame.m.top);
   return inZone ? (
     <PlateLabel
@@ -281,21 +278,23 @@ const PointMark = (props: {
   point: ScatterPoint;
   i: number;
   frame: Frame;
-  /** The single worst point over the SLA. */
+  /** The single highest point over the limit. */
   worst: boolean;
   active: boolean;
-  sla: number;
+  limit: number | undefined;
 }) => {
   const { active, point: p } = props;
   const { x, y } = props.frame;
   const tone = pointTone(props.worst, active);
   const hollow = p.group === "hollow";
-  const px = x(p.x);
+  // Whole pixels on the half, as the gridlines are: a point on a gridline sits on it.
+  const px = crisp(x(p.x));
+  const py = crisp(y(p.y));
   return (
     <g className="fade" style={{ "--i": props.i * 0.4 }}>
       <circle
         cx={px}
-        cy={y(p.y)}
+        cy={py}
         r={active ? 4.5 : 3}
         fill={hollow ? "var(--bg)" : tone}
         stroke={hollow ? tone : "none"}
@@ -308,16 +307,16 @@ const PointMark = (props: {
             className="shape-crisp"
             x1={crisp(px)}
             x2={crisp(px)}
-            y1={Math.round(y(p.y) - 9)}
-            y2={Math.round(y(p.y) - 17)}
+            y1={Math.round(py - 9)}
+            y2={Math.round(py - 17)}
             stroke="var(--l4)"
           />
           <ZoneText
             anchor={labelAnchor(p.name ?? "", px, props.frame)}
-            baseline={y(p.y) - 22}
+            baseline={py - 22}
             className={TICK}
             frame={props.frame}
-            sla={props.sla}
+            limit={props.limit}
             text={p.name ?? ""}
             x={px}
           />
@@ -331,11 +330,12 @@ const PointMark = (props: {
 const HoverReadout = (props: {
   point: ScatterPoint;
   frame: Frame;
-  sla: number;
+  limit: number | undefined;
 }) => {
   const { point: hp } = props;
   const { axis, height: h, m, x, y } = props.frame;
-  const readout = `${hasName(hp) ? `${hp.name ?? ""} ` : ""}${axis.yFormat(hp.y)} · ${axis.xFormat(hp.x)}`;
+  const name = hp.name ?? hp.title ?? "";
+  const readout = `${name === "" ? "" : `${name} `}${axis.yFormat(hp.y)} · ${axis.xFormat(hp.x)}`;
   return (
     <g pointerEvents="none">
       <line
@@ -350,7 +350,7 @@ const HoverReadout = (props: {
         baseline={y(hp.y) - 14}
         className={VALUE}
         frame={props.frame}
-        sla={props.sla}
+        limit={props.limit}
         text={readout}
         x={x(hp.x)}
       />
@@ -358,23 +358,26 @@ const HoverReadout = (props: {
   );
 };
 
-/** Index of the slowest point over the SLA: the one marked red. */
-const worstIndex = (points: ScatterPoint[], sla: number) => {
+/** Index of the highest point over the limit: the one marked red. */
+const worstIndex = (points: ScatterPoint[], limit: number | undefined) => {
   let worst = -1;
+  if (limit === undefined) {
+    return worst;
+  }
   for (const [i, p] of points.entries()) {
-    if (p.y > sla && (worst < 0 || p.y > points[worst].y)) {
+    if (p.y > limit && (worst < 0 || p.y > points[worst].y)) {
       worst = i;
     }
   }
   return worst;
 };
 
-/** Throughput vs latency; the slowest point over the SLA is the one red. */
+/** One measure against another; the highest point over the limit, if any, is the one red. */
 export const Scatter = (props: ScatterProps) => {
   const [hover, setHover] = useState<number | null>(null);
   const tex = useTextureIds("sc");
   const axis = axisConfig(props);
-  const worst = worstIndex(props.points, props.sla);
+  const worst = worstIndex(props.points, props.limit);
 
   return (
     <Chart
@@ -404,10 +407,10 @@ export const Scatter = (props: ScatterProps) => {
           m,
           width,
           x: scaleLinear()
-            .domain(props.xDomain ?? [0, 1000])
+            .domain(props.xDomain)
             .range([m.left, width - m.right]),
           y: scaleLinear()
-            .domain(props.yDomain ?? [0, 500])
+            .domain(props.yDomain)
             .range([h - m.bottom, m.top]),
         };
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
@@ -439,7 +442,9 @@ export const Scatter = (props: ScatterProps) => {
               x1={width - m.right}
             />
             <Axes frame={frame} />
-            <SlaRule frame={frame} zone={tex("zone")} sla={props.sla} />
+            {props.limit !== undefined && (
+              <LimitRule frame={frame} zone={tex("zone")} limit={props.limit} />
+            )}
             {props.points.map((p, i) => (
               <PointMark
                 key={pointKey(p)}
@@ -448,11 +453,11 @@ export const Scatter = (props: ScatterProps) => {
                 frame={frame}
                 worst={i === worst}
                 active={hover === i}
-                sla={props.sla}
+                limit={props.limit}
               />
             ))}
             {hp !== null && (
-              <HoverReadout point={hp} frame={frame} sla={props.sla} />
+              <HoverReadout point={hp} frame={frame} limit={props.limit} />
             )}
           </svg>
         );

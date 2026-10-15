@@ -9,42 +9,60 @@ export interface BoxDatum {
   q3: number;
 }
 
-/** Seconds for an edit to reach every device, by platform, September 2026. */
+/**
+ * F15 Sunshine by season. Hours of bright sunshine in each month recorded at
+ * Oxford (Radcliffe Observatory), grouped by season: spring is March to May,
+ * summer June to August, autumn September to November, winter December to
+ * February. 1173 monthly readings, from 1929 to 2026-09.
+ *
+ * Source: Met Office historic station data, Oxford, monthly (Open Government
+ * Licence v3.0). Sunshine comes from a Campbell Stokes recorder, and from an
+ * automatic Kipp & Zonen sensor in later years, as the file's header explains.
+ *   https://www.metoffice.gov.uk/research/climate/maps-and-data/historic-station-data
+ *   https://www.metoffice.gov.uk/pub/data/weather/uk/climate/stationdata/oxforddata.txt
+ * Fetched 2026-10-15.
+ *
+ * Transform: take the "sun" column, drop months marked missing (---), strip the
+ * estimate (*) and sensor (#) marks, and group the months by season. For each
+ * season: quartiles by linear interpolation, the whiskers at the lowest and
+ * highest reading within 1.5 times the interquartile range of the box, and the
+ * readings beyond them listed as outliers. Scripts: reference/scripts/F11/gen.py.
+ */
 export const tickBoxDemo: BoxDatum[] = [
   {
-    label: "Desktop",
-    max: 2.9,
-    median: 1.2,
-    min: 0.4,
-    outliers: [4.2],
-    q1: 0.8,
-    q3: 1.7,
+    label: "Spring",
+    max: 285,
+    median: 154.55,
+    min: 48.8,
+    outliers: [300.8, 322.8],
+    q1: 123.125,
+    q3: 188.275,
   },
   {
-    label: "Web",
-    max: 4.6,
-    median: 1.9,
-    min: 0.6,
-    outliers: [6.8],
-    q1: 1.3,
-    q3: 2.7,
+    label: "Summer",
+    max: 303.7,
+    median: 192,
+    min: 97.5,
+    outliers: [353],
+    q1: 161.875,
+    q3: 226.875,
   },
   {
-    label: "iOS",
-    max: 6.6,
-    median: 2.8,
-    min: 0.9,
-    outliers: [9.1],
-    q1: 1.8,
-    q3: 4,
+    label: "Autumn",
+    max: 199.1,
+    median: 101.85,
+    min: 31,
+    outliers: [210.4, 213.9],
+    q1: 76.7,
+    q3: 129.25,
   },
   {
-    label: "Android",
-    max: 9.8,
-    median: 4.2,
-    min: 1.1,
-    outliers: [12.4, 13.7],
-    q1: 2.6,
-    q3: 6,
+    label: "Winter",
+    max: 107,
+    median: 59.7,
+    min: 18.2,
+    outliers: [112.9, 113, 115.1, 115.9, 117.6, 124.1, 127.8],
+    q1: 47.7,
+    q3: 72.3,
   },
 ];

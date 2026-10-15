@@ -19,33 +19,33 @@ export const entries: GalleryEntry[] = [
   },
   {
     family: "lupi",
-    id: "L12",
-    name: "Repo owners",
-    render: () => <TypeColonnade unit="repos" />,
-  },
-  {
-    family: "lupi",
-    id: "L13",
-    name: "Signup funnel",
-    render: () => <HourglassStream />,
-  },
-  {
-    family: "lupi",
     id: "L14",
-    name: "Mood split",
+    name: "A hundred donors",
     render: () => <HundredField />,
   },
   {
     family: "lupi",
+    id: "L13",
+    name: "Library earnings",
+    render: () => <HourglassStream />,
+  },
+  {
+    family: "lupi",
+    id: "L12",
+    name: "Lights by keeper",
+    render: () => <TypeColonnade unit="lights" />,
+  },
+  {
+    family: "lupi",
     id: "L15",
-    name: "Survey picks",
+    name: "Days out",
     render: () => <BallotTally />,
   },
   {
     family: "lupi",
     id: "L16",
-    name: "Used together",
-    render: () => <MatrixHeat />,
+    name: "Letter pairs",
+    render: () => <MatrixHeat thresholds={[5, 10, 15, 20]} />,
   },
   {
     family: "lupi",
@@ -63,7 +63,7 @@ export const entries: GalleryEntry[] = [
   {
     family: "lupi",
     id: "L20",
-    name: "Feature scores",
-    render: () => <ParallelCoordinates highlight="Assistant" />,
+    name: "Twelve cheeses",
+    render: () => <ParallelCoordinates highlight="Roquefort" />,
   },
 ];

@@ -11,11 +11,13 @@ import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { ControlSlot } from "./control-slot";
+import { placeNames } from "./scatter-labels";
 import { scatterMorphDemo } from "./scatter-morph.data";
 import type { MorphDatum } from "./scatter-morph.data";
 import {
   blendPts,
   circlePts,
+  labelRoom,
   ptsPath,
   rankTones,
   rectPts,
@@ -82,26 +84,29 @@ const MORPH = DURATION.long;
 /** Corner radius (the radius scale's small step), drawn as a round-joined stroke around an inset outline. */
 const ROUND = 2;
 
-const defaultFormat = (v: number) => `${v}k weekly users`;
-const defaultFx = String;
-const defaultFy = (v: number) => {
-  if (v === 0) {
-    return "0%";
-  }
-  return v > 0 ? `+${v}%` : `−${Math.abs(v)}%`;
-};
+const defaultFormat = (v: number) => `${v} km`;
+const defaultFx = (v: number) => `${v}°`;
+const defaultFy = (v: number) => v.toFixed(2);
 
 const scatterLayout = (c: Ctx): Layout => {
-  const m = { bottom: 34, left: 46, right: 18, top: 14 };
+  const yDomain = [
+    Math.min(0, ...c.data.map((d) => d.y)),
+    Math.max(...c.data.map((d) => d.y)),
+  ];
+  const yLabels = scaleLinear().domain(yDomain).nice(4).ticks(4).map(c.fy);
+  // Names of the scale flush left; the axis note and the plot end flush right.
+  const m = {
+    bottom: 34,
+    left: labelRoom(yLabels, "t-axis") + 8,
+    right: 0,
+    top: 14,
+  };
   const xs = scaleLinear()
     .domain([0, Math.max(...c.data.map((d) => d.x))])
     .nice(4)
     .range([m.left, c.width - m.right - 30]);
   const ys = scaleLinear()
-    .domain([
-      Math.min(0, ...c.data.map((d) => d.y)),
-      Math.max(...c.data.map((d) => d.y)),
-    ])
+    .domain(yDomain)
     .nice(4)
     .range([c.h - m.bottom, m.top]);
   const maxV = Math.max(...c.data.map((d) => d.value));
@@ -155,14 +160,11 @@ const scatterLayout = (c: Ctx): Layout => {
   );
   return {
     furniture,
-    labels: c.data.map((d) => ({
-      anchor: "start",
-      id: d.label,
-      kind: "name",
-      text: d.label,
-      x: xs(d.x) + rad(d.value) + 5,
-      y: ys(d.y),
-    })),
+    labels: placeNames(c.data, { left: m.left, right: c.width }, (d) => [
+      xs(d.x),
+      ys(d.y),
+      rad(d.value),
+    ]),
     marks: c.data.map((d) => circlePts(xs(d.x), ys(d.y), rad(d.value) - ROUND)),
     tips: c.data.map((d): Pt => [xs(d.x), ys(d.y) - rad(d.value)]),
   };
@@ -503,7 +505,7 @@ const MorphLabels = ({
 );
 
 /**
- * G9 Three views. One set of entities that cycles through three views,
+ * G9 Largest asteroids. One set of entities that cycles through three views,
  * scatter → bars → ring, every few seconds; each mark flies smoothly into its
  * new shape. Hover pauses the cycle; the view controls jump straight to a
  * view. The biggest item is solid ink; the rest are hatched on paper inside
@@ -516,7 +518,8 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
   const format = props.format ?? defaultFormat;
   const fx = props.formatX ?? defaultFx;
   const fy = props.formatY ?? defaultFy;
-  const xName = props.xLabel ?? "Minutes a week";
+  const xName = props.xLabel ?? "Inclination";
+  const yName = props.yLabel ?? "Eccentricity";
   const wrap = useRef<HTMLDivElement>(null);
   const shown = useReveal(wrap);
   const reduced = useReducedMotion();
@@ -553,7 +556,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
             order,
             width,
             xLabel: xName,
-            yLabel: props.yLabel ?? "Growth",
+            yLabel: yName,
           };
           const a = LAYOUTS[VIEWS[morph.from]](ctx);
           const b = LAYOUTS[view](ctx);
@@ -612,7 +615,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                 <Tooltip x={tip[0]} y={tip[1]}>
                   <b>{data[hover].label}</b> · {format(data[hover].value)} ·{" "}
                   {fx(data[hover].x)} {xName.toLowerCase()} ·{" "}
-                  {fy(data[hover].y)}
+                  {fy(data[hover].y)} {yName.toLowerCase()}
                 </Tooltip>
               )}
             </div>

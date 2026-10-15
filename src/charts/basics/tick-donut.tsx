@@ -26,7 +26,7 @@ interface TickDonutProps {
   center?: { caption: string; value: string };
   /** Index of the source to draw in the hero colour. */
   highlight?: number;
-  /** What the total counts, captioned under it, e.g. "sign-ups". */
+  /** What the total counts, captioned under it, e.g. "a year". */
   unit?: string;
 }
 
@@ -362,7 +362,7 @@ const TickDonutSvg = ({
     rOut,
     tickLen,
   };
-  const label = `Share by source: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
+  const label = `Shares of the whole: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
 
   return (
     <svg

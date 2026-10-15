@@ -62,8 +62,13 @@ interface SliceProps {
 }
 
 const pct = (v: number) => `${Math.round(v)}%`;
-const minutes = (v: number) => `${Math.round(v)}m`;
-const ringMinutes = (v: number) => `${v} min`;
+const minutes = (v: number) => {
+  const total = Math.round(v);
+  return total < 60
+    ? `${total}m`
+    : `${Math.floor(total / 60)}h ${String(total % 60).padStart(2, "0")}m`;
+};
+const ringHours = (v: number) => `${v / 60}h`;
 
 const TAU = Math.PI * 2;
 
@@ -212,7 +217,8 @@ const pieFit = (p: RadiusInput) => {
   );
   const fits = (outer: number) => {
     const { left, right } = reach(p, outer);
-    return left + right <= p.width;
+    // A couple of pixels each side for text measured a little short.
+    return left + right + 4 <= p.width;
   };
   let lo = 60;
   let hi = cap;
@@ -379,7 +385,7 @@ const RingGuides = (p: { rings: RingGuide[] }) => (
 );
 
 /**
- * G13 Time in product. A pie where the angle is the share and the radius is
+ * G13 Free time. A pie where the angle is the share and the radius is
  * the intensity. Radius runs on a radial (square-root) scale so slice area
  * stays honest. Evenly dotted 1px rings mark the intensity scale; the most
  * intense slice (or the highlight) is solid ink, the rest hatched on paper
@@ -388,10 +394,10 @@ const RingGuides = (p: { rings: RingGuide[] }) => (
 export const BigSlice = (props: BigSliceProps) => {
   const data = props.data ?? bigSliceDemo;
   const height = props.height ?? 400;
-  const rings = props.rings ?? [20, 40, 60];
+  const rings = props.rings ?? [240, 360];
   const fmtShare = props.formatShare ?? pct;
   const format = props.format ?? minutes;
-  const ringFormat = props.ringFormat ?? ringMinutes;
+  const ringFormat = props.ringFormat ?? ringHours;
   const [tip, setTip] = useState<Tip | null>(null);
   const rank = ranks(data.map((d) => d.intensity));
   const heroIndex = props.highlight ?? rank.indexOf(0);
@@ -407,7 +413,7 @@ export const BigSlice = (props: BigSliceProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {shareOf(data[tip.i])} of users ·{" "}
+            <b>{data[tip.i].label}</b> · {shareOf(data[tip.i])} of adults ·{" "}
             {format(data[tip.i].intensity)}
             {suffix}
           </Tooltip>

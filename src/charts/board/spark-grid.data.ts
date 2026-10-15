@@ -1,20 +1,38 @@
+/**
+ * The Vitals grid: nine small multiples of the Great Britain electricity
+ * system, January 2023 to December 2024.
+ *
+ * Source: every series is a table in src/lib/data.ts (weekly demand, wind,
+ * carbon intensity, imports and lowest frequency; monthly solar, gas share
+ * and demand change; the wind year-on-year weeks). That file's header gives
+ * each source URL (NESO historic demand, Elexon FUELHH, NESO Carbon Intensity
+ * API, NESO System Frequency, Clean Power 2030 Action Plan) and the transform
+ * of each series. Fetched 2026-10-15.
+ *
+ * Transform local to this file: every cursor rests on the week of the lowest
+ * weekly frequency of the two years (Monday 18 December 2023) or, in a monthly
+ * cell, on December 2023; the year-on-year cell holds only 2024 and rests on
+ * the week of Storm Darragh (Monday 2 December 2024). The gas cell's plan line
+ * is the Action Plan's 5% and the frequency cell's threshold is the 49.5 Hz
+ * statutory limit.
+ */
 import {
-  SEARCH_TARGET,
-  SPEND_BUDGET,
-  assistantUsers,
-  cloudSpend,
-  filesStored,
+  FREQUENCY_LIMIT,
+  GAS_PLAN_SHARE,
+  carbonMean,
+  demandChange,
+  lowestFrequency,
   monthIndex,
-  searchP95,
-  signupChange,
-  signupGrowth,
-  signups,
-  tickets,
-  weekIndex,
-  weeklyActive,
+  monthlyShare,
+  monthlySolar,
+  weeklyDemand,
+  weeklyImports,
+  weeklyWind,
+  windYearOnYear,
 } from "../../lib/data";
 import type { Point } from "../../lib/data";
-import { fmtInt, fmtMoney, fmtMs, fmtSignedPct } from "../../lib/format";
+import { fmtGCO2, fmtGWh, fmtHz, fmtSignedPct, fmtTWh } from "../../lib/format";
+import { lowestIndex } from "./extremes";
 
 interface SparkCellBase {
   /** Heading over the cell. */
@@ -27,15 +45,15 @@ interface SparkCellBase {
 
 /**
  * Monthly bars. "bars" is a plain column per month, "diverging" hangs signed
- * values from the zero rule, "budget" engraves the part over `budget` in ink.
+ * values from the zero rule, "plan" engraves the part over `plan` in ink.
  */
 export interface SparkBarCell extends SparkCellBase {
-  kind: "bars" | "diverging" | "budget";
+  kind: "bars" | "diverging" | "plan";
   values: (number | null)[];
-  /** One per value, first of the month in UTC. Defaults to Jan 2025 – Dec 2026. */
+  /** One per value, first of the month in UTC. Defaults to Jan 2023 – Dec 2024. */
   months?: Date[];
-  /** The cell's budget line, for kind "budget". */
-  budget?: number;
+  /** The cell's plan line, for kind "plan". */
+  plan?: number;
   /** Resting cursor index; null leaves every bar inked. Defaults to the last month. */
   rest?: number | null;
 }
@@ -58,98 +76,106 @@ export interface SparkLineCell extends SparkCellBase {
 
 export type SparkCell = SparkBarCell | SparkLineCell;
 
-/** Where every cell's cursor rests: the month Assistant shipped. */
-const WEEK_REST = weekIndex("2025-06-02");
-const MONTH_REST = monthIndex("2025-06");
+/**
+ * Where every cell's cursor rests: the week of the lowest system frequency of
+ * the two years (18 December 2023), and its month.
+ */
+const WEEK_REST = lowestIndex(lowestFrequency.map((p) => p.value));
+const MONTH_REST = monthIndex("2023-12");
 
-/** Fieldnote's nine vitals, Jan 2025 – Dec 2026. */
+/** The 2024 wind change cell holds only 2024, so it rests on Storm Darragh. */
+const YEAR_ON_YEAR_REST = windYearOnYear.findIndex(
+  (p) => p.date.toISOString() === "2024-12-02T00:00:00.000Z"
+);
+
+/** The board's nine vitals, Jan 2023 – Dec 2024. */
 export const sparkGridDemo: SparkCell[] = [
   {
-    domain: [0, 100_000],
-    format: fmtInt,
-    kind: "bars",
-    label: "New accounts a month",
-    rest: MONTH_REST,
-    title: "New accounts",
-    values: signups,
-  },
-  {
-    budget: SPEND_BUDGET,
-    domain: [0, 180_000],
-    format: fmtMoney,
-    kind: "budget",
-    label: "Cloud spend a month against budget",
-    rest: MONTH_REST,
-    title: "Cloud spend",
-    values: cloudSpend,
-  },
-  {
-    domain: [-20, 35],
-    format: (v) => fmtSignedPct(v),
-    kind: "diverging",
-    label: "New accounts, month on month",
-    rest: MONTH_REST,
-    title: "Account growth",
-    values: signupChange,
-  },
-  {
-    data: weeklyActive,
-    domain: [0, 290_000],
-    format: fmtInt,
+    data: weeklyDemand,
+    domain: [0, 6500],
+    format: fmtGWh,
     kind: "line",
-    label: "Weekly active users",
+    label: "National demand a week",
     rest: WEEK_REST,
-    title: "Weekly active",
+    title: "Demand",
     tone: 2,
   },
   {
-    data: assistantUsers,
-    domain: [-8000, 230_000],
-    format: fmtInt,
+    data: weeklyWind,
+    domain: [0, 3600],
+    format: fmtGWh,
     kind: "line",
-    label: "Weekly Assistant users",
+    label: "Wind generation a week",
     rest: WEEK_REST,
-    title: "Assistant",
+    title: "Wind",
   },
   {
-    data: signupGrowth,
-    domain: [-10, 70],
+    domain: [0, 3],
+    format: fmtTWh,
+    kind: "bars",
+    label: "Solar generation a month",
+    rest: MONTH_REST,
+    title: "Solar",
+    values: monthlySolar,
+  },
+  {
+    domain: [0, 50],
+    format: (v) => `${v.toFixed(0)}%`,
+    kind: "plan",
+    label: "Gas share of generation a month against the 2030 plan",
+    plan: GAS_PLAN_SHARE,
+    rest: MONTH_REST,
+    title: "Gas share",
+    values: monthlyShare.gas,
+  },
+  {
+    domain: [-15, 20],
+    format: (v) => fmtSignedPct(v),
+    kind: "diverging",
+    label: "Mean daily demand, change on the month before",
+    rest: MONTH_REST,
+    title: "Demand change",
+    values: demandChange,
+  },
+  {
+    data: windYearOnYear,
+    domain: [-80, 170],
     format: (v) => fmtSignedPct(v),
     kind: "line",
-    label: "Sign-ups, year on year",
-    rest: WEEK_REST,
-    title: "Year on year",
+    label: "Wind generation, change on the same week a year before",
+    rest: YEAR_ON_YEAR_REST,
+    title: "Wind, year on year",
     zero: true,
   },
   {
     area: true,
-    data: searchP95,
-    domain: [0, 340],
-    format: fmtMs,
+    data: carbonMean,
+    domain: [0, 280],
+    format: fmtGCO2,
     kind: "line",
-    label: "Search P95 latency",
+    label: "Mean carbon intensity a week",
     rest: WEEK_REST,
-    threshold: { alert: "above", value: SEARCH_TARGET },
-    title: "Search P95",
+    title: "Carbon intensity",
   },
   {
-    area: true,
-    data: filesStored,
-    domain: [0, 130],
-    format: (v) => `${fmtInt(v)} TB`,
-    kind: "step",
-    label: "Files stored",
-    rest: WEEK_REST,
-    title: "Files stored",
-  },
-  {
-    data: tickets,
-    domain: [0, 700],
-    format: fmtInt,
+    data: weeklyImports,
+    domain: [-200, 1100],
+    format: fmtGWh,
     kind: "line",
-    label: "Support tickets a week",
+    label: "Net imports a week",
     rest: WEEK_REST,
-    title: "Tickets",
+    title: "Imports",
     tone: 2,
+    zero: true,
+  },
+  {
+    data: lowestFrequency,
+    domain: [49.2, 49.9],
+    format: fmtHz,
+    kind: "line",
+    label: "Lowest system frequency a week",
+    rest: WEEK_REST,
+    threshold: { alert: "below", value: FREQUENCY_LIMIT },
+    title: "Lowest frequency",
   },
 ];

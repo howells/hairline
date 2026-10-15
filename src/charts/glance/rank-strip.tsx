@@ -195,7 +195,7 @@ const headerOf = (periods: string[]) =>
   });
 
 /**
- * G21 Rank by quarter. One row per entity, one tile per period, the tile
+ * G21 Nobel countries. One row per entity, one tile per period, the tile
  * carrying the rank small in its lower-left corner. Each tile is engraved:
  * the higher the rank, the denser and darker its hatch, so a
  * climb reads as a row darkening left to right. The hero entity's row has
@@ -228,7 +228,7 @@ export const RankStrip = (props: RankStripProps) => {
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
             <b>{rows[hover.r].label}</b> · {data.periods[hover.c]} · #
-            {rows[hover.r].ranks[hover.c]} of {nS}
+            {rows[hover.r].ranks[hover.c]} of {data.outOf ?? nS}
           </Tooltip>
         )
       }
@@ -252,7 +252,11 @@ export const RankStrip = (props: RankStripProps) => {
           ring: rowGap / 2,
           x0: labelW + Math.max(0, (width - labelW - deltaW - gridW) / 2),
         };
-        const top = hasYears ? 46 : 28;
+        // Period names wider than a tile alternate between two heights.
+        const crowded =
+          Math.max(...header.map((h) => textWidth(h.part, "t-label"))) + 4 >
+          cell + gap;
+        const top = (hasYears ? 46 : 28) + (crowded ? 14 : 0);
         const height =
           props.height ??
           top +
@@ -287,7 +291,7 @@ export const RankStrip = (props: RankStripProps) => {
                 <text
                   className="t-label fill-muted"
                   x={geo.x0 + j * (cell + gap) + cell / 2}
-                  y={top - 12}
+                  y={top - 12 - (crowded && j % 2 === 0 ? 14 : 0)}
                   textAnchor="middle"
                 >
                   {h.part}

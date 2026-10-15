@@ -11,9 +11,12 @@ export interface CandleDatum {
 }
 
 /**
- * Daily [open, close] for six trading weeks from Monday 24 August 2026: a
- * climb into the half-year results, a sharp fall on the day, and a recovery
- * to new highs.
+ * F17 Daily price. Synthetic, not real market data: no official source
+ * publishes open, high, low and close for each day, so this is a made-up run
+ * of daily [open, close] pairs for six trading weeks from Monday 24 August
+ * 2026: a climb, a sharp fall, and a recovery to new highs. The highs and lows
+ * are open and close pushed out by a seeded pseudo-random amount. Prices
+ * carry no unit.
  */
 const OPEN_CLOSE = [
   [15.2, 15.6],
@@ -50,7 +53,7 @@ const OPEN_CLOSE = [
 
 const tenth = (v: number): number => Math.round(v * 10) / 10;
 
-/** Fieldnote's share price ($), daily, 24 August to 2 October 2026. */
+/** A made-up price, daily, 24 August to 2 October 2026 (see above). */
 export const candlestickDemo: CandleDatum[] = OPEN_CLOSE.map(
   ([open = 0, close = 0], i) => ({
     close,

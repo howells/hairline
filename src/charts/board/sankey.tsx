@@ -6,6 +6,7 @@ import { fmtInt } from "../../lib/format";
 import { Chart } from "../core";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
+import { nameWidth } from "./room";
 import { LABEL, TICK, VALUE } from "./styles";
 
 /**
@@ -87,6 +88,8 @@ const STAGE_CHAR = 6.2;
 const LABEL_GAP = 4;
 /** Top margin: room for the stage headings and the labels over the top nodes. */
 const TOP = 70;
+/** Bottom margin, px. */
+const BOTTOM = 8;
 /** Crowded funnels stack headings in two rows and labels in two tiers. */
 const TOP_CROWDED = 92;
 const HEADING_Y = [12, 26];
@@ -141,8 +144,15 @@ const labelBox = (n: FunnelNode, placement: Placement): Box => {
 const endsHere = (n: FunnelNode, lastStage: number) =>
   n.stage === lastStage || (n.sourceLinks?.length ?? 0) === 0;
 
-const defaultPlacement = (n: FunnelNode, lastStage: number): Placement =>
-  endsHere(n, lastStage) ? "beside" : "above";
+/** A source has nothing flowing in, so its label goes high over it, clear of its own flows. */
+const isSource = (n: FunnelNode) => (n.targetLinks?.length ?? 0) === 0;
+
+const defaultPlacement = (n: FunnelNode, lastStage: number): Placement => {
+  if (isSource(n)) {
+    return "raised";
+  }
+  return endsHere(n, lastStage) ? "beside" : "above";
+};
 
 /** Whether a label box hits another label or any node but its own. */
 const collides = (
@@ -224,13 +234,31 @@ const placeLabels = (
   return result;
 };
 
+/** Room at the right for the final stage's labels, which sit beside their nodes. */
+const rightRoom = (data: FunnelData) => {
+  const last = data.stages.length - 1;
+  const texts: string[] = [];
+  for (const n of data.nodes) {
+    if (n.stage === last) {
+      let value = 0;
+      for (const l of data.links) {
+        if (l.target === n.id) {
+          value += l.value;
+        }
+      }
+      texts.push(`${n.label} ${fmtInt(value)}`);
+    }
+  }
+  return 10 + nameWidth(texts, 1);
+};
+
 const layoutFunnel = (
   data: FunnelData,
   width: number,
   height: number,
   top: number
 ) => {
-  const m = { bottom: 8, left: 4, right: 96, top };
+  const m = { bottom: BOTTOM, left: 4, right: rightRoom(data), top };
   return sankey<NodeIn, LinkEnds>()
     .nodeId((n) => n.id)
     .nodeAlign((n) => n.stage)
@@ -293,7 +321,12 @@ const FunnelLinks = (props: {
 };
 
 /** Labels at flow ends sit beside the node; the rest stack over (or under) it. */
-const NodeLabel = (props: { node: FunnelNode; placement: Placement }) => {
+const NodeLabel = (props: {
+  node: FunnelNode;
+  placement: Placement;
+  /** Set on paper, for a label that sits across other nodes' flows. */
+  plate: boolean;
+}) => {
   const { node, placement } = props;
   const x0 = node.x0 ?? 0;
   const x1 = node.x1 ?? 0;
@@ -302,16 +335,29 @@ const NodeLabel = (props: { node: FunnelNode; placement: Placement }) => {
   const valueClass = VALUE;
   const name = node.label;
   if (placement === "beside") {
+    const box = labelBox(node, "beside");
     return (
-      <text
-        className={`${LABEL} fade fill-text`}
-        x={x1 + 10}
-        y={(y0 + y1) / 2}
-        dy="0.34em"
-      >
-        <tspan fill="var(--muted)">{name} </tspan>
-        <tspan className={valueClass}>{valueText(node)}</tspan>
-      </text>
+      <>
+        {props.plate && (
+          <rect
+            className="fade fill-paper"
+            x={box.x0 - 4}
+            y={box.y0}
+            width={box.x1 - box.x0 + 8}
+            height={box.y1 - box.y0}
+            rx={2}
+          />
+        )}
+        <text
+          className={`${LABEL} fade fill-text`}
+          x={x1 + 10}
+          y={(y0 + y1) / 2}
+          dy="0.34em"
+        >
+          <tspan fill="var(--muted)">{name} </tspan>
+          <tspan className={valueClass}>{valueText(node)}</tspan>
+        </text>
+      </>
     );
   }
   const nameY =
@@ -371,6 +417,7 @@ const FunnelNodes = (props: {
           fill={nodeFill(n, heroId)}
         />
         <NodeLabel
+          plate={n.stage !== props.lastStage}
           node={n}
           placement={
             props.placements.get(n.id) ?? defaultPlacement(n, props.lastStage)
@@ -406,7 +453,7 @@ const funnelLayout = (data: FunnelData, width: number, height: number) => {
   };
 };
 
-/** Funnel flow, the goal node inked. Hovering a node or link traces it; the rest recede. */
+/** Flow diagram, the largest node of the last stage inked. Hovering a node or link traces it; the rest recede. */
 export const Sankey = (props: {
   data: FunnelData;
   height: number;

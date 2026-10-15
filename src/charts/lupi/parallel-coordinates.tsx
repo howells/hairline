@@ -296,7 +296,7 @@ const statPoints = (
   }));
 
 /**
- * L20 Feature scores. Entities across three to six continuous axes, laid
+ * L20 Twelve cheeses. Entities across three to six continuous axes, laid
  * over an engraved ground: the full range of every entity between each pair
  * of axes stippled, the middle half hatched, each axis carrying a rug of its
  * values. The rest are faint hairlines; the highlighted entity is in ink,
@@ -350,14 +350,14 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
         return (
           <div className="relative">
             <svg
-              aria-label={`${data.rows.length} entities across ${data.axes.map((a) => a.label).join(", ")}`}
+              aria-label={`${data.rows.length} cheeses across ${data.axes.map((a) => a.label).join(", ")}`}
               height={height}
               onPointerLeave={() => {
                 setHover(null);
               }}
               width={width}
             >
-              <title>Feature scores</title>
+              <title>Twelve cheeses</title>
               <Ground
                 ids={ids}
                 middle={bandPath(stat(0.75), stat(0.25))}

@@ -1,5 +1,5 @@
 import type { GalleryEntry } from "../../gallery/types";
-import { fmtInt, fmtMoney } from "../../lib/format";
+import { fmtInt } from "../../lib/format";
 import { Candlestick } from "./candlestick";
 import { DotHeat } from "./dot-heat";
 import { DumbbellQueue } from "./dumbbell-queue";
@@ -20,22 +20,27 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F11",
-    name: "Progress dial",
-    render: () => <TickGauge format={(v) => fmtMoney(v * 1e6)} />,
+    name: "Rain so far",
+    render: () => <TickGauge format={(v) => `${Math.round(v)} mm`} />,
   },
   {
     family: "basics",
     id: "F12",
-    name: "Before and after",
+    name: "Museum visits",
     render: () => (
-      <DumbbellQueue ends={["0", "Minutes to reply"]} format={(v) => `${v}`} />
+      <DumbbellQueue
+        alert="fall"
+        ends={["0", "Millions of visits"]}
+        format={(v) => v.toFixed(1)}
+        unit={0.25}
+      />
     ),
   },
   {
     family: "basics",
     id: "F13",
-    name: "Tickets by platform",
-    render: () => <NestedTreemap />,
+    name: "Milk by use",
+    render: () => <NestedTreemap format={(v) => `${fmtInt(v)}m litres`} />,
   },
   {
     family: "basics",
@@ -46,21 +51,21 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F15",
-    name: "Box plot",
-    render: () => (
-      <TickBox format={(v) => `${Number.isInteger(v) ? v : v.toFixed(1)}s`} />
-    ),
+    name: "Sunshine by season",
+    render: () => <TickBox format={(v) => `${Math.round(v)} h`} />,
   },
   {
     family: "basics",
     id: "F16",
-    name: "Streamgraph",
-    render: () => <StreamRibbon />,
+    name: "Runs by source",
+    render: () => <StreamRibbon format={fmtInt} yearly />,
   },
   {
     family: "basics",
     id: "F17",
     name: "Daily price",
-    render: () => <Candlestick />,
+    render: () => (
+      <Candlestick format={fmtInt} formatPrice={(v) => v.toFixed(2)} />
+    ),
   },
 ];

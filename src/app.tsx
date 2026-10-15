@@ -1,4 +1,5 @@
 import { ChartGrid, SingleChart } from "./pages/gallery";
+import { Credits } from "./pages/sources";
 import { PaletteSwitcher } from "./system/palette";
 import { useRoute } from "./system/router";
 
@@ -10,7 +11,15 @@ const TopBar = () => (
     >
       Hairline
     </a>
-    <PaletteSwitcher />
+    <div className="flex items-center gap-6">
+      <a
+        className="text-muted text-small inline-flex min-h-11 items-center no-underline"
+        href="#/sources"
+      >
+        Sources
+      </a>
+      <PaletteSwitcher />
+    </div>
   </header>
 );
 
@@ -20,6 +29,9 @@ const RouteContent = (props: {
 }) => {
   if (props.section === "chart" && props.arg !== undefined) {
     return <SingleChart id={props.arg} />;
+  }
+  if (props.section === "sources") {
+    return <Credits />;
   }
   return <ChartGrid />;
 };

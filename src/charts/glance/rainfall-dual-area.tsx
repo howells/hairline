@@ -4,7 +4,7 @@ import { area, curveMonotoneX, line } from "d3-shape";
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { fmtMoney, fmtMonth, monthTickLabels } from "../../lib/format";
+import { dayTickLabels, fmtDay } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
@@ -13,7 +13,7 @@ import { paint, useTextureIds } from "../texture-ids";
 import { noteSpace, stagger } from "../util";
 import { rainfallDemo } from "./rainfall-dual-area.data";
 import type { RainfallDatum } from "./rainfall-dual-area.data";
-import { barPath } from "./util-a";
+import { barPath, labelRoom } from "./util-a";
 
 interface RainfallDualAreaProps {
   data?: RainfallDatum[];
@@ -42,9 +42,9 @@ interface Frame {
   tex: (name: string) => string;
 }
 
-/** Spend is in thousands of dollars. */
-const defaultIn = (v: number) => fmtMoney(v * 1000);
-const defaultOut = (v: number) => (v === 0 ? "0" : `${v}k`);
+/** Rain is in millimetres, river flow in cubic metres a second. */
+const defaultIn = (v: number) => `${v} mm`;
+const defaultOut = (v: number) => `${v} m³/s`;
 
 /** About four friendly steps on the hanging scale, from 0 to a round floor. */
 const inputTicks = (max: number) =>
@@ -57,7 +57,7 @@ const rainLabels = (ticks: number[]) =>
       k === 0 || k === Math.floor(ticks.length / 2) || k === ticks.length - 1
   );
 
-/** Spend bars hanging from a hairline top rule. */
+/** Rain bars hanging from a hairline top rule. */
 const Rain = ({ f, fmt }: { f: Frame; fmt: (v: number) => string }) => {
   const bw = f.x.bandwidth();
   return (
@@ -123,11 +123,11 @@ const Flow = ({
     .y0(f.floor)
     .y1((d) => f.yOut(d.output))
     .curve(curveMonotoneX);
-  // Quarter starts on a wide plot, half-years on a phone; the year printed
-  // only where it changes.
+  // Every third day on a wide plot, every sixth on a phone; the month printed
+  // on the first tick and where it changes.
   const every = narrow ? 6 : 3;
   const ticks = f.data.flatMap((d, i) => (i % every === 0 ? [{ d, i }] : []));
-  const tickLabels = monthTickLabels(ticks.map((t) => t.d.date));
+  const tickLabels = dayTickLabels(ticks.map((t) => t.d.date));
   return (
     <g>
       <path
@@ -181,7 +181,7 @@ const Flow = ({
   );
 };
 
-/** The scrub cursor: a hairline drop from the day's spend to the floor, ringed at the sign-ups. */
+/** The scrub cursor: a hairline drop from the day's rain to the floor, ringed at the river. */
 const Cursor = (p: { datum: RainfallDatum; f: Frame; i: number }) => (
   <g pointerEvents="none">
     <line
@@ -203,29 +203,35 @@ const Cursor = (p: { datum: RainfallDatum; f: Frame; i: number }) => (
 );
 
 /**
- * G8 Spend and sign-ups. Hatched input bars hang from a hairline top rule
- * like rain (spend a month); the output rises below as an area engraved in fine
- * horizontal rules (sign-ups) under a 2px ink line. Two scales, stacked, one
- * shared time axis. Scrub to read a month.
+ * G8 Rain and river. Hatched input bars hang from a hairline top rule like
+ * rain (millimetres a day); the output rises below as an area engraved in fine
+ * horizontal rules (river flow) under a 2px ink line. Two scales, stacked, one
+ * shared time axis. Scrub to read a day.
  */
 export const RainfallDualArea = (props: RainfallDualAreaProps) => {
   const data = props.data ?? rainfallDemo;
   const height = props.height ?? 420;
   const fIn = props.formatInput ?? defaultIn;
   const fOut = props.formatOutput ?? defaultOut;
-  const inName = props.inputName ?? "spend";
-  const outName = props.outputName ?? "sign-ups";
+  const inName = props.inputName ?? "rain";
+  const outName = props.outputName ?? "flow";
   const tex = useTextureIds("rain");
   const [hover, setHover] = useState<number | null>(null);
   const last = data.at(-1);
-  const label = `${inName} hanging from the top and ${outName} rising below over ${data.length} months${last === undefined ? "" : `; last: ${fIn(last.input)}, ${fOut(last.output)}`}`;
+  const label = `${inName} hanging from the top and ${outName} rising below over ${data.length} days${last === undefined ? "" : `; last: ${fIn(last.input)}, ${fOut(last.output)}`}`;
 
   return (
     <Plot>
       {(width) => {
+        // Room for the widest axis label on either scale.
+        const [, outTop = 1] = scaleLinear()
+          .domain([0, Math.max(...data.map((d) => d.output))])
+          .nice(6)
+          .domain();
+        const inTop = inputTicks(Math.max(...data.map((d) => d.input))).at(-1);
         const m = {
           bottom: 24 + noteSpace(props.note, width - 16, 20),
-          left: 44,
+          left: labelRoom([fIn(inTop ?? 0), fOut(outTop)], "t-axis") + 12,
           right: 0,
           top: 6,
         };
@@ -304,7 +310,7 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
             </svg>
             {hover !== null && h !== undefined ? (
               <Tooltip x={cx(hover)} y={f.yOut(h.output) - 8}>
-                <b>{fmtMonth(h.date)}</b> · {fIn(h.input)} {inName} ·{" "}
+                <b>{fmtDay(h.date)}</b> · {fIn(h.input)} {inName} ·{" "}
                 {fOut(h.output)} {outName}
               </Tooltip>
             ) : null}

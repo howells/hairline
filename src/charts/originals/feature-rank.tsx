@@ -16,10 +16,11 @@ const LEFT = 20;
 const GAP = 12;
 /** Half a tread, as a share of its quarter's column. */
 const TREAD = 0.3;
-/** The thickest band, for the most weekly users, in whole px (even). */
+/** The thickest band, for the largest area, in whole px (even). */
 const BAND_MAX = 22;
 
-const fmtUsers = (v: number) => `${v}k`;
+/** An area in thousands of hectares, grouped: "1,939k". */
+const fmtUsers = (v: number) => `${Math.round(v).toLocaleString("en-GB")}k`;
 const ORDINAL = ["1st", "2nd", "3rd"];
 const fmtRank = (r: number) => ORDINAL.at(r) ?? `${r + 1}th`;
 
@@ -31,7 +32,7 @@ interface Hover {
 interface Layout {
   cx: (q: number) => number;
   half: number;
-  /** Half a band's thickness for a weekly-users value: whole px. */
+  /** Half a band's thickness for an area: whole px. */
   thick: (v: number) => number;
   x0: number;
   x1: number;
@@ -71,7 +72,7 @@ const treads = (rank: number[], lay: Layout) =>
 /**
  * One edge of a band, left to right: `side` -1 for the top, 1 for the bottom.
  * Edges sit half a pixel in, so the 1px outline is crisp on the treads. Where
- * a feature holds its row, its thickness steps at the quarter's bar line; where
+ * a crop holds its row, its thickness steps at the quarter's bar line; where
  * it changes rows, the edge runs straight to the next tread.
  */
 const bandEdge = (
@@ -95,7 +96,7 @@ const bandEdge = (
   });
 };
 
-/** The band: the track as a ribbon whose thickness follows weekly users. */
+/** The band: the track as a ribbon whose thickness follows area. */
 const bandPath = (rank: number[], weekly: number[], lay: Layout) => {
   const top = bandEdge(rank, weekly, lay, -1);
   const bottom = bandEdge(rank, weekly, lay, 1).toReversed();
@@ -114,7 +115,7 @@ interface TrackProps {
 }
 
 /**
- * One feature: its band across the year, engraved on paper so it covers the
+ * One crop: its band across the year, engraved on paper so it covers the
  * bands it crosses, and its name and Q4 value at the end.
  */
 const Track = ({ datum, dim, hero, i, lay, rank, tex, width }: TrackProps) => {
@@ -200,10 +201,10 @@ interface FeatureRankProps {
 }
 
 /**
- * O3 Feature rank. Features ranked by weekly users each quarter, set like a
- * staff: each feature holds its rank on a rule for the quarter, then
+ * O3 Arable crops. Crops ranked by area in each year, set like a staff:
+ * each crop holds its rank on a rule for the quarter, then
  * switches rows in the gap before the next. Each track is an engraved band
- * as thick as its weekly users: fine hatch, and this year's leader
+ * as thick as its area: fine hatch, and the year's leader
  * crosshatched in ink, thickening as it climbs.
  */
 export const FeatureRank = (props: FeatureRankProps) => {
@@ -216,7 +217,7 @@ export const FeatureRank = (props: FeatureRankProps) => {
   const height = TOP + (data.length - 1) * ROW + 20;
   // The hero draws last, over the tracks it crosses.
   const order = [...[...data.keys()].filter((f) => f !== hero), hero];
-  const label = `Feature rank by weekly users, ${QUARTERS[0]} to ${QUARTERS.at(-1) ?? ""}: ${data[hero].feature} leads with ${fmtUsers(data[hero].weekly.at(-1) ?? 0)}`;
+  const label = `Arable crops ranked by area in the United Kingdom, ${QUARTERS[0]} to ${QUARTERS.at(-1) ?? ""}: ${data[hero].feature} leads with ${fmtUsers(data[hero].weekly.at(-1) ?? 0)}`;
 
   return (
     <Plot>

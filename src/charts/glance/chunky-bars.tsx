@@ -1,7 +1,6 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import { useState } from "react";
 
-import { fmtMoney } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
@@ -16,7 +15,7 @@ interface ChunkyBarsProps {
   data?: ChunkyDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** Footnote under the labels, e.g. "MRR a month". */
+  /** Footnote under the labels. */
   note?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
@@ -61,11 +60,11 @@ const BarMark = (p: BarMarkProps) =>
     />
   );
 
-/** The data is in thousands of dollars. */
-const defaultFormat = (v: number) => fmtMoney(v * 1000);
+/** The data is in pence: 477 reads £4.77. */
+const defaultFormat = (v: number) => `£${(v / 100).toFixed(2)}`;
 
 /**
- * G3 MRR by plan. A handful of wide bars, squared off with a 2px corner,
+ * G3 A pint over time. A handful of wide bars, squared off with a 2px corner,
  * standing on a hairline baseline with the value above each. The leader is
  * solid ink; the rest are engraved: 45° hatching in one grey inside a crisp
  * 1px outline.

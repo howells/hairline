@@ -57,7 +57,7 @@ const heroOf = (data: ShareTable): Cell => {
   return best;
 };
 
-/** Every texture a kind of work can carry, and its resting tone. */
+/** Every texture a kind of land can carry, and its resting tone. */
 const TONES: Record<WorkTexture, string> = {
   cross: "fill-l4",
   dots: "fill-l3",
@@ -228,7 +228,7 @@ interface RowsProps {
 }
 
 /**
- * One engraved bar per team: name on the left, its first share on the
+ * One engraved bar per nation: name on the left, its first share on the
  * right. Each segment is its texture on paper inside a 1px rule; the hero
  * segment is engraved and ruled in ink.
  */
@@ -293,10 +293,10 @@ const Rows = (props: RowsProps) => {
 };
 
 /**
- * O10 Hatched shares. Part-to-whole bars told apart by four engraving
+ * O10 Land by nation. Part-to-whole bars told apart by four engraving
  * families at four greys, not by colour: dense upright rules, a halftone
- * screen, crosshatch and sparse level rules. The largest share, Product's
- * new work, is the one segment in ink.
+ * screen, crosshatch and sparse level rules. The largest share, England's
+ * farmland, is the one segment in ink.
  */
 export const HatchedStack = (props: { data?: ShareTable }) => {
   const data = props.data ?? timeSharesDemo;
@@ -322,7 +322,7 @@ export const HatchedStack = (props: { data?: ShareTable }) => {
         const key = keyLayout(data.kinds, width < 480 ? 0 : labelW, width);
         const top = key.height + KEY_GAP;
         const height = top + data.rows.length * ROW - (ROW - BAR_H);
-        const label = `Share of engineering time by team, 2026: ${data.rows.map((r) => `${r.team} ${r.shares[hero.kind]}% ${kindName}`).join(", ")}`;
+        const label = `Share of land by nation, 2021: ${data.rows.map((r) => `${r.team} ${r.shares[hero.kind]}% ${kindName}`).join(", ")}`;
         return (
           <svg
             aria-label={label}

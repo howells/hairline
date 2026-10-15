@@ -1,3 +1,17 @@
+/**
+ * M1 Christmas trees: cultivated Christmas trees cut, by state, 2022.
+ * Source: USDA National Agricultural Statistics Service, 2022 Census of
+ * Agriculture, Volume 1 Chapter 2, Table 35 "Cultivated Christmas Trees: 2022
+ * and 2017", https://www.nass.usda.gov/Publications/AgCensus/2022/Full_Report/Volume_1,_Chapter_2_US_State_Level/st99_2_035_035.pdf
+ * Fetched 2026-10-15.
+ * Transform: the 2022 "Trees cut, Number" column for the 50 states, copied as
+ * printed. Alaska, Arizona and Nevada print (D), withheld to protect
+ * individual farms, and are left out so they draw as no data. The United
+ * States total (14,548,694) exceeds the 47 published states by 1,590 trees,
+ * the withheld three. The District of Columbia and Puerto Rico are not in the
+ * table and also draw as no data.
+ */
+
 import statesTopo from "us-atlas/states-10m.json";
 
 import { regionsFrom } from "./geo";
@@ -72,57 +86,53 @@ export interface StateDatum {
   value: number;
 }
 
-/** Fieldnote sign-ups by state in 2026. */
+/** Cultivated Christmas trees cut by state in 2022, most first. */
 export const usChoroplethDemo: StateDatum[] = [
-  { state: "CA", value: 31_460 },
-  { state: "NY", value: 24_830 },
-  { state: "TX", value: 21_170 },
-  { state: "WA", value: 17_340 },
-  { state: "MA", value: 13_920 },
-  { state: "IL", value: 11_280 },
-  { state: "FL", value: 10_650 },
-  { state: "CO", value: 9870 },
-  { state: "GA", value: 7940 },
-  { state: "NJ", value: 7610 },
-  { state: "NC", value: 7180 },
-  { state: "VA", value: 6920 },
-  { state: "OR", value: 6470 },
-  { state: "PA", value: 6130 },
-  { state: "MN", value: 5240 },
-  { state: "MD", value: 4960 },
-  { state: "OH", value: 4710 },
-  { state: "AZ", value: 4380 },
-  { state: "MI", value: 4060 },
-  { state: "UT", value: 3840 },
-  { state: "DC", value: 3560 },
-  { state: "TN", value: 3210 },
-  { state: "WI", value: 2980 },
-  { state: "MO", value: 2770 },
-  { state: "CT", value: 2640 },
-  { state: "IN", value: 2420 },
-  { state: "NH", value: 2150 },
-  { state: "SC", value: 2060 },
-  { state: "RI", value: 1870 },
-  { state: "KY", value: 1790 },
-  { state: "NV", value: 1690 },
-  { state: "OK", value: 1520 },
-  { state: "KS", value: 1470 },
-  { state: "NM", value: 1410 },
-  { state: "ID", value: 1330 },
-  { state: "HI", value: 1240 },
-  { state: "NE", value: 1180 },
-  { state: "VT", value: 1120 },
-  { state: "AL", value: 1060 },
-  { state: "IA", value: 1010 },
-  { state: "LA", value: 960 },
-  { state: "ME", value: 940 },
-  { state: "DE", value: 870 },
-  { state: "AR", value: 720 },
-  { state: "MT", value: 690 },
-  { state: "AK", value: 610 },
-  { state: "MS", value: 540 },
-  { state: "WV", value: 480 },
-  { state: "SD", value: 410 },
-  { state: "ND", value: 380 },
-  { state: "WY", value: 320 },
+  { state: "OR", value: 4_823_877 },
+  { state: "NC", value: 3_208_419 },
+  { state: "MI", value: 1_799_391 },
+  { state: "WA", value: 936_904 },
+  { state: "PA", value: 721_480 },
+  { state: "WI", value: 601_199 },
+  { state: "VA", value: 578_777 },
+  { state: "NY", value: 318_745 },
+  { state: "OH", value: 189_240 },
+  { state: "MN", value: 153_600 },
+  { state: "CA", value: 130_730 },
+  { state: "VT", value: 127_121 },
+  { state: "ME", value: 94_425 },
+  { state: "CT", value: 88_893 },
+  { state: "NH", value: 79_323 },
+  { state: "MA", value: 78_630 },
+  { state: "IL", value: 68_681 },
+  { state: "GA", value: 63_915 },
+  { state: "IN", value: 60_841 },
+  { state: "NJ", value: 58_817 },
+  { state: "TX", value: 43_668 },
+  { state: "MD", value: 40_697 },
+  { state: "WV", value: 39_391 },
+  { state: "AL", value: 24_586 },
+  { state: "SC", value: 23_317 },
+  { state: "IA", value: 21_826 },
+  { state: "MO", value: 21_461 },
+  { state: "OK", value: 21_352 },
+  { state: "ID", value: 15_980 },
+  { state: "TN", value: 12_129 },
+  { state: "RI", value: 11_936 },
+  { state: "KS", value: 11_204 },
+  { state: "MS", value: 11_175 },
+  { state: "LA", value: 10_825 },
+  { state: "NE", value: 10_417 },
+  { state: "AR", value: 8410 },
+  { state: "FL", value: 8353 },
+  { state: "MT", value: 6338 },
+  { state: "KY", value: 4748 },
+  { state: "CO", value: 4667 },
+  { state: "NM", value: 2693 },
+  { state: "HI", value: 2570 },
+  { state: "SD", value: 2380 },
+  { state: "DE", value: 1780 },
+  { state: "UT", value: 1722 },
+  { state: "WY", value: 244 },
+  { state: "ND", value: 227 },
 ];

@@ -8,7 +8,7 @@ import type { Margin } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import type { Sync } from "../hooks";
-import { Hatch, Rules, Stipple } from "../texture";
+import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
 import { ValueGrid } from "../value-grid";
@@ -27,7 +27,6 @@ import {
   TICK,
   VALUE,
 } from "./styles";
-import { TICK_CHAR } from "./thin-ticks";
 import { gridEnd, sideMargins } from "./time-frame";
 import type { YAxis } from "./time-frame";
 
@@ -37,7 +36,7 @@ type Phase = "past" | "active" | "future";
  * What a bar segment shows. The first series is solid up to the cursor, ink
  * at it, and hatched after; the second is always stippled, the third finely
  * ruled and the fourth ruled upright, so stacked segments read by grammar. Signed bars hatch their
- * gains and stipple their losses. The part over a budget is told by texture,
+ * gains and stipple their losses. The part over a plan is told by texture,
  * not colour: a dense falling hatch in ink inside an ink rule, the same before
  * and after the cursor.
  */
@@ -144,7 +143,7 @@ export interface Stack {
   label?: string;
 }
 
-interface Budget {
+interface Plan {
   value: number;
   label?: string;
 }
@@ -160,14 +159,14 @@ interface MonthlyBarsProps {
   format: (v: number) => string;
   margin?: Partial<Margin>;
   /** Single stack: the part above this value is engraved in ink. */
-  budget?: Budget;
+  plan?: Plan;
   /** Signed values around a zero rule: gains hatched, losses stippled. */
   diverging?: boolean;
   readout?: Readout;
   compact?: { title: string };
   sync?: Sync;
   label: string;
-  /** One bar per month, first of the month in UTC. Defaults to Jul 2024 – Jun 2026. */
+  /** One bar per month, first of the month in UTC. Defaults to Jan 2023 – Dec 2024. */
   months?: Date[];
 }
 
@@ -308,18 +307,18 @@ interface Segment {
   bottom: number;
 }
 
-/** The stacked segments of one month, splitting off any part over budget. */
+/** The stacked segments of one month, splitting off any part over plan. */
 const segmentsFor = (props: MonthlyBarsProps, frame: Frame, i: number) => {
-  const budget = props.budget?.value;
+  const plan = props.plan?.value;
   let acc = 0;
   return props.stacks.flatMap((s): Segment[] => {
     const from = acc;
     acc += s.values[i] ?? 0;
     const id = `${monthKey(frame.months, i)}-${s.tone}`;
-    if (budget !== undefined && acc > budget) {
+    if (plan !== undefined && acc > plan) {
       return [
-        { bottom: from, grammar: s.tone, id, top: budget },
-        { bottom: budget, grammar: "over", id: `${id}-over`, top: acc },
+        { bottom: from, grammar: s.tone, id, top: plan },
+        { bottom: plan, grammar: "over", id: `${id}-over`, top: acc },
       ];
     }
     return [{ bottom: from, grammar: s.tone, id, top: acc }];
@@ -413,10 +412,10 @@ const Bars = (props: {
   });
 };
 
-/** The budget line, drawn behind the bars. */
-const BudgetRule = (props: { budget: Budget; frame: Frame }) => {
+/** The plan line, drawn behind the bars. */
+const PlanRule = (props: { plan: Plan; frame: Frame }) => {
   const { m, width, y } = props.frame;
-  const by = crisp(y(props.budget.value));
+  const by = crisp(y(props.plan.value));
   return (
     <line
       className={`${RULE_TARGET} fade`}
@@ -428,49 +427,23 @@ const BudgetRule = (props: { budget: Budget; frame: Frame }) => {
   );
 };
 
-/**
- * Where the budget's name starts: the left edge of the first run of bars that
- * stay under budget for the whole width of the name, so it never crosses a
- * bar that breaks it. Falls back to the plot's left edge.
- */
-const budgetLabelX = (chart: MonthlyBarsProps, frame: Frame, text: string) => {
-  const need = text.length * TICK_CHAR;
-  const budget = chart.budget?.value ?? Infinity;
-  const over = (i: number) =>
-    chart.stacks.reduce((sum, s) => sum + (s.values[i] ?? 0), 0) > budget;
-  let start: number | null = null;
-  for (const [i] of frame.months.entries()) {
-    if (over(i)) {
-      start = null;
-    } else {
-      start ??= i === 0 ? frame.m.left : barX(frame, i).x;
-      const end = barX(frame, i).x + barX(frame, i).width;
-      if (end - start >= need) {
-        return start;
-      }
-    }
-  }
-  return frame.m.left;
-};
-
-const BudgetLabel = (props: {
-  budget: Budget;
-  chart: MonthlyBarsProps;
-  frame: Frame;
-}) => {
-  const { y } = props.frame;
-  const text = props.budget.label;
+/** The plan's name on a plate at the left, over the bars that run past it. */
+const PlanLabel = (props: { plan: Plan; frame: Frame }) => {
+  const { m, y } = props.frame;
+  const text = props.plan.label;
   if (text === undefined || text === "") {
     return null;
   }
   return (
-    <text
-      className={`${TICK} t-halo fade`}
-      x={budgetLabelX(props.chart, props.frame, text)}
-      y={y(props.budget.value) - 6}
-    >
-      {text}
-    </text>
+    <g className="fade">
+      <PlateLabel
+        anchor="start"
+        className={TICK}
+        text={text}
+        x={m.left + 6}
+        y={y(props.plan.value) - 14}
+      />
+    </g>
   );
 };
 
@@ -638,9 +611,7 @@ const MonthlyBarsPlot = (props: {
           y={frame.y}
         />
       )}
-      {chart.budget !== undefined && (
-        <BudgetRule budget={chart.budget} frame={frame} />
-      )}
+      {chart.plan !== undefined && <PlanRule plan={chart.plan} frame={frame} />}
       <Bars chart={chart} frame={frame} cursor={cursor} />
       <line
         className={RULE_ZERO}
@@ -652,8 +623,8 @@ const MonthlyBarsPlot = (props: {
       {!compact && (
         <Axes chart={chart} frame={frame} readout={readout} ticks={ticks} />
       )}
-      {chart.budget !== undefined && (
-        <BudgetLabel budget={chart.budget} chart={chart} frame={frame} />
+      {chart.plan !== undefined && (
+        <PlanLabel plan={chart.plan} frame={frame} />
       )}
       {readout === "value" && cursor !== Infinity && (
         <ValueReadout

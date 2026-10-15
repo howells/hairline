@@ -12,7 +12,7 @@ import { argMax } from "./util-b";
 interface RadialConvergenceProps {
   data?: ConvergenceItem[];
   height?: number;
-  /** Noun for the tooltip, e.g. "request". */
+  /** Noun for the tooltip, e.g. "storm". */
   noun?: string;
   note?: string;
 }
@@ -230,14 +230,14 @@ const rimFor = (
 };
 
 /**
- * L5 Requests by theme. Many items on one dotted ring, each claimed by one
+ * L5 Named storms. Many items on one dotted ring, each claimed by one
  * of a few themes; hairlines bundle inward to the theme's hub (area =
  * count). Only the hubs are labelled; items name themselves on hover.
  */
 export const RadialConvergence = (props: RadialConvergenceProps) => {
   const data = props.data ?? radialConvergenceDemo;
   const height = props.height ?? 460;
-  const noun = props.noun ?? "request";
+  const noun = props.noun ?? "storm";
   const [focus, setFocus] = useState<Focus | null>(null);
   const [tip, setTip] = useState<{
     label: string;
@@ -271,12 +271,12 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
         const hero = hubs.at(argMax(hubs.map((h) => h.count)))?.theme;
         return (
           <svg
-            aria-label={`${data.length} items converging on ${hubs.length} themes: ${hubs.map((h) => `${h.theme} ${h.count}`).join(", ")}`}
+            aria-label={`${data.length} named storms in ${hubs.length} seasons: ${hubs.map((h) => `${h.theme} ${h.count}`).join(", ")}`}
             height={plotH}
             onPointerLeave={clear}
             width={width}
           >
-            <title>Items on a rim bundled into theme hubs</title>
+            <title>Named storms on a rim bundled into season hubs</title>
             <DotRing
               className="fade"
               cx={rim.cx}

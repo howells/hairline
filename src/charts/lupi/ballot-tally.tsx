@@ -24,7 +24,7 @@ interface RulerLayout {
   base: number;
   /** Whole-pixel step between ticks. */
   pitch: number;
-  /** Height of a picked tick. */
+  /** Height of a tick for someone who went. */
   tall: number;
   /** Left edge of the first tick. */
   x0: number;
@@ -44,7 +44,7 @@ interface RowProps {
 /** Ruler tick heights in px: every tick, every fifth, every tenth. */
 const RULER = { five: 6, one: 4, ten: 9 } as const;
 
-/** Height of the k-th unpicked tick: a ruler, longer every 5 and every 10. */
+/** Height of the k-th short tick: a ruler, longer every 5 and every 10. */
 const rulerTick = (k: number) => {
   if ((k + 1) % 10 === 0) {
     return RULER.ten;
@@ -52,7 +52,7 @@ const rulerTick = (k: number) => {
   return (k + 1) % 5 === 0 ? RULER.five : RULER.one;
 };
 
-/** One answer: a 100-tick ruler with the picked share standing tall. */
+/** One answer: a 100-tick ruler with the share who went standing tall. */
 const RulerRow = ({
   band,
   format,
@@ -100,13 +100,13 @@ const RulerRow = ({
       </g>
       <g className={tone}>
         {Array.from({ length: n }, (_, k) => {
-          // Picked ticks keep the ruler's cadence: the tens stand tallest.
+          // Tall ticks keep the ruler's cadence: the tens stand tallest.
           const h = tall - RULER.ten + rulerTick(k);
           return (
             <rect
               className="grow-y"
               height={h}
-              key={`pick-${row.label}-${k}`}
+              key={`tall-${row.label}-${k}`}
               style={stagger(index * 12 + k, "dense")}
               width={1}
               x={x0 + pitch * k}
@@ -128,10 +128,10 @@ const RulerRow = ({
 };
 
 /**
- * L15 Survey picks. Multi-select answers as rulers of a hundred: every
- * respondent is one 1px tick at one whole-pixel pitch, faint and short (a
- * ruler, longer every ten), and those who picked the answer stand tall, so
- * "58" reads as a share of the whole. Rows are independent 0–100.
+ * L15 Days out. Multi-select answers as rulers of a hundred: every person
+ * is one 1px tick at one whole-pixel pitch, faint and short (a ruler,
+ * longer every ten), and those who went stand tall, so "44" reads as a
+ * share of the whole. Rows are independent 0–100.
  */
 export const BallotTally = (props: BallotTallyProps) => {
   const data = props.data ?? ballotTallyDemo;
@@ -181,7 +181,7 @@ export const BallotTally = (props: BallotTallyProps) => {
               }}
               width={width}
             >
-              <title>Survey picks</title>
+              <title>Days out</title>
               {data.map((d, i) => (
                 <g
                   className={dimClass(hover !== null && hover !== i)}
@@ -214,7 +214,7 @@ export const BallotTally = (props: BallotTallyProps) => {
                 // Over the row's label, so the label stays readable.
                 y={layoutAt(hover).base - tall - 24}
               >
-                <b>{tip.label}</b> · {format(tip.value)} of {total} picked it
+                <b>{tip.label}</b> · {format(tip.value)} of {total} went
               </Tooltip>
             )}
           </div>

@@ -7,12 +7,13 @@ import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, ranks, stagger } from "../util";
 import { dotWaffleDemo } from "./dot-waffle.data";
 import type { WaffleDatum } from "./dot-waffle.data";
+import { labelRoom } from "./util-a";
 
 interface DotWaffleProps {
   data?: WaffleDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** Footnote under the grid, e.g. "one dot = 1% of new accounts". */
+  /** Footnote under the grid. */
   note?: string;
   /** Index of the category to draw in the hero colour. */
   highlight?: number;
@@ -92,6 +93,24 @@ const apportion = (values: number[], total: number) => {
 };
 
 const defaultFormat = (v: number) => `${v}%`;
+
+/** Width of one legend entry: swatch, widest name, a gap and the widest share; at least 130. */
+const entryWidth = (data: WaffleDatum[], format: (v: number) => string) =>
+  Math.max(
+    130,
+    SWATCH +
+      10 +
+      labelRoom(
+        data.map((d) => d.label),
+        "t-label"
+      ) +
+      16 +
+      labelRoom(
+        data.map((d) => format(d.value)),
+        "t-value"
+      ) +
+      8
+  );
 
 interface LegendProps {
   data: WaffleDatum[];
@@ -194,7 +213,7 @@ const WaffleCells = ({ dots, hover, looks, onEnter, side }: CellsProps) => (
 );
 
 /**
- * G4 Sign-ups by platform. A 10 × 10 grid of small squares, one square = 1% of the
+ * G4 Pollen in honey. A 10 × 10 grid of small squares, one square = 1% of the
  * whole, filled row by row in data order. The largest share is solid ink;
  * each other category is engraved in its own grammar (crosshatch, hatch,
  * rules, stipple) inside a crisp outline. The legend is one line per
@@ -215,7 +234,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
     data.map((d) => d.value),
     100
   ).flatMap((c, i) => Array.from({ length: c }, () => i));
-  const label = `Composition, one square per percent: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
+  const label = `Share of the pollen in honey, one square for each per cent: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
   const enter = (i: number, x: number, y: number) => {
     setTip({ i, x, y });
   };
@@ -232,7 +251,8 @@ export const DotWaffle = (props: DotWaffleProps) => {
     >
       {(width) => {
         const narrow = width < 460;
-        const legendW = narrow ? 0 : 150;
+        const entryW = narrow ? 0 : entryWidth(data, format);
+        const legendW = narrow ? 0 : entryW + 20;
         const noteH = noteSpace(props.note, width - 16, 22);
         const legendRows = narrow ? Math.ceil(data.length / 2) : 0;
         const pitch =
@@ -296,7 +316,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
               format={format}
               hover={hover}
               at={at}
-              hitWidth={narrow ? (width - 16) / 2 : 130}
+              hitWidth={narrow ? (width - 16) / 2 : entryW}
               inset={narrow ? 0 : 8}
               onEnter={enter}
             />

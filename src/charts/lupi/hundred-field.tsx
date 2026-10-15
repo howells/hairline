@@ -11,7 +11,7 @@ import type { ShareDatum } from "./hundred-field.data";
 interface HundredFieldProps {
   data?: ShareDatum[];
   height?: number;
-  /** What one seed stands for, used in the tooltip ("people"). */
+  /** What one seed stands for, used in the tooltip ("donors"). */
   unit?: string;
   note?: string;
   /** Group drawn in the hero colour. Defaults to the largest. */
@@ -302,14 +302,15 @@ const Engraving = ({ head }: { head: Head }) => (
 );
 
 /**
- * L14 Mood split. A hundred people as one engraved seed head: a sunflower of
- * exactly a hundred seeds, cut into contiguous wedges by mood, each mood with
- * its own glyph. The largest mood is the hero, in solid ink seeds.
+ * L14 A hundred donors. A hundred donors as one engraved seed head: a
+ * sunflower of exactly a hundred seeds, cut into contiguous wedges by blood
+ * type, each with its own glyph. The largest is the hero, in solid
+ * ink seeds.
  */
 export const HundredField = (props: HundredFieldProps) => {
   const data = props.data ?? hundredFieldDemo;
   const height = props.height ?? 460;
-  const unit = props.unit ?? "people";
+  const unit = props.unit ?? "donors";
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const [hover, setHover] = useState<number | null>(null);
   const byValue = [...data.keys()].toSorted(
@@ -378,7 +379,7 @@ export const HundredField = (props: HundredFieldProps) => {
               }}
               width={width}
             >
-              <title>A hundred people by mood</title>
+              <title>A hundred donors by blood type</title>
               <Engraving head={head} />
               {head.wedges.map((w) => (
                 <g

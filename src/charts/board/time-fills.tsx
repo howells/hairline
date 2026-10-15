@@ -7,6 +7,7 @@ import type { Point } from "../../lib/data";
 import { DotScreen, Hatch, Rules, Stipple } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
 import { OUTLINE, TICK } from "./styles";
+import { TICK_CHAR } from "./thin-ticks";
 import { curveOf } from "./time-frame";
 import type {
   Band,
@@ -98,11 +99,44 @@ const GapFill = (props: { chart: TimeLinesProps; frame: Frame }) => {
   );
 };
 
+/** Narrowest a band is drawn, px. */
+const MIN_BAND = 8;
+
+/** A band's name over its middle, held inside the plot so it clears the scale. */
+const BandLabel = (props: {
+  band: Band;
+  frame: Frame;
+  x0: number;
+  x1: number;
+}) => {
+  const { m, width } = props.frame;
+  const half = (props.band.label.length * TICK_CHAR) / 2;
+  const mid = (props.x0 + props.x1) / 2;
+  const left = m.left + half;
+  const right = width - m.right - half;
+  return (
+    <text
+      className={TICK}
+      x={Math.max(left, Math.min(right, mid))}
+      y={m.top - 8}
+      textAnchor="middle"
+    >
+      {props.band.label}
+    </text>
+  );
+};
+
 export const SeasonBands = (props: { bands: Band[]; frame: Frame }) => {
   const { m, plotBottom, tex, x } = props.frame;
   return props.bands.map((band) => {
-    const x0 = Math.round(x(band.from));
-    const x1 = Math.round(x(band.to));
+    // A band too narrow to engrave is widened about its centre.
+    const mid = (x(band.from) + x(band.to)) / 2;
+    const half = Math.max(
+      MIN_BAND / 2,
+      Math.abs(x(band.to) - x(band.from)) / 2
+    );
+    const x0 = Math.round(mid - half);
+    const x1 = Math.round(mid + half);
     return (
       <g key={band.from.toISOString()}>
         <rect
@@ -119,14 +153,7 @@ export const SeasonBands = (props: { bands: Band[]; frame: Frame }) => {
           width={x1 - x0 - 1}
           height={Math.round(plotBottom) - Math.round(m.top) - 1}
         />
-        <text
-          className={TICK}
-          x={(x0 + x1) / 2}
-          y={m.top - 8}
-          textAnchor="middle"
-        >
-          {band.label}
-        </text>
+        <BandLabel band={band} frame={props.frame} x0={x0} x1={x1} />
       </g>
     );
   });

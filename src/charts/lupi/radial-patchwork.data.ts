@@ -1,36 +1,485 @@
-import { rnd } from "../../lib/random";
-
+/**
+ * A week of solar flares on the 24-hour dial: the hour each began (UTC), how
+ * long it lasted, how strong its peak was, and the three of class M.
+ *
+ * Source: NOAA Space Weather Prediction Center, GOES X-ray flare list for the
+ * last seven days (primary satellite):
+ * https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json
+ * Fetched 2026-10-15 (saved to reference/raw/L10b/). Public domain (US
+ * government work). Replaces the RNLI Return of Service, which has no
+ * duration, people-aided or life-saved fields.
+ *
+ * Transform: the list holds 57 flares from 2026-10-08 22:33 to 2026-10-15
+ * 21:31 UTC. One has no peak time, class or flux yet (begun 2026-10-14 08:22)
+ * and is dropped, leaving 56. For the rest: `hour` is the begin time as hours
+ * since midnight UTC, to three decimals (about a minute); `minutes` is
+ * end_time minus begin_time; `size` is log10 of the peak flux (max_xrlong, in
+ * watts per square metre) plus 8, so a B1 flare is 1, a C1 is 2 and an M1 is
+ * 3; `label` is max_class as given; `flagged` is true for class M or X
+ * (three flares, all M). Script: reference/scripts/L10/emit.py.
+ */
 export interface PatchworkEvent {
   id: string;
   /** Start time as hours since midnight (0–24). */
   hour: number;
   /** Duration in minutes: sets the wedge's angular width. */
   minutes: number;
-  /** Size, e.g. files touched: sets the wedge's reach. */
+  /** Strength on a log scale: sets the wedge's reach. */
   size: number;
-  /** Crosshatched in the hero colour when true, e.g. the deploy triggered an incident. */
-  incident?: boolean;
+  /** Shown in the tooltip, e.g. the flare class "M6.4". */
+  label: string;
+  /** Crosshatched in the hero colour when true: class M or stronger. */
+  flagged?: boolean;
 }
 
-/** The one deploy that triggered an incident: the chart's hero. */
-const INCIDENT = 31;
-
-/**
- * One working week of Fieldnote deploys (UTC). Europe ships through the
- * morning, Toronto and Austin through the afternoon, and one hotfix went out
- * near midnight.
- */
-export const radialPatchworkDemo: PatchworkEvent[] = Array.from(
-  { length: 64 },
-  (_, k) => {
-    const spread = (rnd(k + 40, 1) + rnd(k + 40, 2) + rnd(k + 40, 3)) / 3;
-    const hour = k === 0 ? 23.2 : 7.2 + spread * 13.5;
-    return {
-      hour: Math.round(hour * 12) / 12,
-      id: `deploy-${k + 1}`,
-      incident: k === INCIDENT,
-      minutes: 30 + Math.round(45 * rnd(k + 40, 4)),
-      size: k === 0 ? 34 : Math.round(10 + 96 * rnd(k + 40, 5) ** 1.5),
-    };
-  }
-);
+/** One week of flares, 8 to 15 October 2026. */
+export const radialPatchworkDemo: PatchworkEvent[] = [
+  {
+    flagged: false,
+    hour: 22.55,
+    id: "2026-10-08T22:33:00Z",
+    label: "C3.5",
+    minutes: 20,
+    size: 2.55,
+  },
+  {
+    flagged: false,
+    hour: 4.467,
+    id: "2026-10-09T04:28:00Z",
+    label: "C1.6",
+    minutes: 22,
+    size: 2.21,
+  },
+  {
+    flagged: false,
+    hour: 5.45,
+    id: "2026-10-09T05:27:00Z",
+    label: "C4.0",
+    minutes: 23,
+    size: 2.61,
+  },
+  {
+    flagged: false,
+    hour: 6.65,
+    id: "2026-10-09T06:39:00Z",
+    label: "C2.9",
+    minutes: 14,
+    size: 2.48,
+  },
+  {
+    flagged: false,
+    hour: 9.883,
+    id: "2026-10-09T09:53:00Z",
+    label: "C1.3",
+    minutes: 15,
+    size: 2.13,
+  },
+  {
+    flagged: false,
+    hour: 11.4,
+    id: "2026-10-09T11:24:00Z",
+    label: "C1.3",
+    minutes: 15,
+    size: 2.12,
+  },
+  {
+    flagged: false,
+    hour: 12.25,
+    id: "2026-10-09T12:15:00Z",
+    label: "C1.5",
+    minutes: 5,
+    size: 2.18,
+  },
+  {
+    flagged: false,
+    hour: 12.55,
+    id: "2026-10-09T12:33:00Z",
+    label: "C1.8",
+    minutes: 14,
+    size: 2.26,
+  },
+  {
+    flagged: false,
+    hour: 13.05,
+    id: "2026-10-09T13:03:00Z",
+    label: "C4.3",
+    minutes: 12,
+    size: 2.64,
+  },
+  {
+    flagged: false,
+    hour: 13.783,
+    id: "2026-10-09T13:47:00Z",
+    label: "C1.4",
+    minutes: 8,
+    size: 2.17,
+  },
+  {
+    flagged: true,
+    hour: 13.917,
+    id: "2026-10-09T13:55:00Z",
+    label: "M1.3",
+    minutes: 22,
+    size: 3.14,
+  },
+  {
+    flagged: false,
+    hour: 15.95,
+    id: "2026-10-09T15:57:00Z",
+    label: "C1.4",
+    minutes: 10,
+    size: 2.18,
+  },
+  {
+    flagged: false,
+    hour: 21.867,
+    id: "2026-10-09T21:52:00Z",
+    label: "C1.4",
+    minutes: 8,
+    size: 2.15,
+  },
+  {
+    flagged: false,
+    hour: 22.783,
+    id: "2026-10-09T22:47:00Z",
+    label: "C1.2",
+    minutes: 9,
+    size: 2.1,
+  },
+  {
+    flagged: false,
+    hour: 23.667,
+    id: "2026-10-09T23:40:00Z",
+    label: "C3.1",
+    minutes: 35,
+    size: 2.5,
+  },
+  {
+    flagged: false,
+    hour: 4.2,
+    id: "2026-10-10T04:12:00Z",
+    label: "C1.5",
+    minutes: 16,
+    size: 2.2,
+  },
+  {
+    flagged: false,
+    hour: 4.583,
+    id: "2026-10-10T04:35:00Z",
+    label: "C7.9",
+    minutes: 5,
+    size: 2.9,
+  },
+  {
+    flagged: false,
+    hour: 7.7,
+    id: "2026-10-10T07:42:00Z",
+    label: "C4.2",
+    minutes: 104,
+    size: 2.62,
+  },
+  {
+    flagged: false,
+    hour: 9.433,
+    id: "2026-10-10T09:26:00Z",
+    label: "C1.7",
+    minutes: 13,
+    size: 2.25,
+  },
+  {
+    flagged: false,
+    hour: 13.3,
+    id: "2026-10-10T13:18:00Z",
+    label: "C2.7",
+    minutes: 14,
+    size: 2.43,
+  },
+  {
+    flagged: true,
+    hour: 13.933,
+    id: "2026-10-10T13:56:00Z",
+    label: "M1.2",
+    minutes: 31,
+    size: 3.09,
+  },
+  {
+    flagged: true,
+    hour: 14.967,
+    id: "2026-10-10T14:58:00Z",
+    label: "M6.4",
+    minutes: 22,
+    size: 3.81,
+  },
+  {
+    flagged: false,
+    hour: 17.75,
+    id: "2026-10-10T17:45:00Z",
+    label: "C4.8",
+    minutes: 15,
+    size: 2.69,
+  },
+  {
+    flagged: false,
+    hour: 20.05,
+    id: "2026-10-10T20:03:00Z",
+    label: "C2.1",
+    minutes: 26,
+    size: 2.34,
+  },
+  {
+    flagged: false,
+    hour: 2.767,
+    id: "2026-10-11T02:46:00Z",
+    label: "C1.8",
+    minutes: 10,
+    size: 2.27,
+  },
+  {
+    flagged: false,
+    hour: 10.433,
+    id: "2026-10-11T10:26:00Z",
+    label: "C1.1",
+    minutes: 19,
+    size: 2.05,
+  },
+  {
+    flagged: false,
+    hour: 14.933,
+    id: "2026-10-11T14:56:00Z",
+    label: "B9.8",
+    minutes: 13,
+    size: 1.99,
+  },
+  {
+    flagged: false,
+    hour: 16.85,
+    id: "2026-10-11T16:51:00Z",
+    label: "C1.2",
+    minutes: 21,
+    size: 2.08,
+  },
+  {
+    flagged: false,
+    hour: 17.2,
+    id: "2026-10-11T17:12:00Z",
+    label: "C1.1",
+    minutes: 13,
+    size: 2.08,
+  },
+  {
+    flagged: false,
+    hour: 1.9,
+    id: "2026-10-12T01:54:00Z",
+    label: "C1.1",
+    minutes: 18,
+    size: 2.07,
+  },
+  {
+    flagged: false,
+    hour: 7.65,
+    id: "2026-10-12T07:39:00Z",
+    label: "B9.3",
+    minutes: 12,
+    size: 1.97,
+  },
+  {
+    flagged: false,
+    hour: 12.433,
+    id: "2026-10-12T12:26:00Z",
+    label: "B8.8",
+    minutes: 19,
+    size: 1.95,
+  },
+  {
+    flagged: false,
+    hour: 19.15,
+    id: "2026-10-12T19:09:00Z",
+    label: "C1.0",
+    minutes: 11,
+    size: 2.01,
+  },
+  {
+    flagged: false,
+    hour: 20.483,
+    id: "2026-10-12T20:29:00Z",
+    label: "C1.0",
+    minutes: 16,
+    size: 2.02,
+  },
+  {
+    flagged: false,
+    hour: 23.8,
+    id: "2026-10-12T23:48:00Z",
+    label: "C1.0",
+    minutes: 10,
+    size: 2.02,
+  },
+  {
+    flagged: false,
+    hour: 3.483,
+    id: "2026-10-13T03:29:00Z",
+    label: "C1.2",
+    minutes: 18,
+    size: 2.11,
+  },
+  {
+    flagged: false,
+    hour: 16.133,
+    id: "2026-10-13T16:08:00Z",
+    label: "C4.2",
+    minutes: 35,
+    size: 2.63,
+  },
+  {
+    flagged: false,
+    hour: 21.7,
+    id: "2026-10-13T21:42:00Z",
+    label: "B9.9",
+    minutes: 13,
+    size: 2,
+  },
+  {
+    flagged: false,
+    hour: 0.817,
+    id: "2026-10-14T00:49:00Z",
+    label: "B9.7",
+    minutes: 27,
+    size: 1.99,
+  },
+  {
+    flagged: false,
+    hour: 1.983,
+    id: "2026-10-14T01:59:00Z",
+    label: "C6.9",
+    minutes: 40,
+    size: 2.84,
+  },
+  {
+    flagged: false,
+    hour: 3.817,
+    id: "2026-10-14T03:49:00Z",
+    label: "C1.1",
+    minutes: 13,
+    size: 2.06,
+  },
+  {
+    flagged: false,
+    hour: 13.267,
+    id: "2026-10-14T13:16:00Z",
+    label: "C1.0",
+    minutes: 12,
+    size: 2.01,
+  },
+  {
+    flagged: false,
+    hour: 13.467,
+    id: "2026-10-14T13:28:00Z",
+    label: "C1.3",
+    minutes: 11,
+    size: 2.13,
+  },
+  {
+    flagged: false,
+    hour: 14.433,
+    id: "2026-10-14T14:26:00Z",
+    label: "C1.3",
+    minutes: 13,
+    size: 2.12,
+  },
+  {
+    flagged: false,
+    hour: 14.667,
+    id: "2026-10-14T14:40:00Z",
+    label: "C1.9",
+    minutes: 7,
+    size: 2.29,
+  },
+  {
+    flagged: false,
+    hour: 15.8,
+    id: "2026-10-14T15:48:00Z",
+    label: "C2.2",
+    minutes: 16,
+    size: 2.35,
+  },
+  {
+    flagged: false,
+    hour: 1.567,
+    id: "2026-10-15T01:34:00Z",
+    label: "B9.4",
+    minutes: 14,
+    size: 1.98,
+  },
+  {
+    flagged: false,
+    hour: 2,
+    id: "2026-10-15T02:00:00Z",
+    label: "C2.8",
+    minutes: 21,
+    size: 2.46,
+  },
+  {
+    flagged: false,
+    hour: 7.333,
+    id: "2026-10-15T07:20:00Z",
+    label: "C1.0",
+    minutes: 12,
+    size: 2.03,
+  },
+  {
+    flagged: false,
+    hour: 13.917,
+    id: "2026-10-15T13:55:00Z",
+    label: "C1.3",
+    minutes: 10,
+    size: 2.14,
+  },
+  {
+    flagged: false,
+    hour: 14.217,
+    id: "2026-10-15T14:13:00Z",
+    label: "C1.0",
+    minutes: 10,
+    size: 2.04,
+  },
+  {
+    flagged: false,
+    hour: 15.183,
+    id: "2026-10-15T15:11:00Z",
+    label: "C1.4",
+    minutes: 9,
+    size: 2.17,
+  },
+  {
+    flagged: false,
+    hour: 15.817,
+    id: "2026-10-15T15:49:00Z",
+    label: "C4.9",
+    minutes: 10,
+    size: 2.7,
+  },
+  {
+    flagged: false,
+    hour: 17.533,
+    id: "2026-10-15T17:32:00Z",
+    label: "C2.8",
+    minutes: 31,
+    size: 2.46,
+  },
+  {
+    flagged: false,
+    hour: 20.833,
+    id: "2026-10-15T20:50:00Z",
+    label: "C1.1",
+    minutes: 9,
+    size: 2.05,
+  },
+  {
+    flagged: false,
+    hour: 21.517,
+    id: "2026-10-15T21:31:00Z",
+    label: "C1.0",
+    minutes: 15,
+    size: 2.02,
+  },
+];

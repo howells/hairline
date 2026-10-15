@@ -1,3 +1,4 @@
+import { format as d3Format } from "d3-format";
 import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
@@ -6,16 +7,16 @@ import { PlotNote } from "../plot-note";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
-import { dottyMatrixDemo } from "./dotty-matrix.data";
+import { dottyMatrixDemo, dottyPeriodLabel } from "./dotty-matrix.data";
 import type { DottyGroup } from "./dotty-matrix.data";
 
 interface DottyMatrixProps {
   data?: DottyGroup[];
   height?: number;
   format?: (v: number) => string;
-  /** Name of one grid cell for the tooltip, e.g. "week". */
-  cell?: string;
-  /** Noun for the value, e.g. "tasks". */
+  /** Name of grid cell `k` (0-based) for the tooltip, e.g. "Jan 2023". */
+  cellLabel?: (k: number) => string;
+  /** Unit after the value, e.g. "years gained". */
   noun?: string;
   note?: string;
 }
@@ -38,6 +39,8 @@ interface PlaneGeometry {
   n: number;
   top: number;
 }
+
+const oneDecimal = d3Format(".1f");
 
 /** Lightness is data: the first (most important) plane is the hero. */
 const TONES = ["fill-hero", "fill-l3", "fill-l4", "fill-l5"];
@@ -133,15 +136,15 @@ const Plane = ({ dim, g, geo, group, onHover, radius, screen }: PlaneProps) => {
 };
 
 /**
- * L8 Team weeks. Groups × grid × amount: each group is an isometric plane
+ * L8 Years gained. Groups × grid × amount: each group is an isometric plane
  * of dots (area = amount) on a fine stipple screen, stacked in space with the most important on top.
  */
 export const DottyMatrix = (props: DottyMatrixProps) => {
   const data = props.data ?? dottyMatrixDemo;
   const height = props.height ?? 440;
-  const format = props.format ?? String;
-  const cell = props.cell ?? "week";
-  const noun = props.noun ?? "tasks";
+  const format = props.format ?? oneDecimal;
+  const cellLabel = props.cellLabel ?? dottyPeriodLabel;
+  const noun = props.noun ?? "years gained";
   const [hover, setHover] = useState<DotHover | null>(null);
   const screen = useTextureIds("plane")("screen");
   const n = Math.max(
@@ -155,7 +158,7 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data[hover.g].label}</b> · {cell} {hover.k + 1} ·{" "}
+            <b>{data[hover.g].label}</b> · {cellLabel(hover.k)} ·{" "}
             {format(data[hover.g].values[hover.k])} {noun}
           </Tooltip>
         )
@@ -168,7 +171,7 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
           data.length,
           n,
           noteSpace(props.note, width - 16, 20),
-          Math.max(0, ...data.map((d) => sansWidth(d.label, 11)))
+          Math.max(0, ...data.map((d) => sansWidth(d.label, 10.7)))
         );
         const scale = scaleSqrt()
           .domain([0, max])
