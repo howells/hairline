@@ -66,12 +66,7 @@ const DumbbellRow = (props: {
           stroke="var(--l5)"
           strokeWidth={2}
         />
-        <circle
-          cx={Math.round(x(r.before))}
-          cy={cy}
-          r={3}
-          fill="var(--l4)"
-        />
+        <circle cx={Math.round(x(r.before))} cy={cy} r={3} fill="var(--l4)" />
         <circle cx={Math.round(x(r.after))} cy={cy} r={4.5} fill={ink} />
         <text
           x={x(Math.max(r.before, r.after)) + 14}
