@@ -1,4 +1,41 @@
-import { ranks } from "../util";
+import { ranks, sansWidth } from "../util";
+
+const widths = new Map<string, number>();
+let probe: SVGTextElement | null = null;
+
+/**
+ * Rendered width of `text` in a text role (`t-label`, `t-axis`, ...), read
+ * from the page's own Inter. Falls back to the estimate until the font is in
+ * (and is not remembered then).
+ */
+export const textWidth = (text: string, role: string) => {
+  const key = `${role}|${text}`;
+  const known = widths.get(key);
+  if (known !== undefined) {
+    return known;
+  }
+  if (typeof document === "undefined" || document.fonts.status !== "loaded") {
+    return sansWidth(text);
+  }
+  if (probe === null) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("aria-hidden", "true");
+    svg.style.cssText =
+      "position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none";
+    probe = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    svg.append(probe);
+    document.body.append(svg);
+  }
+  probe.setAttribute("class", role);
+  probe.textContent = text;
+  const w = probe.getComputedTextLength();
+  widths.set(key, w);
+  return w;
+};
+
+/** Width of the widest of `labels` in `role`, rounded up: room to reserve beside a plot. */
+export const labelRoom = (labels: string[], role = "t-label") =>
+  Math.ceil(Math.max(0, ...labels.map((l) => textWidth(l, role))));
 
 /*
  * Importance ladder as Tailwind classes. Written out in full so Tailwind

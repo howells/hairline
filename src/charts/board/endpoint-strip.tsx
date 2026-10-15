@@ -6,8 +6,9 @@ import type { PointerEvent } from "react";
 import { fmtMs } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart, VGrid } from "../core";
+import { nameWidth } from "./room";
 import { LABEL, POINT, RULE_TARGET, TICK, VALUE } from "./styles";
-import { labelGap, labelRoom, thinTicks } from "./thin-ticks";
+import { labelGap, thinTicks } from "./thin-ticks";
 
 export interface StripEndpoint {
   service: string;
@@ -75,6 +76,8 @@ const nearestIn = (
   return row.endpoints.toSorted((a, b) => dist(a) - dist(b))[0].route;
 };
 
+/** Gap between a service's name and the plot, px. */
+const NAME_GAP = 20;
 /** Room at the right for each row's median, px. */
 const MEDIAN_W = 60;
 /** Room above the plot for the target's and the median column's names, px. */
@@ -160,7 +163,7 @@ const StripRow = (props: {
     >
       <text
         className={LABEL}
-        x={m.left - 20}
+        x={m.left - NAME_GAP}
         y={cy}
         dy="0.34em"
         textAnchor="end"
@@ -265,7 +268,7 @@ export const EndpointStrip = (props: EndpointStripProps) => {
       {(width) => {
         const m = {
           bottom: 28,
-          left: labelRoom(rows),
+          left: NAME_GAP + nameWidth(rows.map((r) => r.name)),
           right: MEDIAN_W,
           top: TOP,
         };

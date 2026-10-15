@@ -67,6 +67,9 @@ interface FanLayout {
   rungR: (v: number) => number;
 }
 
+/** How far a spoke's name runs out from the last ring: its gap, then its text. */
+const nameRun = (d: LaunchFanDatum) => 10 + sansWidth(d.name, 11);
+
 const fanLayout = (
   width: number,
   height: number,
@@ -77,9 +80,6 @@ const fanLayout = (
   /** Room kept below the fan for a footnote. */
   noteH: number
 ): FanLayout => {
-  // Room right of the last ring for the near-level spoke names.
-  const labelRoom =
-    Math.max(48, ...data.slice(-3).map((d) => sansWidth(d.name, 12))) + 14;
   const a0 = 4;
   const a1 = 82;
   const angleOf = (i: number) =>
@@ -96,10 +96,23 @@ const fanLayout = (
   );
   // Radius of the last ring: fit the quarter fan plus its outer labels. The
   // fan spans `top` of labels above the last ring down to 0.04 R above centre.
-  const R = Math.max(
-    150,
-    Math.min((height - top - 6 - noteH) / 0.96, width - labelRoom - 56)
+  // The ring labels reach left of the centre; each name runs out along its
+  // spoke, so the width allows a radius per name and the tightest one binds.
+  const leftEdge = ringLabelW + 2;
+  const reachOf = (R: number, i: number) => {
+    const rad = (angleOf(i) * Math.PI) / 180;
+    return (R + nameRun(data[i])) * Math.sin(rad) + 7 * Math.cos(rad);
+  };
+  const fitR = Math.min(
+    ...data.map((d, i) => {
+      const rad = (angleOf(i) * Math.PI) / 180;
+      return (
+        (width - leftEdge - 7 * Math.cos(rad)) / Math.sin(rad) - nameRun(d)
+      );
+    })
   );
+  const R = Math.max(150, Math.min((height - top - 6 - noteH) / 0.96, fitR));
+  const right = Math.max(...data.map((_, i) => reachOf(R, i)));
   const r0 = R * 0.2;
   const sizeR = scaleSqrt()
     .domain([0, Math.max(...data.map((d) => d.size))])
@@ -110,7 +123,7 @@ const fanLayout = (
     a1,
     angle: angleOf,
     bottom: R * 0.96 + top,
-    cx: Math.max(40, ringLabelW + 10, (width - (R + labelRoom + 40)) / 2 + 40),
+    cx: leftEdge + Math.max(0, (width - leftEdge - right) / 2),
     cy: R + top,
     ringR: (w) => r0 + ((R - r0) * w) / weeks,
     rungR: (v) => 1.5 + 3.5 * Math.sqrt(v / weeklyMax),

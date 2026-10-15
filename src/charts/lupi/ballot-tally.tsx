@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { dimClass, noteSpace, stagger } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { ballotTallyDemo } from "./ballot-tally.data";
 import type { TallyDatum } from "./ballot-tally.data";
 import { argMax } from "./util-b";
@@ -145,10 +145,21 @@ export const BallotTally = (props: BallotTallyProps) => {
     <Plot>
       {(width) => {
         const noteH = noteSpace(props.note, width - 16, 24);
-        // Whole-pixel pitch, leaving room for the value after a full run.
-        const pitch = Math.max(2, Math.floor((width - 40) / total));
-        const rulerW = pitch * (total - 1) + 1;
-        const x0 = Math.round((width - rulerW - 28) / 2);
+        // Whole-pixel pitch, the widest that fits the ruler and the value
+        // after its longest run; that block is centred.
+        const valueW = data.map((d) => sansWidth(format(d.value), 11));
+        const blockAt = (p: number) =>
+          Math.max(
+            p * (total - 1) + 1,
+            ...data.map(
+              (d, i) => p * (Math.round(d.value) - 1) + 7 + (valueW[i] ?? 0)
+            )
+          );
+        let pitch = Math.max(2, Math.floor((width - 1) / (total - 1)));
+        while (pitch > 2 && blockAt(pitch) > width) {
+          pitch -= 1;
+        }
+        const x0 = Math.round((width - blockAt(pitch)) / 2);
         const rowH = (height - noteH - 8) / Math.max(1, data.length);
         const tall = Math.round(Math.min(44, rowH * 0.42));
         const layoutAt = (i: number): RulerLayout => ({

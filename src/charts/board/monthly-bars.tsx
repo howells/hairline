@@ -16,6 +16,7 @@ import { Key } from "./key";
 import type { KeyItem } from "./key";
 import { MonthAxis } from "./month-axis";
 import { labelledTicks, monthTickIndices } from "./month-ticks";
+import { SIDE_GAP, sideRoom } from "./room";
 import {
   CAPTION,
   LABEL,
@@ -211,9 +212,10 @@ const plotMargin = (props: MonthlyBarsProps, readout: Readout): Margin => {
     return { bottom: 4, left: 2, right: 2, top: 4, ...props.margin };
   }
   const top = props.y.side === "right" ? 18 : 8;
+  const right = sideLabelled(props, readout) ? sideRoom(props.stacks) : 2;
   return {
     bottom: 30,
-    ...sideMargins(props.y, 52, sideLabelled(props, readout) ? 84 : 12),
+    ...sideMargins(props.y, 12, right),
     top: readout === "value" ? 30 : top,
     ...props.margin,
   };
@@ -488,7 +490,7 @@ const SideLabels = (props: { stacks: Stack[]; frame: Frame }) => {
       <text
         key={s.label}
         className={`${LABEL} fade`}
-        x={width - m.right + 16}
+        x={width - m.right + SIDE_GAP}
         y={y(mid)}
         dy="0.34em"
         style={{ fill: LABEL_FILL[s.tone] }}

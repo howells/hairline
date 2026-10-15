@@ -376,7 +376,6 @@ export const BOARD_PRESETS: BoardPresetMap = {
           format: fmtMs,
           ticks: range(0, 360, 60),
         }}
-        margin={{ left: 64 }}
       />
     ),
   },

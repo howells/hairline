@@ -5,8 +5,10 @@ import { fmtKInt } from "../../lib/format";
 import { Chart, VGrid } from "../core";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
+import { sansWidth } from "../util";
+import { nameWidth } from "./room";
 import { LABEL, MARK, OUTLINE, TICK, VALUE } from "./styles";
-import { labelGap, labelRoom, thinTicks } from "./thin-ticks";
+import { labelGap, thinTicks } from "./thin-ticks";
 
 export interface NamedValue {
   name: string;
@@ -35,6 +37,9 @@ interface BarState {
 
 /** Ink for the leader (or the hovered bar); the rest are hatched on paper. */
 const isInked = (bar: BarState) => bar.active || (bar.lead && !bar.dim);
+
+/** Gap between a row's name and the plot, px. */
+const NAME_GAP = 20;
 
 /** Height of each bar, px: even, so it centres on whole pixels. */
 const BAR_H = 12;
@@ -89,16 +94,18 @@ export const HBars = (props: HBarsProps) => {
   return (
     <Chart>
       {(width) => {
+        // The last tick's label is centred on the plot's edge.
+        const lastTick = props.ticks.at(-1) ?? 0;
         const m = {
           bottom: 30,
-          left: labelRoom(props.rows),
-          right: 24,
+          left: NAME_GAP + nameWidth(props.rows.map((r) => r.name)),
+          right: Math.ceil(sansWidth(tickFormat(lastTick)) / 2),
           top: 0,
         };
         const h = props.height;
         const x = scaleLinear()
-          .domain([0, props.ticks.at(-1) ?? 0])
-          .range([m.left, width - m.right - 24]);
+          .domain([0, lastTick])
+          .range([m.left, width - m.right]);
         const y = scaleBand()
           .domain(props.rows.map((r) => r.name))
           .range([m.top, h - m.bottom]);
@@ -154,7 +161,7 @@ export const HBars = (props: HBarsProps) => {
                   />
                   <text
                     className={LABEL}
-                    x={m.left - 20}
+                    x={m.left - NAME_GAP}
                     y={cy}
                     dy="0.34em"
                     textAnchor="end"

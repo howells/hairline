@@ -10,7 +10,7 @@ import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, stagger } from "../util";
 import { tickBoxDemo } from "./tick-box.data";
 import type { BoxDatum } from "./tick-box.data";
-import { isActive } from "./util-b";
+import { inkWidth, isActive } from "./util-b";
 import type { Tip } from "./util-b";
 
 interface TickBoxProps {
@@ -31,6 +31,7 @@ interface Layout {
   narrow: boolean;
   plotW: number;
   px0: number;
+  ticks: number[];
   top: number;
   x: ScaleBand<string>;
   y: ScaleLinear<number, number>;
@@ -39,30 +40,63 @@ interface Layout {
 /** Pattern kinds: diagonal hatch for the boxes, crosshatch for the hero. */
 const TEXTURES = ["cross", "hatch"] as const;
 
+/** Margin kept between the ink and the svg edge. */
+const EDGE = 2;
+
 const buildLayout = (
   width: number,
   height: number,
   data: BoxDatum[],
-  hasNote: boolean
+  hasNote: boolean,
+  format: (v: number) => string,
+  customTicks: number[] | undefined
 ): Layout => {
   const top = 14;
-  const left = 44;
-  const right = 18;
   const hi = Math.max(...data.flatMap((d) => [d.max, ...(d.outliers ?? [])]));
-  const plotW = Math.min(width - left - right, data.length * 160);
+  const scale = scaleLinear().domain([0, hi]).nice(4);
+  const ticks = customTicks ?? scale.ticks(4);
+  // The tick values end 16px left of the plot.
+  const tickW =
+    16 + Math.max(0, ...ticks.map((t) => Math.ceil(inkWidth(format(t)))));
+  const bandsFor = (plotW: number) =>
+    scaleBand()
+      .domain(data.map((d) => d.label))
+      .range([0, plotW])
+      .paddingInner(0.3)
+      .paddingOuter(0.25);
+  // How far the ink reaches past the plot's left and right edges: the tick
+  // values, the end labels, and (when there's room beside each box) the median.
+  const reach = (plotW: number) => {
+    const band = bandsFor(plotW);
+    const boxW = Math.min(50, band.bandwidth() * 0.55);
+    const wide = plotW / data.length >= 110;
+    let l = tickW;
+    let r = 0;
+    for (const d of data) {
+      const cx = (band(d.label) ?? 0) + band.bandwidth() / 2;
+      const half = Math.ceil(inkWidth(d.label)) / 2;
+      l = Math.max(l, half - cx);
+      r = Math.max(
+        r,
+        cx + half - plotW,
+        wide ? cx + boxW / 2 + 10 + inkWidth(format(d.median)) - plotW : 0
+      );
+    }
+    return { l, r };
+  };
+  const cap = data.length * 160;
+  let plotW = Math.min(width - EDGE * 2 - tickW, cap);
+  for (let k = 0; k < 3; k += 1) {
+    const { l, r } = reach(plotW);
+    plotW = Math.min(width - EDGE * 2 - l - r, cap);
+  }
+  const { l, r } = reach(plotW);
   // Narrow: no room beside each box, so the median moves under its label.
   const narrow = plotW / data.length < 110;
   const bottom = (hasNote ? 70 : 34) + (narrow ? 16 : 0);
-  const y = scaleLinear()
-    .domain([0, hi])
-    .nice(4)
-    .range([height - bottom, top]);
-  const px0 = left + (width - left - right - plotW) / 2;
-  const x = scaleBand()
-    .domain(data.map((d) => d.label))
-    .range([px0, px0 + plotW])
-    .paddingInner(0.3)
-    .paddingOuter(0.25);
+  const y = scale.copy().range([height - bottom, top]);
+  const px0 = (width - l - plotW - r) / 2 + l;
+  const x = bandsFor(plotW).range([px0, px0 + plotW]);
   const boxW = Math.min(50, x.bandwidth() * 0.55);
   return {
     boxW,
@@ -71,6 +105,7 @@ const buildLayout = (
     narrow,
     plotW,
     px0,
+    ticks,
     top,
     x,
     y,
@@ -286,7 +321,9 @@ export const TickBox = (props: TickBoxProps) => {
           width,
           height,
           data,
-          props.note !== undefined
+          props.note !== undefined,
+          format,
+          props.ticks
         );
         return (
           <svg
@@ -310,11 +347,7 @@ export const TickBox = (props: TickBoxProps) => {
                 tone="fill-hero"
               />
             </defs>
-            <Grid
-              format={format}
-              layout={layout}
-              ticks={props.ticks ?? layout.y.ticks(4)}
-            />
+            <Grid format={format} layout={layout} ticks={layout.ticks} />
             {data.map((d, i) => (
               <Group
                 datum={d}

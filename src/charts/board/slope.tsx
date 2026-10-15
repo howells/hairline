@@ -5,6 +5,7 @@ import { useState } from "react";
 import { fmtMs } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart } from "../core";
+import { nameWidth } from "./room";
 import { relax } from "./spread";
 import { GRID_V, LABEL, TICK, VALUE } from "./styles";
 
@@ -35,6 +36,12 @@ const Columns = (props: {
       </text>
     </g>
   ));
+
+/** The labels carry semibold values, so less is shaved off their width. */
+const LABEL_SHAVE = 0.95;
+
+/** Gap between a column and its row labels, px. */
+const LABEL_GAP = 14;
 
 type Role = "lead" | "worst" | "rest";
 
@@ -105,7 +112,7 @@ const SlopeRow = (props: {
         fill={tone.stroke}
       />
       <text
-        x={xa - 14}
+        x={xa - LABEL_GAP}
         y={props.labelYs[0]}
         dy="0.34em"
         textAnchor="end"
@@ -114,7 +121,12 @@ const SlopeRow = (props: {
         <tspan fill="var(--muted)">{name} </tspan>
         <tspan className={valueClass}>{fmtMs(row.from)}</tspan>
       </text>
-      <text x={xb + 14} y={props.labelYs[1]} dy="0.34em" className={LABEL}>
+      <text
+        x={xb + LABEL_GAP}
+        y={props.labelYs[1]}
+        dy="0.34em"
+        className={LABEL}
+      >
         <tspan className={valueClass}>{fmtMs(row.to)}</tspan>
         <tspan fill="var(--muted)"> {name}</tspan>
       </text>
@@ -149,9 +161,19 @@ export const Slope = (props: {
         const top = 40;
         const bottom = 24;
         const h = props.height;
+        // Each side's labels run out to the edge: the columns sit just inside.
         const xs: [number, number] = [
-          Math.round(width * 0.36),
-          Math.round(width * 0.8) - 40,
+          LABEL_GAP +
+            nameWidth(
+              props.rows.map((r) => `${r.name} ${fmtMs(r.from)}`),
+              LABEL_SHAVE
+            ),
+          width -
+            LABEL_GAP -
+            nameWidth(
+              props.rows.map((r) => `${fmtMs(r.to)} ${r.name}`),
+              LABEL_SHAVE
+            ),
         ];
         const y = scaleLinear()
           .domain(props.domain)

@@ -71,26 +71,6 @@ const TAU = Math.PI * 2;
 const LABEL_SPACE = 6;
 const LABEL_OFFSET = 14;
 
-/**
- * The largest pie radius whose outside labels all stay inside the plot: each
- * label runs from (radius + offset) along its slice's middle out to its
- * text's far end, and must end `margin` px short of the edge.
- */
-const fitRadius = (
-  mids: number[],
-  widths: number[],
-  half: number,
-  margin: number
-) =>
-  Math.min(
-    ...mids.map((a, k) => {
-      const s = Math.abs(Math.sin(a));
-      return s < 0.05
-        ? Number.POSITIVE_INFINITY
-        : (half - margin - widths[k]) / s - LABEL_OFFSET;
-    })
-  );
-
 /** Angular distance from 12 o'clock. */
 const fromTop = (a: number) => Math.min(a % TAU, TAU - (a % TAU));
 
@@ -172,32 +152,84 @@ interface RadiusInput {
   height: number;
   /** Each slice's outside label: its name and its figures. */
   labels: { figures: string; name: string }[];
-  /** Each slice's middle angle. */
-  mids: number[];
+  /** Largest intensity on the radial scale. */
+  max: number;
   narrow: boolean;
+  /** The last reference ring, which labels sit outside of. */
+  ring: number;
+  slices: PieArcDatum<SliceDatum>[];
   width: number;
 }
 
+/** Sine range swept by an arc between two clock angles (0 to 2π). */
+const sineSpan = (a0: number, a1: number) => {
+  const ends = [Math.sin(a0), Math.sin(a1)];
+  return {
+    max: a0 <= Math.PI / 2 && a1 >= Math.PI / 2 ? 1 : Math.max(...ends),
+    min: a0 <= 1.5 * Math.PI && a1 >= 1.5 * Math.PI ? -1 : Math.min(...ends),
+  };
+};
+
+/** How far wedges and outside labels reach left and right of the centre of a pie of radius `outer`. */
+const reach = (p: RadiusInput, outer: number) => {
+  const r = scaleRadial()
+    .domain([0, p.max])
+    .range([outer * 0.24, outer]);
+  const labelRadius = r(p.ring);
+  let left = 0;
+  let right = 0;
+  for (const [k, sl] of p.slices.entries()) {
+    const ro = r(sl.data.intensity);
+    const span = sineSpan(sl.startAngle, sl.endAngle);
+    left = Math.max(left, -span.min * ro);
+    right = Math.max(right, span.max * ro);
+    const { figures, name } = p.labels[k];
+    const text = sansWidth(name, 11) + LABEL_SPACE + sansWidth(figures, 11);
+    const x =
+      Math.sin((sl.startAngle + sl.endAngle) / 2) *
+      (Math.max(ro, labelRadius) + LABEL_OFFSET);
+    if (x >= 0) {
+      right = Math.max(right, x + text);
+    } else {
+      left = Math.max(left, -x + text);
+    }
+  }
+  return { left, right };
+};
+
 /**
- * The pie's outer radius: as large as the height and width allow, and small
- * enough that every outside label (name, a space, figures) stays inside.
+ * The pie's outer radius and where its centre goes: as large as the height
+ * allows, and small enough that wedges and every outside label (name, a
+ * space, figures) fit the width. The pie and its labels are centred together.
  */
-const pieRadius = (p: RadiusInput) =>
-  Math.max(
+const pieFit = (p: RadiusInput) => {
+  const cap = Math.max(
     60,
     Math.min(
       (p.height - p.bottom - 56) / 2,
-      (p.width - (p.narrow ? 68 : 300)) / 2,
-      fitRadius(
-        p.mids,
-        p.labels.map(
-          (l) => sansWidth(l.name, 12) + LABEL_SPACE + sansWidth(l.figures, 11)
-        ),
-        p.width / 2,
-        4
-      )
+      (p.width - (p.narrow ? 68 : 300)) / 2
     )
   );
+  const fits = (outer: number) => {
+    const { left, right } = reach(p, outer);
+    return left + right <= p.width;
+  };
+  let lo = 60;
+  let hi = cap;
+  if (!fits(hi)) {
+    for (let k = 0; k < 20; k += 1) {
+      const mid = (lo + hi) / 2;
+      if (fits(mid)) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    hi = lo;
+  }
+  const { left, right } = reach(p, hi);
+  return { cx: (p.width - left - right) / 2 + left, outer: hi };
+};
 
 interface RingLabelProps {
   angle: number | null;
@@ -384,34 +416,36 @@ export const BigSlice = (props: BigSliceProps) => {
     >
       {(width) => {
         const narrow = width < 520;
+        // Narrow: the name keeps its share and drops the duration.
+        const outside = (d: SliceDatum) => ({
+          figures: narrow
+            ? shareOf(d)
+            : `${shareOf(d)} · ${format(d.intensity)}`,
+          name: d.label,
+        });
         const bottom = 8 + noteSpace(props.note, width - 16, 18);
         const slices = pie<SliceDatum>()
           .value((d) => d.share)
           .sortValues(null)
           .padAngle(0.035)(data);
-        const outer = pieRadius({
+        const max = Math.max(...data.map((d) => d.intensity), ...rings);
+        const { cx, outer } = pieFit({
           bottom,
           height,
-          labels: slices.map((sl) =>
-            narrow
-              ? { figures: shareOf(sl.data), name: sl.data.label }
-              : {
-                  figures: `${shareOf(sl.data)} · ${format(sl.data.intensity)}`,
-                  name: sl.data.label,
-                }
-          ),
-          mids: slices.map((sl) => (sl.startAngle + sl.endAngle) / 2),
+          labels: slices.map((sl) => outside(sl.data)),
+          max,
           narrow,
+          ring: rings.at(-1) ?? max,
+          slices,
           width,
         });
         const inner = outer * 0.24;
-        const centre = { cx: width / 2, cy: 28 + outer };
+        const centre = { cx, cy: 28 + outer };
         // Narrow screens: the pie is width-bound, so trim the unused height.
         const svgH = Math.min(
           height,
           Math.round(centre.cy + outer + 34 + bottom)
         );
-        const max = Math.max(...data.map((d) => d.intensity), ...rings);
         const r = scaleRadial().domain([0, max]).range([inner, outer]);
         const guides = ringGuides(rings, slices, r, ringFormat);
         const wedge = arc<Wedge>()

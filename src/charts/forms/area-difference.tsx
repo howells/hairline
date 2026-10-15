@@ -10,10 +10,13 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp } from "../util";
+import { clamp, sansWidth } from "../util";
 import { ValueGrid } from "../value-grid";
 import { planWeeksDemo } from "./area-difference.data";
 import type { PlanWeek } from "./area-difference.data";
+
+/** Value rules, as many as d3 finds for. */
+const TICKS = 5;
 
 const fmtWeek = utcFormat("%-d %b");
 /** The data is in $k; money reads the house way ($118k, $1.2m). */
@@ -30,8 +33,6 @@ interface Frame {
 
 const makeFrame = (data: PlanWeek[], width: number, height: number) => {
   const values = data.flatMap((d) => [d.actual, d.plan]);
-  const x0 = 44;
-  const x1 = width - 52;
   const bottom = height - 30;
   const top = 12;
   const lo = Math.min(...values);
@@ -40,6 +41,19 @@ const makeFrame = (data: PlanWeek[], width: number, height: number) => {
   const y = scaleLinear()
     .domain([lo - (hi - lo) * 0.06, hi])
     .range([bottom, top]);
+  // Room for the widest value label and its gap, and for the end names.
+  const x0 =
+    Math.ceil(
+      Math.max(
+        ...y
+          .ticks(TICKS)
+          .map((t) => sansWidth(money(t).replaceAll("1", "0"), 11))
+      )
+    ) + 8;
+  const x1 =
+    width -
+    8 -
+    Math.ceil(Math.max(sansWidth("Actual", 11), sansWidth("Plan", 11)) * 0.92);
   const x = scaleLinear()
     .domain([0, data.length - 1])
     .range([x0, x1]);
@@ -94,7 +108,7 @@ const Axes = (props: { data: PlanWeek[]; frame: Frame; width: number }) => {
     <g>
       <ValueGrid
         floor={frame.bottom - 8}
-        ticks={frame.y.ticks(5)}
+        ticks={frame.y.ticks(TICKS)}
         format={money}
         x0={frame.x0}
         x1={frame.x1}

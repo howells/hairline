@@ -17,9 +17,10 @@ const ground = (entry: GalleryEntry) => {
   if (entry.dark === true) {
     return "surface-dark";
   }
-  // Board charts draw their own panel; inside a cell the cell is the panel.
+  // Board charts draw their own panel; inside a cell the cell is the panel,
+  // so its fill and side padding give way to the cell's.
   return entry.family === "board"
-    ? "surface-board [&_figure]:bg-transparent"
+    ? "surface-board [&_figure]:bg-transparent [&_figure]:px-0"
     : "bg-paper grain";
 };
 

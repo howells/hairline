@@ -9,6 +9,7 @@ import { Chart, HGrid, VGrid } from "../core";
 import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { Key } from "./key";
+import { scaleWidth } from "./room";
 import { CURSOR, OUTLINE, POINT, RULE_TARGET, TICK, VALUE } from "./styles";
 import { TICK_CHAR } from "./thin-ticks";
 
@@ -82,6 +83,9 @@ interface Frame {
   y: ScaleLinear<number, number>;
 }
 
+/** Gap between the value labels and the plot, px. */
+const TICK_GAP = 14;
+
 const fmtMsTick = (v: number) => `${v} ms`;
 
 const axisConfig = (props: ScatterProps): AxisConfig => ({
@@ -135,7 +139,7 @@ const Axes = (props: { frame: Frame }) => {
         <text
           key={t}
           className={TICK}
-          x={m.left - 14}
+          x={m.left - TICK_GAP}
           y={y(t)}
           dy="0.34em"
           textAnchor="end"
@@ -385,7 +389,14 @@ export const Scatter = (props: ScatterProps) => {
       }
     >
       {(width) => {
-        const m = { bottom: 44, left: 56, right: 10, top: 20 };
+        const m = {
+          bottom: 44,
+          left:
+            scaleWidth({ format: axis.yTickFormat, ticks: axis.yTicks }) +
+            TICK_GAP,
+          right: 5,
+          top: 20,
+        };
         const h = props.height;
         const frame: Frame = {
           axis,

@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { dimClass, noteSpace, stagger } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { CircleLink, CircleNode } from "./circular-graph.data";
 import { LinkBundle } from "./link-bundle";
@@ -91,9 +91,17 @@ interface NodeProps {
   onEnter: () => void;
 }
 
-const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
+/** Where a node's name starts (or ends, on the left half) and which side it sits. */
+const labelOf = (p: Placed) => {
   const right = Math.cos(p.a) > -0.2;
-  const lx = p.x + Math.cos(p.a) * 4 + (right ? p.r + 8 : -p.r - 8);
+  return {
+    right,
+    x: p.x + Math.cos(p.a) * 4 + (right ? p.r + 8 : -p.r - 8),
+  };
+};
+
+const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
+  const { right, x: lx } = labelOf(p);
   return (
     <g className={dimClass(dim)} onPointerEnter={onEnter}>
       <circle cx={p.x} cy={p.y} r={p.r + 8} fill="transparent" />
@@ -164,27 +172,40 @@ export const CircularGraph = (props: CircularGraphProps) => {
     >
       {(width) => {
         const narrow = width < 460;
-        const cx = width / 2;
         const noteH = noteSpace(props.note, width - 16, 16);
         const rMax = narrow ? 18 : 26;
-        const R = Math.min(height / 2 - rMax - 12, cx - (narrow ? 70 : 96));
+        const R = Math.min(
+          height / 2 - rMax - 12,
+          width / 2 - (narrow ? 70 : 96)
+        );
         // Width-bound rings (narrow screens) trim the unused height.
         const svgH = Math.min(height, Math.round(2 * (R + rMax + 12) + noteH));
         const cy = (svgH - noteH) / 2;
-        const placed: Placed[] = nodes.map((node, i) => {
-          const a =
-            -Math.PI / 2 +
-            (i / nodes.length) * Math.PI * 2 -
-            Math.PI / nodes.length;
-          return {
-            a,
-            i,
-            node,
-            r: Math.max(3, rMax * Math.sqrt(node.value / maxNode)),
-            x: cx + R * Math.cos(a),
-            y: cy + R * Math.sin(a),
-          };
+        const ring = (cx: number): Placed[] =>
+          nodes.map((node, i) => {
+            const a =
+              -Math.PI / 2 +
+              (i / nodes.length) * Math.PI * 2 -
+              Math.PI / nodes.length;
+            return {
+              a,
+              i,
+              node,
+              r: Math.max(3, rMax * Math.sqrt(node.value / maxNode)),
+              x: cx + R * Math.cos(a),
+              y: cy + R * Math.sin(a),
+            };
+          });
+        // Centre the ring with its names: the names reach further on one side.
+        const reach = ring(width / 2).flatMap((p) => {
+          const { right, x } = labelOf(p);
+          const end = right
+            ? x + sansWidth(p.node.id, 11)
+            : x - sansWidth(p.node.id, 11);
+          return [p.x - p.r, p.x + p.r, end];
         });
+        const cx = width - (Math.min(...reach) + Math.max(...reach)) / 2;
+        const placed = ring(cx);
         const at = new Map(placed.map((p) => [p.node.id, p]));
 
         return (

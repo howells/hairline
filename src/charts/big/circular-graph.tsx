@@ -141,8 +141,8 @@ const chordPath = (a: Bead, b: Bead, cx: number, cy: number, R: number) => {
   return `M${a.x.toFixed(1)},${a.y.toFixed(1)}C${c(a)} ${c(b)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 };
 
-/** Clear space round a small ring: room for its beads, not their names. */
-const SMALL_MARGIN = 26;
+/** Clear space round a small ring: just its biggest bead, so the ink runs edge to edge. */
+const SMALL_MARGIN = 8;
 
 /*
  * One axis of a small ring's frame. `along` is the hero name's share of the
@@ -243,8 +243,7 @@ const layoutRing = (
           reach:
             beadR(heroNode.size, maxSize, small) +
             LABEL_GAP +
-            sansWidth(heroNode.id, 12) +
-            4,
+            sansWidth(heroNode.id, 11),
         }
   );
   const beads = data.nodes.map((n, i): Bead => {

@@ -15,6 +15,7 @@ import {
 import { tickDonutDemo } from "./tick-donut.data";
 import type { ShareDatum } from "./tick-donut.data";
 import { isDim, useHoverTip } from "./util-a";
+import { inkWidth } from "./util-b";
 
 interface TickDonutProps {
   data?: ShareDatum[];
@@ -94,10 +95,10 @@ const labelPlacement = (mid: number, lines: number): Placement => {
   return { anchor: "middle", dy: c > 0 ? -4 - extra : 10 };
 };
 
-/** Horizontal room for a label at clock angle `mid` on a dial of radius `r`. */
-const labelRoom = (width: number, mid: number, r: number) => {
+/** Horizontal room for a label at clock angle `mid` on a dial of radius `r` centred at `cx`. */
+const labelRoom = (width: number, cx: number, mid: number, r: number) => {
   const s = Math.sin((mid * Math.PI) / 180);
-  const x = width / 2 + (r + LABEL_GAP) * s;
+  const x = cx + (r + LABEL_GAP) * s;
   if (s > 0.25) {
     return width - EDGE - x;
   }
@@ -152,7 +153,7 @@ const fitRadius = (width: number, r0: number, labels: SourceLabel[]) => {
   const r1 = Math.min(r0, Math.max(Math.max(56, r0 * 0.85), oneLine));
   const stacked = Math.min(
     ...labels.map((l) =>
-      labelLines(l, labelRoom(width, l.mid, r1)).length === 1
+      labelLines(l, labelRoom(width, width / 2, l.mid, r1)).length === 1
         ? Infinity
         : radiusFor(
             width,
@@ -162,6 +163,32 @@ const fitRadius = (width: number, r0: number, labels: SourceLabel[]) => {
     )
   );
   return Math.max(56, Math.min(r1, stacked));
+};
+
+/** Left and right edge of the dial and its labels, with the dial centred at `cx`. */
+const spread = (
+  cx: number,
+  rOut: number,
+  labels: SourceLabel[],
+  lines: string[][]
+) => {
+  // The every-tenth rungs reach 4px past the rim.
+  let lo = cx - rOut - 4;
+  let hi = cx + rOut + 4;
+  for (const [i, l] of labels.entries()) {
+    const x = cx + (rOut + LABEL_GAP) * Math.sin((l.mid * Math.PI) / 180);
+    const w = Math.max(...(lines[i] ?? []).map((line) => inkWidth(line)));
+    const { anchor } = labelPlacement(l.mid, lines[i]?.length ?? 1);
+    lo = Math.min(
+      lo,
+      anchor === "start" ? x : x - (anchor === "end" ? w : w / 2)
+    );
+    hi = Math.max(
+      hi,
+      anchor === "end" ? x : x + (anchor === "start" ? w : w / 2)
+    );
+  }
+  return [lo, hi] as const;
 };
 
 interface SourceProps {
@@ -310,7 +337,18 @@ const TickDonutSvg = ({
     labels
   );
   const tickLen = Math.max(12, rOut * 0.17);
-  const lines = labels.map((l) => labelLines(l, labelRoom(width, l.mid, rOut)));
+  // Centre the dial and its labels together: the labels are rarely the same
+  // width on both sides.
+  const linesAt = (cx: number) =>
+    labels.map((l) => labelLines(l, labelRoom(width, cx, l.mid, rOut)));
+  const recentre = (cx: number, ls: string[][]) => {
+    const [lo, hi] = spread(cx, rOut, labels, ls);
+    return cx + (width - lo - hi) / 2;
+  };
+  const cx0 = width / 2;
+  const cx1 = recentre(cx0, linesAt(cx0));
+  const lines = linesAt(cx1);
+  const cx = recentre(cx1, lines);
   const reach = Math.max(
     rOut + 8,
     ...labels.map((l, i) => labelReach(l.mid, lines[i].length, rOut))
@@ -318,7 +356,7 @@ const TickDonutSvg = ({
   // A width-bound dial gives back the height it can't use.
   const plotH = Math.min(height - noteH, Math.ceil(2 * reach + 24));
   const dial: Dial = {
-    cx: width / 2,
+    cx,
     cy: plotH / 2 + 4,
     rIn: rOut - tickLen,
     rOut,

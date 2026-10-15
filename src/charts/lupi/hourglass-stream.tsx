@@ -179,7 +179,7 @@ const StepShares = ({ data, left, strips, yOf }: StepProps) => (
       const prev = data[j]?.value ?? 1;
       const y = (yOf(j) + yOf(j + 1)) / 2;
       const share = `${Math.round((d.value / prev) * 100)}%`;
-      const from = left + sansWidth(share, 12) + 10;
+      const from = left + sansWidth(share, 11) + 10;
       const fan =
         ((strips[j]?.bars[0]?.x ?? 0) + (strips[j + 1]?.bars[0]?.x ?? 0)) / 2;
       return (
@@ -224,9 +224,17 @@ export const HourglassStream = (props: HourglassStreamProps) => {
     <Plot>
       {(width) => {
         const narrow = width < 460;
-        const blockW = Math.min(width - 4, 640);
+        const blockW = Math.min(width, 640);
         const left = (width - blockW) / 2;
-        const labelX = left + blockW - (narrow ? 76 : 104);
+        // The stage names and figures end at the block's edge (sansWidth
+        // rounds each glyph up, so names are sized a little under the real 11).
+        const labelW = Math.max(
+          ...data.flatMap((d) => [
+            sansWidth(d.label, 10.4),
+            sansWidth(format(d.value), 11),
+          ])
+        );
+        const labelX = left + blockW - labelW;
         const a0 = left + (narrow ? 60 : 96);
         const a1 = labelX - (narrow ? 16 : 30);
         const cx = (a0 + a1) / 2;

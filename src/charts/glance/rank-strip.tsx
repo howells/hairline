@@ -5,9 +5,10 @@ import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { Hatch, PlateLabel } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { dimClass, noteSpace, stagger } from "../util";
 import { rankStripDemo } from "./rank-strip.data";
 import type { RankSeries, RankStripData } from "./rank-strip.data";
+import { textWidth } from "./util-a";
 import { ladderStep } from "./util-b";
 
 interface RankStripProps {
@@ -88,6 +89,10 @@ const deltaText = (delta: number) => {
   return delta < 0 ? `−${-delta}` : "±0";
 };
 
+/** Space between a row's name and its first tile, and its net move and its last. */
+const nameGap = (hero: boolean) => (hero ? 18 : 14);
+const deltaGap = (hero: boolean) => (hero ? 22 : 16);
+
 /** One entity: name, a cell per period carrying its rank, and the net move. */
 const Row = (p: RowProps) => {
   const { cell, gap, gridW, ring, x0 } = p.geo;
@@ -108,7 +113,7 @@ const Row = (p: RowProps) => {
       ) : null}
       <text
         className={`t-name ${p.hero ? "fill-ink" : "fill-muted"}`}
-        x={x0 - (p.hero ? 18 : 14)}
+        x={x0 - nameGap(p.hero)}
         y={p.y + cell / 2}
         dy="0.36em"
         textAnchor="end"
@@ -148,7 +153,7 @@ const Row = (p: RowProps) => {
       <text
         className={`fade t-value ${p.hero ? "" : "fill-muted"}`}
         style={{ "--i": p.periods.length + 3 }}
-        x={x0 + gridW + (p.hero ? 22 : 16)}
+        x={x0 + gridW + deltaGap(p.hero)}
         y={p.y + cell / 2}
         dy="0.36em"
       >
@@ -157,6 +162,25 @@ const Row = (p: RowProps) => {
     </g>
   );
 };
+
+/**
+ * How far the names hang left of the grid and the net moves right of it (the
+ * hero's a little further, clear of its outline), so the block can be centred.
+ */
+const hangs = (series: RankSeries[], heroLabel: string | undefined) => ({
+  deltaW: Math.max(
+    ...series.map(
+      (s) =>
+        textWidth(deltaText(climb(s)), "t-value") +
+        deltaGap(s.label === heroLabel)
+    )
+  ),
+  labelW: Math.max(
+    ...series.map(
+      (s) => textWidth(s.label, "t-name") + nameGap(s.label === heroLabel)
+    )
+  ),
+});
 
 /**
  * A two-line header in the broadsheet style: "Q3 2025" splits into its
@@ -211,12 +235,7 @@ export const RankStrip = (props: RankStripProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        // Room for the longest name, set flush right against the tiles.
-        const labelW =
-          Math.ceil(
-            Math.max(...data.series.map((s) => sansWidth(s.label, 12)))
-          ) + (narrow ? 16 : 24);
-        const deltaW = narrow ? 34 : 56;
+        const { deltaW, labelW } = hangs(data.series, heroLabel);
         const gap = narrow ? 5 : 10;
         // Rows sit further apart than columns, so the hero's outline has
         // its own clear channel above and below.

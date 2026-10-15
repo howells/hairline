@@ -8,6 +8,7 @@ import type { Margin } from "../axes";
 import type { LegendItem } from "../core";
 import type { Sync } from "../hooks";
 import type { Threshold } from "./breach";
+import { scaleWidth } from "./room";
 
 export interface LineSeries {
   data: Point[];
@@ -36,9 +37,14 @@ export const RIGHT_GUTTER = 48;
 
 export const isRightAxis = (y: YAxis) => y.side === "right";
 
-/** Left and right margins for the scale's side. */
-export const sideMargins = (axis: YAxis, left: number, right: number) =>
-  isRightAxis(axis) ? { left: 4, right: RIGHT_GUTTER } : { left, right };
+/**
+ * Left and right margins for the scale's side. A left-hand scale gets room
+ * for its widest label plus `gap`, so the labels start at the plot's edge.
+ */
+export const sideMargins = (axis: YAxis, gap: number, right: number) =>
+  isRightAxis(axis)
+    ? { left: 4, right: RIGHT_GUTTER }
+    : { left: scaleWidth(axis) + gap, right };
 
 /** Where gridlines end: through the gutter when the scale sits at the right. */
 export const gridEnd = (axis: YAxis, width: number, marginRight: number) =>

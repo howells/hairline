@@ -21,6 +21,7 @@ import { dimClass, noteSpace } from "../util";
 import { forceGraphDemo } from "./force-graph.data";
 import type { ForceLink, ForceNode } from "./force-graph.data";
 import { LinkBundle } from "./link-bundle";
+import { textWidth } from "./util-a";
 import { bundleLines } from "./util-b";
 
 interface ForceGraphProps {
@@ -52,8 +53,8 @@ interface Graph {
   maxLink: number;
 }
 
-/** Room kept beside a node for its name ("Notion import"), px. */
-const LABEL_ROOM = 90;
+/** Gap between a satellite and its name, px. */
+const LABEL_GAP = 7;
 
 /** Where the hub is pinned, relative to the plot centre. */
 const HUB_Y = -6;
@@ -302,6 +303,30 @@ const ForceDot = ({
   </g>
 );
 
+/** How far a node and its name reach left and right of its centre. */
+const reach = (n: SimNode, scale: number) => {
+  const r = n.r * scale;
+  const name = n.hub ? 0 : LABEL_GAP + textWidth(n.datum.id, "t-name");
+  const left = labelLeft(n);
+  return { left: r + (left ? name : 0), right: r + (left ? 0 : name) };
+};
+
+/** The shift that centres the nodes and their names on x = 0. */
+const centring = (
+  nodes: SimNode[],
+  scale: number,
+  at: (n: SimNode) => number
+) => {
+  let min = Infinity;
+  let max = -Infinity;
+  for (const n of nodes) {
+    const { left, right } = reach(n, scale);
+    min = Math.min(min, at(n) - left);
+    max = Math.max(max, at(n) + right);
+  }
+  return -(min + max) / 2;
+};
+
 const ForceField = (props: FieldProps) => {
   const { width, height } = props;
   const wrap = useRef<HTMLDivElement>(null);
@@ -319,12 +344,18 @@ const ForceField = (props: FieldProps) => {
 
   const cx = width / 2;
   const cy = height / 2 - noteSpace(props.note, width - 16, 16) / 2;
-  const clampX = (x: number, r: number) =>
-    Math.max(-cx + r + LABEL_ROOM, Math.min(cx - r - LABEL_ROOM, x));
+  const clampX = (n: SimNode, x: number) => {
+    const { left, right } = reach(n, scale);
+    return Math.max(-cx + left, Math.min(cx - right, x));
+  };
   const clampY = (y: number, r: number) =>
     Math.max(-cy + r + 8, Math.min(height - cy - r - 8, y));
+  // Centre the laid-out graph, names included, in the width. Held still while dragging.
+  const [held, setHeld] = useState<number | null>(null);
+  const shift =
+    held ?? centring(graph.nodes, scale, (n) => clampX(n, n.x ?? 0));
   const place = (n: SimNode) => ({
-    x: cx + clampX(n.x ?? 0, n.r * scale),
+    x: cx + shift + clampX(n, n.x ?? 0),
     y: cy + clampY(n.y ?? 0, n.r * scale),
   });
   const pin = (n: SimNode, e: PointerEvent<SVGGElement>) => {
@@ -332,7 +363,7 @@ const ForceField = (props: FieldProps) => {
     if (box === undefined) {
       return;
     }
-    n.fx = clampX(e.clientX - box.left - cx, n.r * scale);
+    n.fx = clampX(n, e.clientX - box.left - cx - shift);
     n.fy = clampY(e.clientY - box.top - cy, n.r * scale);
   };
 
@@ -382,6 +413,7 @@ const ForceField = (props: FieldProps) => {
             }}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
+              setHeld(shift);
               pin(n, e);
               setDragging(n);
               simRef.current?.alphaTarget(0.3).restart();
@@ -397,6 +429,7 @@ const ForceField = (props: FieldProps) => {
               n.fx = n.hub ? 0 : null;
               n.fy = n.hub ? HUB_Y : null;
               setDragging(null);
+              setHeld(null);
               setHover(null);
               simRef.current?.alphaTarget(0);
             }}

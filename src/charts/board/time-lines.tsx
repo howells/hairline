@@ -60,7 +60,7 @@ const plotMargin = (props: TimeLinesProps, readout: Readout): Margin => {
   }
   return {
     bottom: 30,
-    ...sideMargins(props.y, 56, 12),
+    ...sideMargins(props.y, 8, 2),
     top: topRoom(props, readout),
     ...props.margin,
   };

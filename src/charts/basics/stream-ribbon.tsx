@@ -21,7 +21,7 @@ import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger, sum } from "../util";
 import { streamRibbonDemo } from "./stream-ribbon.data";
 import type { StreamData } from "./stream-ribbon.data";
-import { maxIndex } from "./util-b";
+import { inkWidth, maxIndex } from "./util-b";
 
 interface StreamRibbonProps {
   data?: StreamData;
@@ -137,6 +137,9 @@ const buildRiver = (data: StreamData): River => {
   };
 };
 
+/** Margin kept between the ink and the svg edge. */
+const EDGE = 2;
+
 const buildLayout = (
   width: number,
   height: number,
@@ -145,8 +148,14 @@ const buildLayout = (
   hasNote: boolean
 ): Layout => {
   const narrow = width < 560;
-  const left = narrow ? 12 : 20;
-  const right = narrow ? 46 : 72;
+  // The axis rule reaches 10px past the river on each side, and the latest
+  // total sits 10px past its mouth; both stay EDGE inside the svg.
+  const totalW = Math.max(
+    inkWidth(fmtK(river.totals.at(-1) ?? 0)),
+    inkWidth("Total")
+  );
+  const left = EDGE + 10;
+  const right = EDGE + 10 + Math.ceil(totalW);
   const top = 18;
   const plotW = Math.min(width - left - right, 1180);
   const px0 = left + (width - left - right - plotW) / 2;

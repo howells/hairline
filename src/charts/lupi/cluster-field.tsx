@@ -3,7 +3,7 @@ import { useState } from "react";
 import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { clamp, dimClass, noteSpace, stagger, sum } from "../util";
+import { clamp, dimClass, noteSpace, sansWidth, stagger, sum } from "../util";
 import { clusterFieldDemo } from "./cluster-field.data";
 import type {
   ClusterDatum,
@@ -57,17 +57,38 @@ const fieldLayout = (
     const [fx, fy] = cluster.at ?? [k * 120, 0];
     return { cluster, core, fx, fy, r: frameR(cluster, core) };
   });
-  // Labels are wider than small islands: keep at least 44 units each side.
-  const x0 = Math.min(...hubs.map((h) => h.fx - Math.max(h.r, 44)));
-  const x1 = Math.max(...hubs.map((h) => h.fx + Math.max(h.r, 44)));
+  // Labels are wider than small islands, and don't scale with the frame: each
+  // hub reaches its island's radius (plus a dot) or half its label, and the
+  // scale is the one at which the widest reach fills the width.
+  const half = hubs.map(
+    (h) => sansWidth(`${h.cluster.label} · ${h.cluster.members.length}`, 11) / 2
+  );
+  const reachAt = (s: number) => {
+    const ends = hubs.map((h, k) => Math.max(h.r * s + 4, half[k]));
+    return {
+      hi: Math.max(...hubs.map((h, k) => h.fx * s + ends[k])),
+      lo: Math.min(...hubs.map((h, k) => h.fx * s - ends[k])),
+    };
+  };
+  let [sLo, sHi] = [0.01, 8];
+  for (let i = 0; i < 40; i += 1) {
+    const mid = (sLo + sHi) / 2;
+    const span = reachAt(mid);
+    if (span.hi - span.lo > width) {
+      sHi = mid;
+    } else {
+      sLo = mid;
+    }
+  }
+  const s = sLo;
+  const { lo } = reachAt(s);
   const y0 = Math.min(...hubs.map((h) => h.fy - h.r));
   const y1 = Math.max(...hubs.map((h) => h.fy + h.r));
-  const s = width / Math.max(1, x1 - x0);
   const placed = hubs.map((h) => ({
     R: h.r * s,
     cluster: h.cluster,
     core: h.core,
-    x: (h.fx - x0) * s,
+    x: h.fx * s - lo,
     y: (h.fy - y0) * s + 4,
   }));
   return { height: Math.round((y1 - y0) * s + 4 + LABEL_ROOM), placed, s };

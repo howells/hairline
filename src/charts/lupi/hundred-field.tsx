@@ -4,7 +4,7 @@ import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { hundredFieldDemo } from "./hundred-field.data";
 import type { ShareDatum } from "./hundred-field.data";
 
@@ -54,8 +54,7 @@ const TURN = 2 * Math.PI;
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
 /** The cuts start this many spiral steps out, leaving the heart open. */
 const CUT_FROM = 2.2;
-/** Room for a rim label: the name over its count. */
-const LABEL_W = 60;
+/** Room for a rim label above or below the head: the name over its count. */
 const LABEL_H = 30;
 
 /** The non-hero glyphs, in data order. */
@@ -325,13 +324,38 @@ export const HundredField = (props: HundredFieldProps) => {
     <Plot>
       {(width) => {
         const noteH = noteSpace(props.note, width - 16, 24);
-        const R = Math.max(
-          40,
-          Math.min(
-            (width - 2 * LABEL_W - 24) / 2,
-            (height - noteH - 2 * LABEL_H) / 2 - 12
-          )
-        );
+        // The wedge angles don't depend on the radius, so a probe head gives
+        // the label sides; the head then grows until head and labels fill
+        // the width, and the whole is centred.
+        const probe = sunflower(data, hero, { R: 100, cx: 0, cy: 0 });
+        const spanAt = (r: number) => {
+          const c = r / Math.sqrt(Math.max(1, total));
+          const rim = r + Math.max(0.8 * c + 2, 7);
+          let lo = -rim;
+          let hi = rim;
+          for (const w of probe.wedges) {
+            const mid = (w.from + w.to) / 2;
+            const px = (r + c * 1.6) * Math.sin(mid);
+            const room = Math.max(
+              sansWidth(w.group.label, 11),
+              sansWidth(String(w.group.value), 11)
+            );
+            if (Math.sin(mid) > 0.3) {
+              hi = Math.max(hi, px + room);
+            } else if (Math.sin(mid) < -0.3) {
+              lo = Math.min(lo, px - room);
+            } else {
+              lo = Math.min(lo, px - room / 2);
+              hi = Math.max(hi, px + room / 2);
+            }
+          }
+          return { hi, lo };
+        };
+        let R = Math.max(40, (height - noteH - 2 * LABEL_H) / 2 - 12);
+        while (R > 40 && spanAt(R).hi - spanAt(R).lo > width) {
+          R -= 1;
+        }
+        const span = spanAt(R);
         // On narrow screens the head is width-bound: drop the unused height.
         const svgH = Math.min(
           height,
@@ -339,7 +363,7 @@ export const HundredField = (props: HundredFieldProps) => {
         );
         const head = sunflower(data, hero, {
           R,
-          cx: Math.round(width / 2) + 0.5,
+          cx: Math.round((width - (span.hi - span.lo)) / 2 - span.lo) + 0.5,
           cy: Math.round((svgH - noteH) / 2),
         });
         const tip = hover === null ? undefined : head.wedges[hover];

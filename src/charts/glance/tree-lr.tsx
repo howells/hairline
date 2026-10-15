@@ -8,7 +8,7 @@ import { PlotNote } from "../plot-note";
 import { dimClass, noteSpace, stagger } from "../util";
 import { treeLRDemo } from "./tree-lr.data";
 import type { TreeDatum } from "./tree-lr.data";
-import { fillFor, strokeFor } from "./util-a";
+import { fillFor, labelRoom, strokeFor } from "./util-a";
 
 interface TreeLRProps {
   data?: TreeDatum;
@@ -35,6 +35,10 @@ const pathOf = (n: P) =>
     .toReversed()
     .map((a) => a.data.name)
     .join(" › ");
+
+/** Names of the leaves under a node. */
+const leafNames = (d: TreeDatum): string[] =>
+  d.children === undefined ? [d.name] : d.children.flatMap(leafNames);
 
 /** Index of the top-level branch a node sits under, -1 for the root. */
 const branchOf = (n: P) => {
@@ -149,11 +153,11 @@ export const TreeLR = (props: TreeLRProps) => {
       }
     >
       {(width) => {
-        const narrow = width < 460;
         const m = {
           bottom: 10 + noteSpace(props.note, width - 16, 20),
-          left: narrow ? 64 : 76,
-          right: narrow ? 74 : 96,
+          // The root's name hangs left of its dot, the leaf names right of theirs.
+          left: labelRoom([data.name], "t-name") + 10,
+          right: labelRoom(leafNames(data), "t-name") + 6,
           top: 10,
         };
         const laid = tree<TreeDatum>()

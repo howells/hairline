@@ -260,14 +260,26 @@ export const TrendLineage = (props: TrendLineageProps) => {
     Math.ceil(Math.max(...allYears)),
   ];
 
+  const yearW = Math.max(
+    0,
+    ...yearTickLabels(
+      Array.from(
+        { length: y1 - y0 + 1 },
+        (_, k) => new Date(Date.UTC(y0 + k, 0, 1))
+      )
+      // Tabular figures: 0.66em each, wider than sansWidth takes a "1" for.
+    ).map((l) => l.length * 7.3)
+  );
+
   return (
     <Plot>
       {(width) => {
         const m = {
           bottom:
             (width < 480 ? 84 : 76) + noteSpace(props.note, width - 16, 24),
-          left: 46,
-          right: 12,
+          // The year names, then the columns run to the right edge.
+          left: 16 + yearW,
+          right: 0,
           top: 14,
         };
         const colsW = Math.min(width - m.left - m.right, data.length * 64);

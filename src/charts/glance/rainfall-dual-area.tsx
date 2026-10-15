@@ -226,7 +226,7 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
         const m = {
           bottom: 24 + noteSpace(props.note, width - 16, 20),
           left: 44,
-          right: 6,
+          right: 0,
           top: 6,
         };
         const innerH = height - m.top - m.bottom;

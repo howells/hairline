@@ -77,6 +77,9 @@ interface Placement {
   dy: number;
 }
 
+/** Margin kept between a name and the svg edge. */
+const EDGE = 2;
+
 const ABOVE: Placement = { anchor: "middle", dx: 0, dy: -12 };
 const PLACEMENTS: Placement[] = [
   ABOVE,
@@ -95,27 +98,35 @@ const extent = (place: Placement, px: number, w: number) => {
 };
 
 /**
- * The first placement whose name crosses no other point's stem: a stem runs
- * from its dot down to the floor, so a name set low beside a tall stem would
- * cut it.
+ * The first placement whose name stays inside the svg and crosses no other
+ * point's stem: a stem runs from its dot down to the floor, so a name set low
+ * beside a tall stem would cut it. Failing that, the first that stays inside.
  */
 const placeName = (
   self: { px: number; py: number; w: number },
-  stems: { px: number; py: number }[]
-) =>
-  PLACEMENTS.find((place) => {
+  stems: { px: number; py: number }[],
+  width: number
+) => {
+  const inside = (place: Placement) => {
     const [l, r] = extent(place, self.px, self.w);
-    const top = self.py + place.dy - 10;
-    return (
-      stems.every(
-        (st) =>
-          st.px === self.px ||
-          st.px < l - 4 ||
-          st.px > r + 4 ||
-          st.py > self.py + place.dy + 2
-      ) && top > 0
+    return l >= EDGE && r <= width - EDGE && self.py + place.dy - 10 > 0;
+  };
+  const clear = (place: Placement) => {
+    const [l, r] = extent(place, self.px, self.w);
+    return stems.every(
+      (st) =>
+        st.px === self.px ||
+        st.px < l - 4 ||
+        st.px > r + 4 ||
+        st.py > self.py + place.dy + 2
     );
-  }) ?? ABOVE;
+  };
+  return (
+    PLACEMENTS.find((place) => inside(place) && clear(place)) ??
+    PLACEMENTS.find(inside) ??
+    ABOVE
+  );
+};
 
 interface PointProps {
   datum: PlumbDatum;
@@ -251,8 +262,8 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
       }
     >
       {(width) => {
-        const plotW = Math.min(width - 64, 600);
-        const x0 = (width - plotW) / 2 + 8;
+        const plotW = Math.min(width - EDGE * 2, 600);
+        const x0 = (width - plotW) / 2;
         const notes = noteLines(props.note, width - 24);
         const floor =
           Math.round(height) -
@@ -291,7 +302,8 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
                       hero === i ? 12 : 11
                     ),
                   },
-                  data.map((o) => ({ px: x(o.x), py: y(o.y) }))
+                  data.map((o) => ({ px: x(o.x), py: y(o.y) })),
+                  width
                 )}
                 datum={d}
                 dim={isDim(hover, i)}

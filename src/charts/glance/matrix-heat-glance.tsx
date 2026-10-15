@@ -5,9 +5,10 @@ import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { DotScreen, KeySwatch, PlateLabel } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { dimClass, noteSpace, stagger } from "../util";
 import { matrixHeatGlanceDemo } from "./matrix-heat-glance.data";
 import type { MatrixGlanceData } from "./matrix-heat-glance.data";
+import { labelRoom, textWidth } from "./util-a";
 
 interface MatrixHeatGlanceProps {
   data?: MatrixGlanceData;
@@ -101,7 +102,7 @@ interface KeyProps {
 
 /** The five screens as key swatches, each with its range, flush right. */
 const Key = (p: KeyProps) => {
-  const widths = p.labels.map((l) => Math.ceil(sansWidth(l, 11)));
+  const widths = p.labels.map((l) => Math.ceil(textWidth(l, "t-note")));
   const entryW = (k: number) => SWATCH + SWATCH_GAP + widths[k];
   const total =
     widths.reduce((a, _, k) => a + entryW(k), 0) +
@@ -255,16 +256,17 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        // Room for the longest row name.
-        const left =
-          Math.ceil(Math.max(...data.rows.map((r) => sansWidth(r, 12)))) +
-          (narrow ? 10 : 18);
         const gap = narrow ? 5 : 10;
+        const labelGap = narrow ? 8 : 16;
+        // The row names and the grid are one block, centred in the width.
+        const names = labelRoom(data.rows);
         const cell = snapTile(
-          Math.min(80, (width - left - 8 - gap * (nC - 1)) / nC)
+          Math.min(80, (width - names - labelGap - gap * (nC - 1)) / nC)
         );
         const gridW = cell * nC + gap * (nC - 1);
-        const x0 = Math.round(left + Math.max(0, (width - left - gridW) / 2));
+        const x0 = Math.round(
+          (width - names - labelGap - gridW) / 2 + names + labelGap
+        );
         const top = 26;
         const pitch = snapTile(Math.min(cell * 0.86, 76));
         const keyY = top + nR * pitch + gap * (nR - 1) + 18;
@@ -314,7 +316,7 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
               gap={gap}
               hero={[hr, hc]}
               hover={hover}
-              labelGap={narrow ? 8 : 16}
+              labelGap={labelGap}
               onHover={setHover}
               pitch={pitch}
               top={top}

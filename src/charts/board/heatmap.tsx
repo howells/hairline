@@ -11,6 +11,7 @@ import {
   useTextureIds,
 } from "../texture-ids";
 import { Key } from "./key";
+import { nameWidth } from "./room";
 import { CAPTION, TICK } from "./styles";
 
 /**
@@ -31,8 +32,8 @@ const HOUR_TICKS = [0, 6];
 const TICK_ROOM = 22;
 /** Paper between the two halves, px. */
 const HALF_GAP = 10;
-/** Width of the row labels, px. */
-const LABEL_W = 60;
+/** Gap between the row labels and the cells, px. */
+const LABEL_GAP = 10;
 
 interface HeatmapProps {
   rows: string[];
@@ -123,12 +124,14 @@ const HalfDay = (props: {
   top: number;
   x: ScaleBand<number>;
   rowH: number;
+  /** Width of the row labels and their gap, px. */
+  labelW: number;
   tex: (name: string) => string;
   worst: [number, number];
   active: [number, number] | null;
   onHover: (cell: [number, number]) => void;
 }) => {
-  const { chart, from, rowH, top, x } = props;
+  const { chart, from, labelW, rowH, top, x } = props;
   const cols = Array.from({ length: HALF }, (_, k) => from + k);
   const w = Math.round(x.bandwidth()) - GAP;
   const h = rowH - GAP;
@@ -139,7 +142,7 @@ const HalfDay = (props: {
         <text
           key={row}
           className={TICK}
-          x={LABEL_W - 10}
+          x={labelW - LABEL_GAP}
           y={top + r * rowH + rowH / 2}
           dy="0.34em"
           textAnchor="end"
@@ -198,8 +201,8 @@ const HalfDay = (props: {
 };
 
 /** Height of one row of cells at this width: a little shorter than square. */
-const rowHeight = (width: number) =>
-  Math.round(Math.min(32, Math.max(18, (width - LABEL_W) / HALF) * 0.75));
+const rowHeight = (width: number, labelW: number) =>
+  Math.round(Math.min(32, Math.max(18, (width - labelW) / HALF) * 0.75));
 
 /** The screens, one per bin, and the hero's red crosshatch, all on paper. */
 const CellPatterns = (props: { tex: (name: string) => string }) => (
@@ -253,12 +256,13 @@ export const Heatmap = (props: HeatmapProps) => {
       }
     >
       {(width) => {
-        const rowH = rowHeight(width);
+        const labelW = LABEL_GAP + nameWidth(props.rows);
+        const rowH = rowHeight(width, labelW);
         const blockH = props.rows.length * rowH + TICK_ROOM;
         const h = blockH * 2 + HALF_GAP;
         const x = scaleBand<number>()
           .domain(Array.from({ length: HALF }, (_, i) => i))
-          .range([LABEL_W, width]);
+          .range([labelW, width]);
 
         return (
           <svg
@@ -279,6 +283,7 @@ export const Heatmap = (props: HeatmapProps) => {
                 top={k * (blockH + HALF_GAP)}
                 x={x}
                 rowH={rowH}
+                labelW={labelW}
                 tex={tex}
                 worst={worst}
                 active={hover}

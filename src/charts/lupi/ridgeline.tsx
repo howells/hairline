@@ -272,13 +272,16 @@ export const Ridgeline = (props: RidgelineProps) => {
   return (
     <Plot>
       {(width) => {
-        const narrow = width < 460;
-        const labelW = narrow ? 60 : 92;
+        // Room left of the plot for the ridge names, then the gap to the plot
+        // (names sized a little under the real 11: sansWidth rounds glyphs up).
+        const labelW = Math.ceil(
+          18 + Math.max(...ridges.map((r) => sansWidth(r.label, 10.4)))
+        );
         // Room right of the plot for the peak values.
         const valueW = Math.ceil(
-          8 + Math.max(...ridges.map((r) => sansWidth(format(r.peak), 12)))
+          8 + Math.max(...ridges.map((r) => sansWidth(format(r.peak), 11)))
         );
-        const plotW = Math.min(width - labelW - valueW - 8, 520);
+        const plotW = Math.min(width - labelW - valueW, 520);
         const x0 = Math.round(labelW + (width - labelW - valueW - plotW) / 2);
         const x = scaleLinear()
           .domain([d0, d1])

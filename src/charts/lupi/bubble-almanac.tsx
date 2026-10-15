@@ -12,7 +12,7 @@ import {
   TEXTURE_PITCH,
   useTextureIds,
 } from "../texture-ids";
-import { clamp, dimClass, noteSpace, stagger } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import {
   bubbleAlmanacDemo,
   bubbleAlmanacLabelled,
@@ -64,6 +64,9 @@ const LABEL_ROOM = 11;
 const cellId = (d: { category: string; year: number }) =>
   `${d.category}-${d.year}`;
 
+/** Slant of the column names, in degrees: steeper when columns are tight. */
+const headTilt = (colPitch: number) => (colPitch < 50 ? -60 : -24);
+
 /** Gap between a circle's top and its figure's baseline. */
 const lift = (hero: boolean) => (hero ? 7 : 5);
 
@@ -94,11 +97,34 @@ const almanacLayout = (
 ): AlmanacLayout => {
   const categories = [...new Set(data.map((d) => d.category))];
   const years = [...new Set(data.map((d) => d.year))].toSorted((a, b) => a - b);
-  const left = width < 600 ? 40 : 56;
-  const right = 8;
-  const colPitch = clamp((width - left - right) / categories.length, 20, 84);
+  // Room left of the grid for the year names; right of it for the last
+  // slanted column name, which runs past the grid. The pitch is the widest
+  // that fits both, and the whole composition is centred.
+  const yearW = Math.max(
+    0,
+    ...yearTickLabels(years.map((y) => new Date(Date.UTC(y, 0, 1)))).map((l) =>
+      sansWidth(l, 11)
+    )
+  );
+  const left = 12 + yearW;
+  // Sized a little under the real 11: sansWidth rounds each glyph up.
+  const nameW = categories.map((c) => sansWidth(c, 10.4));
+  const rightFor = (pitch: number) => {
+    const tilt = (headTilt(pitch) * Math.PI) / 180;
+    return Math.max(
+      pitch * categories.length,
+      ...nameW.map(
+        (w, k) =>
+          (k + 0.3) * pitch + w * Math.cos(tilt) + 3 * Math.sin(-tilt) + 1
+      )
+    );
+  };
+  let colPitch = 84;
+  while (colPitch > 20 && left + rightFor(colPitch) > width) {
+    colPitch -= 0.25;
+  }
   const gridW = colPitch * categories.length;
-  const x0 = left + Math.max(0, (width - left - right - gridW) / 2);
+  const x0 = left + Math.max(0, (width - left - rightFor(colPitch)) / 2);
   const top = 72;
   const rowPitch = Math.max(20, (height - top - 8 - noteH) / years.length);
   // The largest bubble fits its cell with a clear gap to every neighbour,
@@ -161,7 +187,7 @@ const Ledger = (props: { layout: AlmanacLayout }) => {
           className="fade t-label fill-muted"
           key={`col-${category}`}
           style={stagger(k, "mark")}
-          transform={`translate(${colX(category) - colPitch * 0.2},${rowY(years[0]) - rowPitch * 0.5 - 14}) rotate(${colPitch < 50 ? -60 : -24})`}
+          transform={`translate(${colX(category) - colPitch * 0.2},${rowY(years[0]) - rowPitch * 0.5 - 14}) rotate(${headTilt(colPitch)})`}
         >
           {category}
         </text>

@@ -4,11 +4,45 @@ import { useState } from "react";
 
 import { fmtSignedMs } from "../../lib/format";
 import { Chart, VGrid } from "../core";
+import { sansWidth } from "../util";
 import { Key } from "./key";
+import { nameWidth } from "./room";
 import { LABEL, TICK, VALUE } from "./styles";
-import { labelGap, labelRoom, thinTicks } from "./thin-ticks";
+import { labelGap, thinTicks } from "./thin-ticks";
 
 const msTick = (t: number) => `${t} ms`;
+
+/** Gap between a row's name and the plot's labels, px. */
+const NAME_GAP = 20;
+/** Gap between a row's far dot and its change, px. */
+const VALUE_GAP = 14;
+
+/**
+ * How far the scale can run from `from`: far enough that the last tick's label
+ * and every row's change, set past its far dot, end at the svg's edge.
+ */
+const scaleReach = (
+  rows: Row[],
+  ticks: number[],
+  width: number,
+  from: number
+) => {
+  const [first = 0] = ticks;
+  const span = (ticks.at(-1) ?? first) - first;
+  const lastLabel = sansWidth(msTick(ticks.at(-1) ?? first));
+  return Math.min(
+    width - Math.ceil(lastLabel / 2) - from,
+    ...rows.map(
+      (r) =>
+        ((width -
+          VALUE_GAP -
+          sansWidth(fmtSignedMs(r.after - r.before)) -
+          from) *
+          span) /
+        Math.max(1, Math.max(r.before, r.after) - first)
+    )
+  );
+};
 
 interface Row {
   name: string;
@@ -69,7 +103,7 @@ const DumbbellRow = (props: {
         <circle cx={Math.round(x(r.before))} cy={cy} r={3} fill="var(--l4)" />
         <circle cx={Math.round(x(r.after))} cy={cy} r={4.5} fill={ink} />
         <text
-          x={x(Math.max(r.before, r.after)) + 14}
+          x={x(Math.max(r.before, r.after)) + VALUE_GAP}
           y={cy}
           dy="0.34em"
           className={VALUE}
@@ -114,14 +148,17 @@ export const Dumbbell = (props: {
       {(width) => {
         const m = {
           bottom: 28,
-          left: labelRoom(props.rows),
-          right: 24,
+          left: NAME_GAP + nameWidth(props.rows.map((r) => r.name)),
           top: 8,
         };
         const h = props.height;
+        const from = m.left + 16;
         const x = scaleLinear()
           .domain([props.ticks[0], props.ticks.at(-1) ?? props.ticks[0]])
-          .range([m.left + 16, width - m.right - 40]);
+          .range([
+            from,
+            from + scaleReach(props.rows, props.ticks, width, from),
+          ]);
         const y = scaleBand()
           .domain(props.rows.map((r) => r.name))
           .range([m.top, h - m.bottom]);
@@ -160,7 +197,7 @@ export const Dumbbell = (props: {
                 x={x}
                 y={y}
                 width={width}
-                labelX={m.left - 20}
+                labelX={m.left - NAME_GAP}
                 dim={hover !== null && hover !== r.name}
                 onHover={setHover}
               />

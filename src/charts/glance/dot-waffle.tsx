@@ -103,6 +103,8 @@ interface LegendProps {
   at: (i: number) => { x: number; y: number };
   /** Width of one entry; the value sits flush right inside it. */
   hitWidth: number;
+  /** Gap between the value and the end of its entry. */
+  inset: number;
   onEnter: (i: number, x: number, y: number) => void;
 }
 
@@ -142,7 +144,7 @@ const WaffleLegend = (props: LegendProps) => (
             </text>
             <text
               className="t-value"
-              x={x + props.hitWidth - 8}
+              x={x + props.hitWidth - props.inset}
               y={y}
               dy="0.35em"
               textAnchor="end"
@@ -256,7 +258,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
         const at = (i: number) =>
           narrow
             ? {
-                x: 8 + (i % 2) * ((width - 16) / 2),
+                x: (i % 2) * ((width + 16) / 2),
                 y: gridW + 26 + Math.floor(i / 2) * LEGEND_ROW,
               }
             : { x: gx + gridW + 28, y: 4 + pitch * 0.5 + i * legendGap };
@@ -294,7 +296,8 @@ export const DotWaffle = (props: DotWaffleProps) => {
               format={format}
               hover={hover}
               at={at}
-              hitWidth={narrow ? (width - 16) / 2 - 16 : 130}
+              hitWidth={narrow ? (width - 16) / 2 : 130}
+              inset={narrow ? 0 : 8}
               onEnter={enter}
             />
             <PlotNote

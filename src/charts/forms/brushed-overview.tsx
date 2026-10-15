@@ -19,8 +19,11 @@ import type { DayValue } from "./brushed-overview.data";
 const fmtDay = utcFormat("%a %-d %b");
 const fmtSigned = (v: number) => `${v < 0 ? "−" : "+"}${fmtInt(Math.abs(v))}`;
 
-/** Left end of the detail and the strip: the start grip keeps its 44px. */
-const X0 = 22;
+/**
+ * Left end of the detail and the strip: flush with the column. The start
+ * grip's invisible 44px hit area hangs out past it.
+ */
+const X0 = 0;
 /** The right-hand value column, which the end grip's 22px also fits in. */
 const AXIS = 40;
 const DETAIL_H = 360;

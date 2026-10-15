@@ -14,7 +14,7 @@ import { dimClass, noteSpace, sansWidth } from "../util";
 import { barRaceDemo } from "./bar-race.data";
 import type { RaceData, RaceSeries } from "./bar-race.data";
 import { ControlSlot } from "./control-slot";
-import { barPath } from "./util-a";
+import { barPath, labelRoom, textWidth } from "./util-a";
 import { CONTROL_SLOT_H, useInView } from "./util-b";
 
 interface BarRaceProps {
@@ -192,7 +192,7 @@ const Track = (p: TrackProps) => {
   const last = p.periods.length - 1;
   const x = scaleLinear()
     .domain([0, last])
-    .range([p.left, p.width - 8]);
+    .range([p.left, p.width - 4]);
   const cur = p.periods.indexOf(p.current);
   // Narrow: each year's first period and the current one, in full.
   const labels = p.narrow
@@ -365,6 +365,26 @@ const buttonText = (done: boolean, playing: boolean) => {
   return playing ? "Pause" : "Play";
 };
 
+/** Side margins: room for the names, and for the widest value after the longest bar. */
+const margins = (data: RaceData, format: (v: number) => string) => ({
+  bottom: 44,
+  // The longest name, or half the first stop's label if that is wider.
+  left: Math.max(
+    labelRoom(
+      data.series.map((s) => s.label),
+      "t-name"
+    ) + 10,
+    Math.ceil(textWidth(data.periods[0], "t-axis") / 2)
+  ),
+  right:
+    8 +
+    labelRoom(
+      data.series.flatMap((s) => s.values.map((v) => format(v))),
+      "t-value"
+    ),
+  top: 4,
+});
+
 /**
  * G16 Users by country. A ranking that re-sorts as the values animate through
  * the periods. Bars are squared with a 2px corner; the leader is solid ink
@@ -417,13 +437,7 @@ export const BarRace = (props: BarRaceProps) => {
         }
       >
         {(width) => {
-          const narrow = width < 480;
-          const m = {
-            bottom: 44,
-            left: narrow ? 52 : 70,
-            right: narrow ? 52 : 74,
-            top: 4,
-          };
+          const m = margins(data, format);
           const pitch = (height - m.top - m.bottom) / data.series.length;
           const x = scaleLinear()
             .domain([0, Math.max(1, order[0]?.v ?? 1)])

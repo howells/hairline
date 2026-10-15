@@ -5,10 +5,10 @@ import { useState } from "react";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { dimClass, sansWidth, stagger } from "../util";
+import { dimClass, stagger } from "../util";
 import { dumbbellQueueDemo } from "./dumbbell-queue.data";
 import type { DumbbellDatum } from "./dumbbell-queue.data";
-import { isActive, maxIndex } from "./util-b";
+import { inkWidth, isActive, maxIndex } from "./util-b";
 import type { Tip } from "./util-b";
 
 interface DumbbellQueueProps {
@@ -44,10 +44,12 @@ interface RowProps {
   width: number;
 }
 
+/** Margin kept between the ink and the svg edge. */
+const EDGE = 2;
+
 /**
  * Width a row's value label takes to the right of its rightmost dot: the
- * before value (`t-axis`, 11px) when the row improved, else the after value
- * (`t-value`, 12px).
+ * before value when the row improved, else the after value.
  */
 const rightLabelW = (
   d: DumbbellDatum,
@@ -55,7 +57,7 @@ const rightLabelW = (
   dotR: number
 ) => {
   const text = d.after <= d.before ? format(d.before) : format(d.after);
-  return dotR + 2 + sansWidth(text, d.after <= d.before ? 11 : 12);
+  return dotR + 2 + inkWidth(text);
 };
 
 const buildLayout = (
@@ -65,8 +67,9 @@ const buildLayout = (
   hasNote: boolean,
   format: (v: number) => string
 ): Layout => {
-  const longest = Math.max(...data.map((d) => sansWidth(d.label, 12)));
-  const labelW = Math.min(width * 0.32, longest + 12);
+  const longest = Math.max(...data.map((d) => inkWidth(d.label)));
+  // The row names end at `labelW`, the longest starting at the edge margin.
+  const labelW = EDGE + Math.min(width * 0.32, Math.ceil(longest));
   const top = 36;
   const bottom = hasNote ? 74 : 44;
   const max = Math.max(...data.flatMap((d) => [d.before, d.after]));
@@ -74,11 +77,11 @@ const buildLayout = (
   const x0 = labelW + 12;
   // Pull the track's right end in until every right-hand value label fits.
   const x1 = Math.min(
-    width - (width < 420 ? 22 : 40),
+    width - EDGE,
     ...data.map((d) => {
       const t = Math.max(d.before, d.after) / (max * 1.04);
       return t > 0
-        ? x0 + (width - 2 - rightLabelW(d, format, dotR) - x0) / t
+        ? x0 + (width - EDGE - rightLabelW(d, format, dotR) - x0) / t
         : Infinity;
     })
   );

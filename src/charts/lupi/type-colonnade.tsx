@@ -61,20 +61,19 @@ const GROUP_GAP = 2;
 const DOT_R = 2;
 
 /** Width of an owner label in `t-label`. */
-const labelWidth = (s: string) => sansWidth(s, 12);
+const labelWidth = (s: string) => sansWidth(s.replaceAll(" ", " "), 11);
 
 /** "Name · count", the count glued to the last word so it never wraps alone. */
 const ownerText = (o: OwnerNode) => `${o.owner}\u00A0·\u00A0${o.count}`;
 
 /**
- * Room right of the owner column: the default (150, or 108 narrow), grown to
- * fit the widest owner label up to ~42% of the block. Labels still too long
+ * Room right of the owner column: just the widest owner label, up to ~42% of
+ * the block, so the labels end at the block's edge. Labels still too long
  * wrap at word breaks.
  */
 const ownerReserve = (
   owners: OwnerNode[],
   rOf: (c: number) => number,
-  base: number,
   blockW: number
 ) => {
   const need = Math.max(
@@ -83,7 +82,7 @@ const ownerReserve = (
       (o) => rOf(o.count) + OWNER_GAP + labelWidth(ownerText(o)) + OWNER_EDGE
     )
   );
-  return Math.max(base, Math.min(Math.ceil(need), blockW * 0.42));
+  return Math.min(Math.ceil(need), blockW * 0.42);
 };
 
 const tally = (data: OwnershipDatum[]): OwnerNode[] => {
@@ -127,7 +126,7 @@ const layoutFor = (
   noteH: number
 ): Layout => {
   const narrow = width < 460;
-  const blockW = Math.min(width - 8, 600);
+  const blockW = Math.min(width, 600);
   const left = Math.round((width - blockW) / 2);
   const { rows, slot } = slotsOf(data, owners);
   // A whole-pixel pitch, so every tick in a stack sits on the pixel grid.
@@ -148,7 +147,7 @@ const layoutFor = (
   const maxCount = owners[0]?.count ?? 1;
   const rMax = narrow ? 12 : 16;
   const rOf = (c: number) => Math.max(3, rMax * Math.sqrt(c / maxCount));
-  const reserve = ownerReserve(owners, rOf, narrow ? 108 : 150, blockW);
+  const reserve = ownerReserve(owners, rOf, blockW);
   const ownerLines = new Map(
     owners.map((o) => [
       o.owner,
@@ -168,7 +167,8 @@ const layoutFor = (
     rMax,
     rOf,
     xDot: left + DOT_R + 1.5,
-    xOwner: left + blockW - reserve,
+    // The label's own edge pad lies outside the block.
+    xOwner: left + blockW + OWNER_EDGE - reserve,
     xTick0: left,
     xTick1: left + DOT_R * 2 + 2,
     yItem,

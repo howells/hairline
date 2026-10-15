@@ -209,17 +209,74 @@ const Ground = (props: {
   </g>
 );
 
-/** Each axis's scale: its stated domain, widened to every row's value. */
+/** An axis's stated domain, widened to every row's value. */
+const widened = (data: ParallelData, a: ParallelAxis): [number, number] => {
+  const values = data.rows.map((r) => r.values[a.key] ?? a.domain[0]);
+  return [Math.min(a.domain[0], ...values), Math.max(a.domain[1], ...values)];
+};
+
+/** Each axis's scale: its widened domain. */
 const scalesOf = (data: ParallelData, top: number, bottom: number) =>
-  data.axes.map((a) => {
-    const values = data.rows.map((r) => r.values[a.key] ?? a.domain[0]);
-    return scaleLinear()
-      .domain([
-        Math.min(a.domain[0], ...values),
-        Math.max(a.domain[1], ...values),
-      ])
-      .range([bottom, top]);
-  });
+  data.axes.map((a) =>
+    scaleLinear().domain(widened(data, a)).range([bottom, top])
+  );
+
+// sansWidth rounds each glyph up: a size a little under the real 11 is nearer the ink.
+const textW = (t: string) => sansWidth(t, 10.4);
+
+/** Half the widest line of an axis title wrapped to the gap between axes. */
+const halfTitle = (axis: ParallelAxis | undefined, gap: number) =>
+  Math.max(0, ...wrapWords(axis?.label ?? "", gap - 10, textW).map(textW)) / 2;
+
+/**
+ * What hangs outside the first and last axes: a wrapped title (centred on
+ * its axis), the rug, and on the right the end values or the highlighted
+ * name. Titles wrap to the gap between axes, which in turn depends on these
+ * edges, so settle it.
+ */
+const edgesFor = (
+  data: ParallelData,
+  blockW: number,
+  format: (v: number) => string,
+  highlight: string | undefined
+) => {
+  const first = data.axes.at(0);
+  const last = data.axes.at(-1);
+  const endW =
+    last === undefined
+      ? 0
+      : Math.max(
+          ...widened(data, last).map((v) => textW(withUnit(last, v, format)))
+        );
+  const heroW = data.rows.some((r) => r.name === highlight)
+    ? 12 + textW(highlight ?? "")
+    : 0;
+  const settle = (edge: { l: number; r: number }) => {
+    const gap = (blockW - edge.l - edge.r) / Math.max(1, data.axes.length - 1);
+    return {
+      gap,
+      l: Math.max(RUG, halfTitle(first, gap)),
+      r: Math.max(halfTitle(last, gap), 9 + endW, heroW),
+    };
+  };
+  // A title that wraps or not as the edges move can flip-flop: keep the wider
+  // edges, and wrap the titles to the roomier gap that goes with them.
+  let prev = settle({ l: 30, r: 30 });
+  let edge = settle(prev);
+  for (
+    let pass = 0;
+    pass < 4 && (edge.l !== prev.l || edge.r !== prev.r);
+    pass += 1
+  ) {
+    prev = edge;
+    edge = settle(edge);
+  }
+  return {
+    gap: Math.max(prev.gap, edge.gap),
+    l: Math.max(prev.l, edge.l),
+    r: Math.max(prev.r, edge.r),
+  };
+};
 
 /** Points at one statistic of every axis's values (min, quartiles, max). */
 const statPoints = (
@@ -263,10 +320,10 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
   return (
     <Plot>
       {(width) => {
-        const narrow = width < 460;
-        const blockW = Math.min(width - 8, props.maxWidth ?? 600);
-        const left = (width - blockW) / 2 + (narrow ? 22 : 34);
-        const right = (width + blockW) / 2 - (narrow ? 56 : 90);
+        const blockW = Math.min(width, props.maxWidth ?? 600);
+        const edge = edgesFor(data, blockW, format, props.highlight);
+        const left = (width - blockW) / 2 + edge.l;
+        const right = (width + blockW) / 2 - edge.r;
         const top = 58;
         const noteW = width - 16 - Math.abs(left + right - width);
         const bottom = height - (30 + noteSpace(props.note, noteW, 24));
@@ -274,7 +331,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
           left + ((right - left) * k) / Math.max(1, data.axes.length - 1);
         const ys = scalesOf(data, top, bottom);
         // Room each axis title has between its neighbours.
-        const gap = ax(1) - ax(0);
+        const { gap } = edge;
         // The axes as drawn: end labels follow the widened domains.
         const shown = data.axes.map((a, k): ParallelAxis => {
           const scale = ys.at(k);
@@ -316,7 +373,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
                   rug={data.rows.map((r) =>
                     ys[k](r.values[a.key] ?? a.domain[0])
                   )}
-                  lines={wrapWords(a.label, gap - 10, (t) => sansWidth(t, 12))}
+                  lines={wrapWords(a.label, gap - 10, textW)}
                   top={top}
                   x={ax(k)}
                 />

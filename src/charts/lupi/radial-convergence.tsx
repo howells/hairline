@@ -68,18 +68,6 @@ const buildHubs = (data: ConvergenceItem[], rim: RimGeometry): Hub[] =>
     return { ...t, x, y };
   });
 
-/** Width the widest side label needs, on one line or stacked. */
-const sideLabelW = (data: ConvergenceItem[], stacked: boolean) =>
-  Math.max(
-    0,
-    ...themeAngles(data).flatMap((t) => {
-      if (Math.abs(Math.sin((t.angle * Math.PI) / 180)) <= SIDE) {
-        return [];
-      }
-      return [sansWidth(stacked ? t.theme : `${t.theme} · ${t.count}`, 12)];
-    })
-  );
-
 const ThemeLabel = (props: {
   focus: Focus | null;
   hero: boolean;
@@ -93,8 +81,8 @@ const ThemeLabel = (props: {
   const beside = Math.abs(side) > SIDE;
   const stack = beside && rim.stacked;
   const textW = stack
-    ? sansWidth(hub.theme, 12)
-    : sansWidth(`${hub.theme} · ${hub.count}`, 12);
+    ? sansWidth(hub.theme, 11)
+    : sansWidth(`${hub.theme} · ${hub.count}`, 11);
   let anchor: "end" | "middle" | "start" = "middle";
   let lx = px;
   if (side > SIDE) {
@@ -194,24 +182,46 @@ const rimFor = (
 ) => {
   // Theme names reach this far above and below the rim.
   const reach = 28;
-  const radiusFor = (stacked: boolean) =>
-    clamp(
-      Math.min(
-        width / 2 - sideLabelW(data, stacked) - 22,
-        (height - 2 * reach - noteH) / 2
-      ),
-      64,
-      240
-    );
+  const themes = themeAngles(data);
+  // Left and right ink of the rim and its labels about the centre.
+  const spanAt = (R: number, stacked: boolean) => {
+    let lo = -R - 2;
+    let hi = R + 2;
+    for (const t of themes) {
+      const side = Math.sin((t.angle * Math.PI) / 180);
+      const px = (R + 16) * side;
+      const w = sansWidth(
+        stacked && Math.abs(side) > SIDE ? t.theme : `${t.theme} · ${t.count}`,
+        12
+      );
+      if (side > SIDE) {
+        hi = Math.max(hi, px + w);
+      } else if (side < -SIDE) {
+        lo = Math.min(lo, px - w);
+      } else {
+        lo = Math.min(lo, px - w / 2);
+        hi = Math.max(hi, px + w / 2);
+      }
+    }
+    return { hi, lo };
+  };
+  const radiusFor = (stacked: boolean) => {
+    let R = 240;
+    while (R > 64 && spanAt(R, stacked).hi - spanAt(R, stacked).lo > width) {
+      R -= 1;
+    }
+    return clamp(Math.min(R, (height - 2 * reach - noteH) / 2), 64, 240);
+  };
   // Stack the side labels when one line would squeeze the rim.
   const stacked = radiusFor(false) < 130 && radiusFor(true) > radiusFor(false);
   const R = radiusFor(stacked);
+  const span = spanAt(R, stacked);
   const n = data.length;
   const plotH = Math.min(height, Math.round(2 * (R + reach) + noteH));
   const rim: RimGeometry = {
     R,
     angle: (k) => (360 * k) / n,
-    cx: width / 2,
+    cx: (width - (span.hi - span.lo)) / 2 - span.lo,
     cy: (plotH - noteH) / 2,
     stacked,
     width,

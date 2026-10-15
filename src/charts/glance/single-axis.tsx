@@ -157,7 +157,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
           left:
             Math.ceil(Math.max(...data.map((d) => sansWidth(d.label, 12)))) +
             12,
-          right: 14,
+          right: 0,
           top: 14,
         };
         const step = (width - m.left - m.right) / n;

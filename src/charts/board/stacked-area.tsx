@@ -11,6 +11,7 @@ import { paint, useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
 import { MonthAxis } from "./month-axis";
 import { labelledTicks, monthTicks } from "./month-ticks";
+import { SIDE_GAP, scaleWidth, sideRoom } from "./room";
 import { relax } from "./spread";
 import { CURSOR, LABEL, LINE, RULE_ZERO, TICK_STRONG, VALUE } from "./styles";
 
@@ -124,7 +125,8 @@ const LABEL_GAP = 15;
 
 /**
  * Layer names at the right edge, each centred on its band at the last week
- * and nudged apart where bands are thin; the cursor's value while scrubbing.
+ * and nudged apart where bands are thin; while scrubbing, each name gives
+ * way to the cursor's value, so the room needed is the names' alone.
  */
 const EdgeLabels = (props: {
   layers: Layer[];
@@ -144,15 +146,15 @@ const EdgeLabels = (props: {
     <text
       key={layer.label}
       className={`${LABEL} fade`}
-      x={width - m.right + 12}
+      x={width - m.right + SIDE_GAP}
       y={ys[li]}
       dy="0.34em"
       style={{ fill: layer.text }}
     >
-      {layer.label}
-      {props.index !== null && (
+      {props.index === null ? (
+        layer.label
+      ) : (
         <tspan className={VALUE}>
-          {" "}
           {props.format(layer.values[props.index])}
         </tspan>
       )}
@@ -259,7 +261,12 @@ export const StackedArea = (props: StackedAreaProps) => {
   return (
     <Chart>
       {(width) => {
-        const m = { bottom: 30, left: 48, right: 84, top: 8 };
+        const m = {
+          bottom: 30,
+          left: scaleWidth(props.y) + 8,
+          right: sideRoom(props.layers),
+          top: 8,
+        };
         const h = props.height;
         const frame: Frame = {
           dates: props.dates,

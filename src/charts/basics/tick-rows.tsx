@@ -6,14 +6,13 @@ import {
   dimClass,
   hasText,
   noteLines,
-  sansWidth,
   stagger,
   wrapWords,
 } from "../util";
 import { tickRowsDemo } from "./tick-rows.data";
 import type { CountDatum } from "./tick-rows.data";
 import { isDim, useHoverTip } from "./util-a";
-import { maxIndex } from "./util-b";
+import { inkWidth, maxIndex } from "./util-b";
 
 interface TickRowsProps {
   data?: CountDatum[];
@@ -40,7 +39,7 @@ interface RowFrame {
 const LABEL_LINE = 14;
 
 /** Width of a row label in the `t-label` role. */
-const labelWidth = (s: string) => sansWidth(s, 12);
+const labelWidth = (s: string) => inkWidth(s);
 
 /**
  * Room for the row labels: the default column, widened to fit the longest
@@ -56,11 +55,8 @@ const labelColumn = (labels: string[], width: number) => {
   const lines = labels.map((l) =>
     labelWidth(l) <= room ? [l] : wrapWords(l, room, labelWidth)
   );
-  // A single word longer than the room still gets all the room it needs.
-  const labelW = Math.max(
-    room,
-    ...lines.flat().map((l) => Math.ceil(labelWidth(l)))
-  );
+  // The column is as wide as its widest line, so the composition centres on ink.
+  const labelW = Math.max(...lines.flat().map((l) => Math.ceil(labelWidth(l))));
   return { labelW, lines };
 };
 
@@ -202,19 +198,35 @@ export const TickRows = (props: TickRowsProps) => {
           ...data.map((d) => Math.round(d.value / unit))
         );
         const slots = slotsFor(maxTicks);
-        const track = Math.min(width - labelW - gap - 56, slots * 9);
+        // The count at the end of the longest row, set 12px past its last rung.
+        const valueW = Math.max(
+          ...data.map((d) => Math.ceil(inkWidth(format(d.value))))
+        );
+        // Rungs fill what the labels and the count leave, 2px in from each edge.
+        const pitch = Math.max(
+          4,
+          Math.min(
+            9,
+            Math.floor(
+              (width - 4 - labelW - gap - 12 - valueW - 2) /
+                Math.max(1, slots - 1)
+            )
+          )
+        );
+        const span = (slots - 1) * pitch + 2;
+        const track = slots * pitch;
         const notes = noteLines(props.note, width - 24);
         const height = baseHeight + Math.max(0, notes.length - 1) * NOTE_LINE;
         const pitchY = (baseHeight - (hasNote ? 56 : 24)) / data.length;
         const frame: RowFrame = {
           gap,
           labelW,
-          pitch: Math.max(4, Math.floor(track / slots)),
+          pitch,
           pitchY,
           tickH: Math.round(Math.min(20, pitchY * 0.3)),
           track,
           x0: Math.round(
-            (width - (labelW + gap + track + 40)) / 2 + labelW + gap
+            (width - (labelW + gap + span + 12 + valueW)) / 2 + labelW + gap
           ),
         };
         const hero = props.highlight ?? maxIndex(data.map((d) => d.value));

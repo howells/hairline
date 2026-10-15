@@ -57,27 +57,43 @@ const arcLayout = (
 ): ArcLayout => {
   const nC = data.cols.length;
   // Row names, then the largest bubble's radius plus air before the first column.
-  const labelW = Math.max(0, ...data.rows.map((r) => sansWidth(r, 12)));
-  const reach = 22;
-  const colPitch = clamp((width - labelW - reach - 24) / nC, 22, 44);
-  const spanW = colPitch * (nC - 1);
-  const x0 = Math.max(
-    labelW + reach,
-    labelW + reach + (width - labelW - reach - spanW - colPitch) / 2
-  );
-  const xMid = x0 + spanW / 2;
+  const labelW = Math.max(0, ...data.rows.map((r) => sansWidth(r, 11)));
   // At least 70 above the first row, more when the column names (slanted
   // at 50°) need it; the last row's ends and bubbles reach 0.2 of a row below
   // its slot, then a little air and any footnote.
   const n = data.rows.length;
   const pitchFor = (top: number) =>
     clamp((height - top - 8 - noteH) / (n + 0.2), 22, 40);
-  const longest = Math.max(0, ...data.cols.map((c) => sansWidth(c, 12)));
-  // Tight columns tilt steeper, so neighbouring names never touch.
-  const colTilt = colPitch < 30 ? -64 : -50;
-  const rise = Math.sin((-colTilt * Math.PI) / 180);
-  const top = Math.max(70, longest * rise + pitchFor(70) * 0.85 + 6);
-  const rowPitch = pitchFor(top);
+  const colW = data.cols.map((c) => sansWidth(c, 11));
+  const longest = Math.max(0, ...colW);
+  // Column pitch decides the tilt, the tilt the headroom and the headroom the
+  // row pitch; the composition (row names, bubbles and the last slanted name)
+  // is then centred in the width.
+  const columnFit = (pitch: number) => {
+    // Tight columns tilt steeper, so neighbouring names never touch.
+    const tilt = pitch < 30 ? -64 : -50;
+    const rise = Math.sin((-tilt * Math.PI) / 180);
+    const run = Math.cos((-tilt * Math.PI) / 180);
+    const head = Math.max(70, longest * rise + pitchFor(70) * 0.85 + 6);
+    const rows = pitchFor(head);
+    const rad = Math.min(pitch, rows) * 0.4;
+    const left = labelW + 8 + rad;
+    const right = Math.max(
+      pitch * (nC - 1) + rad,
+      ...colW.map((w, c) => c * pitch + 3 + w * run + 3 * rise)
+    );
+    return { head, left, right, rows, tilt };
+  };
+  let colPitch = 44;
+  let fit = columnFit(colPitch);
+  while (colPitch > 14 && fit.left + fit.right > width) {
+    colPitch -= 0.25;
+    fit = columnFit(colPitch);
+  }
+  const { head: top, left, right, rows: rowPitch, tilt: colTilt } = fit;
+  const spanW = colPitch * (nC - 1);
+  const x0 = left + Math.max(0, (width - left - right) / 2);
+  const xMid = x0 + spanW / 2;
   const bow = rowPitch * 0.5;
   const arcY = (r: number, x: number) => {
     const u = (x - xMid) / (spanW / 2 || 1);

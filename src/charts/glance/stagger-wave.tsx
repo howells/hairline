@@ -12,7 +12,7 @@ import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, stagger } from "../util";
 import { staggerWaveDemo } from "./stagger-wave.data";
 import type { WaveDatum } from "./stagger-wave.data";
-import { barPath } from "./util-a";
+import { barPath, labelRoom } from "./util-a";
 
 interface StaggerWaveProps {
   data?: WaveDatum[];
@@ -114,6 +114,10 @@ const dayTickLabels = (dates: Date[]) =>
 const defaultFormat = (v: number) => fmtInt(v);
 const axisFormat = (v: number) => (v === 0 ? "0" : `${v / 1000}k`);
 
+/** Room for the value labels, flush left of the plot. */
+const axisRoom = (ticks: number[]) =>
+  labelRoom(ticks.map(axisFormat), "t-axis") + 10;
+
 /**
  * G12 Daily sign-ups. Thirty to sixty narrow bars, one a day, squared off with a 2px
  * corner, that enter as a wave, left to right. The peak (or the highlight)
@@ -143,14 +147,10 @@ export const StaggerWave = (props: StaggerWaveProps) => {
       }
     >
       {(width) => {
-        const m = {
-          bottom: 24 + noteSpace(props.note, width - 16, 16),
-          left: 34,
-          right: 4,
-          top: 8,
-        };
-        const floor = height - m.bottom;
-        const y = scaleLinear().domain([0, max]).nice(6).range([floor, m.top]);
+        const bottom = 24 + noteSpace(props.note, width - 16, 16);
+        const floor = height - bottom;
+        const y = scaleLinear().domain([0, max]).nice(6).range([floor, 8]);
+        const m = { bottom, left: axisRoom(y.ticks(6)), right: 0, top: 8 };
         const x = scaleBand<number>()
           .domain(data.map((_, i) => i))
           .range([m.left, width - m.right])

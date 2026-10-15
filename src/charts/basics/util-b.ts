@@ -1,3 +1,5 @@
+import { sansWidth } from "../util";
+
 /** Hover state shared by the basics-b charts: an item plus where to anchor its tooltip. */
 export interface Tip<T> {
   item: T;
@@ -24,4 +26,13 @@ export const maxIndex = (values: readonly number[]): number => {
     }
   }
   return best;
+};
+
+/**
+ * Ink width of a string in the 11px sans roles, for centring a composition:
+ * digits are tabular (0.65em), the rest is `sansWidth` less its safety margin.
+ */
+export const inkWidth = (text: string) => {
+  const digits = (text.match(/\d/gu) ?? []).length;
+  return digits * 0.65 * 11 + sansWidth(text.replaceAll(/\d/gu, ""), 11) * 0.93;
 };

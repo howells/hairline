@@ -10,6 +10,7 @@ import { PlotNote } from "../plot-note";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, ranks, stagger } from "../util";
+import { labelRoom } from "./util-a";
 import { density, silverman } from "./util-b";
 import { violinDemo } from "./violin.data";
 import type { ViolinGroup } from "./violin.data";
@@ -80,6 +81,73 @@ const statsOf = (g: ViolinGroup): GroupStats => {
   };
 };
 
+/** Half-width of a violin at its median, `half` being its widest half. */
+const medianHalf = (s: GroupStats, half: number) => {
+  const medK = Math.round(
+    ((s.med - s.lo) / (s.hi - s.lo || 1)) * (s.at.length - 1)
+  );
+  return (s.dens[medK] / Math.max(...s.dens)) * half;
+};
+
+const bandsOf = (labels: string[], from: number, to: number) =>
+  scaleBand()
+    .domain(labels)
+    .range([from, to])
+    .paddingInner(0.1)
+    .paddingOuter(0.05);
+
+/** A violin's widest half, and where its centre line sits in its band. */
+const halfOf = (bw: number, narrow: boolean) => bw * (narrow ? 0.26 : 0.36);
+const centreOf = (bw: number, narrow: boolean) => bw * (narrow ? 0.38 : 0.4);
+
+interface FitInput {
+  format: (v: number) => string;
+  labels: string[];
+  narrow: boolean;
+  stats: GroupStats[];
+  /** Axis labels, which set the left margin. */
+  ticks: string[];
+  width: number;
+}
+
+/**
+ * The plot's side margins. The left holds the axis labels. The median values
+ * hang off the right of each violin, so the right margin is the smallest that
+ * keeps the furthest of them inside the width.
+ */
+const fitViolins = (p: FitInput) => {
+  const left = labelRoom(p.ticks, "t-axis") + 8;
+  const overhang = (right: number) => {
+    const band = bandsOf(p.labels, left, p.width - right);
+    const bw = band.bandwidth();
+    return Math.max(
+      ...p.labels.map(
+        (l, i) =>
+          (band(l) ?? 0) +
+          centreOf(bw, p.narrow) +
+          medianHalf(p.stats[i], halfOf(bw, p.narrow)) +
+          9 +
+          labelRoom([p.format(p.stats[i].med)], "t-value") -
+          p.width
+      )
+    );
+  };
+  if (overhang(0) <= 0) {
+    return { left, right: 0 };
+  }
+  // Overhang only falls as the margin grows: bisect for the smallest that fits.
+  let [lo, hi] = [0, p.width / 2];
+  for (let k = 0; k < 20; k += 1) {
+    const mid = (lo + hi) / 2;
+    if (overhang(mid) > 0) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return { left, right: hi };
+};
+
 /** One violin: mirrored density, paper median tick, median value and group label. */
 const Figure = (p: FigureProps) => {
   const s = p.stats;
@@ -91,10 +159,7 @@ const Figure = (p: FigureProps) => {
     .y((_, k) => p.y(s.at[k]))
     .x0((_, k) => p.cx - wd(s.dens[k]))
     .x1((_, k) => p.cx + wd(s.dens[k]));
-  const medK = Math.round(
-    ((s.med - s.lo) / (s.hi - s.lo || 1)) * (s.at.length - 1)
-  );
-  const medW = wd(s.dens[medK]);
+  const medW = medianHalf(s, p.half);
   return (
     <g
       className={dimClass(p.dimmed)}
@@ -182,21 +247,25 @@ export const Violin = (props: ViolinProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        const m = {
-          bottom: 32 + noteSpace(props.note, width - 16, 20),
-          left: narrow ? 30 : 40,
-          right: narrow ? 8 : 20,
-          top: 12,
-        };
+        const bottom = 32 + noteSpace(props.note, width - 16, 20);
         const y = scaleLinear()
           .domain([0, maxV])
           .nice()
-          .range([height - m.bottom, m.top]);
-        const x = scaleBand()
-          .domain(data.map((g) => g.label))
-          .range([m.left, width - m.right])
-          .paddingInner(0.1)
-          .paddingOuter(0.05);
+          .range([height - bottom, 12]);
+        const { left, right } = fitViolins({
+          format,
+          labels: data.map((g) => g.label),
+          narrow,
+          stats,
+          ticks: y.ticks(4).map((t) => format(t)),
+          width,
+        });
+        const m = { bottom, left, right, top: 12 };
+        const x = bandsOf(
+          data.map((g) => g.label),
+          left,
+          width - right
+        );
         const bw = x.bandwidth();
         const floor = height - m.bottom;
 
@@ -237,7 +306,7 @@ export const Violin = (props: ViolinProps) => {
               <Figure
                 key={g.label}
                 bw={bw}
-                cx={(x(g.label) ?? 0) + bw * (narrow ? 0.38 : 0.4)}
+                cx={(x(g.label) ?? 0) + centreOf(bw, narrow)}
                 dimmed={hover !== null && hover.i !== i}
                 fill={heroIndex === i ? "fill-hero" : "stroke-l5"}
                 pattern={heroIndex === i ? undefined : paint(tex("hatch"))}
@@ -250,7 +319,7 @@ export const Violin = (props: ViolinProps) => {
                 stats={stats[i]}
                 top={m.top}
                 valueText={format(stats[i].med)}
-                half={bw * (narrow ? 0.26 : 0.36)}
+                half={halfOf(bw, narrow)}
                 y={y}
               />
             ))}

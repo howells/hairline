@@ -340,18 +340,54 @@ const MatrixDefs = ({ fills }: { fills: MatrixFills }) => (
   </defs>
 );
 
-/** Cell size and grid origin for a width; narrow screens get a slimmer label column. */
-const geometryFor = (width: number, n: number, narrow: boolean) => {
-  const labelW = narrow ? 58 : 82;
-  const cell = Math.max(18, Math.min(56, (width - labelW - 24) / n));
-  const size = Math.round(cell - cell * 0.16);
+/** Slant of the column names, in degrees. */
+const HEAD_TILT = 55;
+
+/**
+ * Cell size and grid origin for a width. The row names, the tiles and the
+ * last slanted column name (which runs past the tiles) are centred as one
+ * block, with the largest cell that fits it. `left` is the block's room left
+ * of the grid and `right` its reach beyond the grid's origin.
+ */
+const geometryFor = (
+  width: number,
+  rows: string[],
+  cols: string[],
+  triangle: boolean,
+  legendW: number | null
+) => {
+  // A triangle names no first row and no last column.
+  const rowNames = triangle ? rows.slice(1) : rows;
+  const colNames = triangle ? cols.slice(0, -1) : cols;
+  const left = Math.max(0, ...rowNames.map((r) => sansWidth(r, 11))) + 14;
+  const tilt = (HEAD_TILT * Math.PI) / 180;
+  const reachAt = (cell: number) => {
+    const size = Math.round(cell - cell * 0.16);
+    return Math.max(
+      cell * (colNames.length - 1) + size,
+      legendW ?? 0,
+      ...colNames.map(
+        (c, j) =>
+          cell * j +
+          size / 2 +
+          3 +
+          sansWidth(c, 11) * Math.cos(tilt) +
+          3 * Math.sin(tilt)
+      )
+    );
+  };
+  let cell = 56;
+  while (cell > 18 && left + reachAt(cell) > width) {
+    cell -= 0.25;
+  }
+  const right = reachAt(cell);
   const g: Geometry = {
     cell,
-    size,
-    top: narrow ? 58 : 76,
-    x0: Math.max(labelW + 4, (width - cell * n - labelW) / 2 + labelW),
+    size: Math.round(cell - cell * 0.16),
+    top: legendW === null ? 58 : 76,
+    x0: left + Math.max(0, (width - left - right) / 2),
   };
-  return { g, labelW };
+  return { g, left, right };
 };
 
 /**
@@ -401,7 +437,17 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
     <Plot>
       {(width) => {
         const narrow = width < 460;
-        const { g, labelW } = geometryFor(width, cols.length, narrow);
+        // Wide, the legend runs in one row under the grid and counts in its width.
+        const legendW = narrow
+          ? null
+          : sum(legend.map((l) => 18 + sansWidth(l, 11) + 20)) - 20;
+        const { g, left, right } = geometryFor(
+          width,
+          rows,
+          cols,
+          triangle,
+          legendW
+        );
         const { cell, size, x0 } = g;
         const legendY = g.top + cell * (drawnRow(rows.length - 1) + 1) + 34;
         const height = props.height ?? legendY + (narrow ? 32 : 14);
@@ -443,11 +489,9 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
               <ShadeLegend
                 labels={legend}
                 screens={fills.screens}
-                x={narrow ? x0 - labelW + 6 : x0}
+                x={narrow ? x0 - left : x0}
                 y={legendY}
-                span={
-                  narrow ? width - (x0 - labelW + 6) - 8 : cell * cols.length
-                }
+                span={narrow ? left + right : cell * cols.length}
                 wide={!narrow}
               />
             </svg>

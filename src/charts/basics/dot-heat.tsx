@@ -6,6 +6,7 @@ import { DotRing } from "../texture";
 import { dimClass, stagger } from "../util";
 import { dotHeatDemo } from "./dot-heat.data";
 import type { DotHeatData } from "./dot-heat.data";
+import { inkWidth } from "./util-b";
 import type { Tip } from "./util-b";
 
 interface DotHeatProps {
@@ -86,18 +87,61 @@ const dotClass = (share: number, hero: boolean): string => {
   return share >= 1 / 3 ? "fill-l3" : "fill-l4";
 };
 
+/** Gap between the row names and the first column. */
+const NAME_GAP = 14;
+/** Margin kept between the grid's ink and the svg edge. */
+const EDGE = 2;
+
+/** The dot ramp: area carries the count, floored so small counts still show. */
+const dotRadius = (v: number, max: number, rMax: number) =>
+  v <= 0 ? 1 : Math.max(2, Math.sqrt(v / max) * rMax);
+
+/** Radius of the biggest dot a cell of `cell` px holds, leaving room for the peak's ring. */
+const maxRadius = (cell: number) =>
+  Math.min(cell * 0.44, (cell - RING_CLEAR * 2 - RING_DOT * 2) / 2);
+
 const buildGrid = (
   width: number,
   height: number,
   data: DotHeatData,
   max: number,
-  hasNote: boolean
+  hasNote: boolean,
+  every: number
 ): Grid => {
-  const labelW = width < 420 ? 34 : 52;
   // Room above the grid for the tooltip, so it never covers a dot.
   const top = 40;
   const bottom = hasNote ? 62 : 34;
-  const colRoom = (width - labelW - 12) / data.columns.length;
+  const n = data.columns.length;
+  const last = data.values.map((row) => row[n - 1] ?? 0);
+  const lastLabel = inkWidth(data.columns[n - 1] ?? "") / 2;
+  // The row names, in full while the columns have room and cut to two letters
+  // once they don't; the grid is sized to the names it really carries.
+  const sizeFor = (narrow: boolean) => {
+    const labelW =
+      NAME_GAP +
+      Math.max(
+        ...data.rows.map((row) => inkWidth(narrow ? row.slice(0, 2) : row))
+      );
+    // The last column's ink reaches past its centre by its biggest dot, or by
+    // half its axis label when that column is labelled.
+    const reach = (colW: number) =>
+      Math.max(
+        dotRadius(Math.max(...last), max, maxRadius(colW)),
+        (n - 1) % (narrow ? every * 2 : every) === 0 ? lastLabel : 0
+      );
+    let colRoom = (width - labelW - EDGE * 2) / n;
+    for (let k = 0; k < 4; k += 1) {
+      colRoom = (width - labelW - EDGE * 2 - reach(colRoom)) / (n - 0.5);
+    }
+    return { colRoom, labelW, reach };
+  };
+  let narrow = false;
+  let size = sizeFor(false);
+  if (Math.min(size.colRoom, 58) < 34) {
+    narrow = true;
+    size = sizeFor(true);
+  }
+  const { colRoom, labelW } = size;
   // Rows never stretch far past the columns: a narrow grid gives height back.
   const rowH = Math.min(
     (height - top - bottom) / data.rows.length,
@@ -105,15 +149,13 @@ const buildGrid = (
   );
   const gridH = rowH * data.rows.length;
   const colW = Math.min(colRoom, rowH * 1.05, 58);
-  // Centre the labels and the grid together.
-  const x0 = (width - labelW - colW * data.columns.length) / 2 + labelW;
+  // Centre the names and the grid's ink together.
+  const x0 =
+    (width - labelW - (n - 0.5) * colW - size.reach(colW)) / 2 + labelW;
   const cell = Math.min(colW, rowH);
   // Room for the peak's ring between two full-size neighbours: the ring keeps
   // RING_CLEAR from its own dot and from every neighbour.
-  const rMax = Math.min(
-    cell * 0.44,
-    (cell - RING_CLEAR * 2 - RING_DOT * 2) / 2
-  );
+  const rMax = maxRadius(cell);
   return {
     cell,
     colW,
@@ -121,8 +163,8 @@ const buildGrid = (
     cy: (r) => top + (r + 0.5) * rowH,
     gridBottom: top + gridH,
     height: Math.round(top + gridH + bottom),
-    narrow: colW < 34,
-    radius: (v) => (v <= 0 ? 1 : Math.max(2, Math.sqrt(v / max) * rMax)),
+    narrow,
+    radius: (v) => dotRadius(v, max, rMax),
     rowH,
     top,
     x0,
@@ -150,7 +192,7 @@ const Axes = (props: { data: DotHeatData; every: number; grid: Grid }) => {
           dy="0.34em"
           key={row}
           textAnchor="end"
-          x={grid.x0 - 14}
+          x={grid.x0 - NAME_GAP}
           y={grid.cy(r)}
         >
           {grid.narrow ? row.slice(0, 2) : row}
@@ -258,7 +300,8 @@ export const DotHeat = (props: DotHeatProps) => {
           height,
           data,
           max,
-          props.note !== undefined
+          props.note !== undefined,
+          props.labelEvery ?? 2
         );
         return (
           <svg

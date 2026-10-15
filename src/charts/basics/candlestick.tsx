@@ -18,7 +18,7 @@ import { ValueGrid } from "../value-grid";
 import { candlestickDemo } from "./candlestick.data";
 import type { CandleDatum } from "./candlestick.data";
 import { VALUE_AXIS_ROOM } from "./util-a";
-import { isActive } from "./util-b";
+import { inkWidth, isActive } from "./util-b";
 import type { Tip } from "./util-b";
 
 interface CandlestickProps {
@@ -48,22 +48,58 @@ interface Layout {
 
 const keyOf = (d: CandleDatum) => d.date.toISOString();
 
+/** Margin kept between the ink and the svg edge. */
+const EDGE = 2;
+
+/** The Mondays that carry a tick: all of them, or every other when narrow. */
+const shownMondays = (data: CandleDatum[], narrow: boolean) => {
+  const mondays = data.filter((d) => d.date.getUTCDay() === 1);
+  return narrow ? mondays.filter((_, k) => k % 2 === 0) : mondays;
+};
+
 const buildLayout = (
   width: number,
   height: number,
   data: CandleDatum[],
   domain: [number, number],
-  hasNote: boolean
+  hasNote: boolean,
+  /** The highest high and lowest low, with the price each is labelled by. */
+  priced: { d: CandleDatum; text: string }[]
 ): Layout => {
-  const frameW = Math.min(width - 16, data.length * 26 + VALUE_AXIS_ROOM);
-  const left = Math.round((width - frameW) / 2);
+  const bandsFor = (frameW: number) =>
+    scaleBand()
+      .domain(data.map(keyOf))
+      .range([0, frameW - VALUE_AXIS_ROOM])
+      .paddingInner(0.1)
+      .paddingOuter(0.4);
+  // How far the centred labels (dates, highest and lowest price) reach past
+  // the frame's left edge, which the frame then makes room for.
+  const overhang = (frameW: number) => {
+    const x = bandsFor(frameW);
+    const bw = x.bandwidth();
+    const shown = shownMondays(data, bw < 12);
+    const dates = dayTickLabels(shown.map((d) => d.date));
+    const labels = [
+      ...shown.map((d, k) => ({ d, text: dates[k] ?? "" })),
+      ...priced,
+    ];
+    return Math.max(
+      0,
+      ...labels.map(
+        (l) => Math.ceil(inkWidth(l.text)) / 2 - ((x(keyOf(l.d)) ?? 0) + bw / 2)
+      )
+    );
+  };
+  const cap = data.length * 26 + VALUE_AXIS_ROOM;
+  let frameW = Math.min(width - EDGE * 2, cap);
+  for (let k = 0; k < 3; k += 1) {
+    frameW = Math.min(width - EDGE * 2 - overhang(frameW), cap);
+  }
+  const over = overhang(frameW);
+  const left = Math.round((width - frameW - over) / 2 + over);
   const right = left + frameW;
   const axisY = Math.round(height - (hasNote ? 78 : 32));
-  const x = scaleBand()
-    .domain(data.map(keyOf))
-    .range([left, right - VALUE_AXIS_ROOM])
-    .paddingInner(0.1)
-    .paddingOuter(0.4);
+  const x = bandsFor(frameW).range([left, right - VALUE_AXIS_ROOM]);
   const bw = x.bandwidth();
   return {
     axisY,
@@ -85,8 +121,7 @@ const centre = (layout: Layout, d: CandleDatum): number =>
 /** The baseline and a tick on each Monday (every other when narrow), dated broadsheet-style. */
 const DayAxis = (props: { data: CandleDatum[]; layout: Layout }) => {
   const { layout } = props;
-  const mondays = props.data.filter((d) => d.date.getUTCDay() === 1);
-  const shown = layout.narrow ? mondays.filter((_, k) => k % 2 === 0) : mondays;
+  const shown = shownMondays(props.data, layout.narrow);
   const labels = dayTickLabels(shown.map((d) => d.date));
   return (
     <g>
@@ -230,7 +265,10 @@ export const Candlestick = (props: CandlestickProps) => {
           height,
           data,
           [d0, d1],
-          props.note !== undefined
+          props.note !== undefined,
+          [top, bottom].flatMap((d, k) =>
+            d === undefined ? [] : [{ d, text: fmtPrice(k === 0 ? hi : lo) }]
+          )
         );
         return (
           <svg

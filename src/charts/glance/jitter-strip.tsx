@@ -6,9 +6,10 @@ import { useState } from "react";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { dimClass, noteSpace, stagger } from "../util";
 import { jitterStripDemo } from "./jitter-strip.data";
 import type { JitterGroup } from "./jitter-strip.data";
+import { labelRoom, textWidth } from "./util-a";
 
 interface JitterStripProps {
   data?: JitterGroup[];
@@ -105,7 +106,6 @@ const Band = (p: BandProps) => {
         x={p.labelX}
         y={p.top + p.band / 2}
         dy="0.35em"
-        textAnchor="end"
       >
         {p.group.label}
       </text>
@@ -184,16 +184,17 @@ export const JitterStrip = (props: JitterStripProps) => {
     >
       {(width) => {
         const narrow = width < 480;
+        const ticks = halfDays(max);
         const m = {
           bottom: 40 + noteSpace(props.note, width - 16, 16),
           // Room for the longest group name.
-          left:
-            Math.ceil(Math.max(...data.map((d) => sansWidth(d.label, 12)))) +
-            22,
-          right: narrow ? 12 : 24,
+          left: labelRoom(data.map((d) => d.label)) + 10,
+          // Half the last tick label hangs past its gridline.
+          right: Math.ceil(
+            textWidth(tickHours(ticks.at(-1) ?? 0), "t-axis") / 2
+          ),
           top: 10,
         };
-        const ticks = halfDays(max);
         const x = scaleLinear()
           .domain([0, ticks.at(-1) ?? max])
           .range([m.left + 6, width - m.right]);
@@ -232,7 +233,7 @@ export const JitterStrip = (props: JitterStripProps) => {
             {props.axisLabel === undefined ? null : (
               <text
                 className="t-note"
-                x={width - m.right}
+                x={width}
                 y={floor + 34}
                 textAnchor="end"
               >
@@ -249,7 +250,7 @@ export const JitterStrip = (props: JitterStripProps) => {
                 g={g}
                 group={d}
                 hover={hover}
-                labelX={m.left - 10}
+                labelX={0}
                 med={medians[g]}
                 onEnter={setHover}
                 top={m.top + band * g}

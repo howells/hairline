@@ -5,7 +5,7 @@ import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, noteSpace, stagger } from "../util";
+import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { dottyMatrixDemo } from "./dotty-matrix.data";
 import type { DottyGroup } from "./dotty-matrix.data";
 
@@ -47,12 +47,14 @@ const planeGeometry = (
   height: number,
   groups: number,
   n: number,
-  noteH: number
+  noteH: number,
+  /** Widest group name, set right of the planes. */
+  labelW: number
 ): PlaneGeometry => {
   // Planes are halfW tall and step down 0.485 halfW each, from 16px down.
   const stack = 1 + 0.485 * (groups - 1);
   const halfW = clamp(
-    Math.min((height - 24 - noteH) / stack, (width - 116) / 2),
+    Math.min((height - 24 - noteH) / stack, (width - 14 - labelW) / 2),
     70,
     190
   );
@@ -60,7 +62,7 @@ const planeGeometry = (
   return {
     a,
     b: a / 2,
-    cx: (width - 2 * halfW - 96) / 2 + halfW,
+    cx: (width - 2 * halfW - 14 - labelW) / 2 + halfW,
     gap: halfW * 0.485,
     halfW,
     height: Math.min(height, Math.round(16 + halfW * stack + 8 + noteH)),
@@ -165,7 +167,8 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
           height,
           data.length,
           n,
-          noteSpace(props.note, width - 16, 20)
+          noteSpace(props.note, width - 16, 20),
+          Math.max(0, ...data.map((d) => sansWidth(d.label, 11)))
         );
         const scale = scaleSqrt()
           .domain([0, max])
