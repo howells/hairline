@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 
 import { App } from "./app";
 import { PaletteProvider } from "./system/palette";
+import { installTouchHover } from "./system/touch-hover";
 
 import "./system/app.css";
 
@@ -10,6 +11,8 @@ const root = document.querySelector("#root");
 if (root === null) {
   throw new Error("Missing #root element");
 }
+
+installTouchHover();
 
 /** Longest the boot plate waits for Inter before drawing with the fallback. */
 const FONT_WAIT_MS = 2500;
