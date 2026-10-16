@@ -169,10 +169,12 @@ const fitOf = (tile: Tile): Fit => {
 
 /** A plate's height: name and value plates stack this far apart. */
 const PLATE = 15;
+/** How far a label's plates sit in from the tile's top-left corner. */
+const LABEL_INSET = 8;
 
 /**
  * Name and value inside a tile, set across or up its side to fit, each on a
- * plate flush with the tile's top-left corner, just inside its outline.
+ * plate set in from the tile's top-left corner, engraving showing round it.
  */
 const TileLabel = (props: {
   format: (v: number) => string;
@@ -188,8 +190,8 @@ const TileLabel = (props: {
   if (fit === "none") {
     return null;
   }
-  const x = tile.x + INSET;
-  const y = tile.y + INSET;
+  const x = tile.x + LABEL_INSET;
+  const y = tile.y + LABEL_INSET;
   if (fit === "up") {
     return (
       <g
@@ -235,8 +237,7 @@ const TileLabel = (props: {
 
 /**
  * A tile: its engraving (or the hero's ink), then its label, then its 1px
- * outline over both, so a label plate tucked into the corner meets the
- * outline cleanly.
+ * outline over both.
  */
 const TileMark = (props: {
   children: ReactNode;
