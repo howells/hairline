@@ -824,5 +824,12 @@
     "title": "GBIF Backbone Taxonomy, living mammal species",
     "url": "https://api.gbif.org/v1/species/search?highertaxonKey=359&rank=SPECIES&status=ACCEPTED&isExtinct=false",
     "licence": "CC BY 4.0"
+  },
+  {
+    "id": "B3",
+    "publisher": "Mammal Diversity Database",
+    "title": "Mammal Diversity Database v2.5 (superorders)",
+    "url": "https://doi.org/10.5281/zenodo.21654811",
+    "licence": "CC BY 4.0"
   }
 ]
