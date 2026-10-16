@@ -43,7 +43,6 @@ interface Grid {
   x0: number;
 }
 
-/** Area carries the count; tone steps up the ramp in thirds; the hero is ink. */
 /** The ring's least clearance from any dot, and its dots' radius. */
 const RING_CLEAR = 2.5;
 const RING_DOT = 0.75;
@@ -74,13 +73,28 @@ const ringRadius = (
   return Math.max(own + RING_CLEAR + RING_DOT, r);
 };
 
-const dotClass = (share: number, hero: boolean): string => {
+/**
+ * The values the dots stretch across: the smallest non-zero value to the
+ * largest, so the grid's whole range of sizes and tones is put to use.
+ */
+interface Span {
+  hi: number;
+  lo: number;
+}
+
+/** Where a value sits in the span, 0 at the smallest to 1 at the largest. */
+const spanShare = (v: number, span: Span) =>
+  span.hi > span.lo ? (v - span.lo) / (span.hi - span.lo) : 1;
+
+/** Tone steps up the ramp in thirds of the span; empty cells are faintest; the hero is ink. */
+const dotClass = (v: number, span: Span, hero: boolean): string => {
   if (hero) {
     return "fill-hero";
   }
-  if (share <= 0) {
+  if (v <= 0) {
     return "fill-l5";
   }
+  const share = spanShare(v, span);
   if (share >= 2 / 3) {
     return "fill-l2";
   }
@@ -92,9 +106,17 @@ const NAME_GAP = 14;
 /** Margin kept between the grid's ink and the svg edge. */
 const EDGE = 2;
 
-/** The dot ramp: area carries the count, floored so small counts still show. */
-const dotRadius = (v: number, max: number, rMax: number) =>
-  v <= 0 ? 1 : Math.max(2, Math.sqrt(v / max) * rMax);
+/** The smallest dot's radius; an empty cell keeps a 1px pinpoint. */
+const R_MIN = 2;
+
+/**
+ * The dot ramp: area grows evenly across the span, from R_MIN at the
+ * smallest value to `rMax` at the largest.
+ */
+const dotRadius = (v: number, span: Span, rMax: number) =>
+  v <= 0
+    ? 1
+    : Math.sqrt(R_MIN ** 2 + spanShare(v, span) * (rMax ** 2 - R_MIN ** 2));
 
 /** Radius of the biggest dot a cell of `cell` px holds, leaving room for the peak's ring. */
 const maxRadius = (cell: number) =>
@@ -104,7 +126,7 @@ const buildGrid = (
   width: number,
   height: number,
   data: DotHeatData,
-  max: number,
+  span: Span,
   hasNote: boolean,
   every: number
 ): Grid => {
@@ -126,7 +148,7 @@ const buildGrid = (
     // half its axis label when that column is labelled.
     const reach = (colW: number) =>
       Math.max(
-        dotRadius(Math.max(...last), max, maxRadius(colW)),
+        dotRadius(Math.max(...last), span, maxRadius(colW)),
         (n - 1) % (narrow ? every * 2 : every) === 0 ? lastLabel : 0
       );
     let colRoom = (width - labelW - EDGE * 2) / n;
@@ -164,7 +186,7 @@ const buildGrid = (
     gridBottom: top + gridH,
     height: Math.round(top + gridH + bottom),
     narrow,
-    radius: (v) => dotRadius(v, max, rMax),
+    radius: (v) => dotRadius(v, span, rMax),
     rowH,
     top,
     x0,
@@ -220,7 +242,7 @@ interface DotsProps {
   grid: Grid;
   hero: string;
   hover: string | null;
-  max: number;
+  span: Span;
   onHover: (tip: Tip<Cell>) => void;
 }
 
@@ -241,7 +263,7 @@ const Dots = (props: DotsProps) => {
           }}
         >
           <circle
-            className={`pop ${dotClass(cell.v / props.max, cell.id === props.hero)}`}
+            className={`pop ${dotClass(cell.v, props.span, cell.id === props.hero)}`}
             cx={grid.cx(cell.c)}
             cy={grid.cy(cell.r)}
             r={grid.radius(cell.v)}
@@ -261,8 +283,8 @@ const Dots = (props: DotsProps) => {
 };
 
 /**
- * F10 Hour of birth. One dot per cell, area = count, tone stepping up the ramp
- * in thirds; the peak is the one dot in ink, inside an evenly dotted ring.
+ * F10 Hour of birth. One dot per cell, its area and tone stretched across
+ * the span from the smallest value to the largest (tone in thirds); the peak is the one dot in ink, inside an evenly dotted ring.
  * Empty cells keep a pinpoint so silence stays visible. The tooltip sits
  * above the grid, over the hovered column, clear of every dot.
  */
@@ -275,7 +297,11 @@ export const DotHeat = (props: DotHeatProps) => {
   const cells: Cell[] = data.values.flatMap((row, r) =>
     row.map((v, c) => ({ c, id: `${data.rows[r]}-${data.columns[c]}`, r, v }))
   );
-  const max = Math.max(1, ...cells.map((d) => d.v));
+  const filled = cells.flatMap((d) => (d.v > 0 ? [d.v] : []));
+  const span: Span =
+    filled.length === 0
+      ? { hi: 1, lo: 1 }
+      : { hi: Math.max(...filled), lo: Math.min(...filled) };
   const [peakR, peakC] = props.highlight ?? peakOf(cells);
   const peakV = data.values[peakR]?.[peakC] ?? 0;
   const peakId = `${data.rows[peakR]}-${data.columns[peakC]}`;
@@ -299,7 +325,7 @@ export const DotHeat = (props: DotHeatProps) => {
           width,
           height,
           data,
-          max,
+          span,
           props.note !== undefined,
           props.labelEvery ?? 2
         );
@@ -319,7 +345,7 @@ export const DotHeat = (props: DotHeatProps) => {
               grid={grid}
               hero={peakId}
               hover={tip?.item.id ?? null}
-              max={max}
+              span={span}
               onHover={setTip}
             />
             <DotRing
