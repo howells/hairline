@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { ALL_ENTRIES, entryById } from "../gallery/registry";
 import type { GalleryEntry } from "../gallery/types";
 
@@ -12,21 +14,61 @@ const ground = (entry: GalleryEntry) => {
     : "bg-paper grain";
 };
 
+/** How far ahead of the viewport a chart mounts, so it is drawn before it is seen. */
+const AHEAD = "1200px 0px";
+
+/**
+ * False until the element first comes within AHEAD of the viewport, then true
+ * for good: a chart mounts once, as it nears, and stays mounted.
+ */
+const useNear = () => {
+  const ref = useRef<HTMLElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: AHEAD }
+    );
+    if (ref.current !== null) {
+      io.observe(ref.current);
+    }
+    return () => {
+      io.disconnect();
+    };
+  }, []);
+  return [ref, near] as const;
+};
+
 /**
  * One chart in the house frame: its name, then the chart centred in the room
  * left. Every cell is set the same way, so the grid reads as one desk's work.
+ * The chart itself mounts as the cell nears the viewport; until then the cell
+ * holds a chart's usual height.
  */
-const Cell = (props: { entry: GalleryEntry }) => (
-  <figure
-    id={props.entry.id}
-    className={`m-0 flex min-w-0 flex-col gap-8 p-6 md:p-10 ${ground(props.entry)} ${props.entry.span === "full" ? "col-span-full" : ""}`}
-  >
-    <figcaption className="text-small text-text">{props.entry.name}</figcaption>
-    <div className="flex min-w-0 flex-1 flex-col justify-center">
-      {props.entry.render()}
-    </div>
-  </figure>
-);
+const Cell = (props: { entry: GalleryEntry }) => {
+  const [ref, near] = useNear();
+  return (
+    <figure
+      id={props.entry.id}
+      ref={ref}
+      className={`m-0 flex min-w-0 flex-col gap-8 p-6 md:p-10 ${ground(props.entry)} ${props.entry.span === "full" ? "col-span-full" : ""}`}
+    >
+      <figcaption className="text-small text-text">
+        {props.entry.name}
+      </figcaption>
+      <div
+        className={`flex min-w-0 flex-1 flex-col justify-center ${near ? "" : "min-h-[440px]"}`}
+      >
+        {near ? props.entry.render() : null}
+      </div>
+    </figure>
+  );
+};
 
 /** Every chart in one grid, separated by hairline rules. */
 export const ChartGrid = () => (
