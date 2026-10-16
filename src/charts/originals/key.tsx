@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 
+import { KEY } from "../marks";
 import { sansWidth } from "../util";
 
 /* A right-aligned key of drawn marks, shared by the originals. */
 
 /** Width a key mark occupies, and the gap after it. */
-const MARK_W = 12;
-const MARK_GAP = 6;
-const ITEM_GAP = 16;
+const MARK_W = KEY.swatch;
+const MARK_GAP = KEY.gap;
+const ITEM_GAP = KEY.entryGap;
 
 export interface KeyItem {
   label: string;

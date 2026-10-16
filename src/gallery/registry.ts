@@ -33,7 +33,7 @@ export const ALL_ENTRIES: GalleryEntry[] = [
   ...originals,
   ...forms,
   ...byId(maps, "M2"),
-  // The fills sheet closes the grid: every fill above is one of these.
+  // The fills and marks sheets close the grid: every fill and marker above is one of these.
   ...palette,
 ];
 

@@ -2,6 +2,7 @@ import { scaleQuantize } from "d3-scale";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { KEY } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotScreen, KeySwatch, PlateLabel } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
@@ -36,9 +37,9 @@ const TILE_RADIUS = 2;
 /** Dot radius of each bin's screen, lowest bin first: the shared halftone ladder at pitch 4. */
 const DOT_RADII = HALFTONE_R;
 /** Key swatch size, the gap after it, and the space between key entries. */
-const SWATCH = 12;
-const SWATCH_GAP = 5;
-const KEY_SPACE = 10;
+const SWATCH = KEY.swatch;
+const SWATCH_GAP = KEY.gap;
+const KEY_SPACE = KEY.entryGap;
 
 /**
  * A tile side that holds whole screen tiles with equal margins: 4k + 5, so

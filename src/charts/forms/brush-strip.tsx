@@ -7,6 +7,7 @@ import type { KeyboardEvent, PointerEvent } from "react";
 
 import { monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
+import { MARK_WEIGHT } from "../marks";
 import { Stipple } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { centreOn, dragTo, keyTo } from "./brush-math";
@@ -123,7 +124,7 @@ const Window = (props: {
         <line
           className="stroke-ink"
           key={x === xb ? "end" : "start"}
-          strokeWidth={2}
+          strokeWidth={MARK_WEIGHT}
           x1={x}
           x2={x}
           y1={STRIP_H / 2 - 8}

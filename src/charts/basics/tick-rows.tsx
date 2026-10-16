@@ -9,6 +9,7 @@ import {
   stagger,
   wrapWords,
 } from "../util";
+import { RUNG } from "./rung-geometry";
 import { tickRowsDemo } from "./tick-rows.data";
 import type { CountDatum } from "./tick-rows.data";
 import { isDim, useHoverTip } from "./util-a";
@@ -98,7 +99,7 @@ const Row = ({
   const n = Math.round(datum.value / unit);
   const base = Math.round(12 + (index + 0.5) * frame.pitchY + frame.tickH / 2);
   const mid = base - frame.tickH / 2;
-  const end = rungX(frame, Math.max(0, n - 1)) + 2;
+  const end = rungX(frame, Math.max(0, n - 1)) + RUNG;
   const ticks = Array.from({ length: n }, (_, k) => ({
     id: `${datum.label}-tick-${k}`,
     k,
@@ -131,7 +132,7 @@ const Row = ({
           height={frame.tickH}
           key={tick.id}
           style={stagger(index * 3 + tick.k, "fine")}
-          width={2}
+          width={RUNG}
           x={rungX(frame, tick.k)}
           y={base - frame.tickH}
         />

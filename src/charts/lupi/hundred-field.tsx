@@ -1,9 +1,11 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { Dot, Ring } from "../markers";
+import { DOT, RING_STEP } from "../marks";
+import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
-import { TEXTURE_PITCH } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { hundredFieldDemo } from "./hundred-field.data";
 import type { ShareDatum } from "./hundred-field.data";
@@ -155,26 +157,21 @@ const sunflower = (
   return { ...frame, c, wedges };
 };
 
-/**
- * Glyph size in px: the radius for seeds and rings (top of the dot scale),
- * the dot's radius, or a cross's arm.
- */
-const SIZE: Record<Glyph, number> = { cross: 4, dot: 3, ring: 6, seed: 6 };
-/** One step down the dot scale, for a head too small for full seeds. */
-const SIZE_SMALL: Record<Glyph, number> = {
-  cross: 3,
-  dot: 2,
-  ring: 4.5,
-  seed: 4.5,
+/** Dot sizes per glyph: full-size heads, and one step down for tight ones. */
+const SIZES: Record<"large" | "small", Record<Glyph, DotSize>> = {
+  large: { cross: "sm", dot: "sm", ring: "lg", seed: "lg" },
+  small: { cross: "xs", dot: "xs", ring: "md", seed: "md" },
 };
 /** Below this spiral spacing (px) the seeds step down a size. */
 const SMALL_HEAD = 15;
 
 const SeedMark = (props: { glyph: Glyph; seed: Seed; small: boolean }) => {
   const { glyph, seed } = props;
-  const s = (props.small ? SIZE_SMALL : SIZE)[glyph];
+  const size = SIZES[props.small ? "small" : "large"][glyph];
   const style = stagger(seed.k, "dense");
   if (glyph === "cross") {
+    // Arms one pixel longer than the dot of the same size, on whole pixels.
+    const s = DOT[size] + 1;
     const x = seed.x - 0.5;
     const y = seed.y - 0.5;
     return (
@@ -186,23 +183,22 @@ const SeedMark = (props: { glyph: Glyph; seed: Seed; small: boolean }) => {
   }
   if (glyph === "ring") {
     return (
-      <circle
+      <Ring
         style={style}
-        className="pop fill-paper stroke-l2"
+        className="pop stroke-l2"
         cx={seed.x}
         cy={seed.y}
-        r={s - 0.5}
-        strokeWidth={1}
+        size={size}
       />
     );
   }
   return (
-    <circle
+    <Dot
       style={style}
       className={`pop ${glyph === "seed" ? "fill-hero" : "fill-l3"}`}
       cx={seed.x}
       cy={seed.y}
-      r={s}
+      size={size}
     />
   );
 };
@@ -280,7 +276,7 @@ const Engraving = ({ head }: { head: Head }) => (
       cx={head.cx}
       cy={head.cy}
       r={head.R + head.c * 0.8}
-      step={TEXTURE_PITCH.dense}
+      step={RING_STEP.guide}
       tone="fill-l5"
     />
     {head.wedges.map((w) => {

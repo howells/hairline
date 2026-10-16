@@ -5,6 +5,9 @@ import { useState } from "react";
 import { yearTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot, Ring } from "../markers";
+import { DOT, STEM } from "../marks";
+import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
@@ -126,7 +129,7 @@ interface ColumnProps {
   top: number;
   floor: number;
   floorYear: number;
-  r: number;
+  size: DotSize;
   y: ScaleLinear<number, number>;
   hero: boolean;
 }
@@ -139,7 +142,7 @@ const FeatureColumn = ({
   top,
   floor,
   floorYear,
-  r,
+  size,
   y,
   hero,
 }: ColumnProps) => {
@@ -188,36 +191,35 @@ const FeatureColumn = ({
             x2={stemX}
             y1={crisp(y(s.a))}
             y2={crisp(y(s.b))}
-            strokeWidth={hero ? 2 : 1}
+            strokeWidth={hero ? STEM.hero : STEM.rest}
           />
         )
       )}
       {feature.retired === undefined ? null : (
-        <circle
+        <Dot
           className="pop fill-l5"
           style={stagger(index * 3 + 4, "mark")}
           cx={stemX}
           cy={crisp(y(feature.retired))}
-          r={2}
+          size="xs"
         />
       )}
       {events.slice(1).map((e) => (
-        <circle
+        <Ring
           key={`rework-${e}`}
-          className={`pop fill-paper ${hero ? "stroke-hero" : "stroke-l3"}`}
+          className={`pop ${hero ? "stroke-hero" : "stroke-l3"}`}
           style={stagger(index * 3 + 2, "mark")}
           cx={stemX}
           cy={crisp(y(e))}
-          r={r}
-          strokeWidth={1}
+          size={size}
         />
       ))}
-      <circle
+      <Dot
         className={`pop ${hero ? "fill-hero" : "fill-l3"}`}
         style={stagger(index * 3, "mark")}
         cx={stemX}
         cy={crisp(y(feature.shipped))}
-        r={r}
+        size={size}
       />
       <text
         className={`fade t-name ${labelTone}`}
@@ -290,7 +292,8 @@ export const TrendLineage = (props: TrendLineageProps) => {
           .range([m.top + 8, height - m.bottom]);
         const yearStep = y(y0 + 1) - y(y0);
         const floor = y(y1 + FLOOR_PAD);
-        const r = Math.min(yearStep * 0.32, colW * 0.2) >= 6 ? 6 : 4.5;
+        const size: DotSize =
+          Math.min(yearStep * 0.32, colW * 0.2) >= DOT.lg ? "lg" : "md";
         const years = Array.from({ length: y1 - y0 + 1 }, (_, k) => y0 + k);
         const every = byStep(
           yearStep,
@@ -337,7 +340,7 @@ export const TrendLineage = (props: TrendLineageProps) => {
                     top={m.top}
                     floor={floor}
                     floorYear={y1 + FLOOR_PAD}
-                    r={r}
+                    size={size}
                     y={y}
                     hero={hero === d.name}
                   />
@@ -351,7 +354,7 @@ export const TrendLineage = (props: TrendLineageProps) => {
               />
             </svg>
             {tip !== undefined && hover !== null && (
-              <Tooltip x={cx(hover)} y={y(tip.shipped) - r - 4}>
+              <Tooltip x={cx(hover)} y={y(tip.shipped) - DOT[size] - 4}>
                 <b>{tip.name}</b> · {describe(tip)}
               </Tooltip>
             )}

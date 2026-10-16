@@ -1,6 +1,7 @@
 import { arc as d3arc } from "d3-shape";
 
 import { Plot, Tooltip } from "../core";
+import { MARK_WEIGHT, RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
 import {
@@ -31,6 +32,9 @@ interface TickDonutProps {
 }
 
 const TICKS = 100;
+
+/** How far the dotted guide ring sits inside the tick ring. */
+const GUIDE_INSET = 6;
 /** Rung tones for the sources after the hero, by rank: one step lighter each. */
 const TICK_TONES = ["stroke-l3", "stroke-l4", "stroke-l5", "stroke-l6"];
 
@@ -258,7 +262,7 @@ const Source = ({
         >
           <line
             className={`grow-y ${tone}`}
-            strokeWidth={2}
+            strokeWidth={MARK_WEIGHT}
             style={stagger(tick.t, "dense")}
             x1={dial.cx}
             x2={dial.cx}
@@ -377,7 +381,8 @@ const TickDonutSvg = ({
         tone="fill-l4"
         cx={dial.cx}
         cy={dial.cy}
-        r={dial.rIn - 7}
+        r={dial.rIn - GUIDE_INSET}
+        step={RING_STEP.guide}
       />
       {data.map((d, i) => (
         <Source

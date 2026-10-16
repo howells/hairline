@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { MARK_WEIGHT } from "../marks";
 import { PlotNote } from "../plot-note";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -190,7 +191,7 @@ const Figure = (p: FigureProps) => {
           x2={p.cx + medW + 2}
           y1={Math.round(p.y(s.med))}
           y2={Math.round(p.y(s.med))}
-          strokeWidth={2}
+          strokeWidth={MARK_WEIGHT}
         />
       </g>
       <text

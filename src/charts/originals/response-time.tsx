@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { MARK_WEIGHT } from "../marks";
 import { DotScreen, KeySwatch } from "../texture";
 import {
   HALFTONE_R,
@@ -82,7 +83,7 @@ const ChannelRow = ({
 }: RowProps) => {
   const y = frame.rowY(k);
   const median = datum.q[MEDIAN];
-  const mx = hero ? Math.round(frame.x(median)) : crisp(frame.x(median));
+  const mx = Math.round(frame.x(median));
   const deciles = datum.q.slice(1, -1).filter((_, j) => j + 1 !== MEDIAN);
   // The band's outer top-left pixel, and where its screen stops: on a whole
   // tile, a pixel or more clear of the right outline, so no dot is cut.
@@ -152,7 +153,7 @@ const ChannelRow = ({
       ))}
       <line
         className={`pop shape-crisp ${hero ? "stroke-ink" : "stroke-l1"}`}
-        strokeWidth={hero ? 2 : 1}
+        strokeWidth={MARK_WEIGHT}
         style={stagger(k * 10 + 9, "fine")}
         x1={mx}
         x2={mx}
@@ -173,12 +174,12 @@ const ChannelRow = ({
   );
 };
 
-const tickMark = (half: number, tone: string) => (
+const tickMark = (half: number, tone: string, weight: number) => (
   <line
     className={`shape-crisp ${tone}`}
-    strokeWidth={1}
-    x1={6.5}
-    x2={6.5}
+    strokeWidth={weight}
+    x1={weight === 1 ? 6.5 : 6}
+    x2={weight === 1 ? 6.5 : 6}
     y1={-half}
     y2={half}
   />
@@ -186,8 +187,8 @@ const tickMark = (half: number, tone: string) => (
 
 /** The key: median and decile ticks, and a swatch of the halftone. */
 const keyItems = (tex: (name: string) => string) => [
-  { label: "Median", mark: tickMark(6, "stroke-l1") },
-  { label: "Deciles", mark: tickMark(4, "stroke-l2") },
+  { label: "Median", mark: tickMark(6, "stroke-l1", MARK_WEIGHT) },
+  { label: "Deciles", mark: tickMark(4, "stroke-l2", 1) },
   {
     label: "Seats",
     mark: (

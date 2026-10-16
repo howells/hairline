@@ -16,6 +16,7 @@ import { fmtDay, fmtInt, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useSvgId } from "../hooks";
+import { MARK_WEIGHT, TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -244,7 +245,7 @@ const Bands = (props: {
         <path
           className={`cap-round stroke-ink fill-none transition-opacity ${dim(hero)}`}
           d={topEdge(heroLayer) ?? ""}
-          strokeWidth={2}
+          strokeWidth={MARK_WEIGHT}
         />
       )}
       {hover === null ? null : (
@@ -376,7 +377,7 @@ const TimeAxis = (props: {
           key={t.date.getTime()}
           x1={crisp(t.x)}
           x2={crisp(t.x)}
-          y1={Math.round(props.y) - 6}
+          y1={Math.round(props.y) - TICK.md}
           y2={Math.round(props.y)}
         />
       ))}

@@ -1,5 +1,7 @@
+import { MARK_WEIGHT } from "../marks";
+
 /** Thickness of one rung: the family's mark, a solid 2px bar on whole pixels. */
-export const RUNG = 2;
+export const RUNG = MARK_WEIGHT;
 
 /** Whole-pixel pitch for `count` rungs in `room` px, between 4 and `max`. */
 export const rungPitch = (room: number, count: number, max = 12) =>

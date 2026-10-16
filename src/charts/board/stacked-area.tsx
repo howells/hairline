@@ -6,6 +6,7 @@ import { fmtDay } from "../../lib/format";
 import { crisp } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
+import { Ring } from "../markers";
 import { Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
@@ -180,14 +181,13 @@ const ScrubCursor = (props: {
         y2={h - m.bottom}
       />
       {props.chart.layers.map((layer, li) => (
-        <circle
+        <Ring
           key={layer.label}
           cx={cx}
           cy={y(tops[li][index])}
-          r={4.5}
-          fill="var(--bg)"
+          size="md"
           stroke={layer.stroke}
-          strokeWidth={1.5}
+          weight="cursor"
         />
       ))}
       <text

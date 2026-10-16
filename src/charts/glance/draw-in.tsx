@@ -12,6 +12,7 @@ import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
 import { PlotNote } from "../plot-note";
 import { DotScreen } from "../texture";
@@ -206,12 +207,12 @@ const Frame = (p: FrameProps) => {
             y1={Math.round(p.y(p.data[p.hover.i].value))}
             y2={p.floor}
           />
-          <circle
-            className="fill-paper stroke-ink"
+          <Ring
+            className="stroke-ink"
             cx={p.hover.x}
             cy={p.y(p.data[p.hover.i].value)}
-            r={4.5}
-            strokeWidth={2}
+            size="md"
+            weight="cursor"
           />
         </g>
       )}
@@ -352,11 +353,11 @@ export const DrawIn = (props: DrawInProps) => {
                 y={y}
               />
               {clock.p > 0 && hover === null ? (
-                <circle
+                <Dot
                   className="fill-hero"
                   cx={tipX}
                   cy={y(tipValue)}
-                  r={4.5}
+                  size="md"
                 />
               ) : null}
               <PlotNote

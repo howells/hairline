@@ -3,6 +3,7 @@ import type { ScaleBand, ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
 import { Chart, VGrid } from "../core";
+import { Dot } from "../markers";
 import { sansWidth } from "../util";
 import { Key } from "./key";
 import { nameWidth } from "./room";
@@ -68,7 +69,7 @@ const DumbbellRow = (props: {
   const { i, row: r, x, y } = props;
   const bh = y.bandwidth();
   const cy = Math.round((y(r.name) ?? 0) + bh / 2);
-  const ink = props.worst ? "var(--alert)" : "var(--hero)";
+  const ink = props.worst ? "fill-alert" : "fill-hero";
   return (
     <g
       onPointerEnter={() => {
@@ -102,8 +103,13 @@ const DumbbellRow = (props: {
           stroke="var(--l5)"
           strokeWidth={2}
         />
-        <circle cx={Math.round(x(r.before))} cy={cy} r={3} fill="var(--l4)" />
-        <circle cx={Math.round(x(r.after))} cy={cy} r={4.5} fill={ink} />
+        <Dot
+          className="fill-l4"
+          cx={Math.round(x(r.before))}
+          cy={cy}
+          size="sm"
+        />
+        <Dot className={ink} cx={Math.round(x(r.after))} cy={cy} size="md" />
         <text
           x={x(Math.max(r.before, r.after)) + VALUE_GAP}
           y={cy}

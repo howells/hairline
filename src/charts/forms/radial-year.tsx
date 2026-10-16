@@ -5,6 +5,8 @@ import type { PointerEvent } from "react";
 
 import { fmtDegC, fmtMonth, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { RING_STEP } from "../marks";
 import { DotRing, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
@@ -80,7 +82,13 @@ const Furniture = (props: DialProps) => {
         const onYear = year > props.r(v) - RING_INSET - PLATE_HALF;
         return (
           <g key={v}>
-            <DotRing cx={0} cy={0} r={props.r(v)} tone="fill-l4" />
+            <DotRing
+              cx={0}
+              cy={0}
+              r={props.r(v)}
+              step={RING_STEP.guide}
+              tone="fill-l4"
+            />
             {onYear ? (
               <PlateLabel
                 className="t-axis"
@@ -151,13 +159,13 @@ const Trace = (props: DialProps & { peak: number }) => {
         pathLength={1}
       />
       {hp === null ? null : (
-        <circle className="fill-l2" cx={hp.x} cy={hp.y} r={3} />
+        <Dot className="fill-l2" cx={hp.x} cy={hp.y} size="sm" />
       )}
-      <circle
+      <Dot
         className="pop fill-hero"
         cx={pp.x}
         cy={pp.y}
-        r={4.5}
+        size="md"
         style={stagger(4, "series")}
       />
       <text

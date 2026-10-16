@@ -5,6 +5,7 @@ import type { PointerEvent } from "react";
 
 import { crisp } from "../axes";
 import { Chart, HGrid, VGrid } from "../core";
+import { Dot, Ring } from "../markers";
 import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { Key } from "./key";
@@ -13,7 +14,7 @@ import { CURSOR, OUTLINE, POINT, RULE_TARGET, TICK, VALUE } from "./styles";
 import { TICK_CHAR } from "./thin-ticks";
 
 /** Both groups share one grey; the second group's points are hollow rings. */
-const POINT_TONE = "var(--l2)";
+const POINT_TONE = { fill: "fill-l2", stroke: "stroke-l2" };
 
 export interface ScatterPoint {
   x: number;
@@ -217,9 +218,9 @@ const LimitRule = (props: { frame: Frame; zone: string; limit: number }) => {
 /** The point over the limit by most: red. Hovered: ink. Otherwise the one grey. */
 const pointTone = (worst: boolean, active: boolean) => {
   if (active) {
-    return "var(--hero)";
+    return { fill: "fill-hero", stroke: "stroke-hero" };
   }
-  return worst ? "var(--alert)" : POINT_TONE;
+  return worst ? { fill: "fill-alert", stroke: "stroke-alert" } : POINT_TONE;
 };
 
 /** Centred over its point, unless that would run past the plot's edge. */
@@ -292,15 +293,22 @@ const PointMark = (props: {
   const py = crisp(y(p.y));
   return (
     <g className="fade" style={{ "--i": props.i * 0.4 }}>
-      <circle
-        cx={px}
-        cy={py}
-        r={active ? 4.5 : 3}
-        fill={hollow ? "var(--bg)" : tone}
-        stroke={hollow ? tone : "none"}
-        strokeWidth={1.5}
-        className={POINT}
-      />
+      {hollow ? (
+        <Ring
+          className={`${POINT} ${tone.stroke}`}
+          cx={px}
+          cy={py}
+          size={active ? "md" : "sm"}
+          weight={active ? "cursor" : "rest"}
+        />
+      ) : (
+        <Dot
+          className={`${POINT} ${tone.fill}`}
+          cx={px}
+          cy={py}
+          size={active ? "md" : "sm"}
+        />
+      )}
       {hasName(p) && !active && (
         <g>
           <line

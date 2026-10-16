@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
+import { Dot, Ring } from "../markers";
 import { PlotNote } from "../plot-note";
 import { clamp, dimClass, noteSpace, sansWidth, stagger, sum } from "../util";
 import { clusterFieldDemo } from "./cluster-field.data";
@@ -173,15 +174,9 @@ const Cluster = (props: ClusterProps) => {
         </g>
       ))}
       {p.core ? (
-        <circle className="pop fill-hero" cx={p.x} cy={p.y} r={6} />
+        <Dot className="pop fill-hero" cx={p.x} cy={p.y} size="lg" />
       ) : (
-        <circle
-          className="pop fill-paper stroke-l2"
-          cx={p.x}
-          cy={p.y}
-          r={3}
-          strokeWidth={1.5}
-        />
+        <Ring className="pop stroke-l2" cx={p.x} cy={p.y} size="sm" />
       )}
       <text
         className={`fade t-label ${p.core ? "" : "fill-muted"}`}

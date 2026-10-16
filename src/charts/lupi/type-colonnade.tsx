@@ -2,6 +2,8 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Ring } from "../markers";
+import { DOT } from "../marks";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -58,7 +60,7 @@ const OWNER_GAP = 10;
 const OWNER_EDGE = 4;
 /** Empty rows between two owners' stacks; radius of one light's hollow dot. */
 const GROUP_GAP = 2;
-const DOT_R = 2;
+const DOT_R = DOT.xs;
 
 /**
  * Width of an owner label in `t-label`. sansWidth rounds each glyph up, so the
@@ -243,12 +245,11 @@ const Lights = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
             x={at.xTick0}
             y={y - at.pitch / 2}
           />
-          <circle
-            className={`pop fill-paper transition-colors ${ink ? "stroke-ink" : "stroke-l3"}`}
+          <Ring
+            className={`pop transition-colors ${ink ? "stroke-ink" : "stroke-l3"}`}
             cx={at.xDot}
             cy={y}
-            r={DOT_R}
-            strokeWidth={1}
+            size="xs"
             style={stagger(i, "dense")}
           />
           <line

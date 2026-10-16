@@ -5,6 +5,9 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Ring } from "../markers";
+import { DOT, MARK_WEIGHT } from "../marks";
+import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
 import { dimClass, noteSpace, stagger } from "../util";
 import { jitterStripDemo } from "./jitter-strip.data";
@@ -35,7 +38,8 @@ interface Hit {
 
 interface BandProps {
   band: number;
-  dot: number;
+  /** Ring size at rest: sm when narrow, md when wide. */
+  dot: DotSize;
   g: number;
   /** Ink the rings of this group (the highlight). */
   hero: boolean;
@@ -95,12 +99,13 @@ const seats = (
 
 /** One group: its label, a dot per record jittered across the band, and a median tick. */
 const Band = (p: BandProps) => {
+  const radius = DOT[p.dot];
   const lattice = seats(
     p.group.values.map((v) => p.x(v)),
-    p.dot * 2 + 2,
+    radius * 2 + 2,
     Math.round(p.top + p.band / 2),
     p.band * 0.9,
-    p.x(0) + p.dot + 2
+    p.x(0) + radius + 2
   );
   return (
     <g className={dimClass(p.hover !== null && p.hover.g !== p.g)}>
@@ -116,18 +121,18 @@ const Band = (p: BandProps) => {
         const seat = lattice[k];
         const on = p.hover !== null && p.hover.g === p.g && p.hover.k === k;
         return (
-          <circle
+          <Ring
             // Records carry no id; group + ordinal is their identity.
             key={`${p.group.label}-${String(k)}`}
-            className={`pop fill-none ${on || p.hero ? "stroke-ink" : "stroke-l4"}`}
+            className={`pop ${on || p.hero ? "stroke-ink" : "stroke-l4"}`}
             style={stagger(k, "dense")}
             cx={seat.x}
             cy={seat.y}
-            r={on ? 6 : p.dot}
-            strokeWidth={1}
+            open
+            size={on ? "lg" : p.dot}
             pointerEvents="visible"
             onPointerEnter={() => {
-              p.onEnter({ g: p.g, k, x: seat.x, y: seat.y - p.dot - 4 });
+              p.onEnter({ g: p.g, k, x: seat.x, y: seat.y - radius - 4 });
             }}
           />
         );
@@ -140,16 +145,17 @@ const Band = (p: BandProps) => {
           x2={Math.round(p.x(p.med))}
           y1={Math.round(p.top + p.band * 0.04)}
           y2={Math.round(p.top + p.band * 0.96)}
-          strokeWidth={2}
+          strokeWidth={MARK_WEIGHT}
         />
       ) : (
         <line
-          className="fade rule"
+          className="fade stroke-rule"
           style={{ "--i": 8 + p.g }}
-          x1={crisp(p.x(p.med))}
-          x2={crisp(p.x(p.med))}
+          x1={Math.round(p.x(p.med))}
+          x2={Math.round(p.x(p.med))}
           y1={Math.round(p.top + p.band * 0.04)}
           y2={Math.round(p.top + p.band * 0.96)}
+          strokeWidth={MARK_WEIGHT}
         />
       )}
     </g>
@@ -161,7 +167,7 @@ const Band = (p: BandProps) => {
  * snap to equal-pitch columns and stack outward from each band's centre
  * line, so pile-ups read as taller columns, evenly spaced, with no random
  * jitter. The hero row's median (the first group, or the highlight) is a
- * 2px ink tick; every other median is a quiet 1px rule.
+ * 2px ink tick; every other median is a quiet 2px rule.
  */
 export const JitterStrip = (props: JitterStripProps) => {
   const data = props.data ?? jitterStripDemo;
@@ -249,7 +255,7 @@ export const JitterStrip = (props: JitterStripProps) => {
               <Band
                 key={d.label}
                 band={band}
-                dot={narrow ? 3 : 4.5}
+                dot={narrow ? "sm" : "md"}
                 hero={props.highlight === g}
                 heroRow={(props.highlight ?? 0) === g}
                 g={g}

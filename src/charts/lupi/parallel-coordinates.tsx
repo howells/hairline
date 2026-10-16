@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -35,7 +37,7 @@ interface Point {
 }
 
 /** Length of a rug tick, drawn out from the left of its axis. */
-const RUG = 6;
+const RUG = TICK.md;
 
 /** A row's path: smooth S-curves from axis to axis, flat where it crosses each axis. */
 const rowPath = (pts: Point[]) => {
@@ -117,7 +119,7 @@ const AxisRule = ({
         className="stroke-l2 shape-crisp"
         key={`${axis.key}-${ty}`}
         strokeWidth={1}
-        x1={Math.round(x) - RUG}
+        x1={Math.round(x) + 1 - RUG}
         x2={Math.round(x) + 1}
         y1={crisp(ty)}
         y2={crisp(ty)}
@@ -158,12 +160,12 @@ const RowLine = ({ row, index, pts, hero, active, onEnter }: LineProps) => {
       />
       {hero
         ? pts.map((p) => (
-            <circle
+            <Dot
               className="fade fill-hero"
               cx={p.x}
               cy={p.y}
               key={`${row.name}-${p.x}`}
-              r={3}
+              size="md"
               style={stagger(index + 4, "mark")}
             />
           ))

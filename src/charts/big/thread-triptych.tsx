@@ -3,6 +3,8 @@ import type { PointerEvent } from "react";
 
 import { rndSigned } from "../../lib/random";
 import { Plot } from "../core";
+import { Dot, Ring } from "../markers";
+import { LABEL_TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DottedLine } from "../texture";
 import { noteSpace, sansWidth, stagger } from "../util";
@@ -238,14 +240,13 @@ const DestinationMark = (props: {
   return (
     <>
       {props.hero ? (
-        <circle className="fill-hero" cx={x} cy={stop.y} r={4.5} />
+        <Dot className="fill-hero" cx={x} cy={stop.y} size="md" />
       ) : (
-        <circle
-          className={`fill-paper transition-tone ${props.bright ? "stroke-ink" : "stroke-l3"}`}
+        <Ring
+          className={`transition-tone ${props.bright ? "stroke-ink" : "stroke-l3"}`}
           cx={x}
           cy={stop.y}
-          r={4.5}
-          strokeWidth={1}
+          size="md"
         />
       )}
       <text
@@ -276,9 +277,9 @@ const StopMark = (props: {
       <g className={`transition-opacity ${tone}`}>
         <rect
           className={textTone(bright, "fill-l3")}
-          height={2}
-          width={5}
-          x={Math.round(x) - 7}
+          height={LABEL_TICK.h}
+          width={LABEL_TICK.w}
+          x={Math.round(x) - 2 - LABEL_TICK.w}
           y={tickY}
         />
         <text
@@ -299,9 +300,9 @@ const StopMark = (props: {
       <g className={`transition-opacity ${tone}`}>
         <rect
           className={textTone(bright, "fill-l3")}
-          height={2}
-          width={6}
-          x={Math.round(x) - 3}
+          height={LABEL_TICK.h}
+          width={LABEL_TICK.w}
+          x={Math.round(x) - LABEL_TICK.w / 2}
           y={tickY}
         />
         {((triptych.wide && stop.index % every === 0) || bright) && (

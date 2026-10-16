@@ -1,3 +1,4 @@
+import { KEY } from "../marks";
 import { KeySwatch } from "../texture";
 import { sansWidth } from "../util";
 
@@ -11,9 +12,7 @@ export interface KeyItem {
 }
 
 /** The swatch's side, the gap to its name, and the gap between entries. */
-const SWATCH = 12;
-const TO_NAME = 6;
-const BETWEEN = 16;
+const { entryGap: BETWEEN, gap: TO_NAME, swatch: SWATCH } = KEY;
 
 const itemWidth = (item: KeyItem) =>
   SWATCH + TO_NAME + Math.ceil(sansWidth(item.name, 11));

@@ -5,14 +5,10 @@ import { useState } from "react";
 import { yearTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing, DotScreen } from "../texture";
-import {
-  HALFTONE_R,
-  paint,
-  TEXTURE_PITCH,
-  useTextureIds,
-} from "../texture-ids";
+import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import {
   bubbleAlmanacDemo,
@@ -258,7 +254,7 @@ const Blob = ({
             cx={cx}
             cy={cy}
             r={r + RING_GAP}
-            step={TEXTURE_PITCH.dense}
+            step={RING_STEP.mark}
             tone="fill-l4"
           />
         ) : null}

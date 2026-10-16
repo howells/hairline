@@ -8,6 +8,7 @@ import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { Dot, Ring } from "../markers";
 import { PlotNote } from "../plot-note";
 import { Stipple } from "../texture";
 import { paint } from "../texture-ids";
@@ -169,7 +170,7 @@ const StreamLayer = (p: LayerProps) => (
       y1={crisp(p.floor)}
       y2={crisp(p.floor)}
     />
-    <circle className="fill-hero" cx={p.right} cy={p.headY} r={4.5} />
+    <Dot className="fill-hero" cx={p.right} cy={p.headY} size="md" />
     <text className="t-value t-halo" x={p.right + 9} y={p.headY} dy="0.35em">
       {p.format(p.latest)}
     </text>
@@ -281,12 +282,12 @@ export const DynamicStream = (props: DynamicStreamProps) => {
                     y1={m.top - 6}
                     y2={height - m.bottom}
                   />
-                  <circle
-                    className="fill-paper stroke-ink"
+                  <Ring
+                    className="stroke-ink"
                     cx={xOf(hover.s)}
                     cy={y(feed(hover.s))}
-                    r={4.5}
-                    strokeWidth={2}
+                    size="md"
+                    weight="cursor"
                   />
                 </g>
               )}

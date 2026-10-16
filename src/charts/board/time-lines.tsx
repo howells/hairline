@@ -8,6 +8,7 @@ import { crisp } from "../axes";
 import type { Margin } from "../axes";
 import { Chart, HGrid, SplitClips } from "../core";
 import { useScrub } from "../hooks";
+import { Ring } from "../markers";
 import { DottedPath } from "../texture";
 import { useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
@@ -268,15 +269,14 @@ const ScrubCursor = (props: {
         y2={plotBottom}
       />
       {chart.series.map((s, i) => (
-        <circle
+        <Ring
           key={seriesKey(s)}
           className={`${DOT} ${red && i === 0 ? "stroke-alert" : ""}`}
           cx={cx}
           cy={y(s.data[index].value)}
-          r={compact ? 3 : 4.5}
-          fill="var(--bg)"
+          size={compact ? "sm" : "md"}
           stroke={red && i === 0 ? undefined : LINE_TONE[s.tone].past}
-          strokeWidth={1.5}
+          weight="cursor"
         />
       ))}
       {readout === "value" && (

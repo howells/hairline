@@ -7,6 +7,8 @@ import { fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useScrub } from "../hooks";
+import { Dot } from "../markers";
+import { STEM } from "../marks";
 import { Hatch, KeySwatch, Stipple } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { stagger, weeklyMean } from "../util";
@@ -56,7 +58,7 @@ const Stems = ({ data, frame, hero, hover, mean }: StemsProps) => (
         <line
           className={`grow-y transition-tone shape-crisp ${above ? "" : "from-top"} ${stemClass(i === hero, hover === i)}`}
           key={d.date.toISOString()}
-          strokeWidth={i === hero ? 2 : 1}
+          strokeWidth={i === hero ? STEM.hero : STEM.rest}
           style={stagger(i, "dense")}
           x1={x}
           x2={x}
@@ -259,11 +261,11 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           pathLength={1}
           strokeWidth={1.5}
         />
-        <circle
+        <Dot
           className="pop fill-hero"
           cx={Math.round(frame.x(hero))}
           cy={frame.y(values[hero])}
-          r={3}
+          size="md"
           style={stagger(8)}
         />
         <text
@@ -276,11 +278,11 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           {fmtDegC(values[hero])}
         </text>
         {hover === null || hover === hero ? null : (
-          <circle
+          <Dot
             className="fill-l2"
             cx={crisp(frame.x(hover))}
             cy={frame.y(values[hover])}
-            r={2}
+            size="sm"
           />
         )}
         <Key items={keyItems(tex)} right={width} y={10} />

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import type { CSSProperties } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot, Ring } from "../markers";
+import { KEY, TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { EngravedRect, Hatch, KeySwatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -51,23 +52,8 @@ const lean = (row: SpectrumRow, v: number) =>
 
 /** Stops on every rail's ruler: both ends, the centre and two between each. */
 const STOPS = 7;
-/** Half-heights of a ruler tick: the ends and centre, then the stops between. */
-const TICK_MAJOR = 5;
-const TICK_MINOR = 3;
 /** Half-height of the gap bar, so it spans 7 whole pixels on the rail. */
 const GAP_HALF = 3;
-
-/** Another hill: a hollow 1px ring, well under the inked dot. */
-const Ring = (props: { cx: number; cy: number; style?: CSSProperties }) => (
-  <circle
-    className="pop fill-paper stroke-l5"
-    cx={props.cx}
-    cy={props.cy}
-    r={3}
-    strokeWidth={1}
-    style={props.style}
-  />
-);
 
 /**
  * The rail's span, a whole multiple of the ruler's six intervals so every
@@ -94,7 +80,9 @@ const Ruler = (props: { x0: number; x1: number; y: number }) => {
     <g className="fade stroke-l4">
       {Array.from({ length: STOPS }, (_, k) => {
         const major = k === 0 || k === STOPS - 1 || k * 2 === STOPS - 1;
-        const half = major ? TICK_MAJOR : TICK_MINOR;
+        const len = major ? TICK.lg : TICK.md;
+        // Centred on the rail's pixel row: half the length either side.
+        const top = Math.floor(y + 0.5 - len / 2);
         const x = crisp(props.x0 + pitch * k);
         return (
           <line
@@ -103,8 +91,8 @@ const Ruler = (props: { x0: number; x1: number; y: number }) => {
             strokeWidth={1}
             x1={x}
             x2={x}
-            y1={y - half}
-            y2={y + half + 1}
+            y1={top}
+            y2={top + len}
           />
         );
       })}
@@ -242,15 +230,21 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
           >
             <circle cx={cx} cy={y} fill="transparent" r={us ? 12 : 7} />
             {us ? (
-              <circle
+              <Dot
                 className="pop fill-hero"
                 cx={cx}
                 cy={y}
-                r={4.5}
+                size="md"
                 style={stagger(r * 4, "mark")}
               />
             ) : (
-              <Ring cx={cx} cy={y} style={stagger(r * 4 + m.series, "mark")} />
+              <Ring
+                className="pop stroke-l5"
+                cx={cx}
+                cy={y}
+                size="sm"
+                style={stagger(r * 4 + m.series, "mark")}
+              />
             )}
           </g>
         );
@@ -260,7 +254,8 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
 };
 
 /** Room a key entry takes: swatch, gap, name, then the gap to the next. */
-const entryWidth = (name: string) => 18 + sansWidth(name, 12) + 20;
+const entryWidth = (name: string) =>
+  KEY.swatch + KEY.gap + sansWidth(name, 12) + KEY.entryGap;
 
 /** Baseline to baseline when the key wraps. */
 const KEY_LINE = 20;
@@ -279,7 +274,7 @@ const keyEntries = (gap: string, us: string, span: number) => {
   let line = 0;
   return items.map((item) => {
     const w = entryWidth(item.name);
-    if (cx > 0 && cx + w - 20 > span) {
+    if (cx > 0 && cx + w - KEY.entryGap > span) {
       cx = 0;
       line += 1;
     }
@@ -305,7 +300,7 @@ const SpectrumKey = (props: {
         />
         <text
           className="t-label fill-muted"
-          x={props.x + e.dx + 18}
+          x={props.x + e.dx + KEY.swatch + KEY.gap}
           y={props.y + e.line * KEY_LINE}
         >
           {e.name}

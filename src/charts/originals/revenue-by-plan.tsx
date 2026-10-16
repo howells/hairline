@@ -3,6 +3,7 @@ import { useState } from "react";
 import { fmtSignedPct } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { TICK } from "../marks";
 import { CrossHatch, DotScreen, EngravedRect, Hatch } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { clamp, dimClass, sansWidth, stagger, sum } from "../util";
@@ -12,13 +13,10 @@ import type { PlanRevenue } from "./revenue-by-plan.data";
 /** Baseline of the 0–100% scale, and the rule the ticks hang from. */
 const SCALE_Y = 10;
 const RULE_Y = 24;
-const TICK = 8;
-const TICK_TENTH = 14;
 /** The slim engraved bar under the ticks, one texture per good. */
-const BAR_Y = RULE_Y + TICK_TENTH + 6;
+const BAR_Y = RULE_Y + TICK.xl + 6;
 /** The dimension mark: a gap under the bar, then a 1px tick down to the label. */
 const DIM_GAP = 4;
-const DIM_LEN = 16;
 /** Baselines of the label block's three lines, from the bar's foot. */
 const NAME_Y = 34;
 const SHARE_Y = 51;
@@ -241,7 +239,7 @@ const SegmentMarks = ({
           x1={crisp(x(i / 100))}
           x2={crisp(x(i / 100))}
           y1={RULE_Y}
-          y2={RULE_Y + (i % 10 === 0 ? TICK_TENTH : TICK)}
+          y2={RULE_Y + (i % 10 === 0 ? TICK.xl : TICK.lg)}
         />
       ))}
       <EngravedRect
@@ -263,7 +261,7 @@ const SegmentMarks = ({
         x1={crisp(left)}
         x2={crisp(left)}
         y1={base + DIM_GAP}
-        y2={base + DIM_GAP + DIM_LEN}
+        y2={base + DIM_GAP + TICK.xl}
       />
       <g className="fade" style={stagger(seg.k + 4)}>
         <text

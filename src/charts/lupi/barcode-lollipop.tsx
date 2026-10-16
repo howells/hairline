@@ -6,6 +6,9 @@ import type { PointerEvent } from "react";
 import { monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { DOT, STEM } from "../marks";
+import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
 import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { barcodeLollipopDemo } from "./barcode-lollipop.data";
@@ -91,7 +94,7 @@ const topLabel = (
 interface DayMarkProps {
   datum: BarcodeDatum;
   dim: boolean;
-  dotR: number;
+  dotSize: DotSize;
   format: (v: number) => string;
   /** The highest day: the one mark in ink. */
   hero: boolean;
@@ -107,7 +110,7 @@ interface DayMarkProps {
 const DayMark = ({
   datum,
   dim,
-  dotR,
+  dotSize,
   format,
   hero,
   i,
@@ -118,25 +121,25 @@ const DayMark = ({
   y,
 }: DayMarkProps) => {
   const cy = y(datum.value);
-  const r = hero ? 4.5 : dotR;
+  const r = DOT[hero ? "md" : dotSize];
   // A 2px stem sits on whole pixels, a 1px one on the half pixel.
   const stemX = hero ? Math.round(x) : crisp(x);
   return (
     <g className={dimClass(dim)}>
       <line
         className={`grow-y from-top shape-crisp ${hero ? "stroke-hero" : "stroke-l4"}`}
-        strokeWidth={hero ? 2 : 1}
+        strokeWidth={hero ? STEM.hero : STEM.rest}
         style={stagger(i, "dense")}
         x1={stemX}
         x2={stemX}
         y1={cy}
         y2={y(low)}
       />
-      <circle
+      <Dot
         className={`pop ${hero ? "fill-hero" : "fill-l2"}`}
         cx={stemX}
         cy={cy}
-        r={r}
+        size={hero ? "md" : dotSize}
         style={stagger(i, "dense")}
       />
       {isTop ? (
@@ -250,7 +253,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
         const y = scaleLinear()
           .domain([Math.min(...lows), Math.max(...data.map((d) => d.value))])
           .range([floor - 6, m.top + 22]);
-        const dotR = step >= 8 ? 3 : 2;
+        const dotSize: DotSize = step >= 8 ? "sm" : "xs";
         const labelX = spreadLabels(
           [...top].map((i) => topLabel(i, data[i], format, x, y)),
           m.left - step / 2,
@@ -263,7 +266,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
             return;
           }
           const i = clamp(Math.round((px - m.left) / step), 0, data.length - 1);
-          setTip({ i, x: x(i), y: y(data[i].value) - dotR - 6 });
+          setTip({ i, x: x(i), y: y(data[i].value) - DOT[dotSize] - 6 });
         };
 
         return (
@@ -290,7 +293,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
               <DayMark
                 datum={d}
                 dim={tip !== null && tip.i !== i}
-                dotR={dotR}
+                dotSize={dotSize}
                 format={format}
                 i={i}
                 hero={i === peak}

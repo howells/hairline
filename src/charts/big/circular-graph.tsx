@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
 import { noteSpace, sansWidth, stagger } from "../util";
@@ -325,7 +326,7 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
   return (
     <g className="transition-opacity group-data-[focus=true]/ring:opacity-25">
       <g className="fade" style={{ "--i": 0 }}>
-        <DotRing cx={cx} cy={cy} r={R} tone="fill-l5" />
+        <DotRing cx={cx} cy={cy} r={R} step={RING_STEP.guide} tone="fill-l5" />
       </g>
       <g className="cap-round stroke-ink" fill="none">
         {ordered.map((c, i) => {

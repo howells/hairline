@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { KEY } from "../marks";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch, KeySwatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -36,7 +37,7 @@ interface Dot {
 /** Height of one legend line. */
 const LEGEND_ROW = 28;
 /** Side of a legend swatch (KeySwatch). */
-const SWATCH = 12;
+const SWATCH = KEY.swatch;
 
 /**
  * The engraving grammar, densest first, for every category after the hero:
@@ -99,7 +100,7 @@ const entryWidth = (data: WaffleDatum[], format: (v: number) => string) =>
   Math.max(
     130,
     SWATCH +
-      10 +
+      KEY.gap +
       labelRoom(
         data.map((d) => d.label),
         "t-label"
@@ -158,7 +159,7 @@ const WaffleLegend = (props: LegendProps) => (
               x={x}
               y={y - SWATCH / 2}
             />
-            <text className="t-name" x={x + SWATCH + 8} y={y} dy="0.35em">
+            <text className="t-name" x={x + SWATCH + KEY.gap} y={y} dy="0.35em">
               {d.label}
             </text>
             <text

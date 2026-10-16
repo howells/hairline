@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { MARK_WEIGHT, RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
 import { clamp, stagger } from "../util";
@@ -100,6 +101,9 @@ const tickTone = (i: number, dial: Dial) => {
   return i < dial.earned ? "stroke-l3" : "stroke-l6";
 };
 
+/** How far the dotted guide ring sits inside the tick ring. */
+const GUIDE_INSET = 6;
+
 const Ticks = (props: { dial: Dial }) => {
   const { dial } = props;
   const R = dial.radius;
@@ -119,7 +123,7 @@ const Ticks = (props: { dial: Dial }) => {
         <line
           className={`fade ${tickTone(t.i, dial)}`}
           key={t.id}
-          strokeWidth={2}
+          strokeWidth={MARK_WEIGHT}
           style={stagger(t.i, "dense")}
           x1={t.inner.x}
           x2={t.outer.x}
@@ -294,7 +298,8 @@ export const TickGauge = (props: TickGaugeProps) => {
               cx={dial.cx}
               cy={dial.cy}
               from={dial.a0}
-              r={dial.radius - dial.len - 6}
+              r={dial.radius - dial.len - GUIDE_INSET}
+              step={RING_STEP.guide}
               to={dial.a0 + dial.sweep}
             />
             <Scale dial={dial} />

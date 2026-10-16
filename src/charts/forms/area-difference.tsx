@@ -8,6 +8,7 @@ import type { PointerEvent } from "react";
 import { fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, sansWidth } from "../util";
@@ -150,8 +151,8 @@ const GapReading = (props: { d: PlanWeek; frame: Frame; i: number }) => {
         y1={Math.min(ya, yp)}
         y2={Math.max(ya, yp)}
       />
-      <circle className="fill-l4" cx={x} cy={yp} r={3} />
-      <circle className="fill-hero" cx={x} cy={ya} r={3} />
+      <Dot className="fill-l4" cx={x} cy={yp} size="sm" />
+      <Dot className="fill-hero" cx={x} cy={ya} size="md" />
     </g>
   );
 };

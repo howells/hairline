@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch, PixelLine } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
@@ -46,7 +47,12 @@ const DialFace = (props: { dial: Dial }) => {
       {ticks.map((k) => {
         const deg = k * 15;
         const major = k % 6 === 0;
-        const [x0, y0] = clock(cx, cy, R + (major ? 10 : 13), deg);
+        const [x0, y0] = clock(
+          cx,
+          cy,
+          R + 18 - (major ? TICK.lg : TICK.sm),
+          deg
+        );
         const [x1, y1] = clock(cx, cy, R + 18, deg);
         return (
           <PixelLine

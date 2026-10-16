@@ -4,6 +4,7 @@ import { linkHorizontal } from "d3-shape";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
 import { PlotNote } from "../plot-note";
 import { dimClass, noteSpace, stagger } from "../util";
 import { treeLRDemo } from "./tree-lr.data";
@@ -105,12 +106,12 @@ const TreeNode = ({ n, x, y, k, tone, lit, hitRight, onEnter }: NodeProps) => {
         fill="transparent"
       />
       {leaf ? null : (
-        <circle
+        <Dot
           className={`pop ${tone}`}
           style={stagger(n.depth * 4 + k * 0.2, "series")}
           cx={x}
           cy={y}
-          r={4.5}
+          size="md"
         />
       )}
       <text

@@ -4,6 +4,9 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot, Ring } from "../markers";
+import { DOT, MARK_WEIGHT } from "../marks";
+import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
 import { dimClass, stagger } from "../util";
 import { dumbbellQueueDemo } from "./dumbbell-queue.data";
@@ -28,6 +31,7 @@ interface DumbbellQueueProps {
 
 interface Layout {
   dotR: number;
+  dotSize: DotSize;
   labelW: number;
   pitch: number;
   top: number;
@@ -77,7 +81,8 @@ const buildLayout = (
   const top = 36;
   const bottom = hasNote ? 74 : 44;
   const max = Math.max(...data.flatMap((d) => [d.before, d.after]));
-  const dotR = width < 420 ? 4.5 : 6;
+  const dotSize: DotSize = width < 420 ? "md" : "lg";
+  const dotR = DOT[dotSize];
   const x0 = labelW + 12;
   // Pull the track's right end in until every right-hand value label fits.
   const x1 = Math.min(
@@ -91,6 +96,7 @@ const buildLayout = (
   );
   return {
     dotR,
+    dotSize,
     labelW,
     pitch: (height - top - bottom) / Math.max(1, data.length - 1),
     top,
@@ -129,7 +135,7 @@ const ChangeRungs = (props: {
   const rungs = Array.from({ length: count }, (_, k) => ({
     id: `${datum.label}-rung-${k}`,
     k,
-    x: Math.round(gap0 + ((k + 0.5) / count) * (gap1 - gap0)) - 1,
+    x: Math.round(gap0 + ((k + 0.5) / count) * (gap1 - gap0)) - MARK_WEIGHT / 2,
   }));
   return (
     <g className={worse ? "fill-alert" : "fill-l4"}>
@@ -142,7 +148,7 @@ const ChangeRungs = (props: {
           height={RUNG_H}
           key={b.id}
           style={stagger(props.index * 3 + b.k * 0.6, "mark")}
-          width={2}
+          width={MARK_WEIGHT}
           x={b.x}
           y={props.y - RUNG_H / 2}
         />
@@ -200,19 +206,18 @@ const Row = (props: RowProps) => {
         unit={props.unit}
         y={y}
       />
-      <circle
-        className="pop fill-paper stroke-l3"
+      <Ring
+        className="pop stroke-l3"
         cx={xb}
         cy={y + 0.5}
-        r={R - 0.5}
-        strokeWidth={1}
+        size={layout.dotSize}
         style={stagger(props.index * 3, "mark")}
       />
-      <circle
+      <Dot
         className={props.hero ? "pop fill-hero" : "pop fill-l3"}
         cx={xa}
         cy={y + 0.5}
-        r={R}
+        size={layout.dotSize}
         style={stagger(props.index * 3 + beadCount * 0.6, "mark")}
       />
       <text

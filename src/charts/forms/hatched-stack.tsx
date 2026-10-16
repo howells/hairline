@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { KEY } from "../marks";
 import {
   CrossHatch,
   DotScreen,
@@ -29,8 +30,8 @@ const KEY_LINE = 20;
 /** Room between the key and the first bar. */
 const KEY_GAP = 12;
 /** KeySwatch's size, and the gap after it. */
-const SWATCH = 12;
-const SWATCH_GAP = 6;
+const SWATCH = KEY.swatch;
+const SWATCH_GAP = KEY.gap;
 
 interface Hover {
   kind: number;
@@ -162,8 +163,8 @@ const keyLayout = (kinds: WorkKind[], x0: number, width: number) => {
   let y = 0;
   const items: KeyItem[] = [];
   for (const [k, kind] of kinds.entries()) {
-    const w = SWATCH + SWATCH_GAP + sansWidth(kind.name, 11) + 16;
-    if (x + w - 16 > width && x > x0) {
+    const w = SWATCH + SWATCH_GAP + sansWidth(kind.name, 11) + KEY.entryGap;
+    if (x + w - KEY.entryGap > width && x > x0) {
       x = x0;
       y += KEY_LINE;
     }

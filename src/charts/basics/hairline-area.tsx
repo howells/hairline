@@ -6,6 +6,8 @@ import type { PointerEvent } from "react";
 import { fmtInt, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { MARK_WEIGHT } from "../marks";
 import { PlotNote } from "../plot-note";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -96,8 +98,8 @@ const DayStems = ({
           height={Math.max(0, base - top)}
           key={dayKey(d)}
           style={stagger(i, "fine")}
-          width={2}
-          x={Math.round(frame.x(i)) - 1}
+          width={MARK_WEIGHT}
+          x={Math.round(frame.x(i)) - MARK_WEIGHT / 2}
           y={top}
         />
       );
@@ -253,18 +255,18 @@ const HairlineAreaSvg = ({
         style={stagger(4, "series")}
       />
       {hover === null || hover === hero ? null : (
-        <circle
+        <Dot
           className="fill-l2"
           cx={frame.x(hover)}
           cy={frame.y(values[hover])}
-          r={3}
+          size="sm"
         />
       )}
-      <circle
+      <Dot
         className="pop fill-hero"
         cx={frame.x(hero)}
         cy={frame.y(values[hero])}
-        r={4.5}
+        size="md"
         style={stagger(40, "fine")}
       />
       <text

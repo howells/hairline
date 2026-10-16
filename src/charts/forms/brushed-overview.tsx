@@ -8,6 +8,8 @@ import type { PointerEvent } from "react";
 import { dayTickLabels, fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { STEM } from "../marks";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, weeklyMean } from "../util";
 import { ValueGrid } from "../value-grid";
@@ -118,7 +120,7 @@ const Stems = (props: StemsProps) => (
         <line
           className={`transition-tone shape-crisp ${stemClass(peak, props.hover === i)}`}
           key={d.date.toISOString()}
-          strokeWidth={peak ? 2 : 1}
+          strokeWidth={peak ? STEM.hero : STEM.rest}
           x1={at}
           x2={at}
           y1={props.y(props.mean[i])}
@@ -211,18 +213,18 @@ const Detail = (props: DetailProps) => {
         pathLength={1}
       />
       {props.hover === null || props.hover === peak ? null : (
-        <circle
+        <Dot
           className="fill-l2"
           cx={crisp(x(props.hover))}
           cy={y(props.data[props.hover].value)}
-          r={2}
+          size="sm"
         />
       )}
-      <circle
+      <Dot
         className="pop fill-hero"
         cx={Math.round(x(peak))}
         cy={y(props.data[peak].value)}
-        r={3}
+        size="md"
       />
       <text
         className="fade t-value t-halo"

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Chart } from "../core";
+import { Dot, Ring } from "../markers";
 import { nameWidth } from "./room";
 import { relax } from "./spread";
 import { GRID_V, LABEL, TICK, VALUE } from "./styles";
@@ -48,13 +49,31 @@ const LABEL_GAP = 14;
 type Role = "lead" | "worst" | "rest";
 
 /**
- * The biggest fall in ink, the single biggest rise in red, every other
+ * The biggest fall in the hero tone, the single biggest rise in red, every other
  * row grey. Values stay in text tones: ink for the two marked rows.
  */
-const ROW_TONE: Record<Role, { stroke: string; value: string }> = {
-  lead: { stroke: "var(--ink)", value: "fill-ink" },
-  rest: { stroke: "var(--l3)", value: "fill-muted" },
-  worst: { stroke: "var(--alert)", value: "fill-ink" },
+const ROW_TONE: Record<
+  Role,
+  { dotClass: string; ringClass: string; stroke: string; value: string }
+> = {
+  lead: {
+    dotClass: "fill-hero",
+    ringClass: "stroke-hero",
+    stroke: "var(--hero)",
+    value: "fill-ink",
+  },
+  rest: {
+    dotClass: "fill-l3",
+    ringClass: "stroke-l3",
+    stroke: "var(--l3)",
+    value: "fill-muted",
+  },
+  worst: {
+    dotClass: "fill-alert",
+    ringClass: "stroke-alert",
+    stroke: "var(--alert)",
+    value: "fill-ink",
+  },
 };
 
 /** One row's before/after segment with a label at each end. */
@@ -100,19 +119,12 @@ const SlopeRow = (props: {
         stroke={tone.stroke}
         strokeWidth={1.5}
       />
-      <circle
-        cx={xa}
-        cy={y(row.from)}
-        r={3}
-        fill="var(--bg)"
-        stroke={tone.stroke}
-        strokeWidth={1.5}
-      />
-      <circle
+      <Ring className={tone.ringClass} cx={xa} cy={y(row.from)} size="sm" />
+      <Dot
+        className={tone.dotClass}
         cx={xb}
         cy={y(row.to)}
-        r={props.role === "rest" ? 3 : 4.5}
-        fill={tone.stroke}
+        size={props.role === "rest" ? "sm" : "md"}
       />
       <text
         x={xa - LABEL_GAP}

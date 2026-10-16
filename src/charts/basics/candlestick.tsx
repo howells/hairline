@@ -10,6 +10,7 @@ import {
 } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { MARK_WEIGHT, TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -139,7 +140,7 @@ const DayAxis = (props: { data: CandleDatum[]; layout: Layout }) => {
             x1={crisp(centre(layout, d))}
             x2={crisp(centre(layout, d))}
             y1={layout.axisY + 1}
-            y2={layout.axisY + 6}
+            y2={layout.axisY + 1 + TICK.md}
           />
           <text
             className="t-axis"
@@ -167,7 +168,7 @@ interface CandleProps {
 }
 
 /** Body outline: hairline, or the 2px emphasis width on the hero. */
-const outline = (hero: boolean) => (hero ? 2 : 1);
+const outline = (hero: boolean) => (hero ? MARK_WEIGHT : 1);
 
 const Candle = (props: CandleProps) => {
   const { datum, layout } = props;

@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DottedLine } from "../texture";
 import { dimClass, stagger } from "../util";
@@ -103,7 +104,7 @@ const Axis = (props: {
             x1={crisp(layout.x(e))}
             x2={crisp(layout.x(e))}
             y1={y + 1}
-            y2={y + (k % step === 0 ? 7 : 4)}
+            y2={y + 1 + (k % step === 0 ? TICK.md : TICK.sm)}
           />
           {k % step === 0 ? (
             <text

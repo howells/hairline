@@ -3,6 +3,8 @@ import type { ScaleLinear } from "d3-scale";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { STEM } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
@@ -175,10 +177,11 @@ const Point = ({
       />
       {hero ? (
         <line
-          className="grow-y hairline stroke-hero"
+          className="grow-y stroke-hero shape-crisp"
+          strokeWidth={STEM.hero}
           style={stagger(order, "mark")}
-          x1={crisp(px)}
-          x2={crisp(px)}
+          x1={Math.round(px)}
+          x2={Math.round(px)}
           y1={Math.round(floor)}
           y2={py}
         />
@@ -194,11 +197,11 @@ const Point = ({
           />
         </g>
       )}
-      <circle
+      <Dot
         className={dotClass(hero)}
         cx={crisp(px)}
         cy={py}
-        r={hero ? 4.5 : 3}
+        size={hero ? "md" : "sm"}
         style={stagger(order + 6, "mark")}
       />
       {named ? (

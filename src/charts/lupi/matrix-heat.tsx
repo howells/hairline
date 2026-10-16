@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { KEY } from "../marks";
 import {
   CrossHatch,
   DotScreen,
@@ -172,7 +173,9 @@ interface LegendProps {
 /** The five screens and their ranges: one row when wide, rows of three when narrow. */
 const ShadeLegend = ({ labels, screens, x, y, span, wide }: LegendProps) => {
   // Swatch, gap, label, then air before the next entry.
-  const widths = labels.map((l) => 18 + sansWidth(l, 11) + 20);
+  const widths = labels.map(
+    (l) => KEY.swatch + KEY.gap + sansWidth(l, 11) + KEY.entryGap
+  );
   const perRow = wide ? screens.length : 3;
   const column = Math.min(span / perRow, Math.max(...widths));
   const offsets = widths.map((_, k) =>
@@ -189,7 +192,7 @@ const ShadeLegend = ({ labels, screens, x, y, span, wide }: LegendProps) => {
           />
           <text
             className="t-axis"
-            x={x + (offsets[k] ?? 0) + 18}
+            x={x + (offsets[k] ?? 0) + KEY.swatch + KEY.gap}
             y={y + Math.floor(k / perRow) * 20}
             dy="0.34em"
           >

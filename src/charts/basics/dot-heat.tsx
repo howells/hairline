@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
 import { dimClass, stagger } from "../util";
@@ -354,7 +355,7 @@ export const DotHeat = (props: DotHeatProps) => {
               cx={grid.cx(peakC)}
               cy={grid.cy(peakR)}
               r={ringRadius(grid, data.values, peakR, peakC)}
-              step={3}
+              step={RING_STEP.mark}
             />
             <PlotNote
               text={props.note}

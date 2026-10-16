@@ -7,6 +7,7 @@ import type { PointerEvent } from "react";
 import { dayTickLabels, fmtDay } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Ring } from "../markers";
 import { PlotNote } from "../plot-note";
 import { Hatch, Rules } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -192,12 +193,12 @@ const Cursor = (p: { datum: RainfallDatum; f: Frame; i: number }) => (
       y2={p.f.floor}
       strokeWidth={1}
     />
-    <circle
-      className="fill-paper stroke-ink"
+    <Ring
+      className="stroke-ink"
       cx={p.f.cx(p.i)}
       cy={p.f.yOut(p.datum.output)}
-      r={4.5}
-      strokeWidth={2}
+      size="md"
+      weight="cursor"
     />
   </g>
 );

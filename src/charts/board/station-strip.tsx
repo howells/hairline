@@ -5,6 +5,8 @@ import type { PointerEvent } from "react";
 
 import { crisp } from "../axes";
 import { Chart, VGrid } from "../core";
+import { Dot } from "../markers";
+import { MARK_WEIGHT, TICK as TICK_LEN } from "../marks";
 import { nameWidth } from "./room";
 import { LABEL, POINT, TICK, VALUE } from "./styles";
 import { labelGap, thinTicks } from "./thin-ticks";
@@ -77,7 +79,7 @@ const MEDIAN_W = 60;
 /** Room above the plot for the median column's name, px. */
 const TOP = 22;
 /** Half the height of a row's median tick, px. */
-const TICK_H = 6;
+const TICK_H = TICK_LEN.md;
 
 interface Frame {
   width: number;
@@ -112,11 +114,11 @@ const StationDot = (props: {
   const anchor = cx > frame.width - frame.m.right - 60 ? "end" : "middle";
   return (
     <g>
-      <circle
+      <Dot
         className={`${POINT} ${TONE[props.tone].dot}`}
         cx={cx}
         cy={cy}
-        r={props.active ? 4.5 : 3}
+        size={props.active ? "md" : "sm"}
       />
       {named && (
         <text
@@ -173,9 +175,9 @@ const StripRow = (props: {
       />
       <rect
         className={tone.tick}
-        x={Math.round(x(row.median)) - 1}
+        x={Math.round(x(row.median)) - MARK_WEIGHT / 2}
         y={Math.floor(cy) - TICK_H}
-        width={2}
+        width={MARK_WEIGHT}
         height={TICK_H * 2 + 1}
       />
       {row.stations.map((e) => (

@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Ring } from "../markers";
+import { MARK_WEIGHT } from "../marks";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -242,20 +244,19 @@ const Group = (props: GroupProps) => {
       ) : null}
       <rect
         className={`grow-x ${props.hero ? "fill-hero" : "fill-l2"}`}
-        height={2}
+        height={MARK_WEIGHT}
         style={stagger(index + 3, "series")}
-        width={Math.max(2, boxR - 12)}
+        width={Math.max(MARK_WEIGHT, boxR - 12)}
         x={boxX + 6}
-        y={Math.round(y(datum.median)) - 1}
+        y={Math.round(y(datum.median)) - MARK_WEIGHT / 2}
       />
       {(datum.outliers ?? []).map((o, j) => (
-        <circle
-          className="pop fill-paper stroke-l3"
+        <Ring
+          className="pop stroke-l3"
           cx={crisp(cx)}
           cy={y(o)}
           key={o}
-          r={3}
-          strokeWidth={1}
+          size="sm"
           style={stagger(index * 3 + j + 6, "mark")}
         />
       ))}

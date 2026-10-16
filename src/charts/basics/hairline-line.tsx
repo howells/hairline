@@ -6,6 +6,9 @@ import type { PointerEvent } from "react";
 import { dayTickLabels, fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot, Ring } from "../markers";
+import { STEM } from "../marks";
+import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
@@ -53,7 +56,7 @@ const dotClass = (hollow: boolean, hero: boolean) => {
   if (hero) {
     return "fill-hero";
   }
-  return hollow ? "fill-paper stroke-l3" : "fill-l3";
+  return hollow ? "stroke-l3" : "fill-l3";
 };
 
 interface DotsProps {
@@ -70,27 +73,24 @@ interface DotsProps {
  */
 const Dots = ({ data, format, frame, hero, hover }: DotsProps) => {
   const last = data.length - 1;
-  const radius = (i: number) => {
-    if (i === hero) {
-      return 4.5;
-    }
-    return hover === i ? 4.5 : 3;
-  };
+  const size = (i: number): DotSize =>
+    i === hero || hover === i ? "md" : "sm";
   const labels = hero === last ? [hero] : [hero, last];
   return (
     <g>
       {data.map((d, i) => {
         const hollow = i !== hero && isWeekend(d.date);
-        return (
-          <circle
-            className={`pop transition-radius ${dotClass(hollow, i === hero)}`}
-            cx={crisp(frame.x(i))}
-            cy={frame.y(d.value)}
-            key={dayKey(d)}
-            r={radius(i)}
-            strokeWidth={hollow ? 1 : 0}
-            style={stagger(i, "mark")}
-          />
+        const props = {
+          className: `pop transition-radius ${dotClass(hollow, i === hero)}`,
+          cx: crisp(frame.x(i)),
+          cy: frame.y(d.value),
+          size: size(i),
+          style: stagger(i, "mark"),
+        };
+        return hollow ? (
+          <Ring key={dayKey(d)} {...props} />
+        ) : (
+          <Dot key={dayKey(d)} {...props} />
         );
       })}
       {labels.map((i) => (
@@ -126,10 +126,10 @@ const Stems = ({ data, floor, frame, hero }: StemsProps) => (
           <line
             className="grow-y stroke-hero shape-crisp"
             key={dayKey(d)}
-            strokeWidth={1}
+            strokeWidth={STEM.hero}
             style={stagger(i, "mark")}
-            x1={crisp(px)}
-            x2={crisp(px)}
+            x1={Math.round(px)}
+            x2={Math.round(px)}
             y1={Math.round(floor)}
             y2={frame.y(d.value)}
           />

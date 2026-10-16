@@ -3,15 +3,16 @@
  * target that isolates its step on hover, and the step fills they share with
  * the map.
  */
+import { KEY } from "../marks";
 import { KeySwatch } from "../texture";
 import { clamp, dimClass, sansWidth } from "../util";
 import { stepFill } from "./step-fill";
 
 /** Side of a key swatch (KeySwatch), and the gap before its label. */
-const SWATCH = 12;
-const SWATCH_GAP = 6;
+const SWATCH = KEY.swatch;
+const SWATCH_GAP = KEY.gap;
 /** Widest gap between keys. */
-const KEY_GAP = 12;
+const KEY_GAP = KEY.entryGap;
 /** Each key's pointer target: at least 44 by 44. */
 const HIT = 44;
 

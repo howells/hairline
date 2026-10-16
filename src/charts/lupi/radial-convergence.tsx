@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing } from "../texture";
 import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
@@ -282,6 +283,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
               cx={rim.cx}
               cy={rim.cy}
               r={rim.R}
+              step={RING_STEP.guide}
               tone="fill-l4"
             />
             {hubs.map((hub) => (

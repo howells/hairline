@@ -5,9 +5,10 @@ import type { PieArcDatum } from "d3-shape";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
 import { DotRing, Hatch } from "../texture";
-import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
+import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, ranks, sansWidth, stagger } from "../util";
 import { bigSliceDemo } from "./big-slice.data";
 import type { SliceDatum } from "./big-slice.data";
@@ -365,7 +366,7 @@ const RingGuides = (p: { rings: RingGuide[] }) => (
           cx={0}
           cy={0}
           r={g.radius}
-          step={TEXTURE_PITCH.dense}
+          step={RING_STEP.guide}
           tone="fill-l5"
         />
       ) : (
@@ -375,7 +376,7 @@ const RingGuides = (p: { rings: RingGuide[] }) => (
           cy={0}
           from={g.angle + g.half}
           r={g.radius}
-          step={TEXTURE_PITCH.dense}
+          step={RING_STEP.guide}
           to={g.angle - g.half + TAU}
           tone="fill-l5"
         />

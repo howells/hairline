@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { ballotTallyDemo } from "./ballot-tally.data";
@@ -43,7 +44,7 @@ interface RowProps {
 }
 
 /** Ruler tick heights in px: every tick, every fifth, every tenth. */
-const RULER = { five: 6, one: 4, ten: 9 } as const;
+const RULER = { five: TICK.md, one: TICK.sm, ten: TICK.lg } as const;
 
 /**
  * Ruler length: the next ten above the largest value, so the tens keep

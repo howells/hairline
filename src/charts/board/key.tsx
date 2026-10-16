@@ -1,3 +1,4 @@
+import { KEY } from "../marks";
 import { KeySwatch } from "../texture";
 
 export interface KeyItem {
@@ -19,14 +20,21 @@ export const Key = (props: {
   scale?: boolean;
 }) => (
   <div
-    className={`text-tick flex min-h-3 flex-wrap justify-center gap-y-2 leading-none tabular-nums ${props.scale === true ? "gap-x-0.5" : "gap-x-5"} ${props.className ?? ""}`}
+    className={`text-tick flex min-h-3 flex-wrap justify-center gap-y-2 leading-none tabular-nums ${props.scale === true ? "gap-x-0.5" : ""} ${props.className ?? ""}`}
+    style={props.scale === true ? undefined : { columnGap: KEY.entryGap }}
   >
     {props.items.map((item) => (
       <span
         key={`${item.label ?? ""}-${item.fill ?? item.tone ?? ""}`}
-        className="inline-flex items-center gap-2"
+        className="inline-flex items-center"
+        style={{ gap: KEY.gap }}
       >
-        <svg aria-hidden="true" className="shrink-0" height={12} width={12}>
+        <svg
+          aria-hidden="true"
+          className="shrink-0"
+          height={KEY.swatch}
+          width={KEY.swatch}
+        >
           <KeySwatch fill={item.fill} tone={item.tone} x={0} y={0} />
         </svg>
         {item.label !== undefined && (

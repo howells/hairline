@@ -6,6 +6,7 @@ import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal } from "../hooks";
+import { Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
 import { PlotNote } from "../plot-note";
 import { Hatch } from "../texture";
@@ -240,13 +241,11 @@ const Track = (p: TrackProps) => {
         const text = labels.get(k);
         return (
           <g key={period} className="pointer-events-none">
-            <circle
-              className={passed ? "fill-hero" : "fill-paper stroke-l5"}
-              cx={x(k)}
-              cy={p.y}
-              r={3}
-              strokeWidth={1}
-            />
+            {passed ? (
+              <Dot className="fill-hero" cx={x(k)} cy={p.y} size="sm" />
+            ) : (
+              <Ring className="stroke-l5" cx={x(k)} cy={p.y} size="sm" />
+            )}
             {text === undefined ? null : (
               <text
                 className={period === p.current ? "t-value" : "t-axis"}

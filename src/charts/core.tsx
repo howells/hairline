@@ -249,35 +249,10 @@ export const Cursor = (props: { x: number; y0: number; y1: number }) => (
   />
 );
 
-// ---------- Legend ----------
+// ---------- Legend items ----------
 
 export interface LegendItem {
   color: string;
   hollow?: boolean;
   label: string;
 }
-
-interface LegendProps {
-  className?: string;
-  items: LegendItem[];
-  muted?: boolean;
-}
-
-export const Legend = (props: LegendProps) => (
-  <div
-    className={`text-tick flex min-h-3 justify-center gap-5 leading-none tabular-nums ${props.muted === true ? "text-muted font-light" : "text-text font-normal"} ${props.className ?? ""}`}
-  >
-    {props.items.map((item) => (
-      <span
-        key={`${item.color}-${item.label}`}
-        className="inline-flex items-center gap-2"
-      >
-        <span
-          className={`size-1.75 rounded-full ${item.hollow === true ? "shadow-hollow bg-transparent" : "bg-current"}`}
-          style={{ color: item.color }}
-        />
-        {item.label}
-      </span>
-    ))}
-  </div>
-);

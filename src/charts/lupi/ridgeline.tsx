@@ -6,6 +6,8 @@ import { useState } from "react";
 import { fmtDegC } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { Dot } from "../markers";
+import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -201,11 +203,11 @@ const Peaks = ({
           className={dimClass(hover !== null && hover !== i)}
           key={`peak-${r.label}`}
         >
-          <circle
+          <Dot
             className={`pop ${hero ? "fill-hero" : "fill-l3"}`}
             cx={x(r.peak)}
             cy={base - (r.top / maxD) * ridgeH}
-            r={3}
+            size={hero ? "md" : "sm"}
             style={stagger(i * 6 + 30, "fine")}
           />
           <text
@@ -244,7 +246,7 @@ const Axis = ({ x, y, ticks, format }: AxisProps) => {
             x1={crisp(x(v))}
             x2={crisp(x(v))}
             y1={Math.round(y)}
-            y2={Math.round(y) + 6}
+            y2={Math.round(y) + TICK.md}
           />
           <text className="t-axis" x={x(v)} y={y + 20} textAnchor="middle">
             {format(v)}
