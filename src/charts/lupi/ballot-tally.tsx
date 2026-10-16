@@ -9,7 +9,7 @@ import { argMax } from "./util-b";
 
 interface BallotTallyProps {
   data?: TallyDatum[];
-  /** Ticks per row (the whole sample). */
+  /** The whole sample, for the tooltip: "44 of 100 went". */
   total?: number;
   height?: number;
   format?: (v: number) => string;
@@ -38,11 +38,22 @@ interface RowProps {
   /** Hover band, as tall as the row. */
   band: { h: number; w: number; x: number; y: number };
   row: TallyDatum;
-  total: number;
+  /** Ticks in the ruler, the scale every row shares. */
+  ruler: number;
 }
 
 /** Ruler tick heights in px: every tick, every fifth, every tenth. */
 const RULER = { five: 6, one: 4, ten: 9 } as const;
+
+/**
+ * Ruler length: the next ten above the largest value, so the tens keep
+ * their cadence and even the longest run leaves a little ruler showing.
+ */
+const rulerLength = (data: TallyDatum[], total: number) =>
+  Math.min(
+    total,
+    (Math.floor(Math.max(0, ...data.map((d) => d.value)) / 10) + 1) * 10
+  );
 
 /** Height of the k-th short tick: a ruler, longer every 5 and every 10. */
 const rulerTick = (k: number) => {
@@ -52,7 +63,7 @@ const rulerTick = (k: number) => {
   return (k + 1) % 5 === 0 ? RULER.five : RULER.one;
 };
 
-/** One answer: a 100-tick ruler with the share who went standing tall. */
+/** One answer: a ruler with the share who went standing tall. */
 const RulerRow = ({
   band,
   format,
@@ -60,7 +71,7 @@ const RulerRow = ({
   index,
   layout,
   row,
-  total,
+  ruler,
 }: RowProps) => {
   const { base, pitch, tall, x0 } = layout;
   const n = Math.round(row.value);
@@ -84,7 +95,7 @@ const RulerRow = ({
         {row.label}
       </text>
       <g className="fade fill-l5" style={stagger(index, "series")}>
-        {Array.from({ length: total - n }, (_, j) => {
+        {Array.from({ length: Math.max(0, ruler - n) }, (_, j) => {
           const k = n + j;
           const h = rulerTick(k);
           return (
@@ -128,10 +139,10 @@ const RulerRow = ({
 };
 
 /**
- * L15 Days out. Multi-select answers as rulers of a hundred: every person
- * is one 1px tick at one whole-pixel pitch, faint and short (a ruler,
- * longer every ten), and those who went stand tall, so "44" reads as a
- * share of the whole. Rows are independent 0–100.
+ * L15 Days out. Multi-select answers as rulers: every person who went is
+ * one tall 1px tick at one whole-pixel pitch, standing on a faint shared
+ * ruler (longer every ten) that runs to the next ten above the largest
+ * value, so the rows compare at the widest scale. Rows are independent.
  */
 export const BallotTally = (props: BallotTallyProps) => {
   const data = props.data ?? ballotTallyDemo;
@@ -140,6 +151,7 @@ export const BallotTally = (props: BallotTallyProps) => {
   const height = props.height ?? 460;
   const [hover, setHover] = useState<number | null>(null);
   const hero = props.highlight ?? argMax(data.map((d) => d.value));
+  const ruler = rulerLength(data, total);
 
   return (
     <Plot>
@@ -150,12 +162,12 @@ export const BallotTally = (props: BallotTallyProps) => {
         const valueW = data.map((d) => sansWidth(format(d.value), 11));
         const blockAt = (p: number) =>
           Math.max(
-            p * (total - 1) + 1,
+            p * (ruler - 1) + 1,
             ...data.map(
               (d, i) => p * (Math.round(d.value) - 1) + 7 + (valueW[i] ?? 0)
             )
           );
-        let pitch = Math.max(2, Math.floor((width - 1) / (total - 1)));
+        let pitch = Math.max(2, Math.floor((width - 1) / (ruler - 1)));
         while (pitch > 2 && blockAt(pitch) > width) {
           pitch -= 1;
         }
@@ -197,7 +209,7 @@ export const BallotTally = (props: BallotTallyProps) => {
                     index={i}
                     layout={layoutAt(i)}
                     row={d}
-                    total={total}
+                    ruler={ruler}
                   />
                 </g>
               ))}
