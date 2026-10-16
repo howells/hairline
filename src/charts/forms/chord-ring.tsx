@@ -1,7 +1,7 @@
 import { chord } from "d3-chord";
 import type { Chord, ChordGroup } from "d3-chord";
 import { arc } from "d3-shape";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
@@ -166,74 +166,188 @@ const TeamLabel = (props: {
 const touches = (c: Chord, team: number) =>
   c.source.index === team || c.target.index === team;
 
+/** One pair as drawn: its ribbon and its bundle of threads, built once per size. */
+interface Pair {
+  chord: Chord;
+  key: string;
+  ribbon: string;
+  threads: { d: string; shift: number }[];
+}
+
+/** Every pair's ribbon and threads, and the ring's segments, for one radius. */
+const geometryOf = (data: SharedWork, r: number) => {
+  const chords = layoutOf(data.matrix);
+  const inner = r - RING;
+  const most = Math.max(...chords.map((c) => c.source.value));
+  const pairs = chords.map((c): Pair => ({
+    chord: c,
+    key: `${data.teams[c.source.index]}-${data.teams[c.target.index]}`,
+    ribbon: ribbonPath(c, inner - GAP),
+    threads: shifts(threadCount(c.source.value, most)).map((shift) => ({
+      d: threadPath(c, inner - GAP, shift),
+      shift,
+    })),
+  }));
+  const segment = arc<ChordGroup>().innerRadius(inner).outerRadius(r);
+  return {
+    groups: chords.groups.map((g) => ({ d: segment(g) ?? "", group: g })),
+    pairs,
+  };
+};
+
+type Geometry = ReturnType<typeof geometryOf>;
+
 interface RingProps {
   data: SharedWork;
   /** Id of the ink hatch the focused group's ribbons are engraved with. */
   hatch: string;
   focus: number;
-  hover: number | null;
+  geometry: Geometry;
+  hovering: boolean;
   r: number;
 }
 
-/** Threads first, the focused group's ribbons over them, then the ring and names. */
-const Ring = (props: RingProps) => {
-  const chords = layoutOf(props.data.matrix);
-  const inner = props.r - RING;
-  const mine = chords.filter((c) => touches(c, props.focus));
-  const others = chords.filter((c) => !touches(c, props.focus));
-  const most = Math.max(...chords.map((c) => c.source.value));
-  const segment = arc<ChordGroup>().innerRadius(inner).outerRadius(props.r);
-  return (
-    <g>
-      {/* Every other pair as hairline threads on bare paper, under the hero. */}
-      <g className={dimClass(props.hover !== null)}>
-        {others.flatMap((c) => {
-          const key = `${props.data.teams[c.source.index]}-${props.data.teams[c.target.index]}`;
-          return shifts(threadCount(c.source.value, most)).map((shift) => (
+/**
+ * Threads first, the focused group's ribbons over them, then the ring and
+ * names. Every pair keeps both its threads and its ribbon mounted; focus only
+ * crossfades between them, so moving from group to group never redraws.
+ */
+const Ring = (props: RingProps) => (
+  <g>
+    {/* Every other pair as hairline threads on bare paper, under the hero. */}
+    <g className={dimClass(props.hovering)}>
+      {props.geometry.pairs.map((p) => (
+        <g
+          className="ease-enter transition-opacity"
+          key={p.key}
+          opacity={touches(p.chord, props.focus) ? 0 : 1}
+        >
+          {p.threads.map((t) => (
             <path
               className="draw stroke-l4 fill-none"
-              d={threadPath(c, inner - GAP, shift)}
-              key={`${key}-${shift}`}
+              d={t.d}
+              key={t.shift}
               pathLength={1}
               strokeWidth={1}
             />
-          ));
-        })}
-      </g>
-      {/* The focused team's ribbons lead: ink hatch on paper, the one fill. */}
-      {mine.map((c) => (
-        <path
-          className="fade stroke-l5"
-          d={ribbonPath(c, inner - GAP)}
-          fill={paint(props.hatch)}
-          key={`${props.data.teams[c.source.index]}-${props.data.teams[c.target.index]}`}
-          strokeWidth={1}
-        />
-      ))}
-      {chords.groups.map((g) => (
-        <g key={props.data.teams[g.index]}>
-          <path
-            className={`pop transition-colors ${g.index === props.focus ? "fill-hero" : "fill-l3"}`}
-            d={segment(g) ?? ""}
-            style={stagger(g.index, "mark")}
-          />
-          <TeamLabel
-            group={g}
-            hot={g.index === props.focus}
-            name={props.data.teams[g.index]}
-            r={props.r}
-          />
+          ))}
         </g>
       ))}
     </g>
-  );
+    {/* The focused group's ribbons lead: ink hatch on paper, the one fill. */}
+    {props.geometry.pairs.map((p) => (
+      <g
+        className="ease-enter transition-opacity"
+        key={p.key}
+        opacity={touches(p.chord, props.focus) ? 1 : 0}
+      >
+        <path
+          className="fade stroke-l5"
+          d={p.ribbon}
+          fill={paint(props.hatch)}
+          strokeWidth={1}
+        />
+      </g>
+    ))}
+    {props.geometry.groups.map(({ d, group: g }) => (
+      <g key={props.data.teams[g.index]}>
+        <path
+          className={`pop transition-colors ${g.index === props.focus ? "fill-hero" : "fill-l3"}`}
+          d={d}
+          style={stagger(g.index, "mark")}
+        />
+        <TeamLabel
+          group={g}
+          hot={g.index === props.focus}
+          name={props.data.teams[g.index]}
+          r={props.r}
+        />
+      </g>
+    ))}
+  </g>
+);
+
+/**
+ * The group nearest the pointer's angle: inside a segment it is that group,
+ * and in the gap between two it is the closer, so the focus never drops out
+ * as the pointer crosses from one group to the next.
+ */
+const teamAt = (geometry: Geometry, angle: number) => {
+  const turn = (angle + Math.PI * 2) % (Math.PI * 2);
+  const off = (g: ChordGroup) => {
+    if (turn >= g.startAngle && turn <= g.endAngle) {
+      return 0;
+    }
+    const d = Math.min(
+      Math.abs(turn - g.startAngle),
+      Math.abs(turn - g.endAngle)
+    );
+    return Math.min(d, Math.PI * 2 - d);
+  };
+  return geometry.groups
+    .map(({ group }) => group)
+    .toSorted((a, b) => off(a) - off(b))[0];
 };
 
-/** The group whose ring segment spans the pointer's angle, if any. */
-const teamAt = (data: SharedWork, angle: number) => {
-  const { groups } = chord().padAngle(0.035)(data.matrix);
-  const turn = (angle + Math.PI * 2) % (Math.PI * 2);
-  return groups.find((g) => turn >= g.startAngle && turn <= g.endAngle);
+/** The ring at one width: geometry built once per size, focus moved by the pointer. */
+const ChordSvg = (props: {
+  data: SharedWork;
+  hover: Hover | null;
+  onHover: (h: Hover | null) => void;
+  totals: number[];
+  width: number;
+}) => {
+  const { data, hover, totals, width } = props;
+  const hatch = useTextureIds("exports")("hatch");
+  const busiest = totals.indexOf(Math.max(...totals));
+  const size = Math.min(width, 460);
+  const r = size / 2 - LABEL_ROOM;
+  const cx = centreOf(data, r, width);
+  const cy = Math.round(size / 2);
+  const geometry = useMemo(() => geometryOf(data, r), [data, r]);
+  const label = `UK goods exports in 2025 between ${data.teams.length} partners and kinds of goods; ${data.teams[busiest]} is the largest, ${fmtBn(totals[busiest])}`;
+  const onMove = (e: PointerEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    const dx = e.clientX - box.left - cx;
+    const dy = e.clientY - box.top - cy;
+    // Over the hub the focus holds, so crossing the middle never flickers.
+    if (Math.hypot(dx, dy) < r * 0.45) {
+      return;
+    }
+    const g = teamAt(geometry, Math.atan2(dx, -dy));
+    if (g === undefined || g.index === hover?.team) {
+      return;
+    }
+    const p = polar(middle(g), r);
+    props.onHover({ team: g.index, x: cx + p.x, y: cy + p.y - 12 });
+  };
+  return (
+    <svg
+      aria-label={label}
+      className="touch-pan-y"
+      height={size}
+      onPointerLeave={() => {
+        props.onHover(null);
+      }}
+      onPointerMove={onMove}
+      width={width}
+    >
+      <title>{label}</title>
+      <defs>
+        <Hatch ground="fill-paper" id={hatch} tone="fill-hero" />
+      </defs>
+      <g transform={`translate(${cx} ${cy})`}>
+        <Ring
+          data={data}
+          focus={hover?.team ?? busiest}
+          geometry={geometry}
+          hatch={hatch}
+          hovering={hover !== null}
+          r={r}
+        />
+      </g>
+    </svg>
+  );
 };
 
 /**
@@ -241,16 +355,13 @@ const teamAt = (data: SharedWork, angle: number) => {
  * tied by a bundle of one to three hairlines through the centre, more
  * threads for more pounds, so the ring reads as an engraved web on paper.
  * The busiest group is the ink hero, its pairs drawn as ribbons in an ink
- * hatch on paper; hovering another group moves the hatch to its pairs and
- * dims the threads.
+ * hatch on paper; hovering another group crossfades the hatch to its pairs
+ * and dims the threads.
  */
 export const ChordRing = (props: { data?: SharedWork }) => {
   const data = props.data ?? sharedWorkDemo;
   const [hover, setHover] = useState<Hover | null>(null);
-  const hatch = useTextureIds("exports")("hatch");
   const totals = data.matrix.map((row) => sum(row));
-  const busiest = totals.indexOf(Math.max(...totals));
-  const focus = hover?.team ?? busiest;
   return (
     <Plot
       overlay={
@@ -261,52 +372,15 @@ export const ChordRing = (props: { data?: SharedWork }) => {
         )
       }
     >
-      {(width) => {
-        const size = Math.min(width, 460);
-        const r = size / 2 - LABEL_ROOM;
-        const cx = centreOf(data, r, width);
-        const cy = Math.round(size / 2);
-        const label = `UK goods exports in 2025 between ${data.teams.length} partners and kinds of goods; ${data.teams[busiest]} is the largest, ${fmtBn(totals[busiest])}`;
-        const onMove = (e: PointerEvent<SVGSVGElement>) => {
-          const box = e.currentTarget.getBoundingClientRect();
-          const dx = e.clientX - box.left - cx;
-          const dy = e.clientY - box.top - cy;
-          const g = teamAt(data, Math.atan2(dx, -dy));
-          if (g === undefined || Math.hypot(dx, dy) < r * 0.45) {
-            setHover(null);
-            return;
-          }
-          const mid = (g.startAngle + g.endAngle) / 2;
-          const p = polar(mid, r);
-          setHover({ team: g.index, x: cx + p.x, y: cy + p.y - 12 });
-        };
-        return (
-          <svg
-            aria-label={label}
-            className="touch-pan-y"
-            height={size}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
-            onPointerMove={onMove}
-            width={width}
-          >
-            <title>{label}</title>
-            <defs>
-              <Hatch ground="fill-paper" id={hatch} tone="fill-hero" />
-            </defs>
-            <g transform={`translate(${cx} ${cy})`}>
-              <Ring
-                data={data}
-                hatch={hatch}
-                focus={focus}
-                hover={hover?.team ?? null}
-                r={r}
-              />
-            </g>
-          </svg>
-        );
-      }}
+      {(width) => (
+        <ChordSvg
+          data={data}
+          hover={hover}
+          onHover={setHover}
+          totals={totals}
+          width={width}
+        />
+      )}
     </Plot>
   );
 };
