@@ -92,6 +92,8 @@ interface RidgeLayerProps {
   maxD: number;
   x: ScaleLinear<number, number>;
   hero: boolean;
+  /** Faded while another ridge is hovered; the paper stays opaque. */
+  dim: boolean;
   label: string;
   /** Pattern ids: every ridge's hatch, and the hero's crosshatch. */
   fills: RidgeFills;
@@ -104,7 +106,8 @@ interface RidgeFills {
 
 /**
  * One crest: a paper fill hides the rows behind, then an engraved hatch
- * (crosshatch for the hero), a baseline and the outline.
+ * (crosshatch for the hero), a baseline and the outline. Dimming fades the
+ * ink only, so the paper keeps hiding the rows behind.
  */
 const RidgeLayer = ({
   ridge,
@@ -114,6 +117,7 @@ const RidgeLayer = ({
   maxD,
   x,
   hero,
+  dim,
   label,
   fills,
 }: RidgeLayerProps) => {
@@ -130,32 +134,34 @@ const RidgeLayer = ({
   return (
     <>
       <path d={crest ?? ""} className="fill-paper" />
-      <g className="fade" style={stagger(index, "series")}>
-        <path d={crest ?? ""} fill={paint(hero ? fills.hero : fills.hatch)} />
+      <g className={dimClass(dim)}>
+        <g className="fade" style={stagger(index, "series")}>
+          <path d={crest ?? ""} fill={paint(hero ? fills.hero : fills.hatch)} />
+        </g>
+        <line
+          className="hairline"
+          x1={x.range()[0]}
+          x2={x.range()[1]}
+          y1={crisp(base)}
+          y2={crisp(base)}
+        />
+        <path
+          d={outline ?? ""}
+          className={`draw cap-round fill-none ${hero ? "stroke-hero" : "stroke-l3"}`}
+          pathLength={1}
+          style={stagger(index, "series")}
+          strokeWidth={hero ? 2 : 1.5}
+        />
+        <text
+          className={`fade t-label ${hero ? "" : "fill-muted"}`}
+          style={stagger(index, "series")}
+          x={x.range()[0] - 18}
+          y={base - 4}
+          textAnchor="end"
+        >
+          {label}
+        </text>
       </g>
-      <line
-        className="hairline"
-        x1={x.range()[0]}
-        x2={x.range()[1]}
-        y1={crisp(base)}
-        y2={crisp(base)}
-      />
-      <path
-        d={outline ?? ""}
-        className={`draw cap-round fill-none ${hero ? "stroke-hero" : "stroke-l3"}`}
-        pathLength={1}
-        style={stagger(index, "series")}
-        strokeWidth={hero ? 2 : 1.5}
-      />
-      <text
-        className={`fade t-label ${hero ? "" : "fill-muted"}`}
-        style={stagger(index, "series")}
-        x={x.range()[0] - 18}
-        y={base - 4}
-        textAnchor="end"
-      >
-        {label}
-      </text>
     </>
   );
 };
@@ -313,7 +319,6 @@ export const Ridgeline = (props: RidgelineProps) => {
               {ridges.map((r, i) => (
                 <g
                   key={r.label}
-                  className={dimClass(hover !== null && hover !== i)}
                   onPointerEnter={() => {
                     setHover(i);
                   }}
@@ -333,6 +338,7 @@ export const Ridgeline = (props: RidgelineProps) => {
                     maxD={maxD}
                     x={x}
                     hero={heroOf(r)}
+                    dim={hover !== null && hover !== i}
                     label={r.label}
                     fills={{ hatch: hatchId, hero: heroId }}
                   />
