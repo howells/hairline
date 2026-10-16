@@ -6,31 +6,34 @@ export interface WaterfallDatum {
 }
 
 /**
- * F9 Population change. How the population of England and Wales changed in the
- * year to mid-2025: births and deaths, net migration from abroad, and everything
- * else, ending at the year's growth of 224,874 people (from 61,785,119 to
- * 62,009,993).
+ * F9 Where carbon goes. The world's carbon dioxide in an average year of
+ * 2015 to 2024, in billions of tonnes of CO2: what fossil fuels and land use
+ * emit (40.9), what the ocean and plants take back up, and what is left in
+ * the air (20.4), about half.
  *
- * Source: Office for National Statistics, "Estimates of the population for
- * England and Wales", mid-2011 to mid-2025 detailed time series, sheet MYEB3,
- * estimated components of population change by local authority (Open
- * Government Licence v3.0).
- *   https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales
- *   https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales/mid2011tomid2025detailedtimeseries/myebtablesenglandwales20112025.xlsx
- * Fetched 2026-10-15.
+ * Source: Global Carbon Project, Global Carbon Budget 2025 (Friedlingstein et
+ * al., 2025, Earth System Science Data), Global_Carbon_Budget_2025v1.0.xlsx,
+ * sheet "Global Carbon Budget". Freely available; cite the Global Carbon
+ * Budget 2025 (ICOS licence CC BY 4.0).
+ *   https://globalcarbonbudget.org/datahub/the-latest-gcb-data-2025/
+ *   https://doi.org/10.18160/GCP-2025
+ * Fetched 2026-10-16.
  *
- * Transform: add up the 318 local authorities (country E or W) for the columns
- * births_2025 (587,976), deaths_2025 (568,352), international_net_2025
- * (211,691), internal_net_2025 (-5,940) and other_change_2025
- * (-501). "Other" is internal_net plus other_change (moves to and
- * from Scotland and Northern Ireland, and armed forces and dependants): -6,441.
- * The steps sum exactly to population_2025 minus population_2024. Scripts:
- * reference/scripts/F9/sum.py and gen.py.
+ * Transform: mean of the ten years 2015 to 2024 for each column, in GtC.
+ * Fossil is "fossil emissions excluding carbonation" less "cement
+ * carbonation sink" (10.012 - 0.210 = 9.802), as the budget's headline
+ * fossil figure is net of carbonation; land use is "land-use change
+ * emissions" (1.372); ocean and plants are "ocean sink" (3.221) and "land
+ * sink" (2.363). Each is multiplied by 3.664 to give GtCO2, as the sheet
+ * directs, and rounded to 0.1 so the totals add up as shown: 35.9, 5.0,
+ * 11.8 and 8.7. The closing total is the level reached, 20.4, as is measured
+ * "atmospheric growth" (20.42); the budget imbalance (0.06) is left out. Scripts: reference/scripts/F9-gcb/sheet.py and budget.py.
  */
 export const rungWaterfallDemo: WaterfallDatum[] = [
-  { label: "Births", value: 587_976 },
-  { label: "Deaths", value: -568_352 },
-  { label: "Migration", value: 211_691 },
-  { label: "Other", value: -6441 },
-  { label: "Growth", total: true },
+  { label: "Fossil", value: 35.9 },
+  { label: "Land use", value: 5 },
+  { label: "Emitted", total: true },
+  { label: "Ocean", value: -11.8 },
+  { label: "Plants", value: -8.7 },
+  { label: "Air", total: true },
 ];

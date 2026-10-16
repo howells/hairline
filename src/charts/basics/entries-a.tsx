@@ -1,5 +1,5 @@
 import type { GalleryEntry } from "../../gallery/types";
-import { fmtInt, fmtKInt } from "../../lib/format";
+import { fmtInt } from "../../lib/format";
 import { HairlineArea } from "./hairline-area";
 import { HairlineLine } from "./hairline-line";
 import { PairedRungs } from "./paired-rungs";
@@ -20,6 +20,9 @@ const fmtDaylight = (v: number) => {
   return rest === 0 ? hours : `${hours} ${rest}m`;
 };
 
+/** Billions of tonnes of CO2, to one decimal. */
+const fmtGt = (v: number) => `${v.toFixed(1)}Gt`;
+
 const fmtPounds = (v: number) => `£${fmtInt(v)}`;
 const fmtMillions = (v: number) => `${(v / 1e6).toFixed(2)}m`;
 
@@ -34,8 +37,10 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F3",
-    name: "Shrinking days",
-    render: () => <HairlineArea format={fmtDaylight} />,
+    name: "Daylight in Tromsø",
+    render: () => (
+      <HairlineArea format={fmtDaylight} ticks={[0, 6, 12, 18, 24]} />
+    ),
   },
   {
     family: "basics",
@@ -78,7 +83,7 @@ export const entries: GalleryEntry[] = [
   {
     family: "basics",
     id: "F9",
-    name: "Population change",
-    render: () => <RungWaterfall format={fmtKInt} unit={20_000} />,
+    name: "Where carbon goes",
+    render: () => <RungWaterfall format={fmtGt} />,
   },
 ];

@@ -28,6 +28,8 @@ interface HairlineAreaProps {
   /** Index drawn in the hero colour. Defaults to the peak. */
   highlight?: number;
   formatDate?: (d: Date) => string;
+  /** Value-axis ticks; the scale runs to the last. Defaults to four nice steps. */
+  ticks?: number[];
   /**
    * Widest the plot gets, in px. Defaults to 640, which suits a gallery
    * card; pass `Infinity` to fill a full-width row.
@@ -53,15 +55,23 @@ const stemClass = (hero: boolean, hovered: boolean) => {
   return "grow-y fill-l4";
 };
 
-/** A stem stands on every Monday, on the hero and on the hovered day. */
+/** Past this many days, stems stand monthly rather than weekly. */
+const WEEKLY_SPAN = 120;
+
+/**
+ * A stem stands on every Monday (on every first of the month over a long
+ * span), on the hero and on the hovered day.
+ */
 const hasStem = (
   d: DailyDatum,
   i: number,
-  hero: number,
-  hover: number | null
-) => d.date.getUTCDay() === 1 || i === hero || i === hover;
+  marks: { hero: number; hover: number | null; monthly: boolean }
+) =>
+  (marks.monthly ? d.date.getUTCDate() === 1 : d.date.getUTCDay() === 1) ||
+  i === marks.hero ||
+  i === marks.hover;
 
-/** Weekly 2px stems, floor to value, on whole pixels. */
+/** Weekly (or monthly) 2px stems, floor to value, on whole pixels. */
 const DayStems = ({
   data,
   frame,
@@ -75,7 +85,7 @@ const DayStems = ({
 }) => (
   <g>
     {data.map((d, i) => {
-      if (!hasStem(d, i, hero, hover)) {
+      if (!hasStem(d, i, { hero, hover, monthly: data.length > WEEKLY_SPAN })) {
         return null;
       }
       const top = Math.round(frame.y(d.value));
@@ -95,9 +105,15 @@ const DayStems = ({
   </g>
 );
 
-/** A tick at each first of the month; the year on the first and where it changes. */
+/**
+ * A label at each first of the month (each quarter over a long span); the
+ * year on the first and where it changes.
+ */
 const MonthAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
-  const months = data.flatMap((d, i) => (d.date.getUTCDate() === 1 ? [i] : []));
+  const every = data.length > WEEKLY_SPAN ? 3 : 1;
+  const months = data.flatMap((d, i) =>
+    d.date.getUTCDate() === 1 && d.date.getUTCMonth() % every === 0 ? [i] : []
+  );
   const axis = months.includes(0) ? months : [0, ...months];
   const labels = monthTickLabels(axis.map((i) => data[i].date));
   return (
@@ -118,6 +134,14 @@ const MonthAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
   );
 };
 
+/** The value scale: up to the last of `ticks`, or to four nice steps over the peak. */
+const valueScale = (max: number, floor: number, ticks?: number[]) =>
+  ticks === undefined
+    ? scaleLinear().domain([0, max]).nice(4).range([floor, 40])
+    : scaleLinear()
+        .domain([0, ticks.at(-1) ?? max])
+        .range([floor, 40]);
+
 interface SvgProps {
   clear: () => void;
   /** Pattern id of the stipple under the line. */
@@ -131,6 +155,7 @@ interface SvgProps {
   maxWidth: number;
   note: string | undefined;
   show: (i: number, x: number, y: number) => void;
+  ticks: number[] | undefined;
   width: number;
 }
 
@@ -146,6 +171,7 @@ const HairlineAreaSvg = ({
   maxWidth,
   note,
   show,
+  ticks,
   width,
 }: SvgProps) => {
   const values = data.map((d) => d.value);
@@ -159,13 +185,12 @@ const HairlineAreaSvg = ({
   const x0 = Math.round((width - frameW) / 2);
   const x1 = x0 + frameW;
   const floor = dailyFloor(height, note, width);
-  const y = scaleLinear().domain([0, max]).nice(4).range([floor, 40]);
   const frame: Frame = {
     floor,
     x: scaleLinear()
       .domain([0, last])
       .range([x0 + start, x1 - VALUE_AXIS_ROOM]),
-    y,
+    y: valueScale(max, floor, ticks),
   };
   const path =
     d3line<DailyDatum>()
@@ -202,10 +227,10 @@ const HairlineAreaSvg = ({
         side="right"
         floor={floor}
         format={format}
-        ticks={y.ticks(4)}
+        ticks={ticks ?? frame.y.ticks(4)}
         x0={x0}
         x1={x1}
-        y={y}
+        y={frame.y}
       />
       <path
         className="fade"
@@ -259,7 +284,7 @@ const HairlineAreaSvg = ({
 
 /**
  * F3 Daily area. The area under the line is an engraved stipple, one 1px dot
- * per 4px cell, with a 2px stem every seventh day. The peak stands in ink,
+ * per 4px cell, with a 2px stem every seventh day (every month over a year). The peak stands in ink,
  * labelled, with its label kept inside the frame when it is the first day;
  * hovering a day raises its stem.
  */
@@ -293,6 +318,7 @@ export const HairlineArea = (props: HairlineAreaProps) => {
           maxWidth={props.maxWidth ?? 640}
           note={props.note}
           show={show}
+          ticks={props.ticks}
           width={width}
         />
       )}
