@@ -118,7 +118,7 @@ const Row = (p: RowProps) => {
         className={p.hero ? "fill-ink" : undefined}
         dy="0.36em"
         muted={!p.hero}
-        voice="name"
+        voice="label"
         x={x0 - nameGap(p.hero)}
         y={p.y + cell / 2}
       >
@@ -182,7 +182,7 @@ const hangs = (series: RankSeries[], heroLabel: string | undefined) => ({
   ),
   labelW: Math.max(
     ...series.map(
-      (s) => textWidth(s.label, "t-name") + nameGap(s.label === heroLabel)
+      (s) => textWidth(s.label, "t-label") + nameGap(s.label === heroLabel)
     )
   ),
 });

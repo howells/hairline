@@ -26,11 +26,11 @@ Never open, read, copy or translate anything under `/tmp/lieflat-charts`. The sc
 
 | Role | Use |
 | --- | --- |
-| `t-axis` | ticks, scale labels, small secondary labels (11px, muted) |
-| `t-label` / `t-name` | category and series names (12px medium) |
-| `t-value` | data values (12px semibold, ink, tabular) |
-| `t-value-lg` | the one big figure, when a chart has one (30px semibold) |
-| `t-note` | keys and units, one step quieter than axis (11px, faint) |
+| `t-axis` | ticks, scale labels, keys, units and notes (11px regular, muted, tabular) |
+| `t-label` | category, series and place names (11px medium) |
+| `t-value` | data values (11px semibold, ink, tabular) |
+| `t-figure` | the one big figure, when a chart has one (30px semibold) |
+| `t-halo` | add to any text over marks: a paper-coloured stroke behind the glyphs |
 
 - Remove every `uppercase`, `font-mono`, `tracking-mono`, `tracking-label`, `tracking-caps`, `tracking-strip`, `tracking-wide*` from chart text. For any data string or format written in capitals (`"SEARCH"`, `"JAN"`, `utcFormat("%b").toUpperCase()`), make it sentence or natural case: `Search`, `Jan`, `Jan 2025`. Acronyms keep their capitals (`US`, `CA`, `API`, `DB`, `OOM`, `Q3`, `MAU`).
 - Do not invent sizes. Board text uses the strings in `src/charts/board/styles.ts` (already Inter).
@@ -119,7 +119,7 @@ Every fill is one of the fills in `src/charts/fills.ts`, drawn in full on the Fi
 
 ## Chrome and label type (overrides earlier type notes)
 
-All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; the wordmark differs by weight alone. Inside charts every label, value, tick and note is one size, 11px, told apart by weight and tone; the single big figure (`t-value-lg`) is the only exception. One 1px rule under the header; no bar above chart names.
+All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; the wordmark differs by weight alone. Inside charts every label, value, tick and note is one size, 11px, told apart by weight and tone; the single big figure (`t-figure`) is the only exception. One 1px rule under the header; no bar above chart names.
 
 ## Per chart: what to do
 

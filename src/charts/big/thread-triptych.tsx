@@ -290,7 +290,7 @@ const StopMark = (props: {
           anchor="end"
           className={textTone(bright, "fill-text")}
           dy="0.35em"
-          voice="name"
+          voice="label"
           x={x - LABEL_INSET}
           y={stop.y}
         >

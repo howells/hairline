@@ -61,7 +61,7 @@ const DivergingRow = (p: BarProps) => {
         anchor="end"
         dy="0.35em"
         muted={!p.hero}
-        voice="name"
+        voice="label"
         x={p.labelW}
         y={p.cy}
       >
@@ -212,7 +212,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
         const labelW =
           labelRoom(
             data.map((d) => d.label),
-            "t-name"
+            "t-label"
           ) + 4;
         const valueW = labelRoom(
           data.map((d) => format(d.value)),

@@ -93,7 +93,7 @@ export const Tooltip = (props: TooltipProps) => {
   return (
     <output
       ref={ref}
-      className={`rounded-tip bg-ink text-paper text-tick/normal pointer-events-none absolute z-10 px-2.5 py-1.75 font-sans whitespace-nowrap tabular-nums [&_b]:font-semibold ${props.below === true ? "-translate-x-1/2 translate-y-3" : "-mt-2.5 -translate-x-1/2 -translate-y-full"}`}
+      className={`rounded-tip bg-ink text-paper text-tick/normal pointer-events-none absolute z-10 px-2.5 py-1.75 whitespace-nowrap tabular-nums [&_b]:font-semibold ${props.below === true ? "-translate-x-1/2 translate-y-3" : "-mt-2.5 -translate-x-1/2 -translate-y-full"}`}
       style={{ left: props.x + shift, top: props.y }}
     >
       {props.children}

@@ -5,14 +5,15 @@ import type { StaggerTier } from "./motion";
 import { cx, stagger } from "./util";
 
 /** The text voices, as the t-* utilities in app.css. */
-export type Voice =
-  | "annot"
-  | "axis"
-  | "label"
-  | "name"
-  | "note"
-  | "value"
-  | "value-lg";
+export type Voice = "axis" | "figure" | "label" | "value";
+
+/** Each voice's utility, spelled out so Tailwind finds every one. */
+const VOICE_CLASS = new Map<Voice, string>([
+  ["axis", "t-axis"],
+  ["figure", "t-figure"],
+  ["label", "t-label"],
+  ["value", "t-value"],
+]);
 
 /** The shift that centres a line of text on its y. */
 const MIDDLE = "0.34em";
@@ -32,7 +33,7 @@ type LabelProps = Omit<SVGProps<SVGTextElement>, "order"> & {
 };
 
 /**
- * Text in one of the chart voices: axis, label, value and the rest. It may
+ * Text in one of the chart voices: axis, label, value or figure. It may
  * centre on its y, sit on a halo, take the muted tone and fade in at an
  * entry step; anything else (a hero tone, rotation) passes through.
  */
@@ -51,7 +52,7 @@ export const Label = ({
   <text
     className={cx(
       order === undefined ? null : "fade",
-      `t-${voice}`,
+      VOICE_CLASS.get(voice),
       halo && "t-halo",
       muted && "fill-muted",
       className

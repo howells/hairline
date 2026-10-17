@@ -20,7 +20,7 @@ export const FigureReadout = (props: {
   x: number;
 }) => (
   <g>
-    <Label voice="value-lg" x={props.x} y={30}>
+    <Label voice="figure" x={props.x} y={30}>
       {props.value}
     </Label>
     <Label voice="axis" x={props.x} y={50}>

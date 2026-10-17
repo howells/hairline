@@ -72,12 +72,15 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /*
-   * Type ramp. Small sizes are for chart furniture and mono labels; the
-   * display sizes are fluid. Use these instead of text-[Npx].
+   * The type case: three sizes, five roles. Every chart word is 11px (the
+   * t-axis, t-label and t-value roles, told apart by weight); a chart may
+   * lead with one 30px figure (t-figure); the page around the charts (chart
+   * names, the header, sources) is 13.5px. howells/no-raw-type-utilities
+   * (oxlint.config.ts) rejects any other size, weight, leading or tracking.
    */
-  --text-tick: 11px; /* board ticks, nav, chart values */
-  --text-small: 13.5px; /* notes, blurbs */
-  --text-card: 15px; /* compact card titles, wordmark */
+  --text-tick: 11px;
+  --text-small: 13.5px;
+  --text-figure: 30px;
 
   --radius-tip: 10px;
 
@@ -122,64 +125,44 @@
 
 /*
  * SVG text roles. Charts pick a role, never a font. Everything is Inter, in
- * sentence case, with tabular figures wherever numbers line up. Every label,
- * value, tick and note is one size, 11px, told apart by weight and tone only;
- * value-lg is the single big figure a chart may lead with.
+ * sentence case, with tabular figures wherever numbers line up. Axis, label
+ * and value share one size and differ by weight and tone only; figure is the
+ * single big number a chart may lead with.
  */
+/* Ticks, scale labels, keys, units and notes. */
 @utility t-axis {
   fill: var(--muted);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: --theme(--text-tick);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 
+/* Category, series and place names. */
 @utility t-label {
   fill: var(--text);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: --theme(--text-tick);
   font-weight: 500;
 }
 
-/* A name is a label; kept as its own utility so call sites read clearly. */
-@utility t-name {
-  fill: var(--text);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 500;
-}
-
+/* Data values. */
 @utility t-value {
   fill: var(--ink);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: --theme(--text-tick);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-@utility t-value-lg {
+/* The one big figure a chart may lead with. */
+@utility t-figure {
   fill: var(--ink);
   font-family: var(--font-sans);
-  font-size: 30px;
+  font-size: --theme(--text-figure);
   font-weight: 600;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-}
-
-/* Keys and units: the axis voice, one step quieter. */
-@utility t-note {
-  fill: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
-
-@utility t-annot {
-  fill: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 400;
 }
 
 /* Text over marks: a paper-coloured stroke behind the glyphs. */

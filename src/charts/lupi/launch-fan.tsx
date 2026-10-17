@@ -185,7 +185,7 @@ const Rings = (props: RingsProps) => {
               d={arcPath(cx, cy, r, a0 - 3, a1 + 2)}
               fill="none"
             />
-            <Label anchor="end" middle voice="note" x={lx - 2} y={ly}>
+            <Label anchor="end" middle voice="axis" x={lx - 2} y={ly}>
               {props.labels[k]}
             </Label>
           </g>
@@ -282,7 +282,7 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
         order={i}
         tier="mark"
         transform={`translate(${tx},${ty}) rotate(${a - 90})`}
-        voice="name"
+        voice="label"
       >
         {datum.name}
       </Label>

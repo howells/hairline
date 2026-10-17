@@ -310,7 +310,7 @@ const BeadLabel = (props: { bead: Bead; bright: boolean }) => {
       dy="0.35em"
       muted={!props.bright}
       transform={`translate(${bead.x + off * Math.cos(bead.angle)},${bead.y + off * Math.sin(bead.angle)}) rotate(${deg})`}
-      voice="name"
+      voice="label"
     >
       {bead.id}
     </Label>

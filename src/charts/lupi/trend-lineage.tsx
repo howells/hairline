@@ -216,7 +216,7 @@ const FeatureColumn = ({
         className={labelTone}
         order={index}
         transform={`rotate(${colW < 44 ? -64 : -38} ${x + 3} ${ly})`}
-        voice="name"
+        voice="label"
         x={x + 3}
         y={ly}
       >

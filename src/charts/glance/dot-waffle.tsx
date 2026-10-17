@@ -155,7 +155,7 @@ const WaffleLegend = (props: LegendProps) => (
               x={x}
               y={y - SWATCH / 2}
             />
-            <Label dy="0.35em" voice="name" x={x + SWATCH + KEY.gap} y={y}>
+            <Label dy="0.35em" voice="label" x={x + SWATCH + KEY.gap} y={y}>
               {d.label}
             </Label>
             <Label

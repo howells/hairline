@@ -349,7 +349,7 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
               <Textures tex={tex} />
               <Scale x={lay.x} x1={width - 1} />
               <HRule x0={0} x1={width - 1} y={lay.floor} />
-              <Label anchor="end" voice="note" x={width} y={lay.floor + 16}>
+              <Label anchor="end" voice="axis" x={width} y={lay.floor + 16}>
                 Rise on 2014
               </Label>
               {segments.map((seg) => (

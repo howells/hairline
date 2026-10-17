@@ -7,7 +7,7 @@
 
 /** The panel each board chart sits in. */
 export const PANEL =
-  "relative min-w-0 rounded-xs bg-panel px-2 py-3 font-sans [&_svg]:block [&_svg]:overflow-visible [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-muted [&_svg:focus-visible]:outline-solid";
+  "relative min-w-0 rounded-xs bg-panel px-2 py-3 [&_svg]:block [&_svg]:overflow-visible [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-muted [&_svg:focus-visible]:outline-solid";
 
 /** Ticks, scale labels and small secondary labels (the axis role). */
 export const TICK = "t-axis";

@@ -77,7 +77,7 @@ export const ranks = (values: readonly number[], ascending = false) => {
   return out;
 };
 
-/* ---------- In-plot unit footnote (`t-note`) ---------- */
+/* ---------- In-plot unit footnote (`t-axis`) ---------- */
 
 /** Line pitch of a wrapped footnote (measured with sansWidth, below). */
 export const NOTE_LINE = 12;
@@ -122,7 +122,7 @@ const sansEm = (ch: string) => {
 };
 
 /**
- * Estimated width of a string in the Inter roles (`t-name`, `t-annot`) at
+ * Estimated width of a string in the Inter roles (`t-label`, `t-axis`) at
  * `size` px. Errs slightly wide, so a label that "fits" really does.
  */
 export const sansWidth = (text: string, size = 11) => {
@@ -133,7 +133,7 @@ export const sansWidth = (text: string, size = 11) => {
   return em * size;
 };
 
-/** `t-note` is set at 11px. */
+/** `t-axis` is set at 11px. */
 const NOTE_SIZE = 11;
 
 /**

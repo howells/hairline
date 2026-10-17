@@ -29,7 +29,7 @@ export const PlotNote = (props: PlotNoteProps) => {
     <g className="fade" style={stagger(props.order ?? 6)}>
       {lines.map((line, k) => (
         <text
-          className="t-note"
+          className="t-axis"
           key={line}
           textAnchor={props.anchor ?? "middle"}
           x={props.x}

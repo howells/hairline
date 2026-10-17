@@ -167,7 +167,7 @@ const Frame = (props: {
               hover !== null && hover.r === ri ? "fill-text" : "fill-muted"
             }
             middle
-            voice="name"
+            voice="label"
             x={rowLabelX}
             y={arcY(ri, x0)}
           >

@@ -69,7 +69,7 @@ const Counter = (props: {
   x: number;
 }) => (
   <g>
-    <Label voice="value-lg" x={props.x} y={COUNTER_Y}>
+    <Label voice="figure" x={props.x} y={COUNTER_Y}>
       {props.text}
     </Label>
     {props.caption === undefined ? null : (

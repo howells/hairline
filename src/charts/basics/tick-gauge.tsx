@@ -170,7 +170,7 @@ const Centre = (props: { caption: string; dial: Dial; pct: number }) => {
       <Label
         anchor="middle"
         className="fade"
-        voice="value-lg"
+        voice="figure"
         x={dial.cx}
         y={baseline}
       >

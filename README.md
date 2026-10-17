@@ -25,7 +25,7 @@ Three modes, Pink (the default, after the salmon broadsheet), Paper and Dark, se
 
 ## The system
 
-- **Type.** Inter only, in sentence case, with tabular figures wherever numbers line up. Five roles as Tailwind utilities: `t-axis`, `t-label` (and `t-name`), `t-value`, `t-value-lg` and `t-note`. No capitals, no tracking, no mono.
+- **Type.** Inter only, in sentence case, with tabular figures wherever numbers line up. Three sizes and five roles: `t-axis`, `t-label`, `t-value` and `t-figure` in the charts, `text-small` around them. No capitals, no tracking, no mono; a lint rule holds the case.
 - **Line.** Three stroke widths: 1px hairlines (snapped to the pixel grid with `crisp()` and `shape-crisp`), 1.5px for data lines and curves, 2px for emphasis. A ladder of rules: `grid-line` (faint), `rule` (quiet structure: leaders, tracks, connectors), `hairline` (baselines and zero lines, full ink).
 - **Texture.** One shared module, `src/charts/texture.tsx`: `Hatch`, `CrossHatch`, `Rules`, `Stipple`, `DotScreen`, `Beads`, `DottedLine`, `DotRing`, `DottedPath`, `PixelLine` and `KeySwatch`. Pitches are named in `TEXTURE_PITCH` (hatch 4, crosshatch 6, dot screen 4, dense 3); diagonals are drawn as 1px pixel staircases, so they stay crisp. Textures sit on paper inside a 1px rule, and density or angle encodes a value.
 - **Fills.** Every fill comes from one taxonomy, `src/charts/fills.ts`: a family (solid, hatch, crosshatch, rules, upright rules, stipple, dense stipple, broken rungs) in a tone (ink, strong, mid, quiet, faint, alert), or a step on one of two value ladders (halftone, hatch density) when the fill encodes a quantity. The Fills sheet (`#/chart/P1`, the last cell of the grid) draws the whole taxonomy, so drift shows at a glance.

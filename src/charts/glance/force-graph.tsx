@@ -301,7 +301,7 @@ const ForceDot = ({
       }
       dy="0.35em"
       muted={!n.hub}
-      voice="name"
+      voice="label"
       x={labelX(n.hub, left, at.x, r)}
       y={at.y}
     >
@@ -313,7 +313,7 @@ const ForceDot = ({
 /** How far a node and its name reach left and right of its centre. */
 const reach = (n: SimNode, scale: number) => {
   const r = n.r * scale;
-  const name = n.hub ? 0 : LABEL_GAP + textWidth(n.datum.id, "t-name");
+  const name = n.hub ? 0 : LABEL_GAP + textWidth(n.datum.id, "t-label");
   const left = labelLeft(n);
   return { left: r + (left ? name : 0), right: r + (left ? 0 : name) };
 };

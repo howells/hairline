@@ -243,7 +243,7 @@ export const JitterStrip = (props: JitterStripProps) => {
               </g>
             ))}
             {props.axisLabel === undefined ? null : (
-              <Label anchor="end" voice="note" x={width} y={floor + 34}>
+              <Label anchor="end" voice="axis" x={width} y={floor + 34}>
                 {props.axisLabel}
               </Label>
             )}

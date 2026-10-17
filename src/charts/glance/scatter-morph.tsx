@@ -143,10 +143,10 @@ const scatterLayout = (c: Ctx): Layout => {
           {c.fx(v)}
         </Label>
       ))}
-      <Label anchor="end" voice="note" x={c.width - m.right} y={c.h - 2}>
+      <Label anchor="end" voice="axis" x={c.width - m.right} y={c.h - 2}>
         {c.xLabel} →
       </Label>
-      <Label voice="note" x={m.left} y={m.top - 6}>
+      <Label voice="axis" x={m.left} y={m.top - 6}>
         ↑ {c.yLabel}
       </Label>
     </g>
@@ -486,7 +486,7 @@ const MorphLabels = ({
               ? undefined
               : `rotate(${l.rotate} ${l.x} ${l.y})`
           }
-          voice={l.kind === "category" ? "label" : l.kind}
+          voice={l.kind === "value" ? "value" : "label"}
           x={l.x}
           y={l.y}
         >

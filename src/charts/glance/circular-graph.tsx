@@ -131,7 +131,7 @@ const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
         muted={!hero}
         order={p.i}
         tier="mark"
-        voice="name"
+        voice="label"
         x={lx}
         y={p.y + Math.sin(p.a) * 6}
       >

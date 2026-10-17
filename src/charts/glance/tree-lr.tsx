@@ -122,7 +122,7 @@ const TreeNode = ({ n, x, y, k, tone, lit, hitRight, onEnter }: NodeProps) => {
         dy="0.35em"
         order={n.depth * 4 + k * 0.2}
         tier="series"
-        voice="name"
+        voice="label"
         x={at.x}
         y={at.y}
       >
@@ -165,8 +165,8 @@ export const TreeLR = (props: TreeLRProps) => {
         const m = {
           bottom: 10 + noteSpace(props.note, width - 16, 20),
           // The root's name hangs left of its dot, the leaf names right of theirs.
-          left: labelRoom([data.name], "t-name") + 10,
-          right: labelRoom(leafNames(data), "t-name") + 6,
+          left: labelRoom([data.name], "t-label") + 10,
+          right: labelRoom(leafNames(data), "t-label") + 6,
           top: 10,
         };
         const laid = tree<TreeDatum>()

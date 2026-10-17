@@ -195,7 +195,7 @@ const Key = (props: KeyProps) => (
         />
         <Label
           middle
-          voice="note"
+          voice="axis"
           x={x + SWATCH + SWATCH_GAP}
           y={y + KEY_LINE / 2}
         >

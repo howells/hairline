@@ -249,7 +249,7 @@ const Racer = (p: RacerProps) => (
       anchor="end"
       dy="0.35em"
       muted={!p.leader}
-      voice="name"
+      voice="label"
       x={p.labelX - 10}
       y={0}
     >
@@ -307,7 +307,7 @@ const margins = (data: RaceData, format: (v: number) => string) => ({
   left: Math.max(
     labelRoom(
       data.series.map((s) => s.label),
-      "t-name"
+      "t-label"
     ) + 10,
     Math.ceil(textWidth(data.periods[0], "t-axis") / 2)
   ),

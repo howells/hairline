@@ -107,7 +107,7 @@ interface KeyProps {
 
 /** The five screens as key swatches, each with its range, flush right. */
 const Key = (p: KeyProps) => {
-  const widths = p.labels.map((l) => Math.ceil(textWidth(l, "t-note")));
+  const widths = p.labels.map((l) => Math.ceil(textWidth(l, "t-axis")));
   const entryW = (k: number) => SWATCH + SWATCH_GAP + widths[k];
   const total =
     widths.reduce((a, _, k) => a + entryW(k), 0) +
@@ -127,7 +127,7 @@ const Key = (p: KeyProps) => {
           <KeySwatch fill={e.screen} x={e.at} y={p.y} />
           <Label
             dy="0.35em"
-            voice="note"
+            voice="axis"
             x={e.at + SWATCH + SWATCH_GAP}
             y={p.y + SWATCH / 2}
           >

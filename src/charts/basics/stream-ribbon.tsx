@@ -320,7 +320,7 @@ const Total = (props: {
       <Label voice="value" x={x + 10} y={mid - 2}>
         {format(river.totals.at(-1) ?? 0)}
       </Label>
-      <Label voice="note" x={x + 10} y={mid + 12}>
+      <Label voice="axis" x={x + 10} y={mid + 12}>
         Total
       </Label>
     </g>

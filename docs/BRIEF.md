@@ -56,7 +56,7 @@ Never run them on `.` or on another agent's folder, and never disable rules (no 
 
 **No arbitrary values.** The lint's `shadcn(no-arbitrary-values)` rule rejects `text-[11px]`, `tracking-[0.08em]`, `rounded-[10px]` and the like. Use the theme tokens in `src/system/app.css`:
 
-- Type: `text-3xs` 9 · `text-2xs` 10 · `text-caps` 10.5 · `text-tick` 11 · `text-xs` 12 · `text-caption` 12.5 · `text-small` 13.5 · `text-card` 15 · `text-lede` 17 · `text-title` 19 · `text-h3` 26 · `text-kpi` 32 · `text-h1` 34 · `text-stat` 40 · `text-display-sm…2xl`.
+- Type: `text-tick` 11 · `text-small` 13.5 · `text-figure` 30 (see the case below).
 - `tracking-mono` / `label` / `caps` / `strip` / `heading` / `display` (plus Tailwind's `tight`, `tighter`, `wide`, `widest`); `leading-display` / `heading` (plus `none`, `tight`, `normal`, `relaxed`).
 - `rounded-card` / `panel` / `tip`; `shadow-tip` / `ring` / `ring-ink` / `hollow` / `swatch`.
 - Spacing and durations come from Tailwind's open scales: `px-4.5` = 18px, `gap-1.75` = 7px, `duration-160`. Non-integer stroke widths go in the SVG `strokeWidth` attribute. Name transitions specifically (`transition-opacity`, `transition-colors`, `transition`), never `transition-all`.
@@ -64,7 +64,7 @@ Never run them on `.` or on another agent's folder, and never disable rules (no 
 Tailwind v4 is set up (`src/system/app.css`). **Style with utility classes in `className`; create no CSS files** and add no `<style>` blocks. The palette is exposed as Tailwind colours, so prefer classes to SVG colour attributes:
 
 - Colours: `fill-ink`, `stroke-l3`, `fill-hero`, `stroke-alert`, `fill-paper`, `text-muted`, `bg-panel`, … (paper, panel, ink, text, muted, faint, grid, rule, l0–l6, hero, hero-soft, alert, alert-soft, alert-faded, alert-rule, cat-1–4, heat-1–5). Opacity modifiers work: `fill-ink/40`.
-- Fonts: `font-sans`, `font-mono`. Text roles (`t-axis`, `t-label`, `t-name`, `t-value`, `t-value-lg`, `t-note`, `t-annot`, `t-halo`) and line roles (`hairline`, `grid-dotted`) are Tailwind utilities and compose with others: `className="t-value text-[13px] fill-hero"`.
+- Font: Inter only. Text roles (`t-axis`, `t-label`, `t-value`, `t-figure`, `t-halo`) and line roles (`hairline`, `grid-dotted`) are Tailwind utilities and compose with colour: `className="t-value fill-hero"`.
 - Motion: `grow-y`, `from-top`, `grow-x`, `from-right`, `pop`, `fade`, `draw`, `sweep` are utilities too.
 - Interaction states: Tailwind variants (`hover:`, `group-hover:`, `transition-opacity duration-150`, `data-[active=true]:…`, `group-data-[focus]:…`).
 - Use `style` only for **per-datum dynamic values** that can't be a class: CSS custom properties (`style={{ "--i": i }}`), or a colour/opacity computed from data. SVG geometry attributes (`x`, `y`, `d`, `r`, `width`) stay attributes, as they must.
@@ -117,20 +117,17 @@ Use Tailwind colour classes (`fill-ink`, `stroke-l3`) or, for data-driven values
 - Solid, opaque marks. No gradients-as-decoration, no shadows, no glow. Transparency only where it **encodes density** (overlaid events), or for de-emphasis on hover.
 - Dark cards: set `dark: true` on the gallery entry. Use them only for forms that need a dark ground (luminous networks, threads, dot cascades). The same CSS variables invert automatically.
 
-### Type: SVG text roles (classes in `src/system/base.css`)
+### Type: the case (`src/system/app.css`)
 
-| Class | Font | Use |
-| --- | --- | --- |
-| `t-axis` | mono 10px, muted, uppercase | axis ticks, scale labels |
-| `t-label` | mono 10px 500, uppercase | category names, stage names |
-| `t-name` | Inter 11px 500 | mixed-case proper names (products, people) |
-| `t-value` | mono 11px 600, ink | numbers inside the chart |
-| `t-value-lg` | Inter 800 30px | a big centre number (gauge, donut) |
-| `t-note` | mono 9px, faint, uppercase, tracked | in-plot unit footnote ("ONE DOT = ONE DAY") |
-| `t-annot` | Inter 11px, muted | callouts, annotations |
-| `t-halo` | add to any text over marks | paper-coloured stroke behind glyphs |
+| Role | Use |
+| --- | --- |
+| `t-axis` | ticks, scale labels, keys, units and notes (11px regular, muted, tabular) |
+| `t-label` | category, series and place names (11px medium) |
+| `t-value` | data values (11px semibold, ink, tabular) |
+| `t-figure` | the one big figure, when a chart has one (30px semibold) |
+| `t-halo` | add to any text over marks: a paper-coloured stroke behind the glyphs |
 
-Override size with a theme size class (`text-tick`, `text-small`, …), never inline `fontSize`, and nothing below `text-3xs` (9px). Don't set font families directly.
+The page around the charts uses `text-small` (13.5px), with `font-semibold` for the wordmark. Nothing else: `howells/no-raw-type-utilities` rejects any other size, weight, leading or tracking.
 
 Utility classes: `hairline` (solid 1px rule line), `grid-dotted` (dotted grid line).
 
@@ -140,8 +137,8 @@ Utility classes: `hairline` (solid 1px rule line), `grid-dotted` (dotted grid li
 - **Glance:** bold. Strokes 2px and up, chunky bars with **capsule ends** (round the outer end only), big numbers, conclusion first. Pre-aggregated.
 - Area encodings use `Math.sqrt(value)` for radius. Never put a raw value on a radius.
 - Bars never break the axis.
-- Labels: all-caps mono with tracking for categories and axes; numbers in mono. Callout leader lines are hairlines in `--faint`.
-- Every chart should carry a unit footnote (`t-note`) or make the unit obvious through the gallery subtitle.
+- Labels: Inter in sentence case; numbers in tabular figures. Callout leader lines are hairlines in `--faint`.
+- Every chart should carry a unit footnote (`FootNote`, in `t-axis`) or make the unit obvious through the gallery subtitle.
 
 ### Motion (`src/system/base.css`)
 

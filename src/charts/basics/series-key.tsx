@@ -52,7 +52,7 @@ export const SeriesKey = (props: SeriesKeyProps) => {
             x={starts[i]}
             y={props.y - 10}
           />
-          <Label voice="note" x={starts[i] + SWATCH + TO_NAME} y={props.y}>
+          <Label voice="axis" x={starts[i] + SWATCH + TO_NAME} y={props.y}>
             {item.name}
           </Label>
         </g>

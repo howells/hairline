@@ -25,7 +25,7 @@ interface KeyProps {
   y: number;
 }
 
-/** A short key of marks and names, set in `t-note`, flush to `right`. */
+/** A short key of marks and names, set in `t-axis`, flush to `right`. */
 export const Key = (props: KeyProps) => {
   const widths = props.items.map(
     (item) => MARK_W + MARK_GAP + sansWidth(item.label, 11)
@@ -48,7 +48,7 @@ export const Key = (props: KeyProps) => {
           transform={`translate(${Math.round(at)} ${props.y})`}
         >
           {item.mark}
-          <Label middle voice="note" x={MARK_W + MARK_GAP}>
+          <Label middle voice="axis" x={MARK_W + MARK_GAP}>
             {item.label}
           </Label>
         </g>

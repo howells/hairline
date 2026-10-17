@@ -83,7 +83,11 @@ export const ChartGrid = () => (
 export const SingleChart = (props: { id: string }) => {
   const entry = entryById(props.id);
   if (entry === undefined) {
-    return <main className="text-muted p-10">No chart called {props.id}</main>;
+    return (
+      <main className="text-small text-muted p-10">
+        No chart called {props.id}
+      </main>
+    );
   }
   return (
     <main

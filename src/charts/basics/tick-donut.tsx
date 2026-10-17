@@ -391,7 +391,7 @@ const TickDonutSvg = ({
       <Label
         anchor="middle"
         className="fade"
-        voice="value-lg"
+        voice="figure"
         x={dial.cx}
         y={dial.cy + 6}
       >
@@ -403,7 +403,7 @@ const TickDonutSvg = ({
             anchor="middle"
             className="fade"
             key={line}
-            voice="note"
+            voice="axis"
             x={dial.cx}
             y={dial.cy + 24 + k * NOTE_LINE}
           >
