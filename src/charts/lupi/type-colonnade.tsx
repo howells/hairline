@@ -10,7 +10,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth, stagger, wrapWords } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger, wrapWords } from "../util";
 import { typeColonnadeDemo } from "./type-colonnade.data";
 import type { OwnershipDatum } from "./type-colonnade.data";
 
@@ -235,7 +235,7 @@ const Lights = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
       const ink = lit === true || isHero(d.owner);
       return (
         <g
-          className={`transition-opacity ${lit === false ? "opacity-25" : ""}`}
+          className={dimClass(lit === false)}
           key={d.name}
           onPointerEnter={() => {
             onFocus({ item: i });
@@ -248,14 +248,14 @@ const Lights = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
             y={y - at.pitch / 2}
           />
           <Ring
-            className={`pop transition-colors ${ink ? "stroke-ink" : "stroke-l3"}`}
+            className={`pop transition-tone ${ink ? "stroke-ink" : "stroke-l3"}`}
             cx={at.xDot}
             cy={y}
             size="xs"
             style={stagger(i, "dense")}
           />
           <line
-            className={`draw transition-colors ${ink ? "stroke-ink" : "stroke-l5"}`}
+            className={`draw transition-tone ${ink ? "stroke-ink" : "stroke-l5"}`}
             pathLength={1}
             strokeWidth={1}
             style={stagger(i, "fine")}

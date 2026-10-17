@@ -3,7 +3,7 @@ import type { ScaleBand, ScaleLinear } from "d3-scale";
 
 import { Chart } from "../core";
 import { useHover } from "../hooks";
-import { HitRect } from "../hover";
+import { DimGroup, HitRect } from "../hover";
 import { Dot } from "../markers";
 import { LABEL } from "../roles";
 import { VGrid } from "../rules";
@@ -75,11 +75,11 @@ const DumbbellRow = (props: {
   const cy = Math.round((y(r.name) ?? 0) + bh / 2);
   const ink = props.worst ? "fill-alert" : "fill-hero";
   return (
-    <g
+    <DimGroup
+      dim={props.dim}
       onPointerEnter={() => {
         props.onHover(r.name);
       }}
-      className={`transition-opacity ${props.dim ? "opacity-25" : "opacity-100"}`}
     >
       <HitRect height={bh} width={props.width} x={0} y={y(r.name)} />
       <text
@@ -117,7 +117,7 @@ const DumbbellRow = (props: {
           {props.delta(r.after - r.before)}
         </Label>
       </g>
-    </g>
+    </DimGroup>
   );
 };
 

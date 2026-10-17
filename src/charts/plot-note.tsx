@@ -44,9 +44,11 @@ export const PlotNote = (props: PlotNoteProps) => {
 
 /**
  * The footnote in its usual place: centred under the plot, 6px off the
- * bottom of a chart `width` wide and `height` tall, with 8px either side.
+ * bottom of a chart `width` wide and `height` tall, `gutter` px clear of
+ * either side (8 by default; the daily charts keep 12).
  */
 export const FootNote = (props: {
+  gutter?: number;
   height: number;
   order?: number;
   text?: string;
@@ -55,7 +57,7 @@ export const FootNote = (props: {
   <PlotNote
     order={props.order}
     text={props.text}
-    width={props.width - 16}
+    width={props.width - 2 * (props.gutter ?? 8)}
     x={props.width / 2}
     y={props.height - 6}
   />

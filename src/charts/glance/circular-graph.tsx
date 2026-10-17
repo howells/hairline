@@ -82,7 +82,7 @@ const RingLinks = ({ links, at, cx, cy, focus, hero }: LinksProps) => {
         return (
           <LinkBundle
             key={linkKey(l)}
-            className={`draw transition-tone ${linkTone(linkKey(l) === hero, on)} ${focus !== null && !on ? "opacity-25" : ""}`}
+            className={`draw transition-tone ${linkTone(linkKey(l) === hero, on)} ${focus !== null && !on ? "opacity-30" : ""}`}
             lines={bundleLines(l.value, maxLink)}
             q={{ x: ((s.x + t.x) / 2 + cx) / 2, y: ((s.y + t.y) / 2 + cy) / 2 }}
             s={s}

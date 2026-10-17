@@ -1,13 +1,14 @@
 import { scaleLinear } from "d3-scale";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import type { RefObject } from "react";
 
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useHover, useReducedMotion, useReveal } from "../hooks";
+import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { Bar, Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
+import { usePlayhead } from "../playback";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
@@ -19,7 +20,7 @@ import { barRaceDemo } from "./bar-race.data";
 import type { RaceData, RaceSeries } from "./bar-race.data";
 import { ControlSlot } from "./control-slot";
 import { labelRoom, textWidth } from "./util-a";
-import { CONTROL_SLOT_H, useInView } from "./util-b";
+import { CONTROL_SLOT_H } from "./util-b";
 
 interface BarRaceProps {
   data?: RaceData;
@@ -67,71 +68,27 @@ const valuesAt = (data: RaceData, t: number) => {
   );
 };
 
+/** Under reduced motion, a played race steps one period this often, in ms. */
+const REDUCED_STEP = 900;
+
 /**
- * The race clock. Runs only once revealed and while on screen; under reduced
- * motion it starts on the final period and Play steps period by period.
+ * The race clock: one period every `speed` ms once revealed and on screen.
+ * Under reduced motion it starts on the final period and Play steps period
+ * by period.
  */
 const useRaceClock = (
   box: RefObject<HTMLDivElement | null>,
   last: number,
   speed: number
-) => {
-  const revealed = useReveal(box);
-  const inView = useInView(box);
-  const reduced = useReducedMotion();
-  const [t, setT] = useState(() =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? last : 0
-  );
-  const [playing, setPlaying] = useState(
-    () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-  const running = playing && revealed && inView && t < last;
-
-  useEffect(() => {
-    let raf = 0;
-    let timer = 0;
-    let prev = performance.now();
-    const tick = (now: number) => {
-      const dt = Math.min(64, now - prev);
-      prev = now;
-      setT((cur) => Math.min(last, cur + dt / speed));
-      raf = requestAnimationFrame(tick);
-    };
-    if (running && reduced) {
-      timer = window.setInterval(() => {
-        setT((cur) => Math.min(last, Math.floor(cur) + 1));
-      }, 900);
-    } else if (running) {
-      raf = requestAnimationFrame(tick);
-    }
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearInterval(timer);
-    };
-  }, [running, reduced, speed, last]);
-
-  const done = t >= last;
-  const handleToggle = () => {
-    if (done) {
-      setT(0);
-      setPlaying(true);
-    } else {
-      setPlaying((p) => !p);
-    }
-  };
-  const handleSeek = (k: number) => {
-    setPlaying(false);
-    setT(k);
-  };
-  return {
-    done,
-    handleSeek,
-    handleToggle,
-    playing: playing && !done,
-    reduced,
-    t,
-  };
-};
+) =>
+  usePlayhead({
+    box,
+    end: last,
+    rate: speed,
+    reduced: "step",
+    start: last,
+    step: { every: REDUCED_STEP, unit: 1 },
+  });
 
 interface TrackProps {
   current: string;

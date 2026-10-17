@@ -392,7 +392,7 @@ const ForceField = (props: FieldProps) => {
   return (
     <div ref={wrap} className="relative">
       <ChartSvg
-        className={`duration-enter touch-none transition-opacity ${shown ? "opacity-100" : "opacity-0"}`}
+        className="fade touch-none"
         height={height}
         label={label}
         leave={() => {

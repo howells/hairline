@@ -32,6 +32,14 @@ export const HitCircle = ({
   <circle className={cx("fill-transparent", className)} {...rest} />
 );
 
+/** An invisible path (a wedge, a sector) that widens a record's hover target. */
+export const HitPath = ({
+  className,
+  ...rest
+}: Omit<SVGProps<SVGPathElement>, "fill">) => (
+  <path className={cx("fill-transparent", className)} {...rest} />
+);
+
 /**
  * The tooltip's one sentence: the record's name in bold, then its facts,
  * each after a middle dot.

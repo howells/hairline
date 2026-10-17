@@ -331,7 +331,7 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
     ...chords.filter((c) => leads(c)),
   ];
   return (
-    <g className="transition-opacity group-data-[focus=true]/ring:opacity-25">
+    <g className="transition-opacity group-data-[focus=true]/ring:opacity-30">
       <g className="fade" style={stagger(0)}>
         <DotRing cx={cx} cy={cy} r={R} step={RING_STEP.guide} tone="fill-l5" />
       </g>

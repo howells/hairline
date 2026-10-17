@@ -3,6 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 
 import { Chart } from "../core";
 import { useHover } from "../hooks";
+import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
 import { LABEL, VALUE } from "../roles";
 import { VRule } from "../rules";
@@ -92,8 +93,9 @@ const SlopeRow = (props: {
   const valueClass = `${VALUE} ${tone.value}`;
   const { name } = row;
   return (
-    <g
-      className={`fade transition-opacity ${props.dim ? "opacity-25" : "opacity-100"}`}
+    <DimGroup
+      className="fade"
+      dim={props.dim}
       style={stagger(i)}
       onPointerEnter={() => {
         props.onHover(row.name);
@@ -142,7 +144,7 @@ const SlopeRow = (props: {
         <tspan className={valueClass}>{props.format(row.to)}</tspan>
         <tspan fill="var(--muted)"> {name}</tspan>
       </text>
-    </g>
+    </DimGroup>
   );
 };
 

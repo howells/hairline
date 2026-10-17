@@ -4,17 +4,18 @@ import type { ScaleLinear, ScaleTime } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
 import { utcMonth } from "d3-time";
 import { utcFormat } from "d3-time-format";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import type { PointerEvent, RefObject } from "react";
 
 import { monthTickLabels } from "../../lib/format";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useHover, useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { useHover, useSvgId } from "../hooks";
 import type { HoverAt } from "../hooks";
 import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
+import { usePlayhead } from "../playback";
 import { FootNote } from "../plot-note";
 import { HRule, VRule } from "../rules";
 import { ChartSvg } from "../svg";
@@ -26,7 +27,7 @@ import { ValueGrid } from "../value-grid";
 import { ControlSlot } from "./control-slot";
 import { drawInDemo } from "./draw-in.data";
 import type { DrawInDatum } from "./draw-in.data";
-import { CONTROL_SLOT_H, useInView } from "./util-b";
+import { CONTROL_SLOT_H } from "./util-b";
 
 interface DrawInProps {
   data?: DrawInDatum[];
@@ -49,35 +50,12 @@ const useDrawClock = (
   box: RefObject<HTMLDivElement | null>,
   duration: number
 ) => {
-  const revealed = useReveal(box);
-  const inView = useInView(box);
-  const reduced = useReducedMotion();
-  const [p, setP] = useState(() =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 0
-  );
-  const running = revealed && inView && !reduced && p < 1;
-
-  useEffect(() => {
-    let raf = 0;
-    let prev = performance.now();
-    const tick = (now: number) => {
-      const dt = Math.min(64, now - prev);
-      prev = now;
-      setP((cur) => Math.min(1, cur + dt / duration));
-      raf = requestAnimationFrame(tick);
-    };
-    if (running) {
-      raf = requestAnimationFrame(tick);
-    }
-    return () => {
-      cancelAnimationFrame(raf);
-    };
-  }, [running, duration]);
-
-  const handleReplay = () => {
-    setP(0);
+  const clock = usePlayhead({ box, end: 1, rate: duration, reduced: "end" });
+  return {
+    handleReplay: clock.handleReplay,
+    p: clock.reduced ? 1 : clock.t,
+    reduced: clock.reduced,
   };
-  return { handleReplay, p: reduced ? 1 : p, reduced };
 };
 
 /** Baseline of the big number, and of its caption below it. */

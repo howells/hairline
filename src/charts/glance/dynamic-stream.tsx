@@ -1,14 +1,15 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type { PointerEvent, RefObject } from "react";
 
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useHover, useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { useHover, useSvgId } from "../hooks";
 import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
+import { usePlayhead } from "../playback";
 import { FootNote } from "../plot-note";
 import { HRule, VRule } from "../rules";
 import { ChartSvg } from "../svg";
@@ -20,7 +21,7 @@ import { ValueGrid } from "../value-grid";
 import { ControlSlot } from "./control-slot";
 import { dynamicStreamDemo } from "./dynamic-stream.data";
 import type { StreamFeed } from "./dynamic-stream.data";
-import { CONTROL_SLOT_H, useInView } from "./util-b";
+import { CONTROL_SLOT_H } from "./util-b";
 
 interface DynamicStreamProps {
   /** Value for step n (n ≥ 0). Must be deterministic. */
@@ -53,49 +54,25 @@ const domainOf = (feed: StreamFeed): [number, number] => {
 /**
  * Clock in ms. Runs while revealed, on screen and not paused. Under
  * reduced motion it starts paused, and when played it steps a whole value
- * at a time without scrolling.
+ * every three intervals without scrolling.
  */
 const useStreamClock = (
   box: RefObject<HTMLDivElement | null>,
   interval: number
 ) => {
-  const revealed = useReveal(box);
-  const inView = useInView(box);
-  const reduced = useReducedMotion();
-  const [elapsed, setElapsed] = useState(0);
-  const [playing, setPlaying] = useState(
-    () => !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-  const running = playing && revealed && inView;
-
-  useEffect(() => {
-    let raf = 0;
-    let timer = 0;
-    let prev = performance.now();
-    const tick = (now: number) => {
-      // Cap the step so a backgrounded tab doesn't jump on return.
-      const dt = Math.min(64, now - prev);
-      prev = now;
-      setElapsed((e) => e + dt);
-      raf = requestAnimationFrame(tick);
-    };
-    if (running && reduced) {
-      timer = window.setInterval(() => {
-        setElapsed((e) => (Math.floor(e / interval) + 1) * interval);
-      }, interval * 3);
-    } else if (running) {
-      raf = requestAnimationFrame(tick);
-    }
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearInterval(timer);
-    };
-  }, [running, reduced, interval]);
-
-  const handleToggle = () => {
-    setPlaying((p) => !p);
+  const clock = usePlayhead({
+    box,
+    end: Number.POSITIVE_INFINITY,
+    rate: 1,
+    reduced: "step",
+    step: { every: interval * 3, unit: interval },
+  });
+  return {
+    elapsed: clock.t,
+    handleToggle: clock.handleToggle,
+    playing: clock.playing,
+    reduced: clock.reduced,
   };
-  return { elapsed, handleToggle, playing, reduced };
 };
 
 /** Solid while running, hollow while paused. */

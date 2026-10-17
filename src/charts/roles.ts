@@ -40,4 +40,4 @@ export const DOT = "transition-tone";
 /** Scatter points swell on hover. */
 export const POINT = "transition-radius";
 /** Bars recolour as the cursor passes them. */
-export const MARK = "transition-colors";
+export const MARK = "transition-tone";

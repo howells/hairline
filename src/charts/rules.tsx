@@ -9,16 +9,28 @@ import { cx } from "./util";
 /*
  * Rules: every straight 1px line a chart draws across its plot (baselines,
  * gridlines, row tracks, targets, the cursor) and the short marks that
- * stand on them (stems and ticks). Each snaps to the pixel grid itself.
+ * stand on them (stems and ticks). Each snaps to the pixel grid itself, so
+ * pass the raw coordinate: crisp() is not idempotent, and a coordinate
+ * snapped twice lands a pixel off.
  */
 
-/** What a rule is for, which sets its tone and dash. */
-export type RuleKind = "cursor" | "grid" | "hairline" | "rule" | "target";
+/**
+ * What a rule is for, which sets its tone and dash. "plain" sets nothing:
+ * the tone comes in className.
+ */
+export type RuleKind =
+  | "cursor"
+  | "grid"
+  | "hairline"
+  | "plain"
+  | "rule"
+  | "target";
 
 const RULE_CLASS = new Map<RuleKind, string>([
   ["cursor", CURSOR],
   ["grid", GRID_H],
   ["hairline", RULE_ZERO],
+  ["plain", ""],
   ["rule", "rule"],
   ["target", RULE_TARGET],
 ]);

@@ -163,24 +163,41 @@ export interface HoverAt<K> {
 /**
  * The one hover state: a record key (an index, an id) plus a tooltip anchor.
  * `dim(key)` is true for every record but the hovered one, and only while
- * something is hovered. Re-showing the same record at the same spot does not
- * re-render.
+ * something is hovered. `enter(key, x, y)` makes the pointer handler for a
+ * record; `set` takes a key or null, as a nearest-point search returns.
+ * Re-showing the same record at the same spot does not re-render.
  */
 export const useHover = <K>() => {
   const [at, setAt] = useState<HoverAt<K> | null>(null);
+  const show = (key: K, x = 0, y = 0) => {
+    setAt((prev) =>
+      prev !== null && prev.key === key && prev.x === x && prev.y === y
+        ? prev
+        : { key, x, y }
+    );
+  };
   return {
     at,
     clear: () => {
       setAt(null);
     },
     dim: (key: K) => at !== null && at.key !== key,
+    enter:
+      (key: K, x = 0, y = 0) =>
+      () => {
+        show(key, x, y);
+      },
     key: at === null ? null : at.key,
-    show: (key: K, x = 0, y = 0) => {
-      setAt((prev) =>
-        prev !== null && prev.key === key && prev.x === x && prev.y === y
-          ? prev
-          : { key, x, y }
-      );
+    set: (key: K | null, x = 0, y = 0) => {
+      if (key === null) {
+        setAt(null);
+      } else {
+        show(key, x, y);
+      }
     },
+    show,
   };
 };
+
+/** What useHover returns, for parts that take a chart's hover. */
+export type Hover<K> = ReturnType<typeof useHover<K>>;

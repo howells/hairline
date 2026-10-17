@@ -203,7 +203,7 @@ const THREAD_OPACITY = 0.16;
 /** Every thread at rest plus wide invisible hit paths, built once per size. */
 const ThreadBase = (props: { threads: Thread[] }) => (
   <g
-    className="transition-opacity group-data-[focus=true]/threads:opacity-25"
+    className="transition-opacity group-data-[focus=true]/threads:opacity-30"
     fill="none"
   >
     {props.threads.map((t, i) => (

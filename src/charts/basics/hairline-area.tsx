@@ -93,7 +93,7 @@ const DayStems = ({
       const base = Math.round(frame.floor);
       return (
         <rect
-          className={`transition-colors ${stemClass(i === hero, i === hover)}`}
+          className={`transition-tone ${stemClass(i === hero, i === hover)}`}
           height={Math.max(0, base - top)}
           key={dayKey(d)}
           style={stagger(i, "fine")}

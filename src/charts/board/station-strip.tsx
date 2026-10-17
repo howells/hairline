@@ -5,6 +5,7 @@ import type { PointerEvent } from "react";
 import { crisp } from "../axes";
 import { Chart } from "../core";
 import { useHover } from "../hooks";
+import { DimGroup } from "../hover";
 import { Dot } from "../markers";
 import { MARK_WEIGHT, TICK as TICK_LEN } from "../marks";
 import { LABEL, POINT } from "../roles";
@@ -157,10 +158,7 @@ const StripRow = (props: {
   const ps = row.stations.map((e) => e.value);
   const tone = TONE[props.tone];
   return (
-    <g
-      className={`fade transition-opacity ${props.dim ? "opacity-25" : "opacity-100"}`}
-      style={stagger(props.i)}
-    >
+    <DimGroup className="fade" dim={props.dim} style={stagger(props.i)}>
       <text
         className={LABEL}
         x={m.left - NAME_GAP}
@@ -206,7 +204,7 @@ const StripRow = (props: {
       >
         {props.format(row.median)}
       </Label>
-    </g>
+    </DimGroup>
   );
 };
 

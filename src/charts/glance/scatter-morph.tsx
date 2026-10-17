@@ -7,6 +7,7 @@ import { Plot, Tooltip } from "../core";
 import { useHover, useReducedMotion, useReveal } from "../hooks";
 import { DimGroup, TipText } from "../hover";
 import { DURATION, easeTravel } from "../motion";
+import { useFrame } from "../playback";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
@@ -335,61 +336,64 @@ const LAYOUTS: Record<View, (c: Ctx) => Layout> = {
   scatter: scatterLayout,
 };
 
+/** Where a morph starts: a settled view, or the pose an earlier morph was cut off at. */
+type Pose =
+  | { kind: "between"; from: Pose; t: number; to: number }
+  | { kind: "view"; view: number };
+
+/** The marks of a pose, given each view's marks. */
+const poseMarks = (pose: Pose, marksOf: (view: number) => Pt[][]): Pt[][] => {
+  if (pose.kind === "view") {
+    return marksOf(pose.view);
+  }
+  const a = poseMarks(pose.from, marksOf);
+  const b = marksOf(pose.to);
+  const e = easeTravel(pose.t);
+  return a.map((pts, i) => blendPts(pts, b[i], e));
+};
+
 /**
- * View cycling: hold, then morph to the next view with requestAnimationFrame.
- * Paused while hovered; reduced motion jumps straight to the chosen view.
+ * View cycling: hold, then morph to the next view on the shared frame clock.
+ * Picking a view mid-morph sets off from the pose on screen, so the marks
+ * turn rather than jump. Paused while hovered; reduced motion jumps straight
+ * to the chosen view.
  */
 const useMorph = (shown: boolean, reduced: boolean, paused: boolean) => {
-  const [from, setFrom] = useState(0);
+  const [start, setStart] = useState<Pose>({ kind: "view", view: 0 });
   const [to, setTo] = useState(0);
   const [t, setT] = useState(1);
+  const settled = t >= 1;
   const go = (k: number) => {
     if (k === to) {
       return;
     }
-    if (from !== to) {
-      setFrom(to);
-    }
-    setT(reduced ? 1 : 0);
+    setStart(
+      settled || reduced
+        ? { kind: "view", view: to }
+        : { from: start, kind: "between", t, to }
+    );
     setTo(k);
-    if (reduced) {
-      setFrom(k);
-    }
+    setT(reduced ? 1 : 0);
   };
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const step = (now: number) => {
-      const p = Math.min(1, (now - start) / MORPH);
-      setT(p);
-      if (p < 1) {
-        raf = requestAnimationFrame(step);
-      } else {
-        setFrom(to);
-      }
-    };
-    if (from !== to && !reduced) {
-      raf = requestAnimationFrame(step);
-    }
-    return () => {
-      cancelAnimationFrame(raf);
-    };
-  }, [from, to, reduced]);
+  useFrame(!settled && !reduced, (dt) => {
+    setT((cur) => Math.min(1, cur + dt / MORPH));
+  });
   const next = (to + 1) % VIEWS.length;
-  const idle = shown && !reduced && !paused && from === to;
+  const idle = shown && !reduced && !paused && settled;
   useEffect(() => {
     let id = 0;
     if (idle) {
       id = window.setTimeout(() => {
-        setT(0);
+        setStart({ kind: "view", view: to });
         setTo(next);
+        setT(0);
       }, HOLD);
     }
     return () => {
       window.clearTimeout(id);
     };
-  }, [idle, next]);
-  return { from, go, settled: from === to && t >= 1, t, to };
+  }, [idle, next, to]);
+  return { go, settled, start, t, to };
 };
 
 interface MarkProps {
@@ -547,9 +551,18 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
             xLabel: xName,
             yLabel: yName,
           };
-          const a = LAYOUTS[VIEWS[morph.from]](ctx);
           const b = LAYOUTS[view](ctx);
-          const e = easeTravel(morph.t);
+          const marks = morph.settled
+            ? b.marks
+            : poseMarks(
+                {
+                  from: morph.start,
+                  kind: "between",
+                  t: morph.t,
+                  to: morph.to,
+                },
+                (v) => LAYOUTS[VIEWS[v]](ctx).marks
+              );
           const tip = hover.key === null ? undefined : b.tips[hover.key];
           return (
             <div className="relative">
@@ -570,11 +583,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                 {data.map((d, i) => (
                   <MorphMark
                     key={d.label}
-                    d={ptsPath(
-                      morph.settled
-                        ? b.marks[i]
-                        : blendPts(a.marks[i], b.marks[i], e)
-                    )}
+                    d={ptsPath(marks[i])}
                     dim={hover.dim(i)}
                     fill={tones[i] === 0 ? undefined : paint(tex("hatch"))}
                     i={i}

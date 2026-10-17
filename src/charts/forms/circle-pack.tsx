@@ -144,7 +144,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
                 const isHero = n === hero;
                 return (
                   <circle
-                    className={`pop transition-colors ${isHero ? "fill-hero" : `${fillOf(n)} ${strokeOf(n, hover?.key === key)}`}`}
+                    className={`pop transition-tone ${isHero ? "fill-hero" : `${fillOf(n)} ${strokeOf(n, hover?.key === key)}`}`}
                     cx={n.x}
                     cy={n.y}
                     fill={n.depth === 1 ? paint(stipple) : undefined}

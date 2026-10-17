@@ -170,14 +170,14 @@ const isLit = (focus: Focus | null, f: SankeyFlow, k: number) => {
   return f.from === focus.node || f.to === focus.node;
 };
 
-/** Engraved ribbons at rest; hover inks the traced ones solid and drops the rest to 25%. */
+/** Engraved ribbons at rest; hover inks the traced ones solid and drops the rest back. */
 const ribbonTone = (focus: Focus | null, lit: boolean) => {
   if (focus === null) {
     return { face: "", ribbon: "" };
   }
   return lit
     ? { face: "stroke-l3", ribbon: "" }
-    : { face: "", ribbon: "opacity-25" };
+    : { face: "", ribbon: "opacity-30" };
 };
 
 const nodeLit = (
@@ -229,7 +229,7 @@ const Ribbons = (p: RibbonsProps) => {
         return (
           <g
             key={`${l.from}-${l.to}`}
-            className={`fill-none ${tone.ribbon}`}
+            className={`fill-none transition-opacity ${tone.ribbon}`}
             onPointerEnter={() => {
               p.onFocus({
                 flow: k,

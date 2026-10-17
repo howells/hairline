@@ -205,7 +205,7 @@ const HitWedges = (props: {
         const [tx, ty] = clock(cx, cy, span.reach, (span.a0 + span.a1) / 2);
         return (
           <path
-            className={`fill-transparent transition-colors ${hovered ? "stroke-ink" : "stroke-none"}`}
+            className={`transition-tone fill-transparent ${hovered ? "stroke-ink" : "stroke-none"}`}
             d={sectorPath(cx, cy, r0, span.reach, span.a0, span.a1)}
             key={`hit-${span.a0}-${span.a1}-${span.reach}`}
             onPointerEnter={() => {

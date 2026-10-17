@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent, RefObject } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { useReveal } from "../hooks";
+import { useReducedMotion, useReveal } from "../hooks";
 import { HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
@@ -67,7 +67,7 @@ const edgeWidth = (e: Edge) =>
     ? MESH_WIDTHS[Math.min(MESH_WIDTHS.length, Math.max(1, e.weight)) - 1]
     : 1;
 const DIM =
-  "transition-opacity group-data-[focus=true]/galaxy:not-data-[on=true]:opacity-25";
+  "transition-opacity group-data-[focus=true]/galaxy:not-data-[on=true]:opacity-30";
 const EDGE_DIM =
   "transition-tone group-data-[focus=true]/galaxy:not-data-[on=true]:opacity-5 data-[on=true]:stroke-ink";
 
@@ -78,6 +78,7 @@ const useGalaxySimulation = (
   handles: Handles
 ) => {
   const sim = useRef<Simulation<Star, Edge> | null>(null);
+  const reduced = useReducedMotion();
   useEffect(() => {
     const simulation = shown
       ? makeSimulation(galaxy, () => {
@@ -85,10 +86,7 @@ const useGalaxySimulation = (
         })
       : null;
     sim.current = simulation;
-    if (
-      simulation !== null &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
+    if (simulation !== null && reduced) {
       settle(galaxy, simulation);
       drawGalaxy(galaxy, handles);
     }
@@ -96,7 +94,7 @@ const useGalaxySimulation = (
       simulation?.stop();
       sim.current = null;
     };
-  }, [galaxy, shown, handles]);
+  }, [galaxy, shown, handles, reduced]);
   return sim;
 };
 
@@ -438,10 +436,7 @@ const GalaxySvg = (props: {
   const label = `Underground lines and stations: ${data.nodes.length} nodes in ${domains} lines`;
 
   return (
-    <div
-      className={`duration-enter transition-opacity ${shown ? "opacity-100" : "opacity-0"}`}
-      ref={wrap}
-    >
+    <div className="fade" ref={wrap}>
       <ChartSvg
         className="group/galaxy touch-pan-y data-[dragging=true]:cursor-grabbing"
         height={height}

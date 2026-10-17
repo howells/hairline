@@ -7,7 +7,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { clamp, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { radialConvergenceDemo } from "./radial-convergence.data";
 import type { ConvergenceItem } from "./radial-convergence.data";
 import { clock } from "./util-a";
@@ -150,7 +150,7 @@ const RimItem = ({ focused, hub, k, lit, onEnter, rim }: RimItemProps) => {
   const c2y = hub.y + (c1y - hub.y) * 0.25;
   return (
     <g
-      className={lit ? "transition-opacity" : "opacity-25 transition-opacity"}
+      className={dimClass(!lit)}
       onPointerEnter={() => {
         onEnter(px, py);
       }}

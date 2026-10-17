@@ -1,6 +1,3 @@
-import { useEffect, useState } from "react";
-import type { RefObject } from "react";
-
 import { normals } from "../util";
 
 /** Ladder step for rank `rank` of `n`, spread so the last stays readable at step `lightest`. */
@@ -10,29 +7,6 @@ export const ladderStep = (rank: number, n: number, lightest = 5) => {
   }
   const step = Math.round((rank / (n - 1)) * lightest);
   return Math.max(0, Math.min(lightest, step));
-};
-
-/** Live visibility (unlike useReveal, it flips back when scrolled away). */
-export const useInView = (
-  ref: RefObject<HTMLElement | null>,
-  threshold = 0.1
-) => {
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      ([e]) => {
-        setInView(e.isIntersecting);
-      },
-      { threshold }
-    );
-    if (ref.current !== null) {
-      io.observe(ref.current);
-    }
-    return () => {
-      io.disconnect();
-    };
-  }, [ref, threshold]);
-  return inView;
 };
 
 /** Deterministic log-normal samples: the shared normal draws, exponentiated. */

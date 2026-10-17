@@ -11,7 +11,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { EngravedRect, Hatch, KeySwatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace, sansWidth, stagger, sum } from "../util";
+import { clamp, dimClass, noteSpace, sansWidth, stagger, sum } from "../util";
 import {
   brandSpectrumCompetitors,
   brandSpectrumDemo,
@@ -130,7 +130,7 @@ const GapBar = ({ fill, from, lit, r, to, y }: GapBarProps) => {
   const a = Math.round(Math.min(from, to));
   const b = Math.round(Math.max(from, to));
   return (
-    <g className={`transition-opacity ${lit ? "" : "opacity-25"}`}>
+    <g className={dimClass(!lit)}>
       <EngravedRect
         className="grow-x stroke-l5"
         fill={paint(fill)}

@@ -251,7 +251,7 @@ const Ring = (props: RingProps) => (
     {props.geometry.groups.map(({ d, group: g }) => (
       <g key={props.data.teams[g.index]}>
         <path
-          className={`pop transition-colors ${g.index === props.focus ? "fill-hero" : "fill-l3"}`}
+          className={`pop transition-tone ${g.index === props.focus ? "fill-hero" : "fill-l3"}`}
           d={d}
           style={stagger(g.index, "mark")}
         />
