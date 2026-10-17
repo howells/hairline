@@ -1,4 +1,4 @@
-import { ChartGrid, SingleChart } from "./pages/gallery";
+import { ChartGrid, KitGrid, SingleChart } from "./pages/gallery";
 import { Credits } from "./pages/sources";
 import { PaletteSwitcher } from "./system/palette";
 import { useRoute } from "./system/router";
@@ -12,6 +12,12 @@ const TopBar = () => (
       Hairline
     </a>
     <div className="flex items-center gap-6">
+      <a
+        className="text-muted text-small inline-flex min-h-11 items-center no-underline"
+        href="#/kit"
+      >
+        Kit
+      </a>
       <a
         className="text-muted text-small inline-flex min-h-11 items-center no-underline"
         href="#/sources"
@@ -29,6 +35,9 @@ const RouteContent = (props: {
 }) => {
   if (props.section === "chart" && props.arg !== undefined) {
     return <SingleChart id={props.arg} />;
+  }
+  if (props.section === "kit") {
+    return <KitGrid />;
   }
   if (props.section === "sources") {
     return <Credits />;

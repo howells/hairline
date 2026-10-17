@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { ALL_ENTRIES, entryById } from "../gallery/registry";
+import { ALL_ENTRIES, KIT_ENTRIES, entryById } from "../gallery/registry";
 import type { GalleryEntry } from "../gallery/types";
 
 const ground = (entry: GalleryEntry) => {
@@ -70,14 +70,20 @@ const Cell = (props: { entry: GalleryEntry }) => {
   );
 };
 
-/** Every chart in one grid, separated by hairline rules. */
-export const ChartGrid = () => (
+/** Cells in one grid, separated by hairline rules. */
+const Grid = (props: { entries: GalleryEntry[] }) => (
   <main className="bg-rule border-rule grid grid-flow-dense grid-cols-1 gap-px border-b md:grid-cols-2 2xl:grid-cols-3">
-    {ALL_ENTRIES.map((entry) => (
+    {props.entries.map((entry) => (
       <Cell key={entry.id} entry={entry} />
     ))}
   </main>
 );
+
+/** Every chart. */
+export const ChartGrid = () => <Grid entries={ALL_ENTRIES} />;
+
+/** The kit the charts are drawn from: fills, marks and type. */
+export const KitGrid = () => <Grid entries={KIT_ENTRIES} />;
 
 /** One chart on its own: `#/chart/L13`. */
 export const SingleChart = (props: { id: string }) => {

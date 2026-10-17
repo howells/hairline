@@ -21,7 +21,10 @@ interface Sheet {
   top: number;
 }
 
-/** Tile size, columns and rows for a width: six tone columns after the names. */
+/**
+ * Tile size, columns and rows for a width: six tone columns after the names,
+ * the whole sheet centred in its cell once the tiles reach their widest.
+ */
 const sheetFor = (width: number): Sheet => {
   const narrow = width < 560;
   const labelW = narrow ? 92 : 136;
@@ -33,9 +36,11 @@ const sheetFor = (width: number): Sheet => {
     )
   );
   const tileH = narrow ? 28 : 44;
+  const span = labelW + FILL_TONES.length * (tileW + gap) - gap;
+  const left = Math.max(0, Math.round((width - span) / 2));
   return {
-    col: (k) => labelW + k * (tileW + gap),
-    labelX: 0,
+    col: (k) => left + labelW + k * (tileW + gap),
+    labelX: left,
     rowH: tileH + (narrow ? 8 : 10),
     tileH,
     tileW,
@@ -105,8 +110,8 @@ const RungTile = (p: Omit<TileProps, "solid">) => (
   </g>
 );
 
-const RowName = (p: { label: string; y: number }) => (
-  <Label middle muted voice="label" x={0} y={p.y}>
+const RowName = (p: { label: string; x: number; y: number }) => (
+  <Label middle muted voice="label" x={p.x} y={p.y}>
     {p.label}
   </Label>
 );
@@ -130,7 +135,7 @@ const FamilyRows = ({ hover, id, s }: BodyProps) => (
       const allowed: readonly FillTone[] = family.tones;
       return (
         <g key={family.id}>
-          <RowName label={family.label} y={y + s.tileH / 2} />
+          <RowName x={s.labelX} label={family.label} y={y + s.tileH / 2} />
           {FILL_TONES.map((t, k) => {
             if (!allowed.includes(t.id)) {
               return null;
@@ -171,7 +176,7 @@ const LadderRows = ({ hover, id, s, top }: BodyProps & { top: number }) => {
     <g>
       <HRule
         kind="rule"
-        x0={0}
+        x0={s.labelX}
         x1={s.col(FILL_TONES.length - 1) + s.tileW}
         y={top - 26}
       />
@@ -188,7 +193,7 @@ const LadderRows = ({ hover, id, s, top }: BodyProps & { top: number }) => {
             : ladder.label;
         return (
           <g key={`${ladder.id}-${tone}`}>
-            <RowName label={name} y={y + s.tileH / 2} />
+            <RowName x={s.labelX} label={name} y={y + s.tileH / 2} />
             {ladder.steps.map((step, k) => (
               <Tile
                 key={`${step.pitch}-${step.r}`}
@@ -223,11 +228,11 @@ const LabelRow = ({ hover, id, s, top }: BodyProps & { top: number }) => (
   <g>
     <HRule
       kind="rule"
-      x0={0}
+      x0={s.labelX}
       x1={s.col(FILL_TONES.length - 1) + s.tileW}
       y={top - 26}
     />
-    <RowName label="Labels on fills" y={top + s.tileH / 2} />
+    <RowName x={s.labelX} label="Labels on fills" y={top + s.tileH / 2} />
     {LABEL_SPECIMENS.map((sp, k) => (
       <g key={sp.fill}>
         <Tile

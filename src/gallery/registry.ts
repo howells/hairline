@@ -33,9 +33,12 @@ export const ALL_ENTRIES: GalleryEntry[] = [
   ...originals,
   ...forms,
   ...byId(maps, "M2"),
-  // The fills and marks sheets close the grid: every fill and marker above is one of these.
-  ...palette,
 ];
 
+/** The Kit page: the fills, marks and type every chart above is drawn from. */
+export const KIT_ENTRIES: GalleryEntry[] = palette;
+
 export const entryById = (id: string) =>
-  ALL_ENTRIES.find((e) => e.id.toLowerCase() === id.toLowerCase());
+  [...ALL_ENTRIES, ...KIT_ENTRIES].find(
+    (e) => e.id.toLowerCase() === id.toLowerCase()
+  );
