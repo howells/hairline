@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { rungBarsDemo } from "./rung-bars.data";
 import type { RungDatum } from "./rung-bars.data";
 import { rungPitch, rungY } from "./rung-geometry";
@@ -178,7 +178,7 @@ export const RungBars = (props: RungBarsProps) => {
     >
       {(width) => {
         const margin = {
-          bottom: props.note === undefined ? 30 : 50,
+          bottom: 30 + noteSpace(props.note, width - 16, 20),
           left: 16,
           right: 16,
           top: 28,
@@ -196,10 +196,15 @@ export const RungBars = (props: RungBarsProps) => {
         const max = Math.max(...data.map((d) => d.value / unit));
         const pitch = rungPitch(height - margin.bottom - margin.top, max);
         // When the pitch reaches its cap the columns stop short of the
-        // room, so the plot closes up round them instead of leaving air.
-        const fitted = Math.min(
-          height,
-          margin.top + Math.ceil(Math.max(0, max)) * pitch + margin.bottom
+        // room, so the plot closes up round them instead of leaving air;
+        // at its floor the tallest column needs more, so the plot grows.
+        const tallest = Math.max(0, Math.round(max)) * pitch;
+        const fitted = Math.max(
+          Math.min(
+            height,
+            margin.top + Math.ceil(Math.max(0, max)) * pitch + margin.bottom
+          ),
+          margin.top + tallest + margin.bottom
         );
         const floor = Math.round(fitted - margin.bottom);
         const shadow = Math.min(

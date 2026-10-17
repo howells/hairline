@@ -140,9 +140,9 @@ Utility classes: `hairline` (solid 1px rule line), `grid-dotted` (dotted grid li
 - Labels: Inter in sentence case; numbers in tabular figures. Callout leader lines are hairlines in `--faint`.
 - Every chart should carry a unit footnote (`FootNote`, in `t-axis`) or make the unit obvious through the gallery subtitle.
 
-### Motion (`src/system/base.css`)
+### Motion (`src/system/app.css`)
 
-`Plot` toggles `.is-hidden` → `.is-shown` when it scrolls into view; the Card's Replay button remounts it. Animate with these classes and stagger with `style={{ "--i": index }}`, optionally overriding `"--stagger": "12ms"`:
+`Plot` toggles `.is-hidden` → `.is-shown` when it scrolls into view. Animate with these classes and stagger with `style={{ "--i": index }}`, optionally overriding `"--stagger": "12ms"`:
 
 - `grow-y` (add `from-top` for downward bars), `grow-x` (`from-right`): bars and rungs
 - `pop`: dots scale in. `fade`: labels and annotations.
