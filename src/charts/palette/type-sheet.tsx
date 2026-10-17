@@ -1,14 +1,15 @@
 import { Plot } from "../core";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { stagger } from "../util";
+import type { Voice } from "../text";
+import { cx, stagger } from "../util";
 
 interface TypeRow {
-  /** The role's class names, as a chart or the page sets them. */
-  className: string;
   /** Room the row takes, in px: the figure needs more than the rest. */
   height: number;
   label: string;
+  /** A chart role, or the page's own text at its two weights. */
+  role: Voice | "page" | "wordmark";
   size: string;
   specimen: string;
   weight: string;
@@ -17,54 +18,79 @@ interface TypeRow {
 /** The case, top to bottom: the four chart roles, then the page's two. */
 const ROWS: TypeRow[] = [
   {
-    className: "t-axis",
     height: 44,
     label: "Axis",
+    role: "axis",
     size: "11",
     specimen: "Jan 2024",
     weight: "Regular",
   },
   {
-    className: "t-label",
     height: 44,
     label: "Label",
+    role: "label",
     size: "11",
     specimen: "East Midlands",
     weight: "Medium",
   },
   {
-    className: "t-value",
     height: 44,
     label: "Value",
+    role: "value",
     size: "11",
     specimen: "4,612 GWh",
     weight: "Semibold",
   },
   {
-    className: "t-figure",
     height: 64,
     label: "Figure",
+    role: "figure",
     size: "30",
     specimen: "421 GWh",
     weight: "Semibold",
   },
   {
-    className: "text-small fill-text",
     height: 44,
     label: "Page",
+    role: "page",
     size: "13.5",
     specimen: "Major earthquakes",
     weight: "Regular",
   },
   {
-    className: "text-small fill-text font-semibold",
     height: 44,
     label: "Wordmark",
+    role: "wordmark",
     size: "13.5",
     specimen: "Hairline",
     weight: "Semibold",
   },
 ];
+
+/** A row's specimen, set in the role it shows. */
+const Specimen = (p: {
+  children: string;
+  role: TypeRow["role"];
+  x: number;
+  y: number;
+}) =>
+  p.role === "page" || p.role === "wordmark" ? (
+    <text
+      className={cx(
+        "text-small fill-text",
+        p.role === "wordmark" && "font-semibold"
+      )}
+      dy="0.34em"
+      x={p.x}
+      y={p.y}
+    >
+      {p.children}
+    </text>
+  ) : (
+    <Label middle voice={p.role} x={p.x} y={p.y}>
+      {p.children}
+    </Label>
+  );
 
 /** Room above the first row, for the column names. */
 const HEAD = 28;
@@ -129,14 +155,9 @@ export const TypeSheet = () => (
                   <Label middle muted voice="label" x={0} y={mid}>
                     {row.label}
                   </Label>
-                  <text
-                    className={row.className}
-                    dy="0.34em"
-                    x={c.specimen}
-                    y={mid}
-                  >
+                  <Specimen role={row.role} x={c.specimen} y={mid}>
                     {row.specimen}
-                  </text>
+                  </Specimen>
                   <Label middle voice="value" x={c.size} y={mid}>
                     {row.size}
                   </Label>

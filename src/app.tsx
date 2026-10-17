@@ -12,18 +12,20 @@ const TopBar = () => (
       Hairline
     </a>
     <div className="flex items-center gap-6">
-      <a
-        className="text-muted text-small inline-flex min-h-11 items-center no-underline"
-        href="#/kit"
-      >
-        Kit
-      </a>
-      <a
-        className="text-muted text-small inline-flex min-h-11 items-center no-underline"
-        href="#/sources"
-      >
-        Sources
-      </a>
+      <nav className="flex items-center gap-2.5">
+        <a
+          className="text-muted text-small inline-flex min-h-11 min-w-11 items-center justify-center no-underline"
+          href="#/kit"
+        >
+          Kit
+        </a>
+        <a
+          className="text-muted text-small inline-flex min-h-11 min-w-11 items-center justify-center no-underline"
+          href="#/sources"
+        >
+          Sources
+        </a>
+      </nav>
       <PaletteSwitcher />
     </div>
   </header>

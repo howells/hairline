@@ -199,7 +199,7 @@ export const RungBars = (props: RungBarsProps) => {
         // room, so the plot closes up round them instead of leaving air.
         const fitted = Math.min(
           height,
-          margin.top + Math.ceil(max) * pitch + margin.bottom
+          margin.top + Math.ceil(Math.max(0, max)) * pitch + margin.bottom
         );
         const floor = Math.round(fitted - margin.bottom);
         const shadow = Math.min(
