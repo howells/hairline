@@ -1,5 +1,9 @@
-// Tailwind class strings shared by the board charts. Board colours resolve
-// only inside a `.surface-board` container.
+/*
+ * The role classes every chart draws with: text voices, rules, the cursor,
+ * outlines and lines. A chart names a role rather than spelling its classes.
+ * PANEL is the board's card; board colours resolve only inside a
+ * `.surface-board` container.
+ */
 
 /** The panel each board chart sits in. */
 export const PANEL =

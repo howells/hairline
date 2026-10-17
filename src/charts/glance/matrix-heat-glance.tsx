@@ -290,13 +290,7 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
             <title>{label}</title>
             <defs>
               {DOT_RADII.map((r, k) => (
-                <DotScreen
-                  key={r}
-                  ground="fill-paper"
-                  id={tex(`s${k}`)}
-                  r={r}
-                  tone="fill-l3"
-                />
+                <DotScreen key={r} id={tex(`s${k}`)} r={r} tone="fill-l3" />
               ))}
             </defs>
             {data.columns.map((c, j) => (

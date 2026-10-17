@@ -7,12 +7,13 @@ import { fmtDegC } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
+import { barPath } from "../shapes";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, stagger } from "../util";
 import { staggerWaveDemo } from "./stagger-wave.data";
 import type { WaveDatum } from "./stagger-wave.data";
-import { barPath, labelRoom } from "./util-a";
+import { labelRoom } from "./util-a";
 
 interface StaggerWaveProps {
   data?: WaveDatum[];
@@ -202,7 +203,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={hatch} tone="fill-l4" />
+              <Hatch id={hatch} tone="fill-l4" />
             </defs>
             <YGrid
               format={axisFormat}

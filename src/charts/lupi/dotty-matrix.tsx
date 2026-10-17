@@ -190,7 +190,7 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
           >
             <title>Isometric planes of dots, one plane per group</title>
             <defs>
-              <Stipple ground="fill-paper" id={screen} tone="fill-l5" />
+              <Stipple id={screen} tone="fill-l5" />
             </defs>
             {order.map(({ g, group }) => (
               <Plane

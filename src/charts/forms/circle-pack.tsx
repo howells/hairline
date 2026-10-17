@@ -132,7 +132,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
           >
             <title>{label}</title>
             <defs>
-              <Stipple ground="fill-paper" id={stipple} tone="fill-l4" />
+              <Stipple id={stipple} tone="fill-l4" />
             </defs>
             <g transform={`translate(${dx} 0)`}>
               {nodes.map((n, i) => {

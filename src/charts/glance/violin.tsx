@@ -289,7 +289,7 @@ export const Violin = (props: ViolinProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l4" />
+              <Hatch id={tex("hatch")} tone="fill-l4" />
             </defs>
             {y.ticks(4).map((t) => (
               <g key={t}>

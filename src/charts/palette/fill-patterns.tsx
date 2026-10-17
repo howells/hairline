@@ -13,7 +13,7 @@ type Ladder = (typeof FILL_LADDERS)[number];
 
 /** One engraved pattern for a family in a tone. */
 const FamilyPattern = (props: { family: Family; id: string; tone: string }) => {
-  const common = { ground: "fill-paper", id: props.id, tone: props.tone };
+  const common = { id: props.id, tone: props.tone };
   const { family } = props;
   if (family.id === "hatch") {
     return <Hatch {...common} pitch={family.pitch} />;
@@ -34,7 +34,7 @@ const FamilyPattern = (props: { family: Family; id: string; tone: string }) => {
     return <Stipple {...common} pitch={family.pitch} />;
   }
   if (family.id === "beads") {
-    return <Beads {...common} pitch={family.pitch} />;
+    return <Beads {...common} ground="fill-paper" pitch={family.pitch} />;
   }
   // Solid needs no pattern.
   return null;
@@ -47,7 +47,7 @@ const LadderPattern = (props: {
   step: Ladder["steps"][number];
   tone: string;
 }) => {
-  const common = { ground: "fill-paper", id: props.id, tone: props.tone };
+  const common = { id: props.id, tone: props.tone };
   return props.ladder.id === "halftone" ? (
     <DotScreen {...common} pitch={props.step.pitch} r={props.step.r} />
   ) : (

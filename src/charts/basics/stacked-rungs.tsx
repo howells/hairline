@@ -236,10 +236,9 @@ export const StackedRungs = (props: StackedRungsProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Beads ground="fill-paper" id={ids("beads")} tone="fill-l3" />
+              <Beads id={ids("beads")} tone="fill-l3" />
               {KEY_LOOKS.map((look) => (
                 <look.Pattern
-                  ground="fill-paper"
                   id={ids(look.name)}
                   key={look.name}
                   pitch={TEXTURE_PITCH.dense}

@@ -5,9 +5,9 @@ import { useState } from "react";
 import { crisp } from "../axes";
 import { Chart } from "../core";
 import { Dot, Ring } from "../markers";
+import { GRID_V, LABEL, TICK, VALUE } from "../roles";
 import { nameWidth } from "./room";
 import { relax } from "./spread";
-import { GRID_V, LABEL, TICK, VALUE } from "./styles";
 
 interface Row {
   name: string;

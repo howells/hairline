@@ -8,6 +8,15 @@ import type { StaggerTier } from "./motion";
  * in each family's util-*.ts; anything two families need lives here.
  */
 
+/** Join class names, skipping the empty and the switched-off. */
+export const cx = (...names: (false | null | string | undefined)[]): string =>
+  names
+    .filter(
+      (n): n is string =>
+        n !== false && n !== null && n !== undefined && n !== ""
+    )
+    .join(" ");
+
 export const clamp = (v: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, v));
 

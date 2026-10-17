@@ -337,16 +337,8 @@ export const TickBox = (props: TickBoxProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch
-                ground="fill-paper"
-                id={textures("hatch")}
-                tone="fill-l4"
-              />
-              <CrossHatch
-                ground="fill-paper"
-                id={textures("cross")}
-                tone="fill-hero"
-              />
+              <Hatch id={textures("hatch")} tone="fill-l4" />
+              <CrossHatch id={textures("cross")} tone="fill-hero" />
             </defs>
             <Grid format={format} layout={layout} ticks={layout.ticks} />
             {data.map((d, i) => (

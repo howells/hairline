@@ -225,13 +225,8 @@ const AreaDifferenceSvg = (props: SvgProps) => {
     >
       <title>{label}</title>
       <defs>
-        <CrossHatch ground="fill-paper" id={tex("lead")} tone="fill-hero" />
-        <Hatch
-          angle="rising"
-          ground="fill-paper"
-          id={tex("hatch")}
-          tone="fill-l4"
-        />
+        <CrossHatch id={tex("lead")} tone="fill-hero" />
+        <Hatch angle="rising" id={tex("hatch")} tone="fill-l4" />
         <clipPath id={tex("above")}>
           <path d={above ?? ""} />
         </clipPath>

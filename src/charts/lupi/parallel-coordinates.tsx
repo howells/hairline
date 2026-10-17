@@ -193,8 +193,8 @@ const Ground = (props: {
 }) => (
   <g className="fade" style={stagger(2, "series")}>
     <defs>
-      <Stipple ground="fill-paper" id={props.ids("range")} tone="fill-l4" />
-      <Hatch ground="fill-paper" id={props.ids("middle")} tone="fill-l5" />
+      <Stipple id={props.ids("range")} tone="fill-l4" />
+      <Hatch id={props.ids("middle")} tone="fill-l5" />
     </defs>
     <path
       className="stroke-l5"

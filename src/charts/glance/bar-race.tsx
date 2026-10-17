@@ -9,13 +9,14 @@ import { useReducedMotion, useReveal } from "../hooks";
 import { Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
 import { PlotNote } from "../plot-note";
+import { barPath } from "../shapes";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth } from "../util";
 import { barRaceDemo } from "./bar-race.data";
 import type { RaceData, RaceSeries } from "./bar-race.data";
 import { ControlSlot } from "./control-slot";
-import { barPath, labelRoom, textWidth } from "./util-a";
+import { labelRoom, textWidth } from "./util-a";
 import { CONTROL_SLOT_H, useInView } from "./util-b";
 
 interface BarRaceProps {
@@ -453,7 +454,7 @@ export const BarRace = (props: BarRaceProps) => {
             >
               <title>{label}</title>
               <defs>
-                <Hatch ground="fill-paper" id={hatch} tone="fill-l4" />
+                <Hatch id={hatch} tone="fill-l4" />
               </defs>
               {data.series.map((s, i) => (
                 <Bar

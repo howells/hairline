@@ -2,12 +2,13 @@ import { scaleBand, scaleLinear } from "d3-scale";
 import { useState } from "react";
 
 import { fmtKInt } from "../../lib/format";
-import { Chart, VGrid } from "../core";
+import { Chart } from "../core";
+import { LABEL, MARK, OUTLINE, TICK, VALUE } from "../roles";
+import { VGrid } from "../rules";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth } from "../util";
 import { nameWidth } from "./room";
-import { LABEL, MARK, OUTLINE, TICK, VALUE } from "./styles";
 import { labelGap, thinTicks } from "./thin-ticks";
 
 export interface NamedValue {
@@ -122,7 +123,7 @@ export const HBars = (props: HBarsProps) => {
           >
             <title>{props.label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("bar")} tone="fill-l3" />
+              <Hatch id={tex("bar")} tone="fill-l3" />
             </defs>
             <VGrid xs={props.ticks.map(x)} y0={m.top} y1={h - m.bottom} />
             {thinTicks(

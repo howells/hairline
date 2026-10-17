@@ -237,18 +237,8 @@ export const BrushStrip = (props: StripProps) => {
           <clipPath id={tex("in")}>
             <rect height={STRIP_H} width={Math.max(0, xb - xa)} x={xa} y={0} />
           </clipPath>
-          <Stipple
-            ground="fill-paper"
-            id={tex("out")}
-            pitch={TEXTURE_PITCH.dense}
-            tone="fill-l5"
-          />
-          <Stipple
-            ground="fill-paper"
-            id={tex("sel")}
-            pitch={TEXTURE_PITCH.dense}
-            tone="fill-l4"
-          />
+          <Stipple id={tex("out")} pitch={TEXTURE_PITCH.dense} tone="fill-l5" />
+          <Stipple id={tex("sel")} pitch={TEXTURE_PITCH.dense} tone="fill-l4" />
         </defs>
         <line
           className="hairline"

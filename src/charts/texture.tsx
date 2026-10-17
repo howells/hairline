@@ -2,7 +2,7 @@
  * Engraved textures, shared by every chart. Every mark sits on the svg's own
  * pixel grid: diagonals are clean 1px pixel staircases, dots sit on an even
  * lattice, and colours come from ramp classes so textures follow the palette.
- * Textures go on paper (pass `ground="fill-paper"`), outlined with a 1px rule.
+ * Textures go on paper (the default ground), outlined with a 1px rule.
  *
  * Pitches are named in TEXTURE_PITCH (texture-ids.ts): hatch 4, crosshatch 6,
  * dot screen 4, dense screen 3. Density and angle may encode a value; the
@@ -14,7 +14,7 @@ import { TEXTURE_PITCH } from "./texture-ids";
 import { sansWidth } from "./util";
 
 interface PatternProps {
-  /** Fill class for the ground under the marks, e.g. "fill-paper". */
+  /** Fill class for the ground under the marks; paper unless a chart says otherwise. */
   ground?: string;
   id: string;
   /** Grid pitch in whole px. */
@@ -23,10 +23,13 @@ interface PatternProps {
   tone: string;
 }
 
-const Ground = (props: { className?: string; h: number; w: number }) =>
-  props.className === undefined ? null : (
-    <rect className={props.className} height={props.h} width={props.w} />
-  );
+const Ground = (props: { className?: string; h: number; w: number }) => (
+  <rect
+    className={props.className ?? "fill-paper"}
+    height={props.h}
+    width={props.w}
+  />
+);
 
 /** The pixels of one diagonal across a `pitch` tile, shifted down by `offset`. */
 const diagonal = (pitch: number, falling: boolean, offset: number) =>
@@ -191,7 +194,8 @@ export const DotScreen = ({
 
 /**
  * Beads: 1px columns every `pitch` px. Inside a 2px rung this reads as a row
- * of evenly spaced dots: a broken rung.
+ * of evenly spaced dots: a broken rung. Unlike the other textures it has no
+ * ground unless given one, so the gaps show what is under the rung.
  */
 export const Beads = ({
   ground,
@@ -200,7 +204,9 @@ export const Beads = ({
   tone,
 }: PatternProps) => (
   <pattern height={1} id={id} patternUnits="userSpaceOnUse" width={pitch}>
-    <Ground className={ground} h={1} w={pitch} />
+    {ground === undefined ? null : (
+      <Ground className={ground} h={1} w={pitch} />
+    )}
     <rect className={tone} height={1} width={1} />
   </pattern>
 );

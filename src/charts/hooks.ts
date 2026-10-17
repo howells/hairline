@@ -152,3 +152,35 @@ export const useScrub = (restIndex: number, dates: Date[], sync?: Sync) => {
 
   return { bind, index, isHovering: hover !== null };
 };
+
+/** The hovered record and where its tooltip is anchored. */
+export interface HoverAt<K> {
+  key: K;
+  x: number;
+  y: number;
+}
+
+/**
+ * The one hover state: a record key (an index, an id) plus a tooltip anchor.
+ * `dim(key)` is true for every record but the hovered one, and only while
+ * something is hovered. Re-showing the same record at the same spot does not
+ * re-render.
+ */
+export const useHover = <K>() => {
+  const [at, setAt] = useState<HoverAt<K> | null>(null);
+  return {
+    at,
+    clear: () => {
+      setAt(null);
+    },
+    dim: (key: K) => at !== null && at.key !== key,
+    key: at === null ? null : at.key,
+    show: (key: K, x = 0, y = 0) => {
+      setAt((prev) =>
+        prev !== null && prev.key === key && prev.x === x && prev.y === y
+          ? prev
+          : { key, x, y }
+      );
+    },
+  };
+};

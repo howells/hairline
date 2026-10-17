@@ -93,7 +93,6 @@ const ScreenDefs = (props: { pid: string }) => (
   <defs>
     {SCREENS.map((s, i) => (
       <DotScreen
-        ground="fill-paper"
         id={`${props.pid}-${i}`}
         key={`${s.pitch}-${s.r}`}
         pitch={s.pitch}

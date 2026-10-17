@@ -408,12 +408,8 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
             >
               <title>Lights by keeper</title>
               <defs>
-                <Hatch ground="fill-paper" id={fills.hatch} tone="fill-l4" />
-                <CrossHatch
-                  ground="fill-paper"
-                  id={fills.hero}
-                  tone="fill-hero"
-                />
+                <Hatch id={fills.hatch} tone="fill-l4" />
+                <CrossHatch id={fills.hero} tone="fill-hero" />
               </defs>
               <Lights {...layer} />
               <Owners {...layer} />

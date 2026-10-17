@@ -295,14 +295,10 @@ export const DotWaffle = (props: DotWaffleProps) => {
           >
             <title>{label}</title>
             <defs>
-              <CrossHatch
-                ground="fill-paper"
-                id={tex("cross")}
-                tone="fill-l2"
-              />
-              <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l3" />
-              <Rules ground="fill-paper" id={tex("rule")} tone="fill-l3" />
-              <Stipple ground="fill-paper" id={tex("dots")} tone="fill-l3" />
+              <CrossHatch id={tex("cross")} tone="fill-l2" />
+              <Hatch id={tex("hatch")} tone="fill-l3" />
+              <Rules id={tex("rule")} tone="fill-l3" />
+              <Stipple id={tex("dots")} tone="fill-l3" />
             </defs>
             <WaffleCells
               dots={dots}

@@ -245,7 +245,7 @@ export const RadialYear = (props: { data?: MonthValue[] }) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={hatch} tone="fill-l5" />
+              <Hatch id={hatch} tone="fill-l5" />
             </defs>
             <g transform={`translate(${cx} ${cy})`}>
               <YearFill {...dial} hatch={hatch} />

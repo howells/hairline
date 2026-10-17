@@ -57,7 +57,6 @@ const ScreenDefs = (p: { tex: (name: string) => string }) => (
     {SCREENS.map((sc) => (
       <Hatch
         key={sc.name}
-        ground="fill-paper"
         id={p.tex(sc.name)}
         pitch={sc.pitch}
         tone="fill-l3"

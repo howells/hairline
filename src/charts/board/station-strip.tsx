@@ -4,11 +4,12 @@ import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { crisp } from "../axes";
-import { Chart, VGrid } from "../core";
+import { Chart } from "../core";
 import { Dot } from "../markers";
 import { MARK_WEIGHT, TICK as TICK_LEN } from "../marks";
+import { LABEL, POINT, TICK, VALUE } from "../roles";
+import { VGrid } from "../rules";
 import { nameWidth } from "./room";
-import { LABEL, POINT, TICK, VALUE } from "./styles";
 import { labelGap, thinTicks } from "./thin-ticks";
 
 export interface StripStation {

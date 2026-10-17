@@ -2,12 +2,13 @@ import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
-import { Chart, VGrid } from "../core";
+import { Chart } from "../core";
 import { Dot } from "../markers";
+import { LABEL, TICK, VALUE } from "../roles";
+import { VGrid } from "../rules";
 import { sansWidth } from "../util";
 import { Key } from "./key";
 import { nameWidth } from "./room";
-import { LABEL, TICK, VALUE } from "./styles";
 import { labelGap, thinTicks } from "./thin-ticks";
 
 /** Gap between a row's name and the plot's labels, px. */

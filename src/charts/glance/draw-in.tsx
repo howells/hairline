@@ -125,12 +125,7 @@ interface CurveProps {
 const Curve = (p: CurveProps) => (
   <>
     <defs>
-      <DotScreen
-        ground="fill-paper"
-        id={`${p.clip}-screen`}
-        r={HALFTONE_R[0]}
-        tone="fill-l4"
-      />
+      <DotScreen id={`${p.clip}-screen`} r={HALFTONE_R[0]} tone="fill-l4" />
       <clipPath id={p.clip}>
         <rect x={0} y={0} width={Math.max(0, p.tipX + 2)} height={p.height} />
       </clipPath>

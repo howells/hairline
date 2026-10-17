@@ -226,7 +226,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Beads ground="fill-paper" id={ids("beads")} tone="fill-l3" />
+              <Beads id={ids("beads")} tone="fill-l3" />
             </defs>
             <line
               className="hairline"

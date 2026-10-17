@@ -7,6 +7,7 @@ import { crisp } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import { Ring } from "../markers";
+import { CURSOR, LABEL, LINE, RULE_ZERO, TICK_STRONG, VALUE } from "../roles";
 import { Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
@@ -14,7 +15,6 @@ import { MonthAxis } from "./month-axis";
 import { labelledTicks, monthTicks } from "./month-ticks";
 import { SIDE_GAP, scaleWidth, sideRoom } from "./room";
 import { relax } from "./spread";
-import { CURSOR, LABEL, LINE, RULE_ZERO, TICK_STRONG, VALUE } from "./styles";
 
 /** A layer's engraving, on paper: rules lie level, or stand upright. */
 type Engraving = "hatch" | "stipple" | "rules" | "upright";
@@ -70,15 +70,10 @@ const cumulativeTops = (layers: Layer[]) => {
 /** One pattern per engraving, each on paper. */
 const LayerPatterns = (props: { tex: (name: string) => string }) => (
   <defs>
-    <Hatch ground="fill-paper" id={props.tex("hatch")} tone="fill-l3" />
-    <Stipple ground="fill-paper" id={props.tex("stipple")} tone="fill-l3" />
-    <Rules ground="fill-paper" id={props.tex("rules")} tone="fill-l5" />
-    <Rules
-      angle="upright"
-      ground="fill-paper"
-      id={props.tex("upright")}
-      tone="fill-l5"
-    />
+    <Hatch id={props.tex("hatch")} tone="fill-l3" />
+    <Stipple id={props.tex("stipple")} tone="fill-l3" />
+    <Rules id={props.tex("rules")} tone="fill-l5" />
+    <Rules angle="upright" id={props.tex("upright")} tone="fill-l5" />
   </defs>
 );
 

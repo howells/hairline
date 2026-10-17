@@ -282,18 +282,13 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
             <defs>
               {DENSITY.map((pitch, level) => (
                 <Hatch
-                  ground="fill-paper"
                   id={levelIds[level] ?? ""}
                   key={`def-${pitch}`}
                   pitch={pitch}
                   tone="fill-l3"
                 />
               ))}
-              <CrossHatch
-                ground="fill-paper"
-                id={id("hero")}
-                tone="fill-hero"
-              />
+              <CrossHatch id={id("hero")} tone="fill-hero" />
             </defs>
             <DialFace dial={dial} />
             <Density dial={dial} ids={levelIds} slices={slicesOf(spans)} />

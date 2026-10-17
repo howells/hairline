@@ -362,16 +362,11 @@ const NodeMark = (p: NodeProps) => {
 /** The grains: the hero's crosshatch, then the rest in GRAIN order, all on paper. */
 const GrainDefs = ({ tex }: { tex: (name: string) => string }) => (
   <defs>
-    <CrossHatch ground="fill-paper" id={tex("cross")} tone="fill-l3" />
-    <Hatch
-      angle="falling"
-      ground="fill-paper"
-      id={tex("falling")}
-      tone="fill-l4"
-    />
-    <Hatch ground="fill-paper" id={tex("rising")} tone="fill-l4" />
-    <Stipple ground="fill-paper" id={tex("dots")} tone="fill-l3" />
-    <Rules ground="fill-paper" id={tex("rule")} tone="fill-l4" />
+    <CrossHatch id={tex("cross")} tone="fill-l3" />
+    <Hatch angle="falling" id={tex("falling")} tone="fill-l4" />
+    <Hatch id={tex("rising")} tone="fill-l4" />
+    <Stipple id={tex("dots")} tone="fill-l3" />
+    <Rules id={tex("rule")} tone="fill-l4" />
   </defs>
 );
 

@@ -97,15 +97,9 @@ const Excursions = ({ frame, mean, tex, values }: ExcursionProps) => {
   return (
     <g className="fade" style={stagger(4)}>
       <defs>
-        <Stipple
-          ground="fill-paper"
-          id={tex("over")}
-          pitch={TEXTURE_PITCH.dense}
-          tone="fill-l3"
-        />
+        <Stipple id={tex("over")} pitch={TEXTURE_PITCH.dense} tone="fill-l3" />
         <Hatch
           angle="falling"
-          ground="fill-paper"
           id={tex("under")}
           pitch={TEXTURE_PITCH.hatch}
           tone="fill-l4"

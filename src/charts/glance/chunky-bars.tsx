@@ -1,15 +1,19 @@
 import { scaleBand, scaleLinear } from "d3-scale";
-import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { Bar } from "../markers";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { chunkyBarsDemo } from "./chunky-bars.data";
 import type { ChunkyDatum } from "./chunky-bars.data";
-import { BAR_RADIUS, barPath, rankTones } from "./util-a";
+import { rankTones } from "./util-a";
 
 interface ChunkyBarsProps {
   data?: ChunkyDatum[];
@@ -19,12 +23,6 @@ interface ChunkyBarsProps {
   note?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
-}
-
-interface Tip {
-  i: number;
-  x: number;
-  y: number;
 }
 
 interface BarMarkProps {
@@ -39,26 +37,18 @@ interface BarMarkProps {
 }
 
 /** The hero bar in solid ink; any other bar hatched inside a crisp 1px outline. */
-const BarMark = (p: BarMarkProps) =>
-  p.hero ? (
-    <path
-      className="grow-y fill-hero"
-      style={stagger(p.i, "series")}
-      d={barPath(p.cx - p.bw / 2, p.top, p.bw, p.floor - p.top, "up")}
-    />
-  ) : (
-    <rect
-      className="grow-y stroke-l5 shape-crisp"
-      style={stagger(p.i, "series")}
-      x={crisp(p.cx - p.bw / 2)}
-      y={crisp(p.top)}
-      width={Math.round(p.bw) - 1}
-      height={Math.round(p.floor) - Math.round(p.top)}
-      rx={BAR_RADIUS}
-      fill={paint(p.hatch)}
-      strokeWidth={1}
-    />
-  );
+const BarMark = (p: BarMarkProps) => (
+  <Bar
+    className={p.hero ? "grow-y fill-hero" : "grow-y"}
+    dir="up"
+    fill={p.hero ? undefined : paint(p.hatch)}
+    h={p.floor - p.top}
+    style={stagger(p.i, "series")}
+    w={p.bw}
+    x={p.cx - p.bw / 2}
+    y={p.top}
+  />
+);
 
 /** The data is in pence: 477 reads £4.77. */
 const defaultFormat = (v: number) => `£${(v / 100).toFixed(2)}`;
@@ -73,7 +63,7 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
   const data = props.data ?? chunkyBarsDemo;
   const height = props.height ?? 400;
   const format = props.format ?? defaultFormat;
-  const [tip, setTip] = useState<Tip | null>(null);
+  const hover = useHover<number>();
   const tex = useTextureIds("bars");
   const hatch = tex("hatch");
   // The leader in ink, every other bar engraved in one grey.
@@ -86,9 +76,12 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -113,35 +106,31 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
           .range([floor, m.top]);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={hatch} tone="fill-l4" />
+              <Hatch id={hatch} tone="fill-l4" />
             </defs>
             {data.map((d, i) => {
               const cx = (x(i) ?? 0) + x.bandwidth() / 2;
               const top = y(d.value);
               return (
-                <g
+                <DimGroup
+                  dim={hover.dim(i)}
                   key={d.label}
-                  className={dimClass(tip !== null && tip.i !== i)}
                   onPointerEnter={() => {
-                    setTip({ i, x: cx, y: top - 34 });
+                    hover.show(i, cx, top - 34);
                   }}
                 >
-                  <rect
+                  <HitRect
+                    height={floor - m.top + 60}
+                    width={bw + 16}
                     x={cx - bw / 2 - 8}
                     y={m.top - 36}
-                    width={bw + 16}
-                    height={floor - m.top + 60}
-                    fill="transparent"
                   />
                   <BarMark
                     bw={bw}
@@ -152,40 +141,32 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
                     i={i}
                     top={top}
                   />
-                  <text
-                    className={`fade t-value ${tones[i] === 0 ? "" : "fill-muted"}`}
-                    style={stagger(i + 3, "series")}
+                  <Label
+                    anchor="middle"
+                    muted={tones[i] !== 0}
+                    order={i + 3}
+                    tier="series"
+                    voice="value"
                     x={cx}
                     y={top - 10}
-                    textAnchor="middle"
                   >
                     {format(d.value)}
-                  </text>
-                  <text
-                    className="t-label fill-muted"
+                  </Label>
+                  <Label
+                    anchor="middle"
+                    muted
+                    voice="label"
                     x={cx}
                     y={floor + 20}
-                    textAnchor="middle"
                   >
                     {d.label}
-                  </text>
-                </g>
+                  </Label>
+                </DimGroup>
               );
             })}
-            <line
-              className="hairline"
-              x1={m.left}
-              x2={width - m.right}
-              y1={crisp(floor)}
-              y2={crisp(floor)}
-            />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <HRule x0={m.left} x1={width - m.right} y={floor} />
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

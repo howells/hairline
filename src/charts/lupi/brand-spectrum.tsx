@@ -367,7 +367,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
               Where one hill sits between opposing poles, against others
             </title>
             <defs>
-              <Hatch ground="fill-paper" id={gap} tone="fill-l4" />
+              <Hatch id={gap} tone="fill-l4" />
             </defs>
             {data.map((row, r) => (
               <AxisRow

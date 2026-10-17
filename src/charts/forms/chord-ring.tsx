@@ -334,7 +334,7 @@ const ChordSvg = (props: {
     >
       <title>{label}</title>
       <defs>
-        <Hatch ground="fill-paper" id={hatch} tone="fill-hero" />
+        <Hatch id={hatch} tone="fill-hero" />
       </defs>
       <g transform={`translate(${cx} ${cy})`}>
         <Ring

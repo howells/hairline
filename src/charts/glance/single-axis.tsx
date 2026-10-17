@@ -212,7 +212,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l4" />
+              <Hatch id={tex("hatch")} tone="fill-l4" />
             </defs>
             {data.map((d, i) => (
               <Row

@@ -98,26 +98,18 @@ const WHOLE: Record<WorkTexture, { clear: number; pitch: number } | undefined> =
  */
 const engrave = (texture: WorkTexture, id: string, tone: string) => {
   if (texture === "cross") {
-    return <CrossHatch ground="fill-paper" id={id} key={id} tone={tone} />;
+    return <CrossHatch id={id} key={id} tone={tone} />;
   }
   if (texture === "dots") {
     return (
       // The halftone ladder's middle step: clearly visible at pitch 4.
-      <DotScreen
-        ground="fill-paper"
-        id={id}
-        key={id}
-        r={HALFTONE_R[2]}
-        tone={tone}
-      />
+      <DotScreen id={id} key={id} r={HALFTONE_R[2]} tone={tone} />
     );
   }
   if (texture === "level") {
-    return <Rules ground="fill-paper" id={id} key={id} tone={tone} />;
+    return <Rules id={id} key={id} tone={tone} />;
   }
-  return (
-    <Rules angle="upright" ground="fill-paper" id={id} key={id} tone={tone} />
-  );
+  return <Rules angle="upright" id={id} key={id} tone={tone} />;
 };
 
 /** One pattern per texture, each at its own grey on paper, plus the hero's in ink. */

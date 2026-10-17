@@ -1,10 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-import { crisp } from "./axes";
-import type { TickMark } from "./axes";
-import { CURSOR, GRID_H, GRID_V, PANEL, TICK } from "./board/styles";
 import { useMeasure, useReveal } from "./hooks";
+import { PANEL } from "./roles";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
 
@@ -146,108 +144,6 @@ export const SplitClips = (props: SplitClipsProps) => {
     </defs>
   );
 };
-
-// ---------- Axes & grid ----------
-
-interface HGridProps {
-  className?: string;
-  x0: number;
-  x1: number;
-  ys: number[];
-}
-
-export const HGrid = (props: HGridProps) => (
-  <g>
-    {props.ys.map((y) => (
-      <line
-        key={`h-${y}`}
-        className={props.className ?? GRID_H}
-        x1={props.x0}
-        x2={props.x1}
-        y1={crisp(y)}
-        y2={crisp(y)}
-      />
-    ))}
-  </g>
-);
-
-interface VGridProps {
-  xs: number[];
-  y0: number;
-  y1: number;
-}
-
-export const VGrid = (props: VGridProps) => (
-  <g>
-    {props.xs.map((x) => (
-      <line
-        key={`v-${x}`}
-        className={GRID_V}
-        x1={crisp(x)}
-        x2={crisp(x)}
-        y1={props.y0}
-        y2={props.y1}
-      />
-    ))}
-  </g>
-);
-
-interface YTicksProps {
-  anchor?: "end" | "start";
-  ticks: { label: string; y: number }[];
-  x: number;
-}
-
-export const YTicks = (props: YTicksProps) => (
-  <g>
-    {props.ticks.map((t) => (
-      <text
-        key={t.label}
-        className={TICK}
-        x={props.x}
-        y={t.y}
-        dy="0.34em"
-        textAnchor={props.anchor ?? "end"}
-      >
-        {t.label}
-      </text>
-    ))}
-  </g>
-);
-
-interface XTicksProps {
-  anchor?: "end" | "middle" | "start";
-  opacity?: number;
-  ticks: TickMark[];
-  y: number;
-}
-
-export const XTicks = (props: XTicksProps) => (
-  <g className="transition-opacity" style={{ opacity: props.opacity ?? 1 }}>
-    {props.ticks.map((t) => (
-      <text
-        key={t.label}
-        className={TICK}
-        x={t.x}
-        y={props.y}
-        dy="0.71em"
-        textAnchor={props.anchor ?? "middle"}
-      >
-        {t.label}
-      </text>
-    ))}
-  </g>
-);
-
-export const Cursor = (props: { x: number; y0: number; y1: number }) => (
-  <line
-    className={CURSOR}
-    x1={crisp(props.x)}
-    x2={crisp(props.x)}
-    y1={props.y0}
-    y2={props.y1}
-  />
-);
 
 // ---------- Legend items ----------
 

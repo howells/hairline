@@ -129,7 +129,6 @@ const Screens = ({ ids }: { ids: (name: string) => string }) => (
     {[false, true].flatMap((weekend) =>
       RADII.map((r, k) => (
         <DotScreen
-          ground="fill-paper"
           id={ids(screenId(weekend, k))}
           key={screenId(weekend, k)}
           r={r}
@@ -137,7 +136,7 @@ const Screens = ({ ids }: { ids: (name: string) => string }) => (
         />
       ))
     )}
-    <CrossHatch ground="fill-paper" id={ids("peak")} tone="fill-hero" />
+    <CrossHatch id={ids("peak")} tone="fill-hero" />
   </defs>
 );
 

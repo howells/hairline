@@ -282,7 +282,7 @@ export const Candlestick = (props: CandlestickProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={ids("hatch")} tone="fill-l3" />
+              <Hatch id={ids("hatch")} tone="fill-l3" />
             </defs>
             <ValueGrid
               labelFloor

@@ -136,7 +136,7 @@ interface LayerProps {
 const StreamLayer = (p: LayerProps) => (
   <>
     <defs>
-      <Stipple ground="fill-paper" id={`${p.clip}-dots`} tone="fill-l4" />
+      <Stipple id={`${p.clip}-dots`} tone="fill-l4" />
       <clipPath id={p.clip}>
         <rect x={p.left} y={0} width={p.right - p.left} height={p.floor + 20} />
       </clipPath>

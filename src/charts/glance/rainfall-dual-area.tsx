@@ -9,12 +9,13 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { Ring } from "../markers";
 import { PlotNote } from "../plot-note";
+import { barPath } from "../shapes";
 import { Hatch, Rules } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { noteSpace, stagger } from "../util";
 import { rainfallDemo } from "./rainfall-dual-area.data";
 import type { RainfallDatum } from "./rainfall-dual-area.data";
-import { barPath, labelRoom } from "./util-a";
+import { labelRoom } from "./util-a";
 
 interface RainfallDualAreaProps {
   data?: RainfallDatum[];
@@ -285,8 +286,8 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
             >
               <title>{label}</title>
               <defs>
-                <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l4" />
-                <Rules ground="fill-paper" id={tex("rule")} tone="fill-l5" />
+                <Hatch id={tex("hatch")} tone="fill-l4" />
+                <Rules id={tex("rule")} tone="fill-l5" />
                 <clipPath id={tex("sweep")}>
                   <rect
                     className="sweep"

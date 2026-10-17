@@ -331,12 +331,7 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
           >
             <title>Circles of {noun} by country and year</title>
             <defs>
-              <DotScreen
-                ground="fill-paper"
-                id={screen}
-                r={HALFTONE_R[1]}
-                tone="fill-l3"
-              />
+              <DotScreen id={screen} r={HALFTONE_R[1]} tone="fill-l3" />
             </defs>
             <Ledger layout={layout} />
             {order.map((d, i) => (

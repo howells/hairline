@@ -222,7 +222,7 @@ const HairlineAreaSvg = ({
     >
       <title>{label}</title>
       <defs>
-        <Stipple ground="fill-paper" id={stipple} tone="fill-l3" />
+        <Stipple id={stipple} tone="fill-l3" />
       </defs>
       <ValueGrid
         labelFloor

@@ -315,8 +315,8 @@ export const Ridgeline = (props: RidgelineProps) => {
             >
               <title>January daily mean temperature by decade</title>
               <defs>
-                <Hatch ground="fill-paper" id={hatchId} tone="fill-l5" />
-                <CrossHatch ground="fill-paper" id={heroId} tone="fill-hero" />
+                <Hatch id={hatchId} tone="fill-l5" />
+                <CrossHatch id={heroId} tone="fill-hero" />
               </defs>
               {ridges.map((r, i) => (
                 <g

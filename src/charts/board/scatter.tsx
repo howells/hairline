@@ -4,13 +4,14 @@ import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { crisp } from "../axes";
-import { Chart, HGrid, VGrid } from "../core";
+import { Chart } from "../core";
 import { Dot, Ring } from "../markers";
+import { CURSOR, OUTLINE, POINT, RULE_TARGET, TICK, VALUE } from "../roles";
+import { HGrid, VGrid } from "../rules";
 import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { Key } from "./key";
 import { scaleWidth } from "./room";
-import { CURSOR, OUTLINE, POINT, RULE_TARGET, TICK, VALUE } from "./styles";
 import { TICK_CHAR } from "./thin-ticks";
 
 /** Both groups share one grey; the second group's points are hollow rings. */
@@ -441,7 +442,7 @@ export const Scatter = (props: ScatterProps) => {
           >
             <title>{props.label}</title>
             <defs>
-              <Stipple ground="fill-paper" id={tex("zone")} tone="fill-l4" />
+              <Stipple id={tex("zone")} tone="fill-l4" />
             </defs>
             <VGrid xs={axis.xTicks.map(frame.x)} y0={m.top} y1={h - m.bottom} />
             <HGrid

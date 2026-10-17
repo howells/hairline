@@ -75,9 +75,9 @@ const textureOf = (bands: Band[], group: string): Texture =>
 /** The tile engravings, one per parent, each on paper. */
 const TreeTextures = (props: { ids: (name: Texture) => string }) => (
   <defs>
-    <Stipple ground="fill-paper" id={props.ids("stipple")} tone="fill-l3" />
-    <Hatch ground="fill-paper" id={props.ids("hatch")} tone="fill-l4" />
-    <Rules ground="fill-paper" id={props.ids("rules")} tone="fill-l4" />
+    <Stipple id={props.ids("stipple")} tone="fill-l3" />
+    <Hatch id={props.ids("hatch")} tone="fill-l4" />
+    <Rules id={props.ids("rules")} tone="fill-l4" />
   </defs>
 );
 

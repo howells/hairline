@@ -574,7 +574,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
               >
                 <title>{label}</title>
                 <defs>
-                  <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l3" />
+                  <Hatch id={tex("hatch")} tone="fill-l3" />
                 </defs>
                 {morph.settled ? (
                   <g key={`f-${view}`} className="fade">

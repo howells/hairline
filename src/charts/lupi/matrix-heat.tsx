@@ -328,11 +328,10 @@ const Cells = ({
 /** The matrix's patterns: the empty hatch, the hero's crosshatch, one halftone per step. */
 const MatrixDefs = ({ fills }: { fills: MatrixFills }) => (
   <defs>
-    <Hatch ground="fill-paper" id={fills.empty} tone="fill-l5" />
-    <CrossHatch ground="fill-paper" id={fills.hero} tone="fill-hero" />
+    <Hatch id={fills.empty} tone="fill-l5" />
+    <CrossHatch id={fills.hero} tone="fill-hero" />
     {HALFTONE_R.map((r, k) => (
       <DotScreen
-        ground="fill-paper"
         id={fills.screens[k] ?? ""}
         key={r}
         pitch={TEXTURE_PITCH.screen}

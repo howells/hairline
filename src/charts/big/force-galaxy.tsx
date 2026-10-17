@@ -141,18 +141,12 @@ const HubDefs = (props: { pid: string }) => (
     {TONES.map((t) =>
       t === "ink" ? (
         <CrossHatch
-          ground="fill-paper"
           id={`${props.pid}-${t}`}
           key={t}
           tone={TONE_CLASS[t].fill}
         />
       ) : (
-        <Hatch
-          ground="fill-paper"
-          id={`${props.pid}-${t}`}
-          key={t}
-          tone={TONE_CLASS[t].fill}
-        />
+        <Hatch id={`${props.pid}-${t}`} key={t} tone={TONE_CLASS[t].fill} />
       )
     )}
   </defs>

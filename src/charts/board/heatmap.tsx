@@ -3,6 +3,7 @@ import type { ScaleBand } from "d3-scale";
 import { useState } from "react";
 
 import { Chart } from "../core";
+import { CAPTION, TICK } from "../roles";
 import { CrossHatch, DotScreen } from "../texture";
 import {
   HALFTONE_R,
@@ -12,7 +13,6 @@ import {
 } from "../texture-ids";
 import { Key } from "./key";
 import { nameWidth } from "./room";
-import { CAPTION, TICK } from "./styles";
 
 /**
  * The screens, low to high: the shared halftone ladder at pitch 4, one dot
@@ -210,15 +210,9 @@ const rowHeight = (width: number, labelW: number) =>
 const CellPatterns = (props: { tex: (name: string) => string }) => (
   <defs>
     {BINS.map((b) => (
-      <DotScreen
-        key={b.name}
-        ground="fill-paper"
-        id={props.tex(b.name)}
-        r={b.r}
-        tone="fill-l3"
-      />
+      <DotScreen key={b.name} id={props.tex(b.name)} r={b.r} tone="fill-l3" />
     ))}
-    <CrossHatch ground="fill-paper" id={props.tex("hero")} tone="fill-alert" />
+    <CrossHatch id={props.tex("hero")} tone="fill-alert" />
   </defs>
 );
 

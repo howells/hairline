@@ -6,9 +6,20 @@ import type { Point } from "../../lib/data";
 import { fmtDay } from "../../lib/format";
 import { crisp } from "../axes";
 import type { Margin } from "../axes";
-import { Chart, HGrid, SplitClips } from "../core";
+import { Chart, SplitClips } from "../core";
 import { useScrub } from "../hooks";
 import { Ring } from "../markers";
+import {
+  CAPTION,
+  CURSOR,
+  DOT,
+  LINE,
+  RULE_TARGET,
+  RULE_ZERO,
+  TICK,
+  TICK_STRONG,
+} from "../roles";
+import { HGrid } from "../rules";
 import { DottedPath } from "../texture";
 import { useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
@@ -19,16 +30,6 @@ import { Key } from "./key";
 import { keyItem } from "./key-item";
 import { MonthAxis } from "./month-axis";
 import { labelledTicks, monthTicks } from "./month-ticks";
-import {
-  CAPTION,
-  CURSOR,
-  DOT,
-  LINE,
-  RULE_TARGET,
-  RULE_ZERO,
-  TICK,
-  TICK_STRONG,
-} from "./styles";
 import { Patterns, SeasonBands, ShadeLayer } from "./time-fills";
 import {
   DOT_TONE,

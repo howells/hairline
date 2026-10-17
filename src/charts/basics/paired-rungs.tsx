@@ -195,8 +195,8 @@ export const PairedRungs = (props: PairedRungsProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={ids("hatch")} tone="fill-l4" />
-              <Rules ground="fill-paper" id={ids("rules")} tone="fill-l3" />
+              <Hatch id={ids("hatch")} tone="fill-l4" />
+              <Rules id={ids("rules")} tone="fill-l3" />
             </defs>
             <SeriesKey
               align="end"

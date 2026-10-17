@@ -4,10 +4,10 @@ import { useState } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { Chart } from "../core";
+import { LABEL, TICK, VALUE } from "../roles";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { nameWidth } from "./room";
-import { LABEL, TICK, VALUE } from "./styles";
 
 /**
  * Links are engraved ribbons: a hatch on paper, darker on the traced path.
@@ -484,12 +484,7 @@ export const Sankey = (props: {
             <title>{props.label}</title>
             <defs>
               {LINK_KEYS.map((key) => (
-                <Hatch
-                  key={key}
-                  ground="fill-paper"
-                  id={tex(key)}
-                  tone={LINK_INK[key].tone}
-                />
+                <Hatch key={key} id={tex(key)} tone={LINK_INK[key].tone} />
               ))}
             </defs>
             {props.data.stages.map((s, i) => (

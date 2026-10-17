@@ -252,12 +252,8 @@ export const FeatureRank = (props: FeatureRankProps) => {
             >
               <title>{label}</title>
               <defs>
-                <Hatch ground="fill-paper" id={tex("band")} tone="fill-l4" />
-                <CrossHatch
-                  ground="fill-paper"
-                  id={tex("hero")}
-                  tone="fill-hero"
-                />
+                <Hatch id={tex("band")} tone="fill-l4" />
+                <CrossHatch id={tex("hero")} tone="fill-hero" />
               </defs>
               <Staff count={data.length} lay={lay} />
               {order.map((f) => (

@@ -472,7 +472,7 @@ export const BigSlice = (props: BigSliceProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l4" />
+              <Hatch id={tex("hatch")} tone="fill-l4" />
             </defs>
             <g transform={`translate(${centre.cx},${centre.cy})`}>
               <RingGuides rings={guides} />

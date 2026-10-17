@@ -527,26 +527,10 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
               </clipPath>
             </defs>
             <defs>
-              <CrossHatch
-                ground="fill-paper"
-                id={textures("cross")}
-                tone="fill-hero"
-              />
-              <Hatch
-                ground="fill-paper"
-                id={textures("hatch")}
-                tone="fill-l3"
-              />
-              <Stipple
-                ground="fill-paper"
-                id={textures("stipple")}
-                tone="fill-l3"
-              />
-              <Rules
-                ground="fill-paper"
-                id={textures("rules")}
-                tone="fill-l4"
-              />
+              <CrossHatch id={textures("cross")} tone="fill-hero" />
+              <Hatch id={textures("hatch")} tone="fill-l3" />
+              <Stipple id={textures("stipple")} tone="fill-l3" />
+              <Rules id={textures("rules")} tone="fill-l4" />
             </defs>
             <Bands
               clip={clip}

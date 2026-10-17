@@ -4,9 +4,9 @@
 import { area } from "d3-shape";
 
 import type { Point } from "../../lib/data";
+import { OUTLINE, TICK } from "../roles";
 import { DotScreen, Hatch, Rules, Stipple } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
-import { OUTLINE, TICK } from "./styles";
 import { TICK_CHAR } from "./thin-ticks";
 import { curveOf } from "./time-frame";
 import type {
@@ -20,24 +20,15 @@ import type {
 /** One shared pattern per engraving, all on paper. */
 const ShadePattern = (props: { id: string; kind: Shade }) => {
   if (props.kind === "stipple") {
-    return <Stipple ground="fill-paper" id={props.id} tone="fill-l3" />;
+    return <Stipple id={props.id} tone="fill-l3" />;
   }
   if (props.kind === "rules") {
-    return (
-      <Rules angle="upright" ground="fill-paper" id={props.id} tone="fill-l5" />
-    );
+    return <Rules angle="upright" id={props.id} tone="fill-l5" />;
   }
   if (props.kind === "screen") {
-    return (
-      <DotScreen
-        ground="fill-paper"
-        id={props.id}
-        r={HALFTONE_R[0]}
-        tone="fill-l4"
-      />
-    );
+    return <DotScreen id={props.id} r={HALFTONE_R[0]} tone="fill-l4" />;
   }
-  return <Hatch ground="fill-paper" id={props.id} tone="fill-l4" />;
+  return <Hatch id={props.id} tone="fill-l4" />;
 };
 
 export const Patterns = (props: { chart: TimeLinesProps; frame: Frame }) => {
@@ -45,14 +36,9 @@ export const Patterns = (props: { chart: TimeLinesProps; frame: Frame }) => {
   return (
     <defs>
       <ShadePattern id={tex("shade")} kind={props.chart.texture ?? "hatch"} />
-      <Hatch
-        angle="falling"
-        ground="fill-paper"
-        id={tex("lead-1")}
-        tone="fill-l3"
-      />
-      <Hatch ground="fill-paper" id={tex("lead-2")} tone="fill-l4" />
-      <Stipple ground="fill-paper" id={tex("season")} tone="fill-l4" />
+      <Hatch angle="falling" id={tex("lead-1")} tone="fill-l3" />
+      <Hatch id={tex("lead-2")} tone="fill-l4" />
+      <Stipple id={tex("season")} tone="fill-l4" />
     </defs>
   );
 };

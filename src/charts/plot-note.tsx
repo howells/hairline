@@ -41,3 +41,22 @@ export const PlotNote = (props: PlotNoteProps) => {
     </g>
   );
 };
+
+/**
+ * The footnote in its usual place: centred under the plot, 6px off the
+ * bottom of a chart `width` wide and `height` tall, with 8px either side.
+ */
+export const FootNote = (props: {
+  height: number;
+  order?: number;
+  text?: string;
+  width: number;
+}) => (
+  <PlotNote
+    order={props.order}
+    text={props.text}
+    width={props.width - 16}
+    x={props.width / 2}
+    y={props.height - 6}
+  />
+);

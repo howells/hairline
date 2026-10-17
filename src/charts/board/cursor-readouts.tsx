@@ -1,9 +1,9 @@
 // What a time chart shows at its cursor: a lone value, one big figure, or a
 // name-and-value tag beside each dot.
 
+import { TICK, VALUE, VALUE_LG } from "../roles";
 import { PlateLabel } from "../texture";
 import { relax } from "./spread";
-import { TICK, VALUE, VALUE_LG } from "./styles";
 
 /** The lone value over the cursor. */
 export const ValueReadout = (props: { text: string; x: number; y: number }) => (

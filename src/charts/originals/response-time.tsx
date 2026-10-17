@@ -202,7 +202,6 @@ const Screens = ({ tex }: { tex: (name: string) => string }) => (
   <defs>
     {DOT_R.map((r, i) => (
       <DotScreen
-        ground="fill-paper"
         id={tex(String(i))}
         key={r}
         pitch={TEXTURE_PITCH.screen}

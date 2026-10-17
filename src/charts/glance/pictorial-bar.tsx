@@ -348,8 +348,8 @@ export const PictorialBar = (props: PictorialBarProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("row")} tone="fill-l3" />
-              <Hatch ground="fill-paper" id={tex("hero")} tone="fill-hero" />
+              <Hatch id={tex("row")} tone="fill-l3" />
+              <Hatch id={tex("hero")} tone="fill-hero" />
               <TrackClips g={g} id={id} rows={rows} />
             </defs>
             {rows.map((r) => (

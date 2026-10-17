@@ -1,6 +1,6 @@
 // The boards' month axis: the labels under a time plot.
 
-import { TICK } from "./styles";
+import { TICK } from "../roles";
 import { TICK_CHAR } from "./thin-ticks";
 
 /** Centred, unless half the label would run past an edge of the svg. */

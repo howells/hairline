@@ -1,12 +1,15 @@
 import { scaleBand } from "d3-scale";
-import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, stagger } from "../util";
+import { stagger } from "../util";
 import { rungBarsDemo } from "./rung-bars.data";
 import type { RungDatum } from "./rung-bars.data";
 import { rungPitch, rungY } from "./rung-geometry";
@@ -23,12 +26,6 @@ interface RungBarsProps {
   note?: string;
   /** Units per rung. */
   unit?: number;
-}
-
-interface Tip {
-  bar: number;
-  x: number;
-  y: number;
 }
 
 /** How far each column's engraved shadow falls, right and down, in px. */
@@ -94,13 +91,12 @@ const LadderBar = (props: Ladder) => {
   const centre = props.left + props.bandwidth / 2;
   const right = Math.round(props.left + props.bandwidth);
   return (
-    <g className={dimClass(props.dim)} onPointerEnter={props.onEnter}>
-      <rect
+    <DimGroup dim={props.dim} onPointerEnter={props.onEnter}>
+      <HitRect
+        height={props.floor - top + 24}
+        width={props.bandwidth + 12 + SHADOW}
         x={props.left - 6}
         y={top - 24}
-        width={props.bandwidth + 12 + SHADOW}
-        height={props.floor - top + 24}
-        className="fill-transparent"
       />
       <CastShadow
         floor={props.floor}
@@ -123,24 +119,25 @@ const LadderBar = (props: Ladder) => {
         pitch={props.pitch}
         width={props.bandwidth}
       />
-      <text
-        className="fade t-value"
-        style={stagger(props.index)}
+      <Label
+        anchor="middle"
+        order={props.index}
+        voice="value"
         x={centre}
         y={top - 10}
-        textAnchor="middle"
       >
         {props.format(props.datum.value)}
-      </text>
-      <text
-        className="t-label fill-muted"
+      </Label>
+      <Label
+        anchor="middle"
+        muted
+        voice="label"
         x={centre}
         y={props.floor + 18}
-        textAnchor="middle"
       >
         {props.datum.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -155,15 +152,18 @@ export const RungBars = (props: RungBarsProps) => {
   const unit = props.unit ?? 1;
   const height = props.height ?? 460;
   const format = props.format ?? String;
-  const [tip, setTip] = useState<Tip | null>(null);
+  const hover = useHover<number>();
   const tex = useTextureIds("counted");
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.bar].label}</b> · {format(data[tip.bar].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -194,29 +194,20 @@ export const RungBars = (props: RungBarsProps) => {
           .join(", ");
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("shade")} tone="fill-l4" />
-              <CrossHatch
-                ground="fill-paper"
-                id={tex("shade-hero")}
-                tone="fill-l3"
-              />
+              <Hatch id={tex("shade")} tone="fill-l4" />
+              <CrossHatch id={tex("shade-hero")} tone="fill-l3" />
             </defs>
-            <line
-              className="hairline"
-              x1={Math.round(x0)}
-              x2={Math.round(x0 + plotWidth)}
-              y1={crisp(floor)}
-              y2={crisp(floor)}
+            <HRule
+              x0={Math.round(x0)}
+              x1={Math.round(x0 + plotWidth)}
+              y={floor}
             />
             {data.map((datum, index) => {
               const left = x(index) ?? 0;
@@ -226,7 +217,7 @@ export const RungBars = (props: RungBarsProps) => {
                   key={datum.label}
                   bandwidth={x.bandwidth()}
                   datum={datum}
-                  dim={tip !== null && tip.bar !== index}
+                  dim={hover.dim(index)}
                   floor={floor}
                   format={format}
                   hero={hero === index}
@@ -236,22 +227,17 @@ export const RungBars = (props: RungBarsProps) => {
                   rungs={rungs}
                   tex={tex}
                   onEnter={() => {
-                    setTip({
-                      bar: index,
-                      x: left + x.bandwidth() / 2,
-                      y: rungY(floor, rungs - 1, pitch) - 22,
-                    });
+                    hover.show(
+                      index,
+                      left + x.bandwidth() / 2,
+                      rungY(floor, rungs - 1, pitch) - 22
+                    );
                   }}
                 />
               );
             })}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

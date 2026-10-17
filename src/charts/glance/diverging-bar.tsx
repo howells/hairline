@@ -5,12 +5,13 @@ import { fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { PlotNote } from "../plot-note";
+import { barPath } from "../shapes";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, stagger } from "../util";
 import { divergingBarDemo } from "./diverging-bar.data";
 import type { DivergingDatum } from "./diverging-bar.data";
-import { barPath, labelRoom } from "./util-a";
+import { labelRoom } from "./util-a";
 
 interface DivergingBarProps {
   data?: DivergingDatum[];
@@ -266,8 +267,8 @@ export const DivergingBar = (props: DivergingBarProps) => {
           >
             <title>{label}</title>
             <defs>
-              <Hatch ground="fill-paper" id={tex("hatch")} tone="fill-l3" />
-              <Stipple ground="fill-paper" id={tex("dots")} tone="fill-l3" />
+              <Hatch id={tex("hatch")} tone="fill-l3" />
+              <Stipple id={tex("dots")} tone="fill-l3" />
             </defs>
             <GridRules ticks={ticks} x={x} y0={m.top} y1={height - m.bottom} />
             {data.map((d, i) => {

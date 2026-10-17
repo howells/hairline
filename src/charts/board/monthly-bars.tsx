@@ -8,15 +8,6 @@ import type { Margin } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import type { Sync } from "../hooks";
-import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
-import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { stagger } from "../util";
-import { ValueGrid } from "../value-grid";
-import { Key } from "./key";
-import type { KeyItem } from "./key";
-import { MonthAxis } from "./month-axis";
-import { labelledTicks, monthTickIndices } from "./month-ticks";
-import { SIDE_GAP, sideRoom } from "./room";
 import {
   CAPTION,
   LABEL,
@@ -26,7 +17,16 @@ import {
   RULE_ZERO,
   TICK,
   VALUE,
-} from "./styles";
+} from "../roles";
+import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
+import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
+import { stagger } from "../util";
+import { ValueGrid } from "../value-grid";
+import { Key } from "./key";
+import type { KeyItem } from "./key";
+import { MonthAxis } from "./month-axis";
+import { labelledTicks, monthTickIndices } from "./month-ticks";
+import { SIDE_GAP, sideRoom } from "./room";
 import { gridEnd, sideMargins } from "./time-frame";
 import type { YAxis } from "./time-frame";
 
@@ -104,28 +104,13 @@ const BarPatterns = (props: { tex: (name: string) => string }) => {
   const { tex } = props;
   return (
     <defs>
-      <Hatch ground="fill-paper" id={tex("s1")} tone="fill-l3" />
-      <Stipple ground="fill-paper" id={tex("s2")} tone="fill-l3" />
-      <Rules ground="fill-paper" id={tex("s3")} tone="fill-l5" />
-      <Rules
-        angle="upright"
-        ground="fill-paper"
-        id={tex("s4")}
-        tone="fill-l5"
-      />
-      <Hatch
-        angle="falling"
-        ground="fill-paper"
-        id={tex("over")}
-        tone="fill-hero"
-      />
-      <Hatch ground="fill-paper" id={tex("gain")} tone="fill-l2" />
-      <Stipple
-        ground="fill-paper"
-        id={tex("loss")}
-        pitch={TEXTURE_PITCH.dense}
-        tone="fill-l2"
-      />
+      <Hatch id={tex("s1")} tone="fill-l3" />
+      <Stipple id={tex("s2")} tone="fill-l3" />
+      <Rules id={tex("s3")} tone="fill-l5" />
+      <Rules angle="upright" id={tex("s4")} tone="fill-l5" />
+      <Hatch angle="falling" id={tex("over")} tone="fill-hero" />
+      <Hatch id={tex("gain")} tone="fill-l2" />
+      <Stipple id={tex("loss")} pitch={TEXTURE_PITCH.dense} tone="fill-l2" />
     </defs>
   );
 };
