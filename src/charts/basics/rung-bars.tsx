@@ -28,8 +28,13 @@ interface RungBarsProps {
   unit?: number;
 }
 
-/** How far each column's engraved shadow falls, right and down, in px. */
+/**
+ * How far each column's engraved shadow falls, right and down, in px: 10,
+ * or less where the columns stand close, so a shadow takes at most this
+ * share of the gap and never reaches the next column.
+ */
 const SHADOW = 10;
+const SHADOW_SHARE = 0.4;
 /** The long, dark rung: every tenth, reaching this far past the column. */
 const TENS = 10;
 const TENS_REACH = 3;
@@ -45,6 +50,7 @@ interface Ladder {
   left: number;
   pitch: number;
   rungs: number;
+  shadow: number;
   /** Pattern id for a named engraving. */
   tex: (name: string) => string;
   onEnter: () => void;
@@ -60,14 +66,15 @@ const CastShadow = (props: {
   hero: boolean;
   index: number;
   right: number;
+  shadow: number;
   tex: (name: string) => string;
   top: number;
 }) => {
-  const { floor, right, top } = props;
+  const { floor, right, shadow, top } = props;
   const points = [
     [right, top],
-    [right + SHADOW, top + SHADOW],
-    [right + SHADOW, floor],
+    [right + shadow, top + shadow],
+    [right + shadow, floor],
     [right, floor],
   ]
     .map((p) => p.join(","))
@@ -94,7 +101,7 @@ const LadderBar = (props: Ladder) => {
     <DimGroup dim={props.dim} onPointerEnter={props.onEnter}>
       <HitRect
         height={props.floor - top + 24}
-        width={props.bandwidth + 12 + SHADOW}
+        width={props.bandwidth + 12 + props.shadow}
         x={props.left - 6}
         y={top - 24}
       />
@@ -103,6 +110,7 @@ const LadderBar = (props: Ladder) => {
         hero={props.hero}
         index={props.index}
         right={right}
+        shadow={props.shadow}
         tex={props.tex}
         top={top}
       />
@@ -194,6 +202,10 @@ export const RungBars = (props: RungBarsProps) => {
           margin.top + Math.ceil(max) * pitch + margin.bottom
         );
         const floor = Math.round(fitted - margin.bottom);
+        const shadow = Math.min(
+          SHADOW,
+          Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
+        );
         const hero = props.highlight ?? maxIndex(data.map((d) => d.value));
         const label = data
           .map((d) => `${d.label} ${format(d.value)}`)
@@ -231,6 +243,7 @@ export const RungBars = (props: RungBarsProps) => {
                   left={left}
                   pitch={pitch}
                   rungs={rungs}
+                  shadow={shadow}
                   tex={tex}
                   onEnter={hover.enter(
                     index,

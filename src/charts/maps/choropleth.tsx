@@ -274,6 +274,16 @@ const keepInside = (p: PlacedLabel, width: number): PlacedLabel => {
 };
 
 /**
+ * The lead label on a narrow plot, where its figure would spill over the
+ * region's edge: shortened to the region's name (the tooltip has the
+ * figure) rather than plated over the region it names.
+ */
+const nameOnly = (home: PlacedLabel, name: string): PlacedLabel => {
+  const named = { ...home, text: name };
+  return home.covers(glyphBox(named)) ? named : home;
+};
+
+/**
  * A label at its home spot: on its region's anchor, or offset (with a
  * leader) by the datum's dx/dy. Null when there is no room for it: an offset
  * label on a narrow plot, or on a narrow plot any label after the first that
@@ -305,8 +315,10 @@ const homeLabel = (
     x: t.anchor[0] + dx,
     y: t.anchor[1] + dy,
   };
-  const spills = !t.covers(glyphBox(home));
-  return props.narrow && !first && spills ? null : home;
+  if (!props.narrow || t.covers(glyphBox(home))) {
+    return home;
+  }
+  return first ? nameOnly(home, datum.label ?? key) : null;
 };
 
 /**
