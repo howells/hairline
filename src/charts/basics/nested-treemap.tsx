@@ -1,17 +1,19 @@
 import { hierarchy, treemap, treemapDice, treemapSquarify } from "d3-hierarchy";
 import type { HierarchyRectangularNode } from "d3-hierarchy";
-import { useState } from "react";
 import type { ReactNode } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, sansWidth, stagger, sum } from "../util";
+import { sansWidth, stagger, sum } from "../util";
 import { nestedTreemapDemo } from "./nested-treemap.data";
 import type { TreemapGroup } from "./nested-treemap.data";
-import { isActive, maxIndex } from "./util-b";
-import type { Tip } from "./util-b";
+import { maxIndex } from "./util-b";
 
 interface NestedTreemapProps {
   data?: TreemapGroup[];
@@ -283,9 +285,19 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
   const data = props.data ?? nestedTreemapDemo;
   const height = props.height ?? 420;
   const format = props.format ?? fmtInt;
-  const [tip, setTip] = useState<Tip<Tile> | null>(null);
+  const hover = useHover<string>();
   const textures = useTextureIds("tree");
   const total = sum(data.flatMap((g) => g.children.map((c) => c.value)));
+  const leaves = data.flatMap((g) =>
+    g.children.map((c) => ({
+      group: g.name,
+      id: `${g.name}/${c.name}`,
+      name: c.name,
+      value: c.value,
+    }))
+  );
+  const tipped =
+    hover.key === null ? undefined : leaves.find((l) => l.id === hover.key);
   const label = data
     .map(
       (g) =>
@@ -296,11 +308,16 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.item.name}</b> · {format(tip.item.value)} ·{" "}
-            {Math.round((tip.item.value / total) * 100)}% of all ·{" "}
-            {tip.item.group}
+        hover.at === null || tipped === undefined ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                format(tipped.value),
+                `${Math.round((tipped.value / total) * 100)}% of all`,
+                tipped.group,
+              ]}
+              lead={tipped.name}
+            />
           </Tooltip>
         )
       }
@@ -314,39 +331,31 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
                 (t) => t.id === props.highlight || t.name === props.highlight
               )?.id;
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <TreeTextures ids={textures} />
             {bands.map((b, i) => (
-              <text
-                className="fade t-label"
+              <Label
                 key={b.name}
-                style={stagger(i, "series")}
+                order={i}
+                tier="series"
+                voice="label"
                 x={b.x}
                 y={b.y}
               >
                 {b.name} · {Math.round(b.share * 100)}%
-              </text>
+              </Label>
             ))}
             {tiles.map((tile, i) => (
-              <g
-                className={dimClass(
-                  isActive(tip?.item.id ?? null, tile.id) === false
-                )}
+              <DimGroup
+                dim={hover.dim(tile.id)}
                 key={tile.id}
                 onPointerEnter={() => {
-                  setTip({
-                    item: tile,
-                    x: tile.x + tile.w / 2,
-                    y: tile.y + 10,
-                  });
+                  hover.show(tile.id, tile.x + tile.w / 2, tile.y + 10);
                 }}
               >
                 <TileMark
@@ -362,9 +371,9 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
                     tile={tile}
                   />
                 </TileMark>
-              </g>
+              </DimGroup>
             ))}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

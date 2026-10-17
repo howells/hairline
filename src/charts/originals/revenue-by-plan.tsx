@@ -1,12 +1,14 @@
-import { useState } from "react";
-
 import { fmtSignedPct } from "../../lib/format";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { TICK } from "../marks";
+import { HRule, Stem, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, DotScreen, EngravedRect, Hatch } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, sansWidth, stagger, sum } from "../util";
+import { clamp, sansWidth, stagger, sum } from "../util";
 import { planRevenue } from "./revenue-by-plan.data";
 import type { PlanRevenue } from "./revenue-by-plan.data";
 
@@ -147,23 +149,24 @@ const GrowthColumn = ({
   const y = lay.floor - h;
   return (
     <>
-      <line
-        className="rule grow-y from-top"
+      <VRule
+        className="grow-y from-top"
+        kind="rule"
         style={stagger(seg.k + 4)}
-        x1={crisp(left)}
-        x2={crisp(left)}
-        y1={lay.base + MONEY_Y + 10}
-        y2={y - VALUE_ROOM}
+        x={left}
+        y0={lay.base + MONEY_Y + 10}
+        y1={y - VALUE_ROOM}
       />
-      <text
-        className={`fade t-value ${tone}`}
-        style={stagger(seg.k + 6)}
-        textAnchor={flip ? "end" : "start"}
+      <Label
+        anchor={flip ? "end" : "start"}
+        className={tone}
+        order={seg.k + 6}
+        voice="value"
         x={flip ? width : left}
         y={y - 7}
       >
         {rise}
-      </text>
+      </Label>
       <EngravedRect
         className={`grow-y ${outline}`}
         fill={fill}
@@ -222,24 +225,21 @@ const SegmentMarks = ({
   const textX = flip ? width : left;
   const anchor = flip ? "end" : "start";
   return (
-    <g className={dimClass(dim)} onPointerEnter={onEnter}>
-      <rect
-        className="fill-transparent"
+    <DimGroup dim={dim} onPointerEnter={onEnter}>
+      <HitRect
         height={lay.height}
         width={Math.max(1, x(seg.end) - x(seg.start))}
         x={x(seg.start)}
         y={0}
       />
       {ticks.map((i) => (
-        <line
-          className={`grow-y from-top shape-crisp ${TONES[Math.min(seg.k, 3)]}`}
+        <Stem
+          className={`grow-y from-top ${TONES[Math.min(seg.k, 3)]}`}
           key={i}
-          strokeWidth={1}
           style={stagger(i, "dense")}
-          x1={crisp(x(i / 100))}
-          x2={crisp(x(i / 100))}
-          y1={RULE_Y}
-          y2={RULE_Y + (i % 10 === 0 ? TICK.xl : TICK.lg)}
+          x={x(i / 100)}
+          y0={RULE_Y}
+          y1={RULE_Y + (i % 10 === 0 ? TICK.xl : TICK.lg)}
         />
       ))}
       <EngravedRect
@@ -254,40 +254,35 @@ const SegmentMarks = ({
         x={left}
         y={BAR_Y}
       />
-      <line
-        className={`grow-y from-top shape-crisp ${hero ? "stroke-ink" : "stroke-l4"}`}
-        strokeWidth={1}
+      <Stem
+        className={`grow-y from-top ${hero ? "stroke-ink" : "stroke-l4"}`}
         style={stagger(seg.k + 2)}
-        x1={crisp(left)}
-        x2={crisp(left)}
-        y1={base + DIM_GAP}
-        y2={base + DIM_GAP + TICK.xl}
+        x={left}
+        y0={base + DIM_GAP}
+        y1={base + DIM_GAP + TICK.xl}
       />
       <g className="fade" style={stagger(seg.k + 4)}>
-        <text
-          className={`t-label ${tone}`}
-          textAnchor={anchor}
+        <Label
+          anchor={anchor}
+          muted={!hero}
+          voice="label"
           x={textX}
           y={base + NAME_Y}
         >
           {seg.plan}
-        </text>
-        <text
-          className={`t-value ${tone}`}
-          textAnchor={anchor}
+        </Label>
+        <Label
+          anchor={anchor}
+          muted={!hero}
+          voice="value"
           x={textX}
           y={base + SHARE_Y}
         >
           {fmtShare(seg.share)}
-        </text>
-        <text
-          className="t-value fill-muted"
-          textAnchor={anchor}
-          x={textX}
-          y={base + MONEY_Y}
-        >
+        </Label>
+        <Label anchor={anchor} muted voice="value" x={textX} y={base + MONEY_Y}>
           {fmtPounds(seg.revenue)}
-        </text>
+        </Label>
       </g>
       <GrowthColumn
         fill={fill}
@@ -299,7 +294,7 @@ const SegmentMarks = ({
         tone={tone}
         width={width}
       />
-    </g>
+    </DimGroup>
   );
 };
 
@@ -307,23 +302,11 @@ const SegmentMarks = ({
 const Scale = ({ x, x1 }: { x: (f: number) => number; x1: number }) => (
   <>
     {[0, 0.5, 1].map((f) => (
-      <text
-        className="t-axis"
-        key={f}
-        textAnchor={scaleAnchor(f)}
-        x={x(f)}
-        y={SCALE_Y}
-      >
+      <Label anchor={scaleAnchor(f)} key={f} voice="axis" x={x(f)} y={SCALE_Y}>
         {fmtShare(f)}
-      </text>
+      </Label>
     ))}
-    <line
-      className="hairline"
-      x1={0}
-      x2={x1}
-      y1={crisp(RULE_Y - 1)}
-      y2={crisp(RULE_Y - 1)}
-    />
+    <HRule x0={0} x1={x1} y={RULE_Y - 1} />
   </>
 );
 
@@ -339,7 +322,7 @@ interface RevenueByPlanProps {
  */
 export const RevenueByPlan = (props: RevenueByPlanProps) => {
   const segments = segmentsOf(props.data ?? planRevenue);
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const tex = useTextureIds("revenue-by-plan");
   const gMax = Math.max(...segments.map((s) => s.growth));
   const label = segments
@@ -354,59 +337,50 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
     <Plot>
       {(width) => {
         const lay = layoutOf(width);
-        const tipSeg = hover === null ? null : segments[hover];
+        const tipSeg = hover.key === null ? null : segments[hover.key];
         return (
           <>
-            <svg
-              aria-label={title}
+            <ChartSvg
               height={lay.height}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={title}
+              leave={hover.clear}
               width={width}
             >
-              <title>{title}</title>
               <Textures tex={tex} />
               <Scale x={lay.x} x1={width - 1} />
-              <line
-                className="hairline"
-                x1={0}
-                x2={width - 1}
-                y1={crisp(lay.floor)}
-                y2={crisp(lay.floor)}
-              />
-              <text
-                className="t-note"
-                textAnchor="end"
-                x={width}
-                y={lay.floor + 16}
-              >
+              <HRule x0={0} x1={width - 1} y={lay.floor} />
+              <Label anchor="end" voice="note" x={width} y={lay.floor + 16}>
                 Rise on 2014
-              </text>
+              </Label>
               {segments.map((seg) => (
                 <SegmentMarks
-                  dim={hover !== null && hover !== seg.k}
+                  dim={hover.dim(seg.k)}
                   fill={paint(tex(String(Math.min(seg.k, 3))))}
                   gMax={gMax}
                   key={seg.plan}
                   lay={lay}
                   onEnter={() => {
-                    setHover(seg.k);
+                    hover.show(seg.k);
                   }}
                   seg={seg}
                   ticks={ticksOf(seg, seg.k === segments.length - 1)}
                   width={width}
                 />
               ))}
-            </svg>
+            </ChartSvg>
             {tipSeg === null ? null : (
               <Tooltip
                 x={lay.x((tipSeg.start + tipSeg.end) / 2)}
                 y={RULE_Y - 2}
               >
-                <b>{tipSeg.plan}</b> · {fmtPounds(tipSeg.revenue)} ·{" "}
-                {(tipSeg.share * 100).toFixed(1)}% ·{" "}
-                {fmtSignedPct(tipSeg.growth * 100)} on 2014
+                <TipText
+                  facts={[
+                    fmtPounds(tipSeg.revenue),
+                    `${(tipSeg.share * 100).toFixed(1)}%`,
+                    `${fmtSignedPct(tipSeg.growth * 100)} on 2014`,
+                  ]}
+                  lead={tipSeg.plan}
+                />
               </Tooltip>
             )}
           </>

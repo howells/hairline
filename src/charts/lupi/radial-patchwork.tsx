@@ -1,8 +1,10 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { TICK } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch, PixelLine } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { clamp, noteSpace, stagger } from "../util";
@@ -68,16 +70,16 @@ const DialFace = (props: { dial: Dial }) => {
       {[0, 6, 12, 18].map((h) => {
         const [x, y] = clock(cx, cy, R + 32, h * 15);
         return (
-          <text
-            className="t-axis"
-            dy="0.34em"
+          <Label
+            anchor="middle"
             key={`hour-${h}`}
-            textAnchor="middle"
+            middle
+            voice="axis"
             x={x}
             y={y}
           >
             {h}:00
-          </text>
+          </Label>
         );
       })}
     </g>
@@ -185,18 +187,12 @@ const Density = (props: { dial: Dial; ids: string[]; slices: Slice[] }) => (
   </g>
 );
 
-interface TipState {
-  i: number;
-  x: number;
-  y: number;
-}
-
 /** Invisible hit wedges, smallest on top; the hovered one is outlined. */
 const HitWedges = (props: {
   dial: Dial;
-  onEnter: (tip: TipState) => void;
+  hovered: number | null;
+  onEnter: (i: number, x: number, y: number) => void;
   spans: Span[];
-  tip: TipState | null;
 }) => {
   const { cx, cy, r0 } = props.dial;
   const order = props.spans
@@ -205,7 +201,7 @@ const HitWedges = (props: {
   return (
     <g>
       {order.map(({ i, span }) => {
-        const hovered = props.tip !== null && props.tip.i === i;
+        const hovered = props.hovered === i;
         const [tx, ty] = clock(cx, cy, span.reach, (span.a0 + span.a1) / 2);
         return (
           <path
@@ -213,7 +209,7 @@ const HitWedges = (props: {
             d={sectorPath(cx, cy, r0, span.reach, span.a0, span.a1)}
             key={`hit-${span.a0}-${span.a1}-${span.reach}`}
             onPointerEnter={() => {
-              props.onEnter({ i, x: tx, y: ty - 6 });
+              props.onEnter(i, tx, ty - 6);
             }}
             strokeLinejoin="round"
             strokeWidth={2}
@@ -234,20 +230,25 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
   const data = props.data ?? radialPatchworkDemo;
   const height = props.height ?? 460;
   const outlined = props.outlined ?? "class M or stronger";
-  const [tip, setTip] = useState<TipState | null>(null);
+  const hover = useHover<number>();
   const maxSize = Math.max(1, ...data.map((d) => d.size));
   const id = useTextureIds("patch");
   const levelIds = DENSITY.map((pitch) => id(`hatch-${pitch}`));
-  const tipEvent = tip === null ? undefined : data.at(tip.i);
+  const tipEvent = hover.key === null ? undefined : data.at(hover.key);
 
   return (
     <Plot
       overlay={
-        tip === null || tipEvent === undefined ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{hhmm(tipEvent.hour)} UTC</b> · {tipEvent.label} ·{" "}
-            {tipEvent.minutes} min
-            {tipEvent.flagged === true ? ` · ${outlined}` : ""}
+        hover.at === null || tipEvent === undefined ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                tipEvent.label,
+                `${tipEvent.minutes} min`,
+                ...(tipEvent.flagged === true ? [outlined] : []),
+              ]}
+              lead={`${hhmm(tipEvent.hour)} UTC`}
+            />
           </Tooltip>
         )
       }
@@ -270,15 +271,13 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
         const spans = data.map((event) => spanOf(dial, event, maxSize));
         const flagged = spans.filter((_, i) => data[i]?.flagged === true);
         return (
-          <svg
-            aria-label={`${data.length} solar flares on a 24-hour dial in UTC, ${flagged.length} of ${outlined}`}
+          <ChartSvg
             height={svgH}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={`${data.length} solar flares on a 24-hour dial in UTC, ${flagged.length} of ${outlined}`}
+            leave={hover.clear}
+            title="Solar flares overlaid on a 24-hour dial"
             width={width}
           >
-            <title>Solar flares overlaid on a 24-hour dial</title>
             <defs>
               {DENSITY.map((pitch, level) => (
                 <Hatch
@@ -310,14 +309,16 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
                 style={stagger(DENSITY.length + k)}
               />
             ))}
-            <HitWedges dial={dial} onEnter={setTip} spans={spans} tip={tip} />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
+            <HitWedges
+              dial={dial}
+              hovered={hover.key}
+              onEnter={(i, x, y) => {
+                hover.show(i, x, y);
+              }}
+              spans={spans}
             />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

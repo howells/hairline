@@ -2,12 +2,16 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { DimGroup, HitCircle, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { KEY, TICK } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule, Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { EngravedRect, Hatch, KeySwatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, noteSpace, sansWidth, stagger, sum } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, sum } from "../util";
 import {
   brandSpectrumCompetitors,
   brandSpectrumDemo,
@@ -83,18 +87,8 @@ const Ruler = (props: { x0: number; x1: number; y: number }) => {
         const len = major ? TICK.lg : TICK.md;
         // Centred on the rail's pixel row: half the length either side.
         const top = Math.floor(y + 0.5 - len / 2);
-        const x = crisp(props.x0 + pitch * k);
-        return (
-          <line
-            className="shape-crisp"
-            key={`stop-${x}`}
-            strokeWidth={1}
-            x1={x}
-            x2={x}
-            y1={top}
-            y2={top + len}
-          />
-        );
+        const x = props.x0 + pitch * k;
+        return <Stem key={`stop-${crisp(x)}`} x={x} y0={top} y1={top + len} />;
       })}
     </g>
   );
@@ -177,13 +171,13 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
   ];
   return (
     <g>
-      <line
-        className="grow-x rule"
+      <HRule
+        className="grow-x"
+        kind="rule"
         style={stagger(r, "series")}
-        x1={x0}
-        x2={x1}
-        y1={y}
-        y2={y}
+        x0={x0}
+        x1={x1}
+        y={rowY(r)}
       />
       <Ruler x0={x0} x1={x1} y={y} />
       <GapBar
@@ -194,30 +188,32 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
         from={at(row.us)}
         y={y}
       />
-      <text
-        className="t-label fill-muted"
-        dy="0.34em"
-        textAnchor={narrow ? "start" : "end"}
+      <Label
+        anchor={narrow ? "start" : "end"}
+        middle
+        muted
+        voice="label"
         x={narrow ? x0 : x0 - 30}
         y={ly}
       >
         {row.left}
-      </text>
-      <text
-        className="t-label fill-muted"
-        dy="0.34em"
-        textAnchor={narrow ? "end" : "start"}
+      </Label>
+      <Label
+        anchor={narrow ? "end" : "start"}
+        middle
+        muted
+        voice="label"
         x={narrow ? x1 : x1 + 30}
         y={ly}
       >
         {row.right}
-      </text>
+      </Label>
       {marks.map((m) => {
         const us = m.series === 0;
         const cx = at(m.v);
         return (
-          <g
-            className={dimClass(!lit(m.series))}
+          <DimGroup
+            dim={!lit(m.series)}
             key={m.id}
             onPointerEnter={() => {
               onHover({
@@ -228,7 +224,7 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
               });
             }}
           >
-            <circle cx={cx} cy={y} fill="transparent" r={us ? 12 : 7} />
+            <HitCircle cx={cx} cy={y} r={us ? 12 : 7} />
             {us ? (
               <Dot
                 className="pop fill-hero"
@@ -246,7 +242,7 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
                 style={stagger(r * 4 + m.series, "mark")}
               />
             )}
-          </g>
+          </DimGroup>
         );
       })}
     </g>
@@ -298,13 +294,14 @@ const SpectrumKey = (props: {
           x={props.x + e.dx}
           y={props.y - 9 + e.line * KEY_LINE}
         />
-        <text
-          className="t-label fill-muted"
+        <Label
+          muted
+          voice="label"
           x={props.x + e.dx + KEY.swatch + KEY.gap}
           y={props.y + e.line * KEY_LINE}
         >
           {e.name}
-        </text>
+        </Label>
       </g>
     ))}
   </g>
@@ -338,7 +335,10 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{seriesName(hover.series)}</b> · {tipValue(hover)}
+            <TipText
+              facts={[tipValue(hover)]}
+              lead={seriesName(hover.series)}
+            />
           </Tooltip>
         )
       }
@@ -355,17 +355,15 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
         const layout = spectrumLayout(axis, height, data.length, footH);
         const legendY = layout.rowY(data.length - 1) + 54;
         return (
-          <svg
-            aria-label={`Positions between opposing poles: ${data.map((row) => `${usName} ${lean(row, row.us)}`).join("; ")}`}
+          <ChartSvg
             height={layout.height}
-            onPointerLeave={() => {
+            label={`Positions between opposing poles: ${data.map((row) => `${usName} ${lean(row, row.us)}`).join("; ")}`}
+            leave={() => {
               setHover(null);
             }}
+            title="Where one hill sits between opposing poles, against others"
             width={width}
           >
-            <title>
-              Where one hill sits between opposing poles, against others
-            </title>
             <defs>
               <Hatch id={gap} tone="fill-l4" />
             </defs>
@@ -381,13 +379,8 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
               />
             ))}
             <SpectrumKey entries={key} x={axis.x0} y={legendY} />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={layout.height - 6}
-            />
-          </svg>
+            <FootNote height={layout.height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

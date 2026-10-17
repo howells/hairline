@@ -41,21 +41,3 @@ export const arcPath = (
   const [x1, y1] = clock(cx, cy, r, a1);
   return `M${x0},${y0}A${r},${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1},${y1}`;
 };
-
-/** Greedy word wrap by character budget. */
-export const wrap = (text: string, maxChars: number) => {
-  const lines: string[] = [];
-  let current = "";
-  for (const word of text.split(/\s+/u)) {
-    if (current !== "" && `${current} ${word}`.length > maxChars) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = current === "" ? word : `${current} ${word}`;
-    }
-  }
-  if (current !== "") {
-    lines.push(current);
-  }
-  return lines;
-};

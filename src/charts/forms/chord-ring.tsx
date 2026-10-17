@@ -1,13 +1,17 @@
 import { chord } from "d3-chord";
 import type { Chord, ChordGroup } from "d3-chord";
 import { arc } from "d3-shape";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { dimClass, sansWidth, stagger, sum } from "../util";
+import { sansWidth, stagger, sum } from "../util";
 import { sharedWorkDemo } from "./chord-ring.data";
 import type { SharedWork } from "./chord-ring.data";
 
@@ -22,12 +26,6 @@ const RING = 3;
 const GAP = 3;
 /** Samples along each thread's curve; enough that 1px reads as one smooth line. */
 const SAMPLES = 40;
-
-interface Hover {
-  team: number;
-  x: number;
-  y: number;
-}
 
 /** A point on the ring; angles run clockwise from twelve o'clock. */
 const polar = (angle: number, r: number) => ({
@@ -151,15 +149,16 @@ const TeamLabel = (props: {
     dy = "0.71em";
   }
   return (
-    <text
-      className={`fade ${props.hot ? "t-value" : "t-label"}`}
+    <Label
+      anchor={anchorAt(mid)}
+      className="fade"
       dy={dy}
-      textAnchor={anchorAt(mid)}
+      voice={props.hot ? "value" : "label"}
       x={p.x}
       y={p.y}
     >
       {props.name}
-    </text>
+    </Label>
   );
 };
 
@@ -215,7 +214,7 @@ interface RingProps {
 const Ring = (props: RingProps) => (
   <g>
     {/* Every other pair as hairline threads on bare paper, under the hero. */}
-    <g className={dimClass(props.hovering)}>
+    <DimGroup dim={props.hovering}>
       {props.geometry.pairs.map((p) => (
         <g
           className="ease-enter transition-opacity"
@@ -233,7 +232,7 @@ const Ring = (props: RingProps) => (
           ))}
         </g>
       ))}
-    </g>
+    </DimGroup>
     {/* The focused group's ribbons lead: ink hatch on paper, the one fill. */}
     {props.geometry.pairs.map((p) => (
       <g
@@ -292,8 +291,7 @@ const teamAt = (geometry: Geometry, angle: number) => {
 /** The ring at one width: geometry built once per size, focus moved by the pointer. */
 const ChordSvg = (props: {
   data: SharedWork;
-  hover: Hover | null;
-  onHover: (h: Hover | null) => void;
+  hover: ReturnType<typeof useHover<number>>;
   totals: number[];
   width: number;
 }) => {
@@ -315,38 +313,35 @@ const ChordSvg = (props: {
       return;
     }
     const g = teamAt(geometry, Math.atan2(dx, -dy));
-    if (g === undefined || g.index === hover?.team) {
+    if (g === undefined || g.index === hover.key) {
       return;
     }
     const p = polar(middle(g), r);
-    props.onHover({ team: g.index, x: cx + p.x, y: cy + p.y - 12 });
+    hover.show(g.index, cx + p.x, cy + p.y - 12);
   };
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="touch-pan-y"
       height={size}
-      onPointerLeave={() => {
-        props.onHover(null);
-      }}
+      label={label}
+      leave={hover.clear}
       onPointerMove={onMove}
       width={width}
     >
-      <title>{label}</title>
       <defs>
         <Hatch id={hatch} tone="fill-hero" />
       </defs>
       <g transform={`translate(${cx} ${cy})`}>
         <Ring
           data={data}
-          focus={hover?.team ?? busiest}
+          focus={hover.key ?? busiest}
           geometry={geometry}
           hatch={hatch}
-          hovering={hover !== null}
+          hovering={hover.key !== null}
           r={r}
         />
       </g>
-    </svg>
+    </ChartSvg>
   );
 };
 
@@ -360,26 +355,23 @@ const ChordSvg = (props: {
  */
 export const ChordRing = (props: { data?: SharedWork }) => {
   const data = props.data ?? sharedWorkDemo;
-  const [hover, setHover] = useState<Hover | null>(null);
+  const hover = useHover<number>();
   const totals = data.matrix.map((row) => sum(row));
   return (
     <Plot
       overlay={
-        hover === null ? null : (
-          <Tooltip x={hover.x} y={hover.y}>
-            <b>{data.teams[hover.team]}</b> · {fmtBn(totals[hover.team])}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[fmtBn(totals[hover.at.key])]}
+              lead={data.teams[hover.at.key]}
+            />
           </Tooltip>
         )
       }
     >
       {(width) => (
-        <ChordSvg
-          data={data}
-          hover={hover}
-          onHover={setHover}
-          totals={totals}
-          width={width}
-        />
+        <ChordSvg data={data} hover={hover} totals={totals} width={width} />
       )}
     </Plot>
   );

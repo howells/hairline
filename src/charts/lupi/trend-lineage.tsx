@@ -1,17 +1,21 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import { yearTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
-import { DOT, STEM } from "../marks";
+import { DOT } from "../marks";
 import type { DotSize } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule, Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { trendLineageDemo } from "./trend-lineage.data";
 import type { LineageDatum } from "./trend-lineage.data";
 import { byStep } from "./util-b";
@@ -97,23 +101,11 @@ const YearGrid = ({ years, y, x0, x1, every }: GridProps) => {
     <g>
       {(every >= 5 ? ticked : years).map((yr) => (
         <g key={`year-${yr}`}>
-          <line
-            className="grid-line"
-            x1={x0 - 8}
-            x2={x1}
-            y1={crisp(y(yr))}
-            y2={crisp(y(yr))}
-          />
+          <HRule kind="grid" x0={x0 - 8} x1={x1} y={y(yr)} />
           {labels.has(yr) && (
-            <text
-              className="t-axis"
-              x={x0 - 16}
-              y={y(yr)}
-              dy="0.34em"
-              textAnchor="end"
-            >
+            <Label anchor="end" middle voice="axis" x={x0 - 16} y={y(yr)}>
               {labels.get(yr)}
-            </text>
+            </Label>
           )}
         </g>
       ))}
@@ -162,12 +154,11 @@ const FeatureColumn = ({
   }
   return (
     <>
-      <rect
+      <HitRect
         x={x - colW / 2}
         y={top}
         width={colW}
         height={floor - top + 40}
-        fill="transparent"
       />
       {segmentsOf(feature, end).map((s) =>
         s.dormant ? (
@@ -183,15 +174,14 @@ const FeatureColumn = ({
             />
           </g>
         ) : (
-          <line
+          <Stem
             key={s.id}
-            className={`grow-y from-top shape-crisp ${hero ? "stroke-hero" : "stroke-l5"}`}
+            className={`grow-y from-top ${hero ? "stroke-hero" : "stroke-l5"}`}
+            hero={hero}
             style={stagger(index, "series")}
-            x1={stemX}
-            x2={stemX}
-            y1={crisp(y(s.a))}
-            y2={crisp(y(s.b))}
-            strokeWidth={hero ? STEM.hero : STEM.rest}
+            x={x}
+            y0={crisp(y(s.a))}
+            y1={crisp(y(s.b))}
           />
         )
       )}
@@ -221,16 +211,17 @@ const FeatureColumn = ({
         cy={crisp(y(feature.shipped))}
         size={size}
       />
-      <text
-        className={`fade t-name ${labelTone}`}
-        style={stagger(index)}
+      <Label
+        anchor="end"
+        className={labelTone}
+        order={index}
+        transform={`rotate(${colW < 44 ? -64 : -38} ${x + 3} ${ly})`}
+        voice="name"
         x={x + 3}
         y={ly}
-        textAnchor="end"
-        transform={`rotate(${colW < 44 ? -64 : -38} ${x + 3} ${ly})`}
       >
         {feature.name}
-      </text>
+      </Label>
     </>
   );
 };
@@ -244,7 +235,7 @@ const FeatureColumn = ({
 export const TrendLineage = (props: TrendLineageProps) => {
   const data = props.data ?? trendLineageDemo;
   const height = props.height ?? 460;
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const allYears = data.flatMap((d) => [
     d.shipped,
     ...(d.reworked ?? []),
@@ -305,18 +296,16 @@ export const TrendLineage = (props: TrendLineageProps) => {
           ],
           25
         );
-        const tip = hover === null ? undefined : data[hover];
+        const tip = hover.key === null ? undefined : data[hover.key];
         return (
           <div className="relative">
-            <svg
-              width={width}
+            <ChartSvg
               height={height}
-              aria-label={`Sea area lineage ${y0}–${y1}: ${data.map((d) => `${d.name}, ${describe(d)}`).join("; ")}`}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={`Sea area lineage ${y0}–${y1}: ${data.map((d) => `${d.name}, ${describe(d)}`).join("; ")}`}
+              leave={hover.clear}
+              title="Sea area lineage"
+              width={width}
             >
-              <title>Sea area lineage</title>
               <YearGrid
                 years={years}
                 y={y}
@@ -325,11 +314,11 @@ export const TrendLineage = (props: TrendLineageProps) => {
                 every={every}
               />
               {data.map((d, i) => (
-                <g
+                <DimGroup
                   key={d.name}
-                  className={dimClass(hover !== null && hover !== i)}
+                  dim={hover.dim(i)}
                   onPointerEnter={() => {
-                    setHover(i);
+                    hover.show(i);
                   }}
                 >
                   <FeatureColumn
@@ -344,18 +333,13 @@ export const TrendLineage = (props: TrendLineageProps) => {
                     y={y}
                     hero={hero === d.name}
                   />
-                </g>
+                </DimGroup>
               ))}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={height - 6}
-              />
-            </svg>
-            {tip !== undefined && hover !== null && (
-              <Tooltip x={cx(hover)} y={y(tip.shipped) - DOT[size] - 4}>
-                <b>{tip.name}</b> · {describe(tip)}
+              <FootNote height={height} text={props.note} width={width} />
+            </ChartSvg>
+            {tip !== undefined && hover.key !== null && (
+              <Tooltip x={cx(hover.key)} y={y(tip.shipped) - DOT[size] - 4}>
+                <TipText facts={[describe(tip)]} lead={tip.name} />
               </Tooltip>
             )}
           </div>

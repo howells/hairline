@@ -1,16 +1,5 @@
 import { sansWidth } from "../util";
 
-/** Hover state shared by the basics-b charts: an item plus where to anchor its tooltip. */
-export interface Tip<T> {
-  item: T;
-  x: number;
-  y: number;
-}
-
-/** Is item `key` the hovered one? null when nothing is hovered. */
-export const isActive = <T>(hover: T | null, key: T): boolean | null =>
-  hover === null ? null : hover === key;
-
 /** Point on a circle, angle in radians measured clockwise from 12 o'clock. */
 export const polar = (cx: number, cy: number, r: number, a: number) => ({
   x: cx + r * Math.sin(a),

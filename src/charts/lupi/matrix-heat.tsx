@@ -1,7 +1,10 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { TipText } from "../hover";
 import { KEY } from "../marks";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import {
   CrossHatch,
   DotScreen,
@@ -104,31 +107,35 @@ const Headers = ({ rows, cols, g, hover, triangle }: HeadersProps) => (
       // In a triangle each column is named just above its first cell.
       const y = g.top + (triangle ? g.cell * j : 0) - 12;
       return (
-        <text
+        <Label
           key={`col-${c}`}
-          className={`fade t-label ${hover?.[1] === j ? "fill-ink" : "fill-muted"}`}
-          style={stagger(j, "mark")}
+          className={hover?.[1] === j ? "fill-ink" : "fill-muted"}
+          order={j}
+          tier="mark"
+          voice="label"
           x={x}
           y={y}
           transform={`rotate(-55 ${x} ${y})`}
         >
           {c}
-        </text>
+        </Label>
       );
     })}
     {rows.map((r, i) =>
       triangle && i === 0 ? null : (
-        <text
+        <Label
           key={`row-${r}`}
-          className={`fade t-label ${hover?.[0] === i ? "fill-ink" : "fill-muted"}`}
-          style={stagger(i, "mark")}
+          anchor="end"
+          className={hover?.[0] === i ? "fill-ink" : "fill-muted"}
+          middle
+          order={i}
+          tier="mark"
+          voice="label"
           x={g.x0 - 14}
           y={g.top + g.cell * (triangle ? i - 1 : i) + g.size / 2}
-          dy="0.34em"
-          textAnchor="end"
         >
           {r}
-        </text>
+        </Label>
       )
     )}
   </g>
@@ -190,14 +197,14 @@ const ShadeLegend = ({ labels, screens, x, y, span, wide }: LegendProps) => {
             x={x + (offsets[k] ?? 0)}
             y={y - 6 + Math.floor(k / perRow) * 20}
           />
-          <text
-            className="t-axis"
+          <Label
+            middle
+            voice="axis"
             x={x + (offsets[k] ?? 0) + KEY.swatch + KEY.gap}
             y={y + Math.floor(k / perRow) * 20}
-            dy="0.34em"
           >
             {labels[k]}
-          </text>
+          </Label>
         </g>
       ))}
     </g>
@@ -342,6 +349,10 @@ const MatrixDefs = ({ fills }: { fills: MatrixFills }) => (
   </defs>
 );
 
+/** "Row then column": the pair a tile stands for. */
+const pairName = (rows: string[], cols: string[], [i, j]: [number, number]) =>
+  `${rows[i] ?? ""} then ${cols[j] ?? ""}`;
+
 /** Slant of the column names, in degrees. */
 const HEAD_TILT = 55;
 
@@ -458,15 +469,15 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
         const keyV = data.values[key[0]]?.[key[1]] ?? 0;
         return (
           <div className="relative">
-            <svg
-              width={width}
+            <ChartSvg
               height={height}
-              aria-label={`${rows.length} by ${cols.length} matrix; strongest ${rows[key[0]] ?? ""} then ${cols[key[1]] ?? ""} at ${format(keyV)}${unit}`}
-              onPointerLeave={() => {
+              label={`${rows.length} by ${cols.length} matrix; strongest ${rows[key[0]] ?? ""} then ${cols[key[1]] ?? ""} at ${format(keyV)}${unit}`}
+              leave={() => {
                 setHover(null);
               }}
+              title="Letter pairs"
+              width={width}
             >
-              <title>Letter pairs</title>
               <Headers
                 rows={rows}
                 cols={cols}
@@ -496,17 +507,16 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
                 span={narrow ? left + right : cell * cols.length}
                 wide={!narrow}
               />
-            </svg>
+            </ChartSvg>
             {hover !== null && tipV !== null && (
               <Tooltip
                 x={x0 + cell * hover[1] + size / 2}
                 y={g.top + cell * drawnRow(hover[0]) - 4}
               >
-                <b>
-                  {rows[hover[0]]} then {cols[hover[1]]}
-                </b>{" "}
-                · {format(tipV)}
-                {unit}
+                <TipText
+                  facts={[`${format(tipV)}${unit}`]}
+                  lead={pairName(rows, cols, hover)}
+                />
               </Tooltip>
             )}
           </div>

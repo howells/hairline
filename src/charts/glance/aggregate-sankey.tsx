@@ -4,10 +4,13 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { DimGroup, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, ranks, stagger, wrapWords } from "../util";
+import { noteSpace, ranks, stagger, wrapWords } from "../util";
 import { aggregateSankeyDemo } from "./aggregate-sankey.data";
 import type { AggregateSankeyData, SankeyFlow } from "./aggregate-sankey.data";
 import { textWidth } from "./util-a";
@@ -283,17 +286,17 @@ interface SourceLabelProps {
 const SourceLabel = (p: SourceLabelProps) => {
   if (p.lines.length === 1) {
     return (
-      <text className="t-label" x={p.x} y={p.y} dy="0.36em" textAnchor="end">
+      <Label anchor="end" dy="0.36em" voice="label" x={p.x} y={p.y}>
         {p.name}
         <tspan className="fill-muted"> · {p.valueText}</tspan>
-      </text>
+      </Label>
     );
   }
   return (
-    <text
-      className="t-label"
+    <Label
+      anchor="end"
+      voice="label"
       y={p.y - ((p.lines.length - 1) * LABEL_LINE) / 2}
-      textAnchor="end"
     >
       {p.lines.map((line, k) => (
         <tspan
@@ -305,7 +308,7 @@ const SourceLabel = (p: SourceLabelProps) => {
           {line}
         </tspan>
       ))}
-    </text>
+    </Label>
   );
 };
 
@@ -317,8 +320,8 @@ const NodeMark = (p: NodeProps) => {
   const y1 = p.node.y1 ?? 0;
   const mid = (y0 + y1) / 2;
   return (
-    <g
-      className={dimClass(!p.lit)}
+    <DimGroup
+      dim={!p.lit}
       onPointerEnter={() => {
         p.onEnter({
           flow: null,
@@ -348,14 +351,14 @@ const NodeMark = (p: NodeProps) => {
           y={mid}
         />
       ) : (
-        <text className="t-label" x={x1 + LABEL_GAP} y={mid} dy="0.36em">
+        <Label dy="0.36em" voice="label" x={x1 + LABEL_GAP} y={mid}>
           {p.node.name}
           <tspan className="t-value" dx={6}>
             {p.valueText}
           </tspan>
-        </text>
+        </Label>
       )}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -418,16 +421,15 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
         focus === null ? null : (
           <Tooltip x={focus.x} y={focus.y}>
             {focus.flow === null ? (
-              <>
-                <b>{focus.node}</b> · {format(total(focus.node ?? ""))} {unit}
-              </>
+              <TipText
+                facts={[`${format(total(focus.node ?? ""))} ${unit}`]}
+                lead={focus.node ?? ""}
+              />
             ) : (
-              <>
-                <b>
-                  {data.flows[focus.flow].from} → {data.flows[focus.flow].to}
-                </b>{" "}
-                · {format(data.flows[focus.flow].value)} {unit}
-              </>
+              <TipText
+                facts={[`${format(data.flows[focus.flow].value)} ${unit}`]}
+                lead={`${data.flows[focus.flow].from} → ${data.flows[focus.flow].to}`}
+              />
             )}
           </Tooltip>
         )
@@ -442,15 +444,14 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
         const graph = layoutGraph(data, width, height, narrow, bottom, margins);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setFocus(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             <GrainDefs tex={tex} />
             <Ribbons
               data={data}
@@ -478,13 +479,8 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
                 valueText={format(n.value ?? 0)}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -2,9 +2,12 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { HitRect, TipText } from "../hover";
 import { Ring } from "../markers";
 import { DOT } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { noteSpace, sansWidth, stagger, wrapWords } from "../util";
@@ -238,8 +241,7 @@ const Lights = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
             onFocus({ item: i });
           }}
         >
-          <rect
-            fill="transparent"
+          <HitRect
             height={at.pitch}
             width={at.xOwner - at.rMax - at.xTick0}
             x={at.xTick0}
@@ -279,9 +281,10 @@ interface OwnerLabelProps {
 
 /** The owner's name and count, centred on its node when it wraps. */
 const OwnerLabel = ({ hero, lines, owner, rank, x, y }: OwnerLabelProps) => (
-  <text
-    className={`fade t-label ${hero ? "" : "fill-muted"}`}
-    style={stagger(rank + 10)}
+  <Label
+    muted={!hero}
+    order={rank + 10}
+    voice="label"
     y={y - ((lines.length - 1) * OWNER_LINE) / 2}
   >
     {lines.map((line, k) => (
@@ -293,7 +296,7 @@ const OwnerLabel = ({ hero, lines, owner, rank, x, y }: OwnerLabelProps) => (
         {line}
       </tspan>
     ))}
-  </text>
+  </Label>
 );
 
 /**
@@ -323,12 +326,11 @@ const Owners = ({
             onFocus({ owner: o.owner });
           }}
         >
-          <rect
+          <HitRect
             x={at.xOwner - at.rMax}
             y={y - Math.max(r, 9)}
             width={at.blockW + at.left - at.xOwner + at.rMax}
             height={Math.max(r, 9) * 2}
-            fill="transparent"
           />
           <circle
             className={`pop ${hero ? "stroke-hero" : "stroke-l5"}`}
@@ -398,28 +400,23 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
           focus?.item === undefined ? undefined : data[focus.item];
         return (
           <div className="relative">
-            <svg
-              width={width}
+            <ChartSvg
               height={at.height}
-              aria-label={`${data.length} ${unit} across ${owners.length} keepers: ${owners.map((o) => `${o.owner} ${o.count}`).join(", ")}`}
-              onPointerLeave={() => {
+              label={`${data.length} ${unit} across ${owners.length} keepers: ${owners.map((o) => `${o.owner} ${o.count}`).join(", ")}`}
+              leave={() => {
                 setFocus(null);
               }}
+              title="Lights by keeper"
+              width={width}
             >
-              <title>Lights by keeper</title>
               <defs>
                 <Hatch id={fills.hatch} tone="fill-l4" />
                 <CrossHatch id={fills.hero} tone="fill-hero" />
               </defs>
               <Lights {...layer} />
               <Owners {...layer} />
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={at.height - 6}
-              />
-            </svg>
+              <FootNote height={at.height} text={props.note} width={width} />
+            </ChartSvg>
             {focusOwner !== undefined && (
               <Tooltip
                 x={at.xOwner}
@@ -431,13 +428,20 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
                   4
                 }
               >
-                <b>{focusOwner}</b> ·{" "}
-                {owners.find((o) => o.owner === focusOwner)?.count ?? 0} {unit}
+                <TipText
+                  facts={[
+                    `${owners.find((o) => o.owner === focusOwner)?.count ?? 0} ${unit}`,
+                  ]}
+                  lead={focusOwner}
+                />
               </Tooltip>
             )}
             {focusItem !== undefined && focus?.item !== undefined && (
               <Tooltip x={at.xTick1} y={at.yItem(focus.item) - 6}>
-                <b>{focusItem.name}</b> · kept by {focusItem.owner}
+                <TipText
+                  facts={[`kept by ${focusItem.owner}`]}
+                  lead={focusItem.name}
+                />
               </Tooltip>
             )}
           </div>

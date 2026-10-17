@@ -1,14 +1,18 @@
 import { scaleBand, scaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { VGrid, VRule } from "../rules";
 import { barPath } from "../shapes";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { divergingBarDemo } from "./diverging-bar.data";
 import type { DivergingDatum } from "./diverging-bar.data";
 import { labelRoom } from "./util-a";
@@ -22,12 +26,6 @@ interface DivergingBarProps {
   note?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
-}
-
-interface Tip {
-  i: number;
-  x: number;
-  y: number;
 }
 
 /** Tick step that gives roughly four gridlines a side. */
@@ -57,23 +55,18 @@ const DivergingRow = (p: BarProps) => {
   const gain = p.d.value >= 0;
   const { onPointerEnter } = p;
   return (
-    <g className={dimClass(p.dim)} onPointerEnter={onPointerEnter}>
-      <rect
-        x={0}
-        y={p.cy - p.band / 2}
-        width={p.width}
-        height={p.band}
-        fill="transparent"
-      />
-      <text
-        className={`t-name ${p.hero ? "" : "fill-muted"}`}
+    <DimGroup dim={p.dim} onPointerEnter={onPointerEnter}>
+      <HitRect x={0} y={p.cy - p.band / 2} width={p.width} height={p.band} />
+      <Label
+        anchor="end"
+        dy="0.35em"
+        muted={!p.hero}
+        voice="name"
         x={p.labelW}
         y={p.cy}
-        dy="0.35em"
-        textAnchor="end"
       >
         {p.d.label}
-      </text>
+      </Label>
       <path
         className={`grow-x ${gain ? "" : "from-right"} ${p.fill.className}`}
         style={stagger(p.i, "series")}
@@ -97,17 +90,19 @@ const DivergingRow = (p: BarProps) => {
         fill={p.fill.pattern}
         strokeWidth={1}
       />
-      <text
-        className={`fade t-value ${p.hero ? "" : "fill-muted"}`}
-        style={stagger(p.i + 3, "series")}
+      <Label
+        anchor={gain ? "start" : "end"}
+        dy="0.35em"
+        muted={!p.hero}
+        order={p.i + 3}
+        tier="series"
+        voice="value"
         x={gain ? p.x1 + 8 : p.x1 - 8}
         y={p.cy}
-        dy="0.35em"
-        textAnchor={gain ? "start" : "end"}
       >
         {p.text}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -179,27 +174,6 @@ const fillOf = (
     : { className: "stroke-l5 shape-crisp", pattern: paint(tex("dots")) };
 };
 
-/** Vertical gridlines at each tick, snapped to the pixel grid. */
-const GridRules = (p: {
-  ticks: number[];
-  x: (v: number) => number;
-  y0: number;
-  y1: number;
-}) => (
-  <g>
-    {p.ticks.map((t) => (
-      <line
-        key={t}
-        className="grid-line"
-        x1={crisp(p.x(t))}
-        x2={crisp(p.x(t))}
-        y1={p.y0}
-        y2={p.y1}
-      />
-    ))}
-  </g>
-);
-
 /**
  * G10 Names rising, falling. Signed values either side of a solid ink zero rule. The
  * biggest gain (or the highlight) is solid ink; other gains are hatched and
@@ -210,7 +184,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
   const data = props.data ?? divergingBarDemo;
   const height = props.height ?? 340;
   const format = props.format ?? defaultFormat;
-  const [tip, setTip] = useState<Tip | null>(null);
+  const hover = useHover<number>();
   const label = data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
   const lo = Math.min(0, ...data.map((d) => d.value));
   const hi = Math.max(0, ...data.map((d) => d.value));
@@ -222,9 +196,12 @@ export const DivergingBar = (props: DivergingBarProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -257,20 +234,21 @@ export const DivergingBar = (props: DivergingBarProps) => {
         const ticks = gridTicks(x.domain(), step * (narrow ? 2 : 1));
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={tex("hatch")} tone="fill-l3" />
               <Stipple id={tex("dots")} tone="fill-l3" />
             </defs>
-            <GridRules ticks={ticks} x={x} y0={m.top} y1={height - m.bottom} />
+            <VGrid
+              xs={ticks.map((t) => x(t))}
+              y0={m.top}
+              y1={height - m.bottom}
+            />
             {data.map((d, i) => {
               const cy = (y(i) ?? 0) + y.bandwidth() / 2;
               const bh = Math.min(y.bandwidth(), 22);
@@ -293,28 +271,17 @@ export const DivergingBar = (props: DivergingBarProps) => {
                   labelW={labelW}
                   width={width}
                   band={y.step()}
-                  dim={tip !== null && tip.i !== i}
+                  dim={hover.dim(i)}
                   text={format(d.value)}
                   onPointerEnter={() => {
-                    setTip({ i, x: x(d.value), y: cy - bh / 2 - 2 });
+                    hover.show(i, x(d.value), cy - bh / 2 - 2);
                   }}
                 />
               );
             })}
-            <line
-              className="hairline"
-              x1={zero}
-              x2={zero}
-              y1={m.top}
-              y2={height - m.bottom}
-            />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <VRule x={x(0)} y0={m.top} y1={height - m.bottom} />
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

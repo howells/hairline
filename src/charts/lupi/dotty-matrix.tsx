@@ -3,10 +3,13 @@ import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { DimGroup, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger } from "../util";
 import { dottyMatrixDemo, dottyPeriodLabel } from "./dotty-matrix.data";
 import type { DottyGroup } from "./dotty-matrix.data";
 
@@ -91,8 +94,8 @@ const Plane = ({ dim, g, geo, group, onHover, radius, screen }: PlaneProps) => {
   const outline = `M${cx},${cy - halfW / 2}L${cx + halfW},${cy}L${cx},${cy + halfW / 2}L${cx - halfW},${cy}Z`;
   const tone = TONES.at(g) ?? "fill-l5";
   return (
-    <g className={dimClass(dim)}>
-      <g className="fade" style={{ "--i": g }}>
+    <DimGroup dim={dim}>
+      <g className="fade" style={stagger(g)}>
         <path
           className="stroke-l5"
           d={outline}
@@ -123,15 +126,17 @@ const Plane = ({ dim, g, geo, group, onHover, radius, screen }: PlaneProps) => {
           />
         );
       })}
-      <text
-        className={`fade t-label ${g === 0 ? "" : "fill-muted"}`}
-        dy="0.34em"
+      <Label
+        className="fade"
+        middle
+        muted={g !== 0}
+        voice="label"
         x={cx + halfW + 14}
         y={cy}
       >
         {group.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -158,8 +163,13 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data[hover.g].label}</b> · {cellLabel(hover.k)} ·{" "}
-            {format(data[hover.g].values[hover.k])} {noun}
+            <TipText
+              facts={[
+                cellLabel(hover.k),
+                `${format(data[hover.g].values[hover.k])} ${noun}`,
+              ]}
+              lead={data[hover.g].label}
+            />
           </Tooltip>
         )
       }
@@ -180,15 +190,15 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
         // Painter's order: the bottom plane first, so upper planes sit on top.
         const order = data.map((group, g) => ({ g, group })).toReversed();
         return (
-          <svg
-            aria-label={`Stacked dot planes: ${data.map((d) => `${d.label} ${format(d.values.reduce((s, v) => s + v, 0))} ${noun}`).join(", ")}`}
+          <ChartSvg
             height={geo.height}
-            onPointerLeave={() => {
+            label={`Stacked dot planes: ${data.map((d) => `${d.label} ${format(d.values.reduce((s, v) => s + v, 0))} ${noun}`).join(", ")}`}
+            leave={() => {
               setHover(null);
             }}
+            title="Isometric planes of dots, one plane per group"
             width={width}
           >
-            <title>Isometric planes of dots, one plane per group</title>
             <defs>
               <Stipple id={screen} tone="fill-l5" />
             </defs>
@@ -204,13 +214,8 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
                 screen={screen}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={geo.height - 6}
-            />
-          </svg>
+            <FootNote height={geo.height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

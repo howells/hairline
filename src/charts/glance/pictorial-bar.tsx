@@ -1,11 +1,12 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
-import { useSvgId } from "../hooks";
-import { PlotNote } from "../plot-note";
+import { useHover, useSvgId } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { pictorialBarDemo } from "./pictorial-bar.data";
 import type { PictorialDatum } from "./pictorial-bar.data";
 import { labelRoom, rankTones } from "./util-a";
@@ -20,12 +21,6 @@ interface PictorialBarProps {
   note?: string;
   /** Index of the row to draw in the hero colour. */
   highlight?: number;
-}
-
-interface Tip {
-  i: number;
-  x: number;
-  y: number;
 }
 
 interface Row {
@@ -173,23 +168,18 @@ const PictorialRow = ({
     y: top + Math.floor(k / g.perLine) * (g.ih + LINE_GAP),
   }));
   return (
-    <g className={dimClass(dim)} onPointerEnter={onEnter}>
-      <rect
-        x={0}
-        y={row.cy - g.rowH / 2}
-        width={width}
-        height={g.rowH}
-        fill="transparent"
-      />
-      <text
-        className="t-label fill-muted"
+    <DimGroup dim={dim} onPointerEnter={onEnter}>
+      <HitRect x={0} y={row.cy - g.rowH / 2} width={width} height={g.rowH} />
+      <Label
+        anchor="end"
+        dy="0.35em"
+        muted
+        voice="label"
         x={g.x0 - 14}
         y={row.cy}
-        dy="0.35em"
-        textAnchor="end"
       >
         {row.datum.label}
-      </text>
+      </Label>
       <g>
         {icons.map((ic) => (
           <PageGlyph
@@ -215,16 +205,18 @@ const PictorialRow = ({
           />
         ))}
       </g>
-      <text
-        className={`fade t-value ${hero ? "" : "fill-muted"}`}
-        style={stagger(row.i + 4, "series")}
+      <Label
+        dy="0.35em"
+        muted={!hero}
+        order={row.i + 4}
+        tier="series"
+        voice="value"
         x={g.x0 + g.perLine * g.pitch + 10}
         y={row.cy}
-        dy="0.35em"
       >
         {label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -266,7 +258,7 @@ export const PictorialBar = (props: PictorialBarProps) => {
   const format = props.format ?? defaultFormat;
   const id = useSvgId("pict");
   const tex = useTextureIds("pict");
-  const [tip, setTip] = useState<Tip | null>(null);
+  const hover = useHover<number>();
   // The biggest row in ink; every other row's filled icons at one grey.
   const tones = rankTones(
     data.map((d) => d.value),
@@ -280,9 +272,12 @@ export const PictorialBar = (props: PictorialBarProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -338,15 +333,12 @@ export const PictorialBar = (props: PictorialBarProps) => {
         });
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={svgH}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={tex("row")} tone="fill-l3" />
               <Hatch id={tex("hero")} tone="fill-hero" />
@@ -361,24 +353,19 @@ export const PictorialBar = (props: PictorialBarProps) => {
                 id={id}
                 texture={paint(tex(isHero(r.i) ? "hero" : "row"))}
                 width={width}
-                dim={tip !== null && tip.i !== r.i}
+                dim={hover.dim(r.i)}
                 label={format(r.datum.value)}
                 onEnter={() => {
-                  setTip({
-                    i: r.i,
-                    x: x0 + Math.min(r.n, perLine) * pitch,
-                    y: r.cy - (lines * g.ih + (lines - 1) * LINE_GAP) / 2 - 4,
-                  });
+                  hover.show(
+                    r.i,
+                    x0 + Math.min(r.n, perLine) * pitch,
+                    r.cy - (lines * g.ih + (lines - 1) * LINE_GAP) / 2 - 4
+                  );
                 }}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

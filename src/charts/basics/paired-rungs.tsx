@@ -1,17 +1,20 @@
 import { scaleBand } from "d3-scale";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { PlotNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, Rules } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { NOTE_LINE, dimClass, hasText, noteLines, stagger } from "../util";
+import { NOTE_LINE, hasText, noteLines, stagger } from "../util";
 import { pairedRungsDemo } from "./paired-rungs.data";
 import type { PairDatum } from "./paired-rungs.data";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { SeriesKey } from "./series-key";
-import { isDim, useHoverTip } from "./util-a";
 import { maxIndex } from "./util-b";
 
 interface PairedRungsProps {
@@ -66,19 +69,13 @@ const Pair = ({
   const band = bw * 2 + gap;
   const prevTop = rungY(floor, nPrev - 1, pitch);
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(left + band / 2, top);
       }}
     >
-      <rect
-        className="fill-transparent"
-        height={floor - top}
-        width={band + 12}
-        x={left - 6}
-        y={top}
-      />
+      <HitRect height={floor - top} width={band + 12} x={left - 6} y={top} />
       {nPrev > 0 ? (
         <rect
           className="grow-y stroke-l5 shape-crisp"
@@ -102,33 +99,34 @@ const Pair = ({
         pitch={pitch}
         width={bw}
       />
-      <text
-        className="fade t-axis"
-        style={stagger(index)}
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        order={index}
+        voice="axis"
         x={left + bw / 2}
         y={rungY(floor, nPrev - 1, pitch) - 10}
       >
         {format(datum.previous)}
-      </text>
-      <text
-        className="fade t-value"
-        style={stagger(index)}
-        textAnchor="middle"
+      </Label>
+      <Label
+        anchor="middle"
+        order={index}
+        voice="value"
         x={left + bw + gap + bw / 2}
         y={rungY(floor, nCur - 1, pitch) - 10}
       >
         {format(datum.current)}
-      </text>
-      <text
-        className="t-label fill-muted"
-        textAnchor="middle"
+      </Label>
+      <Label
+        anchor="middle"
+        muted
+        voice="label"
         x={left + band / 2}
         y={floor + 18}
       >
         {datum.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -145,7 +143,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
   const format = props.format ?? String;
   const [prevName, curName] = props.periods ?? ["2011", "2021"];
   const hasNote = hasText(props.note);
-  const { clear, hover, show, tip } = useHoverTip();
+  const hover = useHover<number>();
   const ids = useTextureIds("paired");
   const label = data
     .map(
@@ -157,10 +155,15 @@ export const PairedRungs = (props: PairedRungsProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {curName} {format(data[tip.i].current)}{" "}
-            · {prevName} {format(data[tip.i].previous)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `${curName} ${format(data[hover.at.key].current)}`,
+                `${prevName} ${format(data[hover.at.key].previous)}`,
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -187,13 +190,12 @@ export const PairedRungs = (props: PairedRungsProps) => {
         const pitch = rungPitch(floor - 32, max);
         const hero = props.highlight ?? maxIndex(data.map((d) => d.current));
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={clear}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={ids("hatch")} tone="fill-l4" />
               <Rules id={ids("rules")} tone="fill-l3" />
@@ -207,19 +209,13 @@ export const PairedRungs = (props: PairedRungsProps) => {
               x={Math.round(x0 + plotW)}
               y={16}
             />
-            <line
-              className="hairline"
-              x1={Math.round(x0)}
-              x2={Math.round(x0 + plotW)}
-              y1={crisp(floor)}
-              y2={crisp(floor)}
-            />
+            <HRule x0={Math.round(x0)} x1={Math.round(x0 + plotW)} y={floor} />
             {data.map((d, i) => (
               <Pair
                 bw={(band - gap) / 2}
                 hatch={ids("hatch")}
                 datum={d}
-                dim={isDim(hover, i)}
+                dim={hover.dim(i)}
                 floor={floor}
                 format={format}
                 gap={gap}
@@ -228,7 +224,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
                 key={d.label}
                 left={x(d.label) ?? 0}
                 onEnter={(px, py) => {
-                  show(i, px, py);
+                  hover.show(i, px, py);
                 }}
                 pitch={pitch}
                 unit={unit}
@@ -240,7 +236,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
               x={width / 2}
               y={height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

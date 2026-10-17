@@ -4,12 +4,16 @@ import type { ReactNode } from "react";
 
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useReducedMotion, useReveal } from "../hooks";
+import { useHover, useReducedMotion, useReveal } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { DURATION, easeTravel } from "../motion";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger } from "../util";
 import { ControlSlot } from "./control-slot";
 import { placeNames } from "./scatter-labels";
 import { scatterMorphDemo } from "./scatter-morph.data";
@@ -116,46 +120,34 @@ const scatterLayout = (c: Ctx): Layout => {
     <g>
       {ys.ticks(4).map((v) => (
         <g key={`y${v}`}>
-          <line
-            className={v === 0 ? "hairline" : "grid-line"}
-            x1={m.left}
-            x2={c.width - m.right}
-            y1={Math.round(ys(v)) + 0.5}
-            y2={Math.round(ys(v)) + 0.5}
-          />
-          <text
-            className="t-axis"
-            x={m.left - 8}
+          <HRule
+            kind={v === 0 ? "hairline" : "grid"}
+            x0={m.left}
+            x1={c.width - m.right}
             y={ys(v)}
-            dy="0.35em"
-            textAnchor="end"
-          >
+          />
+          <Label anchor="end" dy="0.35em" voice="axis" x={m.left - 8} y={ys(v)}>
             {c.fy(v)}
-          </text>
+          </Label>
         </g>
       ))}
       {xs.ticks(4).map((v) => (
-        <text
+        <Label
+          anchor="middle"
           key={`x${v}`}
-          className="t-axis"
+          voice="axis"
           x={xs(v)}
           y={c.h - m.bottom + 18}
-          textAnchor="middle"
         >
           {c.fx(v)}
-        </text>
+        </Label>
       ))}
-      <text
-        className="t-note"
-        x={c.width - m.right}
-        y={c.h - 2}
-        textAnchor="end"
-      >
+      <Label anchor="end" voice="note" x={c.width - m.right} y={c.h - 2}>
         {c.xLabel} →
-      </text>
-      <text className="t-note" x={m.left} y={m.top - 6}>
+      </Label>
+      <Label voice="note" x={m.left} y={m.top - 6}>
         ↑ {c.yLabel}
-      </text>
+      </Label>
     </g>
   );
   return {
@@ -416,8 +408,9 @@ interface MarkProps {
  * outer pixel of an l5 underlay).
  */
 const MorphMark = ({ onPointerEnter, ...p }: MarkProps) => (
-  <g
-    className={`pop ${dimClass(p.dim)}`}
+  <DimGroup
+    className="pop"
+    dim={p.dim}
     style={stagger(p.i, "mark")}
     strokeLinejoin="round"
     onPointerEnter={onPointerEnter}
@@ -435,7 +428,7 @@ const MorphMark = ({ onPointerEnter, ...p }: MarkProps) => (
         />
       </>
     )}
-  </g>
+  </DimGroup>
 );
 
 const ViewChips = ({
@@ -461,12 +454,6 @@ const ViewChips = ({
   </fieldset>
 );
 
-const LABEL_CLASS: Record<LabelKind, string> = {
-  category: "t-label fill-muted",
-  name: "t-name",
-  value: "t-value",
-};
-
 const MorphLabels = ({
   labels,
   halo,
@@ -485,20 +472,22 @@ const MorphLabels = ({
             strokeWidth={1}
           />
         )}
-        <text
-          className={`${LABEL_CLASS[l.kind]} ${halo ? "t-halo" : ""}`}
-          x={l.x}
-          y={l.y}
+        <Label
+          anchor={l.anchor}
           dy="0.35em"
-          textAnchor={l.anchor}
+          halo={halo}
+          muted={l.kind === "category"}
           transform={
             l.rotate === undefined || l.rotate === 0
               ? undefined
               : `rotate(${l.rotate} ${l.x} ${l.y})`
           }
+          voice={l.kind === "category" ? "label" : l.kind}
+          x={l.x}
+          y={l.y}
         >
           {l.text}
-        </text>
+        </Label>
       </g>
     ))}
   </g>
@@ -523,8 +512,8 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
   const wrap = useRef<HTMLDivElement>(null);
   const shown = useReveal(wrap);
   const reduced = useReducedMotion();
-  const [hover, setHover] = useState<number | null>(null);
-  const morph = useMorph(shown, reduced, hover !== null);
+  const hover = useHover<number>();
+  const morph = useMorph(shown, reduced, hover.key !== null);
   const tex = useTextureIds("morph");
   const handlePick = morph.go;
   // The biggest item in solid ink; the rest engraved in one hatch.
@@ -561,18 +550,15 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
           const a = LAYOUTS[VIEWS[morph.from]](ctx);
           const b = LAYOUTS[view](ctx);
           const e = easeTravel(morph.t);
-          const tip = hover === null ? undefined : b.tips[hover];
+          const tip = hover.key === null ? undefined : b.tips[hover.key];
           return (
             <div className="relative">
-              <svg
-                width={width}
+              <ChartSvg
                 height={h + noteH}
-                aria-label={label}
-                onPointerLeave={() => {
-                  setHover(null);
-                }}
+                label={label}
+                leave={hover.clear}
+                width={width}
               >
-                <title>{label}</title>
                 <defs>
                   <Hatch id={tex("hatch")} tone="fill-l3" />
                 </defs>
@@ -589,11 +575,11 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                         ? b.marks[i]
                         : blendPts(a.marks[i], b.marks[i], e)
                     )}
-                    dim={hover !== null && hover !== i}
+                    dim={hover.dim(i)}
                     fill={tones[i] === 0 ? undefined : paint(tex("hatch"))}
                     i={i}
                     onPointerEnter={() => {
-                      setHover(i);
+                      hover.show(i);
                     }}
                   />
                 ))}
@@ -604,18 +590,18 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                     halo={view === "scatter"}
                   />
                 ) : null}
-                <PlotNote
-                  text={props.note}
-                  width={width - 16}
-                  x={width / 2}
-                  y={h + noteH - 6}
-                />
-              </svg>
-              {tip === undefined || hover === null ? null : (
+                <FootNote height={h + noteH} text={props.note} width={width} />
+              </ChartSvg>
+              {tip === undefined || hover.key === null ? null : (
                 <Tooltip x={tip[0]} y={tip[1]}>
-                  <b>{data[hover].label}</b> · {format(data[hover].value)} ·{" "}
-                  {fx(data[hover].x)} {xName.toLowerCase()} ·{" "}
-                  {fy(data[hover].y)} {yName.toLowerCase()}
+                  <TipText
+                    facts={[
+                      format(data[hover.key].value),
+                      `${fx(data[hover.key].x)} ${xName.toLowerCase()}`,
+                      `${fy(data[hover.key].y)} ${yName.toLowerCase()}`,
+                    ]}
+                    lead={data[hover.key].label}
+                  />
                 </Tooltip>
               )}
             </div>

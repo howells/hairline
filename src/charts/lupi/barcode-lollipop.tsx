@@ -1,16 +1,20 @@
 import { format as d3format } from "d3-format";
 import { scaleLinear } from "d3-scale";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { Dot } from "../markers";
-import { DOT, STEM } from "../marks";
+import { DOT } from "../marks";
 import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
-import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { clamp, noteSpace, sansWidth, stagger } from "../util";
 import { barcodeLollipopDemo } from "./barcode-lollipop.data";
 import type { BarcodeDatum } from "./barcode-lollipop.data";
 import { argMax } from "./util-b";
@@ -24,12 +28,6 @@ interface BarcodeLollipopProps {
   aside?: string;
   /** How many top days to label. Default 3. */
   top?: number;
-}
-
-interface DayTip {
-  i: number;
-  x: number;
-  y: number;
 }
 
 const twoDp = d3format(".2f");
@@ -125,15 +123,14 @@ const DayMark = ({
   // A 2px stem sits on whole pixels, a 1px one on the half pixel.
   const stemX = hero ? Math.round(x) : crisp(x);
   return (
-    <g className={dimClass(dim)}>
-      <line
-        className={`grow-y from-top shape-crisp ${hero ? "stroke-hero" : "stroke-l4"}`}
-        strokeWidth={hero ? STEM.hero : STEM.rest}
+    <DimGroup dim={dim}>
+      <Stem
+        className={`grow-y from-top ${hero ? "stroke-hero" : "stroke-l4"}`}
+        hero={hero}
         style={stagger(i, "dense")}
-        x1={stemX}
-        x2={stemX}
-        y1={cy}
-        y2={y(low)}
+        x={x}
+        y0={cy}
+        y1={y(low)}
       />
       <Dot
         className={`pop ${hero ? "fill-hero" : "fill-l2"}`}
@@ -143,16 +140,18 @@ const DayMark = ({
         style={stagger(i, "dense")}
       />
       {isTop ? (
-        <text
-          className={`fade t-halo ${hero ? "t-value" : "t-axis"}`}
-          textAnchor="middle"
+        <Label
+          anchor="middle"
+          className="fade"
+          halo
+          voice={hero ? "value" : "axis"}
           x={labelX ?? x}
           y={cy - r - 8}
         >
           {format(datum.value)}
-        </text>
+        </Label>
       ) : null}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -169,14 +168,14 @@ const MonthTicks = (props: {
   return (
     <g>
       {starts.map((i, k) => (
-        <text
-          className="t-axis"
+        <Label
           key={`month-${props.data[i].date.toISOString()}`}
+          voice="axis"
           x={props.x(i)}
           y={props.floor + 22}
         >
           {labels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -217,7 +216,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
   const height = props.height ?? 440;
   const format = props.format ?? metres;
   const topN = props.top ?? 3;
-  const [tip, setTip] = useState<DayTip | null>(null);
+  const hover = useHover<number>();
   const lows = data.map((d) => d.low ?? d.value * 0.9);
   const top = new Set(
     data
@@ -232,10 +231,15 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{dayFmt(data[tip.i].date)}</b> · high {format(data[tip.i].value)}{" "}
-            · low {format(lows[tip.i])}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `high ${format(data[hover.at.key].value)}`,
+                `low ${format(lows[hover.at.key])}`,
+              ]}
+              lead={dayFmt(data[hover.at.key].date)}
+            />
           </Tooltip>
         )
       }
@@ -262,37 +266,33 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
           if (px < m.left - step || px > width - m.right + step) {
-            setTip(null);
+            hover.clear();
             return;
           }
           const i = clamp(Math.round((px - m.left) / step), 0, data.length - 1);
-          setTip({ i, x: x(i), y: y(data[i].value) - DOT[dotSize] - 6 });
+          hover.show(i, x(i), y(data[i].value) - DOT[dotSize] - 6);
         };
 
         return (
-          <svg
-            aria-label={`Daily high and low water over ${data.length} days. Highest high water: ${[...top].map((i) => `${dayFmt(data[i].date)} ${format(data[i].value)}`).join(", ")}`}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={`Daily high and low water over ${data.length} days. Highest high water: ${[...top].map((i) => `${dayFmt(data[i].date)} ${format(data[i].value)}`).join(", ")}`}
+            leave={hover.clear}
             onPointerMove={onMove}
+            title="One hairline per day, a lollipop at each day's high water"
             width={width}
           >
-            <title>
-              One hairline per day, a lollipop at each day&apos;s high water
-            </title>
             <Barcode
               data={data}
               floor={floor}
-              hover={tip === null ? null : tip.i}
+              hover={hover.key}
               top={m.top}
               x={x}
             />
             {data.map((d, i) => (
               <DayMark
                 datum={d}
-                dim={tip !== null && tip.i !== i}
+                dim={hover.dim(i)}
                 dotSize={dotSize}
                 format={format}
                 i={i}
@@ -311,7 +311,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
               x={(m.left + width - m.right) / 2}
               y={height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -13,6 +13,9 @@ import {
   TICK,
 } from "../marks";
 import type { DotSize, TickSize } from "../marks";
+import { HRule, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing, DottedLine, KeySwatch } from "../texture";
 import { stagger } from "../util";
 
@@ -66,9 +69,10 @@ const Cell = (p: {
 }) => (
   <g className="fade" style={stagger(p.order, "fine")}>
     {p.children}
-    <text
-      className="t-axis fill-muted"
-      textAnchor="middle"
+    <Label
+      anchor="middle"
+      muted
+      voice="axis"
       x={Math.round(p.x)}
       y={Math.round(p.y) + 26}
     >
@@ -78,7 +82,7 @@ const Cell = (p: {
           {p.detail}
         </tspan>
       )}
-    </text>
+    </Label>
   </g>
 );
 
@@ -92,9 +96,9 @@ const Row = (p: {
   const y = Math.round(p.s.top + p.s.rowH * p.index + 18);
   return (
     <g>
-      <text className="t-label fill-muted" dy="0.34em" x={0} y={y}>
+      <Label middle muted voice="label" x={0} y={y}>
         {p.label}
-      </text>
+      </Label>
       {p.cells.map((c, k) => (
         <Cell
           detail={c.detail}
@@ -116,20 +120,8 @@ const TickSpecimen = (p: { size: TickSize; x: number; y: number }) => {
   const floor = p.y + 8;
   return (
     <g>
-      <line
-        className="hairline"
-        x1={p.x - 10}
-        x2={p.x + 10}
-        y1={crisp(floor)}
-        y2={crisp(floor)}
-      />
-      <line
-        className="hairline"
-        x1={crisp(p.x)}
-        x2={crisp(p.x)}
-        y1={floor - TICK[p.size]}
-        y2={floor}
-      />
+      <HRule x0={p.x - 10} x1={p.x + 10} y={floor} />
+      <VRule x={p.x} y0={floor - TICK[p.size]} y1={floor} />
     </g>
   );
 };
@@ -278,15 +270,7 @@ const ROWS: SheetRow[] = [
       {
         detail: 1,
         label: "Rule",
-        mark: (x, y) => (
-          <line
-            className="hairline"
-            x1={x - 22}
-            x2={x + 22}
-            y1={crisp(y)}
-            y2={crisp(y)}
-          />
-        ),
+        mark: (x, y) => <HRule x0={x - 22} x1={x + 22} y={y} />,
       },
       {
         detail: 3,
@@ -338,14 +322,9 @@ const ROWS: SheetRow[] = [
         mark: (x, y) => (
           <g>
             <KeySwatch tone="fill-l3" x={x - 20} y={y - KEY.swatch / 2} />
-            <text
-              className="t-label"
-              dy="0.34em"
-              x={x - 20 + KEY.swatch + KEY.gap}
-              y={y}
-            >
+            <Label middle voice="label" x={x - 20 + KEY.swatch + KEY.gap} y={y}>
               Key
-            </text>
+            </Label>
           </g>
         ),
       },
@@ -367,12 +346,12 @@ export const MarkSheet = () => {
         const s = sheetFor(width);
         const height = s.top + s.rowH * rows.length;
         return (
-          <svg
-            aria-label="The marks every chart may use"
+          <ChartSvg
             height={height}
+            label="The marks every chart may use"
+            title="Marks"
             width={width}
           >
-            <title>Marks</title>
             <g transform={`translate(${s.left} 0)`}>
               {rows.map((row, i) => (
                 <Row
@@ -384,7 +363,7 @@ export const MarkSheet = () => {
                 />
               ))}
             </g>
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -8,13 +8,17 @@ import { useEffect, useRef, useState } from "react";
 import type { PointerEvent, RefObject } from "react";
 
 import { monthTickLabels } from "../../lib/format";
-import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { useHover, useReducedMotion, useReveal, useSvgId } from "../hooks";
+import type { HoverAt } from "../hooks";
+import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotScreen } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
 import { noteSpace } from "../util";
@@ -33,12 +37,6 @@ interface DrawInProps {
   /** Draw duration in ms. */
   duration?: number;
   note?: string;
-}
-
-interface Hit {
-  i: number;
-  x: number;
-  y: number;
 }
 
 const fmtDate = utcFormat("%-d %b");
@@ -93,13 +91,13 @@ const Counter = (props: {
   x: number;
 }) => (
   <g>
-    <text className="t-value-lg" x={props.x} y={COUNTER_Y}>
+    <Label voice="value-lg" x={props.x} y={COUNTER_Y}>
       {props.text}
-    </text>
+    </Label>
     {props.caption === undefined ? null : (
-      <text className="t-label fill-muted" x={props.x} y={CAPTION_Y}>
+      <Label muted voice="label" x={props.x} y={CAPTION_Y}>
         {props.caption}
-      </text>
+      </Label>
     )}
   </g>
 );
@@ -159,7 +157,7 @@ const Curve = (p: CurveProps) => (
 interface FrameProps {
   data: DrawInDatum[];
   floor: number;
-  hover: Hit | null;
+  hover: HoverAt<number> | null;
   left: number;
   narrow: boolean;
   /** The svg's width: the baseline runs under the scale to here. */
@@ -181,31 +179,24 @@ const Frame = (p: FrameProps) => {
   const labels = monthTickLabels(months);
   return (
     <>
-      <line
-        className="hairline"
-        x1={p.left}
-        x2={p.width}
-        y1={crisp(p.floor)}
-        y2={crisp(p.floor)}
-      />
+      <HRule x0={p.left} x1={p.width} y={p.floor} />
       {months.map((d, k) => (
-        <text key={d.getTime()} className="t-axis" x={p.x(d)} y={p.floor + 16}>
+        <Label key={d.getTime()} voice="axis" x={p.x(d)} y={p.floor + 16}>
           {labels[k]}
-        </text>
+        </Label>
       ))}
       {p.hover === null ? null : (
         <g pointerEvents="none">
-          <line
-            className="stroke-faint shape-crisp"
-            x1={crisp(p.hover.x)}
-            x2={crisp(p.hover.x)}
-            y1={Math.round(p.y(p.data[p.hover.i].value))}
-            y2={p.floor}
+          <VRule
+            kind="cursor"
+            x={p.hover.x}
+            y0={Math.round(p.y(p.data[p.hover.key].value))}
+            y1={p.floor}
           />
           <Ring
             className="stroke-ink"
             cx={p.hover.x}
-            cy={p.y(p.data[p.hover.i].value)}
+            cy={p.y(p.data[p.hover.key].value)}
             size="md"
             weight="cursor"
           />
@@ -252,13 +243,15 @@ export const DrawIn = (props: DrawInProps) => {
   const clock = useDrawClock(box, props.duration ?? 2200);
   // Under reduced motion there is nothing to replay, so no control slot.
   const height = (props.height ?? 380) - (clock.reduced ? 0 : CONTROL_SLOT_H);
-  const [hover, setHover] = useState<Hit | null>(null);
+  const hover = useHover<number>();
   const [first] = data;
   const last = data.at(-1) ?? first;
   const eased = easeTravel(clock.p);
   const tipValue = valueAt(data, eased);
   const caption =
-    hover === null ? props.caption : `to ${fmtDate(data[hover.i].date)}`;
+    hover.at === null
+      ? props.caption
+      : `to ${fmtDate(data[hover.at.key].date)}`;
   const label = `Cumulative line from ${format(first.value)} to ${format(last.value)}${props.caption === undefined ? "" : `, ${props.caption}`}`;
 
   return (
@@ -270,10 +263,12 @@ export const DrawIn = (props: DrawInProps) => {
       )}
       <Plot
         overlay={
-          hover === null ? null : (
-            <Tooltip x={hover.x} y={hover.y}>
-              <b>{fmtDate(data[hover.i].date)}</b> ·{" "}
-              {format(data[hover.i].value)} to date
+          hover.at === null ? null : (
+            <Tooltip x={hover.at.x} y={hover.at.y}>
+              <TipText
+                facts={[`${format(data[hover.at.key].value)} to date`]}
+                lead={fmtDate(data[hover.at.key].date)}
+              />
             </Tooltip>
           )
         }
@@ -307,24 +302,23 @@ export const DrawIn = (props: DrawInProps) => {
                 xs,
                 e.clientX - e.currentTarget.getBoundingClientRect().left
               );
-              setHover({ i, x: xs[i], y: y(data[i].value) - 10 });
+              hover.show(i, xs[i], y(data[i].value) - 10);
             }
           };
           return (
-            <svg
-              width={width}
-              height={height}
-              aria-label={label}
+            <ChartSvg
               className="touch-pan-y"
+              height={height}
+              label={label}
+              leave={hover.clear}
               onPointerMove={handleMove}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              width={width}
             >
-              <title>{label}</title>
               <Counter
                 caption={caption}
-                text={format(hover === null ? tipValue : data[hover.i].value)}
+                text={format(
+                  hover.at === null ? tipValue : data[hover.at.key].value
+                )}
                 x={m.left}
               />
               <Curve
@@ -340,14 +334,14 @@ export const DrawIn = (props: DrawInProps) => {
               <Frame
                 data={data}
                 floor={height - m.bottom}
-                hover={hover}
+                hover={hover.at}
                 left={m.left}
                 narrow={narrow}
                 width={width}
                 x={x}
                 y={y}
               />
-              {clock.p > 0 && hover === null ? (
+              {clock.p > 0 && hover.at === null ? (
                 <Dot
                   className="fill-hero"
                   cx={tipX}
@@ -355,13 +349,8 @@ export const DrawIn = (props: DrawInProps) => {
                   size="md"
                 />
               ) : null}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={height - 6}
-              />
-            </svg>
+              <FootNote height={height} text={props.note} width={width} />
+            </ChartSvg>
           );
         }}
       </Plot>

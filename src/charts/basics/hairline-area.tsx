@@ -4,23 +4,22 @@ import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
 import { fmtInt, monthTickLabels } from "../../lib/format";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { Dot } from "../markers";
 import { MARK_WEIGHT } from "../marks";
 import { PlotNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger } from "../util";
 import { ValueGrid } from "../value-grid";
 import { hairlineAreaDemo } from "./hairline-area.data";
 import type { DailyDatum } from "./hairline-line.data";
-import {
-  VALUE_AXIS_ROOM,
-  dailyFloor,
-  fmtMonthDay,
-  useHoverTip,
-} from "./util-a";
+import { VALUE_AXIS_ROOM, dailyFloor, fmtMonthDay } from "./util-a";
 
 interface HairlineAreaProps {
   data?: DailyDatum[];
@@ -121,16 +120,16 @@ const MonthAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
   return (
     <g>
       {axis.map((i, k) => (
-        <text
-          className="t-axis"
+        <Label
+          anchor={k === 0 ? "start" : "middle"}
           dx={k === 0 ? -6 : 0}
           key={dayKey(data[i])}
-          textAnchor={k === 0 ? "start" : "middle"}
+          voice="axis"
           x={frame.x(i)}
           y={frame.floor + 20}
         >
           {labels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -212,15 +211,14 @@ const HairlineAreaSvg = ({
   };
 
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="touch-pan-y"
       height={height}
-      onPointerLeave={clear}
+      label={label}
+      leave={clear}
       onPointerMove={onMove}
       width={width}
     >
-      <title>{label}</title>
       <defs>
         <Stipple id={stipple} tone="fill-l3" />
       </defs>
@@ -241,13 +239,7 @@ const HairlineAreaSvg = ({
         style={stagger(2, "series")}
       />
       <DayStems data={data} frame={frame} hero={hero} hover={hover} />
-      <line
-        className="hairline"
-        x1={x0}
-        x2={x1}
-        y1={crisp(floor)}
-        y2={crisp(floor)}
-      />
+      <HRule x0={x0} x1={x1} y={floor} />
       <path
         className="draw stroke-l3 stroke-medium cap-round fill-none"
         d={path}
@@ -269,18 +261,18 @@ const HairlineAreaSvg = ({
         size="md"
         style={stagger(40, "fine")}
       />
-      <text
-        className="fade t-value"
-        style={stagger(10)}
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        order={10}
+        voice="value"
         x={frame.x(hero)}
         y={frame.y(values[hero]) - 13}
       >
         {format(values[hero])}
-      </text>
+      </Label>
       <MonthAxis data={data} frame={frame} />
       <PlotNote text={note} width={width - 24} x={width / 2} y={height - 6} />
-    </svg>
+    </ChartSvg>
   );
 };
 
@@ -294,15 +286,18 @@ export const HairlineArea = (props: HairlineAreaProps) => {
   const data = props.data ?? hairlineAreaDemo;
   const format = props.format ?? fmtInt;
   const fmtDate = props.formatDate ?? fmtMonthDay;
-  const { clear, hover, show, tip } = useHoverTip();
+  const { at, clear, key: hover, show } = useHover<number>();
   const stipple = useTextureIds("daily")("stipple");
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{fmtDate(data[tip.i].date)}</b> · {format(data[tip.i].value)}
+        at === null ? null : (
+          <Tooltip x={at.x} y={at.y}>
+            <TipText
+              facts={[format(data[at.key].value)]}
+              lead={fmtDate(data[at.key].date)}
+            />
           </Tooltip>
         )
       }

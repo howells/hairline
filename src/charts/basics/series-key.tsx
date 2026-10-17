@@ -1,4 +1,5 @@
 import { KEY } from "../marks";
+import { Label } from "../text";
 import { KeySwatch } from "../texture";
 import { sansWidth } from "../util";
 
@@ -51,9 +52,9 @@ export const SeriesKey = (props: SeriesKeyProps) => {
             x={starts[i]}
             y={props.y - 10}
           />
-          <text className="t-note" x={starts[i] + SWATCH + TO_NAME} y={props.y}>
+          <Label voice="note" x={starts[i] + SWATCH + TO_NAME} y={props.y}>
             {item.name}
-          </text>
+          </Label>
         </g>
       ))}
     </g>

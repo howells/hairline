@@ -1,10 +1,13 @@
 import { utcFormat } from "d3-time-format";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, DotScreen } from "../texture";
 import {
   HALFTONE_R,
@@ -12,7 +15,7 @@ import {
   paint,
   useTextureIds,
 } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { calendarHeatDemo } from "./calendar-heat.data";
 import type { DayDatum } from "./calendar-heat.data";
 
@@ -235,10 +238,11 @@ const Frame = ({ days, g }: { days: Day[]; g: Grid }) => {
   return (
     <g>
       {heads.map((d, k) => (
-        <text
-          className="fade t-axis"
+        <Label
           key={d.date}
-          style={stagger(d.col + d.band * 4, "fine")}
+          order={d.col + d.band * 4}
+          tier="fine"
+          voice="axis"
           // A band's first month starts at the band's left edge: nothing
           // precedes it there, and its name gets the room the year needs.
           x={lineX(
@@ -248,20 +252,20 @@ const Frame = ({ days, g }: { days: Day[]; g: Grid }) => {
           y={lineY(g, d.band, 0) - 9}
         >
           {months[k]}
-        </text>
+        </Label>
       ))}
       {Array.from({ length: bands }, (_, band) => band).flatMap((band) =>
         ["Mon", "Wed", "Fri", "Sun"].map((name, k) => (
-          <text
-            className="t-axis"
-            dy="0.34em"
+          <Label
+            anchor="end"
             key={`${band}-${name}`}
-            textAnchor="end"
+            middle
+            voice="axis"
             x={g.x0 - (g.narrow ? 8 : 14)}
             y={lineY(g, band, k * 2) + 2 + g.cell / 2}
           >
             {name}
-          </text>
+          </Label>
         ))
       )}
     </g>
@@ -330,7 +334,7 @@ const layout = (
 export const CalendarHeat = (props: CalendarHeatProps) => {
   const data = props.data ?? calendarHeatDemo;
   const unit = props.unit ?? "events";
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const ids = useTextureIds("almanac");
   const max = Math.max(1, ...data.map((d) => d.value));
 
@@ -344,28 +348,31 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
         const index = new Map(
           days.map((d, i) => [keyOf(d.band, d.col, d.dow), i])
         );
-        const hovered = hover === null ? undefined : days[hover];
+        const hovered = hover.key === null ? undefined : days[hover.key];
         return (
           <div className="relative">
-            <svg
-              aria-label={describe(days, unit, peak)}
+            <ChartSvg
               height={g.svgH}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={describe(days, unit, peak)}
+              leave={hover.clear}
               onPointerMove={(e) => {
-                setHover(dayAt(e, g, index));
+                const day = dayAt(e, g, index);
+                if (day === null) {
+                  hover.clear();
+                } else {
+                  hover.show(day);
+                }
               }}
+              title={`Daily ${unit}`}
               width={width}
             >
-              <title>Daily {unit}</title>
               <Screens ids={ids} />
               <Frame days={days} g={g} />
-              <g className={dimClass(hover !== null)}>
+              <DimGroup dim={hover.key !== null}>
                 {days.map((d) => (
                   <Cell d={d} g={g} ids={ids} key={d.date} />
                 ))}
-              </g>
+              </DimGroup>
               {contours(days, g).map((c) => (
                 <path
                   className="fade fill-l2 shape-crisp"
@@ -384,19 +391,17 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
                   y={cellY(g, hovered) + 0.5}
                 />
               )}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={g.svgH - 6}
-              />
-            </svg>
+              <FootNote height={g.svgH} text={props.note} width={width} />
+            </ChartSvg>
             {hovered !== undefined && (
               <Tooltip
                 x={cellX(g, hovered) + g.cell / 2}
                 y={cellY(g, hovered) - 4}
               >
-                <b>{dayLabel(new Date(hovered.t))}</b> · {hovered.value} {unit}
+                <TipText
+                  facts={[`${hovered.value} ${unit}`]}
+                  lead={dayLabel(new Date(hovered.t))}
+                />
               </Tooltip>
             )}
           </div>

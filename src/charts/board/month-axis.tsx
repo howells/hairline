@@ -1,6 +1,6 @@
 // The boards' month axis: the labels under a time plot.
 
-import { TICK } from "../roles";
+import { Label } from "../text";
 import { TICK_CHAR } from "./thin-ticks";
 
 /** Centred, unless half the label would run past an edge of the svg. */
@@ -61,16 +61,16 @@ export const MonthAxis = (props: {
 }) => (
   <g>
     {clearOf(props.ticks, props.width).map((t) => (
-      <text
+      <Label
+        anchor={t.anchor}
+        dy="0.71em"
         key={`${t.x}-${t.label}`}
-        className={TICK}
+        voice="axis"
         x={t.x}
         y={props.y}
-        dy="0.71em"
-        textAnchor={t.anchor}
       >
         {t.label}
-      </text>
+      </Label>
     ))}
   </g>
 );

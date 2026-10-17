@@ -1,17 +1,20 @@
 import { scaleBand } from "d3-scale";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { PlotNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Beads, Rules, Stipple } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { NOTE_LINE, dimClass, hasText, noteLines, stagger, sum } from "../util";
+import { NOTE_LINE, hasText, noteLines, sum } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { SeriesKey } from "./series-key";
 import { stackedRungsDemo, stackedRungsSeries } from "./stacked-rungs.data";
 import type { StackDatum } from "./stacked-rungs.data";
-import { isDim, useHoverTip } from "./util-a";
 import { maxIndex } from "./util-b";
 
 interface StackedRungsProps {
@@ -105,14 +108,13 @@ const Column = ({
   const top = rungY(floor, slotsOf(datum, unit) - 1, pitch);
   const segments = segmentsOf(datum, unit);
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(left + bw / 2, top - 30);
       }}
     >
-      <rect
-        className="fill-transparent"
+      <HitRect
         height={floor - top + 30}
         width={bw + labelRoom + 16}
         x={left - 8}
@@ -139,36 +141,37 @@ const Column = ({
             width={bw}
           />
           {seg.n > 0 ? (
-            <text
-              className="fade t-axis"
+            <Label
               dy="0.35em"
-              style={stagger(index + seg.k)}
+              order={index + seg.k}
+              voice="axis"
               x={left + bw + 7}
               y={Math.round(floor) - (seg.start + seg.n / 2) * pitch}
             >
               {format(seg.value)}
-            </text>
+            </Label>
           ) : null}
         </g>
       ))}
-      <text
-        className="fade t-value"
-        style={stagger(index + 3)}
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        order={index + 3}
+        voice="value"
         x={left + bw / 2}
         y={top - 14}
       >
         {format(sum(datum.parts))}
-      </text>
-      <text
-        className="t-label fill-muted"
-        textAnchor="middle"
+      </Label>
+      <Label
+        anchor="middle"
+        muted
+        voice="label"
         x={left + bw / 2}
         y={floor + 18}
       >
         {datum.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -184,7 +187,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
   const height = props.height ?? 440;
   const format = props.format ?? String;
   const hasNote = hasText(props.note);
-  const { clear, hover, show, tip } = useHoverTip();
+  const hover = useHover<number>();
   const ids = useTextureIds("stack");
   const partName = (k: number) => series.at(k) ?? `#${k + 1}`;
   const breakdown = (d: StackDatum) =>
@@ -196,10 +199,15 @@ export const StackedRungs = (props: StackedRungsProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(sum(data[tip.i].parts))} ·{" "}
-            {breakdown(data[tip.i])}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                format(sum(data[hover.at.key].parts)),
+                breakdown(data[hover.at.key]),
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -228,13 +236,12 @@ export const StackedRungs = (props: StackedRungsProps) => {
         );
         const hero = props.highlight ?? maxIndex(data.map((d) => sum(d.parts)));
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={clear}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Beads id={ids("beads")} tone="fill-l3" />
               {KEY_LOOKS.map((look) => (
@@ -255,19 +262,13 @@ export const StackedRungs = (props: StackedRungsProps) => {
               x={Math.round(x0 + plotW)}
               y={16}
             />
-            <line
-              className="hairline"
-              x1={Math.round(x0)}
-              x2={Math.round(x0 + plotW)}
-              y1={crisp(floor)}
-              y2={crisp(floor)}
-            />
+            <HRule x0={Math.round(x0)} x1={Math.round(x0 + plotW)} y={floor} />
             {data.map((d, i) => (
               <Column
                 beads={ids("beads")}
                 bw={bw}
                 datum={d}
-                dim={isDim(hover, i)}
+                dim={hover.dim(i)}
                 floor={floor}
                 format={format}
                 hero={hero === i}
@@ -276,7 +277,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
                 labelRoom={labelRoom}
                 left={(x(d.label) ?? 0) + band / 2 - (bw + labelRoom) / 2}
                 onEnter={(px, py) => {
-                  show(i, px, py);
+                  hover.show(i, px, py);
                 }}
                 pitch={pitch}
                 unit={unit}
@@ -288,7 +289,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
               x={width / 2}
               y={height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

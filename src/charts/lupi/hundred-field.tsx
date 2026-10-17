@@ -1,12 +1,13 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { DOT, RING_STEP } from "../marks";
 import type { DotSize } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
 import { DotRing } from "../texture";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger } from "../util";
 import { hundredFieldDemo } from "./hundred-field.data";
 import type { ShareDatum } from "./hundred-field.data";
 
@@ -308,7 +309,7 @@ export const HundredField = (props: HundredFieldProps) => {
   const height = props.height ?? 460;
   const unit = props.unit ?? "donors";
   const total = data.reduce((sum, d) => sum + d.value, 0);
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const byValue = [...data.keys()].toSorted(
     (a, b) => (data[b]?.value ?? 0) - (data[a]?.value ?? 0)
   );
@@ -363,38 +364,31 @@ export const HundredField = (props: HundredFieldProps) => {
           cx: Math.round((width - (span.hi - span.lo)) / 2 - span.lo) + 0.5,
           cy: Math.round((svgH - noteH) / 2),
         });
-        const tip = hover === null ? undefined : head.wedges[hover];
+        const tip = hover.key === null ? undefined : head.wedges[hover.key];
         const tipAt = tip === undefined ? undefined : labelAt(head, tip);
         return (
           <div className="relative">
-            <svg
-              aria-label={`${total} ${unit}: ${data.map((d) => `${d.label} ${d.value}`).join(", ")}`}
+            <ChartSvg
               height={svgH}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={`${total} ${unit}: ${data.map((d) => `${d.label} ${d.value}`).join(", ")}`}
+              leave={hover.clear}
+              title="A hundred donors by blood type"
               width={width}
             >
-              <title>A hundred donors by blood type</title>
               <Engraving head={head} />
               {head.wedges.map((w) => (
-                <g
-                  className={dimClass(hover !== null && hover !== w.index)}
+                <DimGroup
+                  dim={hover.dim(w.index)}
                   key={w.group.label}
                   onPointerEnter={() => {
-                    setHover(w.index);
+                    hover.show(w.index);
                   }}
                 >
                   <WedgeMarks head={head} w={w} />
-                </g>
+                </DimGroup>
               ))}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={svgH - 6}
-              />
-            </svg>
+              <FootNote height={svgH} text={props.note} width={width} />
+            </ChartSvg>
             {tip !== undefined && tipAt !== undefined && (
               <Tooltip
                 // Off the head: under a lower label, over an upper one.
@@ -402,7 +396,10 @@ export const HundredField = (props: HundredFieldProps) => {
                 x={tipAt.x}
                 y={tipAt.lower ? tipAt.y + 18 : tipAt.y - 12}
               >
-                <b>{tip.group.label}</b> · {tip.group.value} of {total} {unit}
+                <TipText
+                  facts={[`${tip.group.value} of ${total} ${unit}`]}
+                  lead={tip.group.label}
+                />
               </Tooltip>
             )}
           </div>

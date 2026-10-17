@@ -1,8 +1,10 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { KEY } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch, KeySwatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { dimClass, noteSpace, ranks, stagger } from "../util";
@@ -18,12 +20,6 @@ interface DotWaffleProps {
   note?: string;
   /** Index of the category to draw in the hero colour. */
   highlight?: number;
-}
-
-interface Tip {
-  i: number;
-  x: number;
-  y: number;
 }
 
 interface Dot {
@@ -117,8 +113,9 @@ interface LegendProps {
   data: WaffleDatum[];
   /** How each category is drawn. */
   looks: Look[];
+  /** True while another category is hovered. */
+  dim: (i: number) => boolean;
   format: (v: number) => string;
-  hover: number | null;
   /** Position of entry i. */
   at: (i: number) => { x: number; y: number };
   /** Width of one entry; the value sits flush right inside it. */
@@ -134,20 +131,19 @@ const WaffleLegend = (props: LegendProps) => (
     {props.data.map((d, i) => {
       const { x, y } = props.at(i);
       return (
-        <g
+        <DimGroup
           key={d.label}
-          className={dimClass(props.hover !== null && props.hover !== i)}
+          dim={props.dim(i)}
           onPointerEnter={() => {
             props.onEnter(i, x + props.hitWidth / 2, y - 10);
           }}
         >
           <g className="fade" style={stagger(i + 6, "series")}>
-            <rect
+            <HitRect
               x={x}
               y={y - LEGEND_ROW / 2}
               width={props.hitWidth}
               height={LEGEND_ROW}
-              fill="transparent"
             />
             <KeySwatch
               fill={props.looks[i].fill}
@@ -159,35 +155,35 @@ const WaffleLegend = (props: LegendProps) => (
               x={x}
               y={y - SWATCH / 2}
             />
-            <text className="t-name" x={x + SWATCH + KEY.gap} y={y} dy="0.35em">
+            <Label dy="0.35em" voice="name" x={x + SWATCH + KEY.gap} y={y}>
               {d.label}
-            </text>
-            <text
-              className="t-value"
+            </Label>
+            <Label
+              anchor="end"
+              dy="0.35em"
+              voice="value"
               x={x + props.hitWidth - props.inset}
               y={y}
-              dy="0.35em"
-              textAnchor="end"
             >
               {props.format(d.value)}
-            </text>
+            </Label>
           </g>
-        </g>
+        </DimGroup>
       );
     })}
   </g>
 );
 
 interface CellsProps {
+  dim: (i: number) => boolean;
   dots: Dot[];
-  hover: number | null;
   looks: Look[];
   onEnter: (i: number, x: number, y: number) => void;
   side: number;
 }
 
 /** The 10 × 10 grid; engraved cells sit on half pixels so their outline is crisp. */
-const WaffleCells = ({ dots, hover, looks, onEnter, side }: CellsProps) => (
+const WaffleCells = ({ dim, dots, looks, onEnter, side }: CellsProps) => (
   <g>
     {dots.map((d) => {
       const look = looks[d.owner];
@@ -195,7 +191,7 @@ const WaffleCells = ({ dots, hover, looks, onEnter, side }: CellsProps) => (
       return (
         <rect
           key={d.id}
-          className={`pop ${look.className} ${dimClass(hover !== null && hover !== d.owner)}`}
+          className={`pop ${look.className} ${dimClass(dim(d.owner))}`}
           style={stagger(d.order, "dense")}
           x={Math.round(d.cx - side / 2) + inset}
           y={Math.round(d.cy - side / 2) + inset}
@@ -224,8 +220,8 @@ export const DotWaffle = (props: DotWaffleProps) => {
   const data = props.data ?? dotWaffleDemo;
   const height = props.height ?? 340;
   const format = props.format ?? defaultFormat;
-  const [tip, setTip] = useState<Tip | null>(null);
-  const hover = tip === null ? null : tip.i;
+  const hover = useHover<number>();
+  const enter = hover.show;
   const tex = useTextureIds("waffle");
   const looks = slotsFor(
     data.map((d) => d.value),
@@ -236,16 +232,16 @@ export const DotWaffle = (props: DotWaffleProps) => {
     100
   ).flatMap((c, i) => Array.from({ length: c }, () => i));
   const label = `Share of the pollen in honey, one square for each per cent: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
-  const enter = (i: number, x: number, y: number) => {
-    setTip({ i, x, y });
-  };
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -285,15 +281,12 @@ export const DotWaffle = (props: DotWaffleProps) => {
             : { x: gx + gridW + 28, y: 4 + pitch * 0.5 + i * legendGap };
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={svgH}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <CrossHatch id={tex("cross")} tone="fill-l2" />
               <Hatch id={tex("hatch")} tone="fill-l3" />
@@ -301,8 +294,8 @@ export const DotWaffle = (props: DotWaffleProps) => {
               <Stipple id={tex("dots")} tone="fill-l3" />
             </defs>
             <WaffleCells
+              dim={hover.dim}
               dots={dots}
-              hover={hover}
               looks={looks}
               onEnter={enter}
               side={side}
@@ -310,20 +303,15 @@ export const DotWaffle = (props: DotWaffleProps) => {
             <WaffleLegend
               data={data}
               looks={looks}
+              dim={hover.dim}
               format={format}
-              hover={hover}
               at={at}
               hitWidth={narrow ? (width - 16) / 2 : entryW}
               inset={narrow ? 0 : 8}
               onEnter={enter}
             />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

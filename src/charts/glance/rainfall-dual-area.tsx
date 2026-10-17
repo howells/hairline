@@ -1,15 +1,19 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { dayTickLabels, fmtDay } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { Ring } from "../markers";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule, Stem } from "../rules";
 import { barPath } from "../shapes";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, Rules } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { noteSpace, stagger } from "../util";
@@ -65,16 +69,16 @@ const Rain = ({ f, fmt }: { f: Frame; fmt: (v: number) => string }) => {
   return (
     <g>
       {rainLabels(f.inTicks).map((v) => (
-        <text
+        <Label
+          anchor="end"
+          dy="0.35em"
           key={v}
-          className="t-axis"
+          voice="axis"
           x={f.left - 10}
           y={f.yIn(v)}
-          dy="0.35em"
-          textAnchor="end"
         >
           {fmt(v)}
-        </text>
+        </Label>
       ))}
       {f.data.map((d, i) =>
         d.input > 0 ? (
@@ -94,13 +98,7 @@ const Rain = ({ f, fmt }: { f: Frame; fmt: (v: number) => string }) => {
           />
         ) : null
       )}
-      <line
-        className="hairline"
-        x1={f.left}
-        x2={f.right}
-        y1={crisp(f.top)}
-        y2={crisp(f.top)}
-      />
+      <HRule x0={f.left} x1={f.right} y={f.top} />
     </g>
   );
 };
@@ -139,22 +137,21 @@ const Flow = ({
       />
       {f.yOut.ticks(narrow ? 4 : 6).map((v) => (
         <g key={v}>
-          <line
-            className={v === 0 ? "hairline" : "grid-line"}
-            x1={f.left}
-            x2={f.right}
-            y1={crisp(f.yOut(v))}
-            y2={crisp(f.yOut(v))}
+          <HRule
+            kind={v === 0 ? "hairline" : "grid"}
+            x0={f.left}
+            x1={f.right}
+            y={f.yOut(v)}
           />
-          <text
-            className="t-axis"
+          <Label
+            anchor="end"
+            dy="0.35em"
+            voice="axis"
             x={f.left - 10}
             y={f.yOut(v)}
-            dy="0.35em"
-            textAnchor="end"
           >
             {fmt(v)}
-          </text>
+          </Label>
         </g>
       ))}
       <g clipPath={`url(#${clip})`}>
@@ -168,16 +165,16 @@ const Flow = ({
         />
       </g>
       {ticks.map((t, k) => (
-        <text
+        <Label
+          anchor={k === 0 ? "start" : "middle"}
+          dx={k === 0 ? -f.x.bandwidth() / 2 : 0}
           key={t.d.date.toISOString()}
-          className="t-axis"
+          voice="axis"
           x={f.cx(t.i)}
           y={f.floor + 16}
-          textAnchor={k === 0 ? "start" : "middle"}
-          dx={k === 0 ? -f.x.bandwidth() / 2 : 0}
         >
           {tickLabels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -186,13 +183,11 @@ const Flow = ({
 /** The scrub cursor: a hairline drop from the day's rain to the floor, ringed at the river. */
 const Cursor = (p: { datum: RainfallDatum; f: Frame; i: number }) => (
   <g pointerEvents="none">
-    <line
-      className="stroke-muted shape-crisp"
-      x1={crisp(p.f.cx(p.i))}
-      x2={crisp(p.f.cx(p.i))}
-      y1={Math.round(p.f.yIn(p.datum.input) + 4)}
-      y2={p.f.floor}
-      strokeWidth={1}
+    <Stem
+      className="stroke-muted"
+      x={p.f.cx(p.i)}
+      y0={Math.round(p.f.yIn(p.datum.input) + 4)}
+      y1={p.f.floor}
     />
     <Ring
       className="stroke-ink"
@@ -218,7 +213,7 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
   const inName = props.inputName ?? "rain";
   const outName = props.outputName ?? "flow";
   const tex = useTextureIds("rain");
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const last = data.at(-1);
   const label = `${inName} hanging from the top and ${outName} rising below over ${data.length} days${last === undefined ? "" : `; last: ${fIn(last.input)}, ${fOut(last.output)}`}`;
 
@@ -250,7 +245,7 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
           cx,
           data,
           floor,
-          hover,
+          hover: hover.key,
           inTicks,
           left: m.left,
           right: width - m.right,
@@ -268,23 +263,20 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
         const move = (e: PointerEvent<SVGSVGElement>) => {
           const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
           const i = Math.round((px - cx(0)) / x.step());
-          setHover(Math.max(0, Math.min(data.length - 1, i)));
+          hover.show(Math.max(0, Math.min(data.length - 1, i)));
         };
-        const h = hover === null ? undefined : data[hover];
+        const h = hover.key === null ? undefined : data[hover.key];
 
         return (
           <div className="relative">
-            <svg
+            <ChartSvg
               className="touch-pan-y"
-              width={width}
               height={height}
-              aria-label={label}
+              label={label}
+              leave={hover.clear}
               onPointerMove={move}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              width={width}
             >
-              <title>{label}</title>
               <defs>
                 <Hatch id={tex("hatch")} tone="fill-l4" />
                 <Rules id={tex("rule")} tone="fill-l5" />
@@ -300,20 +292,20 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
               </defs>
               <Rain f={f} fmt={fIn} />
               <Flow f={f} fmt={fOut} clip={tex("sweep")} narrow={width < 460} />
-              {hover !== null && h !== undefined ? (
-                <Cursor datum={h} f={f} i={hover} />
+              {hover.key !== null && h !== undefined ? (
+                <Cursor datum={h} f={f} i={hover.key} />
               ) : null}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={height - 6}
-              />
-            </svg>
-            {hover !== null && h !== undefined ? (
-              <Tooltip x={cx(hover)} y={f.yOut(h.output) - 8}>
-                <b>{fmtDay(h.date)}</b> · {fIn(h.input)} {inName} ·{" "}
-                {fOut(h.output)} {outName}
+              <FootNote height={height} text={props.note} width={width} />
+            </ChartSvg>
+            {hover.key !== null && h !== undefined ? (
+              <Tooltip x={cx(hover.key)} y={f.yOut(h.output) - 8}>
+                <TipText
+                  facts={[
+                    `${fIn(h.input)} ${inName}`,
+                    `${fOut(h.output)} ${outName}`,
+                  ]}
+                  lead={fmtDay(h.date)}
+                />
               </Tooltip>
             ) : null}
           </div>

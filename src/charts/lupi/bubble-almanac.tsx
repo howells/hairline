@@ -1,15 +1,19 @@
 import { format as d3Format } from "d3-format";
 import { scaleSqrt } from "d3-scale";
-import { useState } from "react";
 
 import { yearTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing, DotScreen } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger } from "../util";
 import {
   bubbleAlmanacDemo,
   bubbleAlmanacLabelled,
@@ -164,33 +168,30 @@ const Ledger = (props: { layout: AlmanacLayout }) => {
     <g>
       {years.map((year, k) => (
         <g key={`row-${year}`}>
-          <line
-            className="grid-line"
-            x1={x0}
-            x2={x0 + gridW}
-            y1={crisp(rowY(year))}
-            y2={crisp(rowY(year))}
-          />
-          <text
-            className="t-label fill-muted"
-            dy="0.34em"
-            textAnchor="end"
+          <HRule kind="grid" x0={x0} x1={x0 + gridW} y={rowY(year)} />
+          <Label
+            anchor="end"
+            middle
+            muted
+            voice="label"
             x={x0 - 12}
             y={rowY(year)}
           >
             {yearLabels[k]}
-          </text>
+          </Label>
         </g>
       ))}
       {categories.map((category, k) => (
-        <text
-          className="fade t-label fill-muted"
+        <Label
           key={`col-${category}`}
-          style={stagger(k, "mark")}
+          muted
+          order={k}
+          tier="mark"
           transform={`translate(${colX(category) - colPitch * 0.2},${rowY(years[0]) - rowPitch * 0.5 - 14}) rotate(${headTilt(colPitch)})`}
+          voice="label"
         >
           {category}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -231,8 +232,8 @@ const Blob = ({
   const coreR = layout.core(cell.core);
   const flag = cell.flag === true;
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(cx, cy - drawnR(layout, cell) - 4);
       }}
@@ -268,18 +269,20 @@ const Blob = ({
         ) : null}
       </g>
       {labelled && labelAbove ? (
-        <text
-          className={`fade t-halo ${hero ? "t-value" : "t-axis"}`}
-          textAnchor="middle"
+        <Label
+          anchor="middle"
+          className="fade"
+          halo
+          voice={hero ? "value" : "axis"}
           x={cx}
           // Above the circle, clear of the hero's 2px outline; with no room
           // above, no figure is drawn (it hid in the halftone).
           y={cy - drawnR(layout, cell) - lift(hero)}
         >
           {format(cell.value)}
-        </text>
+        </Label>
       ) : null}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -295,21 +298,25 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
   const format = props.format ?? twoDecimals;
   const noun = props.noun ?? "Mt of green coffee";
   const labelled = new Set(props.labelled ?? bubbleAlmanacLabelled);
-  const [tip, setTip] = useState<{ id: string; x: number; y: number } | null>(
-    null
-  );
+  const hover = useHover<string>();
   const screen = useTextureIds("almanac")("screen");
   const byId = new Map(data.map((d) => [cellId(d), d]));
-  const tipCell = tip === null ? undefined : byId.get(tip.id);
+  const tipCell = hover.key === null ? undefined : byId.get(hover.key);
 
   return (
     <Plot
       overlay={
-        tip === null || tipCell === undefined ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{tipCell.category}</b> · {tipCell.year} · {format(tipCell.value)}{" "}
-            {noun} · yield {format(tipCell.core)} t/ha
-            {tipCell.flag === true ? " · down on the year before" : ""}
+        hover.at === null || tipCell === undefined ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                String(tipCell.year),
+                `${format(tipCell.value)} ${noun}`,
+                `yield ${format(tipCell.core)} t/ha`,
+                ...(tipCell.flag === true ? ["down on the year before"] : []),
+              ]}
+              lead={tipCell.category}
+            />
           </Tooltip>
         )
       }
@@ -321,15 +328,13 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
         const order = data.toSorted((a, b) => b.value - a.value);
         const heroId = order.length > 0 ? cellId(order[0]) : "";
         return (
-          <svg
-            aria-label={`${noun} by country and year, ${layout.years[0]} to ${layout.years.at(-1) ?? ""}`}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={`${noun} by country and year, ${layout.years[0]} to ${layout.years.at(-1) ?? ""}`}
+            leave={hover.clear}
+            title={`Circles of ${noun} by country and year`}
             width={width}
           >
-            <title>Circles of {noun} by country and year</title>
             <defs>
               <DotScreen id={screen} r={HALFTONE_R[1]} tone="fill-l3" />
             </defs>
@@ -337,7 +342,7 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
             {order.map((d, i) => (
               <Blob
                 cell={d}
-                dim={tip !== null && tip.id !== cellId(d)}
+                dim={hover.dim(cellId(d))}
                 format={format}
                 hero={cellId(d) === heroId}
                 i={i}
@@ -352,17 +357,12 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
                 layout={layout}
                 screen={screen}
                 onEnter={(x, y) => {
-                  setTip({ id: cellId(d), x, y });
+                  hover.show(cellId(d), x, y);
                 }}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

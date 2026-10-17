@@ -1,15 +1,19 @@
 import { quantile } from "d3-array";
 import { scaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { Dot } from "../markers";
 import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
+import { VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger, wrapWords } from "../util";
+import { noteSpace, sansWidth, stagger, wrapWords } from "../util";
 import { parallelDemo } from "./parallel-coordinates.data";
 import type {
   ParallelAxis,
@@ -97,23 +101,18 @@ const AxisRule = ({
   <g className="fade" style={stagger(index, "mark")}>
     {/* Every title ends on one baseline; a long one wraps upward. */}
     {lines.map((line, k) => (
-      <text
-        className="t-label fill-muted"
+      <Label
+        anchor="middle"
         key={line}
-        textAnchor="middle"
+        muted
+        voice="label"
         x={x}
         y={top - 26 - (lines.length - 1 - k) * TITLE_LINE}
       >
         {line}
-      </text>
+      </Label>
     ))}
-    <line
-      className="rule"
-      x1={crisp(x)}
-      x2={crisp(x)}
-      y1={Math.round(top)}
-      y2={Math.round(bottom)}
-    />
+    <VRule kind="rule" x={x} y0={Math.round(top)} y1={Math.round(bottom)} />
     {rug.map((ty) => (
       <line
         className="stroke-l2 shape-crisp"
@@ -125,12 +124,12 @@ const AxisRule = ({
         y2={crisp(ty)}
       />
     ))}
-    <text className="t-axis fill-muted" dy="0.34em" x={x + 9} y={top}>
+    <Label middle muted voice="axis" x={x + 9} y={top}>
       {withUnit(axis, axis.domain[1], format)}
-    </text>
-    <text className="t-axis fill-muted" dy="0.34em" x={x + 9} y={bottom}>
+    </Label>
+    <Label middle muted voice="axis" x={x + 9} y={bottom}>
       {withUnit(axis, axis.domain[0], format)}
-    </text>
+    </Label>
   </g>
 );
 
@@ -149,7 +148,7 @@ const RowLine = ({ row, index, pts, hero, active, onEnter }: LineProps) => {
   const strong = hero || active === true;
   const last = pts.at(-1);
   return (
-    <g className={dimClass(active === false)} onPointerEnter={onEnter}>
+    <DimGroup dim={active === false} onPointerEnter={onEnter}>
       <path className="fill-none stroke-transparent" d={d} strokeWidth={10} />
       <path
         className={`draw cap-round fill-none ${strong ? "stroke-hero" : "stroke-l4"}`}
@@ -171,17 +170,11 @@ const RowLine = ({ row, index, pts, hero, active, onEnter }: LineProps) => {
           ))
         : null}
       {hero && last !== undefined && (
-        <text
-          className="fade t-label"
-          dy="0.34em"
-          style={stagger(16)}
-          x={last.x + 12}
-          y={last.y}
-        >
+        <Label middle order={16} voice="label" x={last.x + 12} y={last.y}>
           {row.name}
-        </text>
+        </Label>
       )}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -308,7 +301,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
   const data = props.data ?? parallelDemo;
   const height = props.height ?? 470;
   const format = props.format ?? ((v: number) => `${v}`);
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const ids = useTextureIds("ranges");
   // Hero last, so it sits on top.
   const order = data.rows
@@ -347,19 +340,17 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
             y: ys[k](r.values[a.key] ?? a.domain[0]),
           }));
         const stat = (p: number) => statPoints(data, ys, ax, p);
-        const tipRow = hover === null ? undefined : data.rows[hover];
+        const tipRow = hover.key === null ? undefined : data.rows[hover.key];
         const tipPts = tipRow === undefined ? [] : pointsOf(tipRow);
         return (
           <div className="relative">
-            <svg
-              aria-label={`${data.rows.length} cheeses across ${data.axes.map((a) => a.label).join(", ")}`}
+            <ChartSvg
               height={height}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={`${data.rows.length} cheeses across ${data.axes.map((a) => a.label).join(", ")}`}
+              leave={hover.clear}
+              title="Twelve cheeses"
               width={width}
             >
-              <title>Twelve cheeses</title>
               <Ground
                 ids={ids}
                 middle={bandPath(stat(0.75), stat(0.25))}
@@ -382,12 +373,12 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
               ))}
               {order.map(({ r, i }) => (
                 <RowLine
-                  active={hover === null ? null : hover === i}
+                  active={hover.key === null ? null : hover.key === i}
                   hero={props.highlight === r.name}
                   index={i}
                   key={r.name}
                   onEnter={() => {
-                    setHover(i);
+                    hover.show(i);
                   }}
                   pts={pointsOf(r)}
                   row={r}
@@ -399,19 +390,19 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
                 x={(left + right) / 2}
                 y={height - 6}
               />
-            </svg>
+            </ChartSvg>
             {tipRow !== undefined && tipPts.length > 0 && (
               <Tooltip
                 x={tipPts[Math.floor(tipPts.length / 2)].x}
                 y={Math.min(...tipPts.map((p) => p.y)) - 6}
               >
-                <b>{tipRow.name}</b> ·{" "}
-                {data.axes
-                  .map(
+                <TipText
+                  facts={data.axes.map(
                     (a) =>
                       `${a.label} ${withUnit(a, tipRow.values[a.key] ?? 0, format)}`
-                  )
-                  .join(" · ")}
+                  )}
+                  lead={tipRow.name}
+                />
               </Tooltip>
             )}
           </div>

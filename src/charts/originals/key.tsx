@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { KEY } from "../marks";
+import { Label } from "../text";
 import { sansWidth } from "../util";
 
 /* A right-aligned key of drawn marks, shared by the originals. */
@@ -47,9 +48,9 @@ export const Key = (props: KeyProps) => {
           transform={`translate(${Math.round(at)} ${props.y})`}
         >
           {item.mark}
-          <text className="t-note" dy="0.34em" x={MARK_W + MARK_GAP}>
+          <Label middle voice="note" x={MARK_W + MARK_GAP}>
             {item.label}
-          </text>
+          </Label>
         </g>
       ))}
     </g>

@@ -8,8 +8,12 @@ import type { PointerEvent } from "react";
 import { dayTickLabels, fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { Dot } from "../markers";
-import { STEM } from "../marks";
+import { HRule, Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, weeklyMean } from "../util";
 import { ValueGrid } from "../value-grid";
@@ -44,17 +48,10 @@ const tickLabels = (dates: Date[]) =>
     ? monthTickLabels(dates)
     : dayTickLabels(dates);
 
-interface Hover {
-  i: number;
-  x: number;
-  y: number;
-}
-
 interface DetailProps {
   data: DayValue[];
-  hover: number | null;
+  hover: ReturnType<typeof useHover<number>>;
   mean: number[];
-  setHover: (h: Hover | null) => void;
   span: Span;
   width: number;
 }
@@ -78,15 +75,15 @@ const DateTicks = (props: {
   return (
     <g>
       {ticks.map((d, k) => (
-        <text
-          className="t-axis"
+        <Label
+          anchor="middle"
           key={d.toISOString()}
-          textAnchor="middle"
+          voice="axis"
           x={t(d)}
           y={props.floor + 22}
         >
           {labels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -115,16 +112,14 @@ const Stems = (props: StemsProps) => (
     {props.data.slice(props.span.a, props.span.b + 1).map((d, k) => {
       const i = props.span.a + k;
       const peak = i === props.peak;
-      const at = peak ? Math.round(props.x(i)) : crisp(props.x(i));
       return (
-        <line
-          className={`transition-tone shape-crisp ${stemClass(peak, props.hover === i)}`}
+        <Stem
+          className={`transition-tone ${stemClass(peak, props.hover === i)}`}
+          hero={peak}
           key={d.date.toISOString()}
-          strokeWidth={peak ? STEM.hero : STEM.rest}
-          x1={at}
-          x2={at}
-          y1={props.y(props.mean[i])}
-          y2={props.y(d.value)}
+          x={props.x(i)}
+          y0={props.y(props.mean[i])}
+          y1={props.y(d.value)}
         />
       );
     })}
@@ -154,21 +149,18 @@ const Detail = (props: DetailProps) => {
     const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
     const i = clamp(Math.round(x.invert(px)), a, b);
     const top = Math.min(y(props.data[i].value), y(props.mean[i]));
-    props.setHover({ i, x: x(i), y: top - 6 });
+    props.hover.show(i, x(i), top - 6);
   };
   const label = `Daily maximum temperature, ${fmtDay(props.data[a].date)} to ${fmtDay(props.data[b].date)}, with the 7-day average: hottest ${fmtDegC(props.data[peak].value)} on ${fmtDay(props.data[peak].date)}`;
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="touch-pan-y"
       height={DETAIL_H}
-      onPointerLeave={() => {
-        props.setHover(null);
-      }}
+      label={label}
+      leave={props.hover.clear}
       onPointerMove={onMove}
       width={props.width}
     >
-      <title>{label}</title>
       <defs>
         <clipPath id={tex("plot")}>
           <rect height={DETAIL_H} width={x1 - X0 + 8} x={X0 - 4} y={0} />
@@ -183,13 +175,7 @@ const Detail = (props: DetailProps) => {
         x1={props.width}
         y={y}
       />
-      <line
-        className="hairline"
-        x1={X0}
-        x2={props.width}
-        y1={crisp(floor)}
-        y2={crisp(floor)}
-      />
+      <HRule x0={X0} x1={props.width} y={floor} />
       <DateTicks
         data={props.data}
         floor={floor}
@@ -199,7 +185,7 @@ const Detail = (props: DetailProps) => {
       />
       <Stems
         data={props.data}
-        hover={props.hover}
+        hover={props.hover.key}
         mean={props.mean}
         peak={peak}
         span={props.span}
@@ -212,11 +198,11 @@ const Detail = (props: DetailProps) => {
         d={path}
         pathLength={1}
       />
-      {props.hover === null || props.hover === peak ? null : (
+      {props.hover.key === null || props.hover.key === peak ? null : (
         <Dot
           className="fill-l2"
-          cx={crisp(x(props.hover))}
-          cy={y(props.data[props.hover].value)}
+          cx={crisp(x(props.hover.key))}
+          cy={y(props.data[props.hover.key].value)}
           size="sm"
         />
       )}
@@ -226,15 +212,17 @@ const Detail = (props: DetailProps) => {
         cy={y(props.data[peak].value)}
         size="md"
       />
-      <text
-        className="fade t-value t-halo"
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        className="fade"
+        halo
+        voice="value"
         x={clamp(x(peak), X0 + 16, x1 - 16)}
         y={y(props.data[peak].value) - 10}
       >
         {fmtDegC(props.data[peak].value)}
-      </text>
-    </svg>
+      </Label>
+    </ChartSvg>
   );
 };
 
@@ -259,14 +247,19 @@ export const BrushedOverview = (props: { data?: DayValue[] }) => {
     a: clamp(hottest - OPEN_HALF, 0, last),
     b: clamp(hottest + OPEN_HALF, 0, last),
   });
-  const [hover, setHover] = useState<Hover | null>(null);
+  const hover = useHover<number>();
   return (
     <Plot
       overlay={
-        hover === null ? null : (
-          <Tooltip x={hover.x} y={hover.y}>
-            <b>{fmtDay(data[hover.i].date)}</b> · {fmtDegC(data[hover.i].value)}{" "}
-            · {fmtSigned(data[hover.i].value - mean[hover.i])} vs 7-day average
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                fmtDegC(data[hover.at.key].value),
+                `${fmtSigned(data[hover.at.key].value - mean[hover.at.key])} vs 7-day average`,
+              ]}
+              lead={fmtDay(data[hover.at.key].date)}
+            />
           </Tooltip>
         )
       }
@@ -275,9 +268,8 @@ export const BrushedOverview = (props: { data?: DayValue[] }) => {
         <div className="flex flex-col gap-4">
           <Detail
             data={data}
-            hover={hover?.i ?? null}
+            hover={hover}
             mean={mean}
-            setHover={setHover}
             span={span}
             width={width}
           />

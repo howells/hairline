@@ -1,12 +1,15 @@
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import type { SankeyLink, SankeyNode } from "d3-sankey";
-import { useState } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { Chart } from "../core";
-import { LABEL, TICK, VALUE } from "../roles";
+import { useHover } from "../hooks";
+import { LABEL, VALUE } from "../roles";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
+import { stagger } from "../util";
 import { nameWidth } from "./room";
 
 /**
@@ -409,7 +412,7 @@ const FunnelNodes = (props: {
       >
         <rect
           className="grow-y"
-          style={{ "--i": i * 3 }}
+          style={stagger(i * 3)}
           x={x0}
           y={y0}
           width={x1 - x0}
@@ -459,7 +462,7 @@ export const Sankey = (props: {
   height: number;
   label: string;
 }) => {
-  const [hover, setHover] = useState<string | null>(null);
+  const hover = useHover<string>();
   const tex = useTextureIds("sk");
 
   return (
@@ -473,44 +476,45 @@ export const Sankey = (props: {
         const stageX = stageXs(props.data, graph.nodes);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={props.height}
-            aria-label={props.label}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            label={props.label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{props.label}</title>
             <defs>
               {LINK_KEYS.map((key) => (
                 <Hatch key={key} id={tex(key)} tone={LINK_INK[key].tone} />
               ))}
             </defs>
             {props.data.stages.map((s, i) => (
-              <text
+              <Label
                 key={s}
-                className={TICK}
+                voice="axis"
                 x={stageX[i]}
                 y={HEADING_Y[crowded ? i % 2 : 0]}
               >
                 {s}
-              </text>
+              </Label>
             ))}
             <FunnelLinks
               tex={tex}
               links={graph.links}
               nodes={graph.nodes}
-              hover={hover}
-              onHover={setHover}
+              hover={hover.key}
+              onHover={(key) => {
+                hover.show(key);
+              }}
             />
             <FunnelNodes
               nodes={graph.nodes}
               placements={placements}
               lastStage={props.data.stages.length - 1}
-              onHover={setHover}
+              onHover={(id) => {
+                hover.show(id);
+              }}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

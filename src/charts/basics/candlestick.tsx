@@ -1,6 +1,5 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import {
   dayTickLabels,
@@ -8,19 +7,22 @@ import {
   fmtMoney,
   fmtPrice as fmtPrice2,
 } from "../../lib/format";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { MARK_WEIGHT, TICK } from "../marks";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect } from "../hover";
+import { MARK_WEIGHT } from "../marks";
+import { FootNote } from "../plot-note";
+import { HRule, Stem, Tick } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, stagger } from "../util";
+import { stagger } from "../util";
 import { ValueGrid } from "../value-grid";
 import { candlestickDemo } from "./candlestick.data";
 import type { CandleDatum } from "./candlestick.data";
 import { VALUE_AXIS_ROOM } from "./util-a";
-import { inkWidth, isActive } from "./util-b";
-import type { Tip } from "./util-b";
+import { inkWidth } from "./util-b";
 
 interface CandlestickProps {
   data?: CandleDatum[];
@@ -126,30 +128,18 @@ const DayAxis = (props: { data: CandleDatum[]; layout: Layout }) => {
   const labels = dayTickLabels(shown.map((d) => d.date));
   return (
     <g>
-      <line
-        className="hairline"
-        x1={layout.left}
-        x2={layout.right}
-        y1={crisp(layout.axisY)}
-        y2={crisp(layout.axisY)}
-      />
+      <HRule x0={layout.left} x1={layout.right} y={layout.axisY} />
       {shown.map((d, k) => (
         <g key={keyOf(d)}>
-          <line
-            className="hairline"
-            x1={crisp(centre(layout, d))}
-            x2={crisp(centre(layout, d))}
-            y1={layout.axisY + 1}
-            y2={layout.axisY + 1 + TICK.md}
-          />
-          <text
-            className="t-axis"
-            textAnchor="middle"
+          <Tick x={centre(layout, d)} y={layout.axisY + 1} />
+          <Label
+            anchor="middle"
+            voice="axis"
             x={centre(layout, d)}
             y={layout.axisY + 20}
           >
             {labels[k]}
-          </text>
+          </Label>
         </g>
       ))}
     </g>
@@ -160,11 +150,11 @@ interface CandleProps {
   datum: CandleDatum;
   /** Pattern id of the hatch inside falling bodies. */
   hatch: string;
+  dim: boolean;
   hero: boolean;
-  hover: string | null;
   index: number;
   layout: Layout;
-  onHover: (tip: Tip<CandleDatum>) => void;
+  onHover: (x: number, y: number) => void;
 }
 
 /** Body outline: hairline, or the 2px emphasis width on the hero. */
@@ -188,27 +178,24 @@ const Candle = (props: CandleProps) => {
   const solid = props.hero ? "fill-hero" : "stroke-l5";
   const hollow = props.hero ? "fill-paper stroke-hero" : "fill-paper stroke-l3";
   return (
-    <g
-      className={dimClass(isActive(props.hover, keyOf(datum)) === false)}
+    <DimGroup
+      dim={props.dim}
       onPointerEnter={() => {
-        props.onHover({ item: datum, x: cx, y: y(datum.high) - 8 });
+        props.onHover(cx, y(datum.high) - 8);
       }}
     >
-      <rect
-        className="fill-transparent"
+      <HitRect
         height={y(datum.low) - y(datum.high) + 12}
         width={bw + 2}
         x={cx - bw / 2 - 1}
         y={y(datum.high) - 6}
       />
-      <line
-        className={`fade shape-crisp ${props.hero ? "stroke-hero" : "stroke-l3"}`}
-        strokeWidth={1}
+      <Stem
+        className={`fade ${props.hero ? "stroke-hero" : "stroke-l3"}`}
         style={stagger(props.index, "mark")}
-        x1={crisp(cx)}
-        x2={crisp(cx)}
-        y1={Math.round(y(datum.high))}
-        y2={Math.round(y(datum.low))}
+        x={cx}
+        y0={Math.round(y(datum.high))}
+        y1={Math.round(y(datum.low))}
       />
       <rect
         className={`grow-y ${up ? hollow : solid}`}
@@ -221,7 +208,7 @@ const Candle = (props: CandleProps) => {
         x={x0 + s / 2}
         y={y0 + s / 2}
       />
-    </g>
+    </DimGroup>
   );
 };
 
@@ -236,7 +223,7 @@ export const Candlestick = (props: CandlestickProps) => {
   const height = props.height ?? 420;
   const format = props.format ?? fmtMoney;
   const fmtPrice = props.formatPrice ?? fmtPrice2;
-  const [tip, setTip] = useState<Tip<CandleDatum> | null>(null);
+  const hover = useHover<number>();
   const ids = useTextureIds("candle");
   const lo = Math.min(...data.map((d) => d.low));
   const hi = Math.max(...data.map((d) => d.high));
@@ -251,11 +238,13 @@ export const Candlestick = (props: CandlestickProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{fmtDay(tip.item.date)}</b> · O {fmtPrice(tip.item.open)} · H{" "}
-            {fmtPrice(tip.item.high)} · L {fmtPrice(tip.item.low)} · C{" "}
-            {fmtPrice(tip.item.close)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <b>{fmtDay(data[hover.at.key].date)}</b> · O{" "}
+            {fmtPrice(data[hover.at.key].open)} · H{" "}
+            {fmtPrice(data[hover.at.key].high)} · L{" "}
+            {fmtPrice(data[hover.at.key].low)} · C{" "}
+            {fmtPrice(data[hover.at.key].close)}
           </Tooltip>
         )
       }
@@ -272,15 +261,12 @@ export const Candlestick = (props: CandlestickProps) => {
           )
         );
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={ids("hatch")} tone="fill-l3" />
             </defs>
@@ -300,42 +286,40 @@ export const Candlestick = (props: CandlestickProps) => {
                 hatch={ids("hatch")}
                 datum={d}
                 hero={i === data.length - 1}
-                hover={tip === null ? null : keyOf(tip.item)}
+                dim={hover.dim(i)}
                 index={i}
                 key={keyOf(d)}
                 layout={layout}
-                onHover={setTip}
+                onHover={(x, y) => {
+                  hover.show(i, x, y);
+                }}
               />
             ))}
             {top === undefined ? null : (
-              <text
-                className="fade t-axis"
-                style={stagger(10)}
-                textAnchor="middle"
+              <Label
+                anchor="middle"
+                order={10}
+                voice="axis"
                 x={centre(layout, top)}
                 y={layout.y(hi) - 10}
               >
                 {fmtPrice(hi)}
-              </text>
+              </Label>
             )}
             {bottom === undefined ? null : (
-              <text
-                className="fade t-axis t-halo"
-                style={stagger(10)}
-                textAnchor="middle"
+              <Label
+                anchor="middle"
+                halo
+                order={10}
+                voice="axis"
                 x={centre(layout, bottom)}
                 y={layout.y(lo) + 18}
               >
                 {fmtPrice(lo)}
-              </text>
+              </Label>
             )}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

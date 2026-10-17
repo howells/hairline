@@ -1,10 +1,13 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { MARK_WEIGHT } from "../marks";
+import { Stem, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotScreen, KeySwatch } from "../texture";
 import {
   HALFTONE_R,
@@ -12,7 +15,7 @@ import {
   TEXTURE_PITCH,
   useTextureIds,
 } from "../texture-ids";
-import { dimClass, sansWidth, stagger } from "../util";
+import { sansWidth, stagger } from "../util";
 import { fmtPercent } from "./format";
 import { Key } from "./key";
 import { LEVELS, MEDIAN, responseTimes } from "./response-time.data";
@@ -83,7 +86,6 @@ const ChannelRow = ({
 }: RowProps) => {
   const y = frame.rowY(k);
   const median = datum.q[MEDIAN];
-  const mx = Math.round(frame.x(median));
   const deciles = datum.q.slice(1, -1).filter((_, j) => j + 1 !== MEDIAN);
   // The band's outer top-left pixel, and where its screen stops: on a whole
   // tile, a pixel or more clear of the right outline, so no dot is cut.
@@ -93,22 +95,11 @@ const ChannelRow = ({
   const screenEnd =
     Math.floor((bandW - 3) / TEXTURE_PITCH.screen) * TEXTURE_PITCH.screen;
   return (
-    <g className={dimClass(dim)} onPointerEnter={onEnter}>
-      <rect
-        className="fill-transparent"
-        height={ROW}
-        width={width}
-        x={0}
-        y={y - ROW / 2}
-      />
-      <text
-        className={`t-label ${hero ? "" : "fill-muted"}`}
-        dy="0.34em"
-        x={0}
-        y={y}
-      >
+    <DimGroup dim={dim} onPointerEnter={onEnter}>
+      <HitRect height={ROW} width={width} x={0} y={y - ROW / 2} />
+      <Label middle muted={!hero} voice="label" x={0} y={y}>
         {datum.channel}
-      </text>
+      </Label>
       <g className="grow-x" style={stagger(k, "series")}>
         {/* The screen is pinned to the band's inside edge, not the svg. */}
         <g transform={`translate(${bx + 1} ${by + 1})`}>
@@ -140,48 +131,45 @@ const ChannelRow = ({
         </g>
       </g>
       {deciles.map((v, j) => (
-        <line
-          className="pop stroke-l2 shape-crisp"
+        <Stem
+          className="pop stroke-l2"
           key={`${datum.channel}-${v}`}
-          strokeWidth={1}
           style={stagger(k * 10 + j, "fine")}
-          x1={crisp(frame.x(v))}
-          x2={crisp(frame.x(v))}
-          y1={Math.round(y) - DECILE}
-          y2={Math.round(y) + DECILE + 1}
+          x={frame.x(v)}
+          y0={Math.round(y) - DECILE}
+          y1={Math.round(y) + DECILE + 1}
         />
       ))}
-      <line
-        className={`pop shape-crisp ${hero ? "stroke-ink" : "stroke-l1"}`}
-        strokeWidth={MARK_WEIGHT}
+      <Stem
+        className={`pop ${hero ? "stroke-ink" : "stroke-l1"}`}
+        hero
         style={stagger(k * 10 + 9, "fine")}
-        x1={mx}
-        x2={mx}
-        y1={Math.round(y) - MEDIAN_H}
-        y2={Math.round(y) + MEDIAN_H + 1}
+        x={frame.x(median)}
+        y0={Math.round(y) - MEDIAN_H}
+        y1={Math.round(y) + MEDIAN_H + 1}
       />
-      <text
-        className={`fade t-value ${hero ? "" : "fill-muted"}`}
-        dy="0.34em"
-        style={stagger(k + 4)}
-        textAnchor="end"
+      <Label
+        anchor="end"
+        middle
+        muted={!hero}
+        order={k + 4}
+        voice="value"
         x={width}
         y={y}
       >
         {fmtPercent(median)}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
 const tickMark = (half: number, tone: string, weight: number) => (
-  <line
-    className={`shape-crisp ${tone}`}
-    strokeWidth={weight}
-    x1={weight === 1 ? 6.5 : 6}
-    x2={weight === 1 ? 6.5 : 6}
-    y1={-half}
-    y2={half}
+  <Stem
+    className={tone}
+    hero={weight === MARK_WEIGHT}
+    x={6}
+    y0={-half}
+    y1={half}
   />
 );
 
@@ -223,7 +211,7 @@ interface ResponseTimeProps {
  */
 export const ResponseTime = (props: ResponseTimeProps) => {
   const data = props.data ?? responseTimes;
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const tex = useTextureIds("response-time");
   const medians = data.map((d) => d.q[MEDIAN]);
   const hero = medians.indexOf(Math.max(...medians));
@@ -248,62 +236,58 @@ export const ResponseTime = (props: ResponseTimeProps) => {
         };
         const ticks = width < 480 ? TICKS_NARROW : TICKS_WIDE;
         const max = Math.max(...data.flatMap((d) => densities(d.q, frame.x)));
-        const tip = hover === null ? null : data[hover];
+        const tip = hover.key === null ? null : data[hover.key];
         return (
           <>
-            <svg
-              aria-label={label}
+            <ChartSvg
               height={height}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={label}
+              leave={hover.clear}
               width={width}
             >
-              <title>{label}</title>
               <Screens tex={tex} />
               <Key items={keyItems(tex)} right={width} y={8} />
               {ticks.map((t) => (
                 <g key={t}>
-                  <line
-                    className="grid-line"
-                    x1={crisp(frame.x(t))}
-                    x2={crisp(frame.x(t))}
-                    y1={TOP}
-                    y2={floor}
-                  />
-                  <text
-                    className="t-axis"
-                    textAnchor="middle"
+                  <VRule kind="grid" x={frame.x(t)} y0={TOP} y1={floor} />
+                  <Label
+                    anchor="middle"
+                    voice="axis"
                     x={frame.x(t)}
                     y={floor + 18}
                   >
                     {fmtPercent(t)}
-                  </text>
+                  </Label>
                 </g>
               ))}
               {data.map((d, k) => (
                 <ChannelRow
                   datum={d}
                   dense={{ max, tex }}
-                  dim={hover !== null && hover !== k}
+                  dim={hover.dim(k)}
                   frame={frame}
                   hero={k === hero}
                   k={k}
                   key={d.channel}
                   onEnter={() => {
-                    setHover(k);
+                    hover.show(k);
                   }}
                   width={width}
                 />
               ))}
-            </svg>
-            {tip === null || hover === null ? null : (
+            </ChartSvg>
+            {tip === null || hover.key === null ? null : (
               <Tooltip
                 x={frame.x(tip.q[MEDIAN])}
-                y={frame.rowY(hover) - MEDIAN_H - 2}
+                y={frame.rowY(hover.key) - MEDIAN_H - 2}
               >
-                <b>{tip.channel}</b> · median {fmtPercent(tip.q[MEDIAN])} · one
-                in ten above {fmtPercent(tip.q[9])}
+                <TipText
+                  facts={[
+                    `median ${fmtPercent(tip.q[MEDIAN])}`,
+                    `one in ten above ${fmtPercent(tip.q[9])}`,
+                  ]}
+                  lead={tip.channel}
+                />
               </Tooltip>
             )}
           </>

@@ -1,12 +1,15 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import { Chart } from "../core";
+import { useHover } from "../hooks";
+import { HitRect } from "../hover";
 import { Dot } from "../markers";
-import { LABEL, TICK, VALUE } from "../roles";
+import { LABEL } from "../roles";
 import { VGrid } from "../rules";
-import { sansWidth } from "../util";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { sansWidth, stagger } from "../util";
 import { Key } from "./key";
 import { nameWidth } from "./room";
 import { labelGap, thinTicks } from "./thin-ticks";
@@ -78,13 +81,7 @@ const DumbbellRow = (props: {
       }}
       className={`transition-opacity ${props.dim ? "opacity-25" : "opacity-100"}`}
     >
-      <rect
-        x={0}
-        y={y(r.name)}
-        width={props.width}
-        height={bh}
-        fill="transparent"
-      />
+      <HitRect height={bh} width={props.width} x={0} y={y(r.name)} />
       <text
         className={LABEL}
         x={props.labelX}
@@ -95,7 +92,7 @@ const DumbbellRow = (props: {
       >
         {r.name}
       </text>
-      <g className="fade" style={{ "--i": i }}>
+      <g className="fade" style={stagger(i)}>
         <line
           x1={Math.round(x(r.before))}
           x2={Math.round(x(r.after))}
@@ -111,14 +108,14 @@ const DumbbellRow = (props: {
           size="sm"
         />
         <Dot className={ink} cx={Math.round(x(r.after))} cy={cy} size="md" />
-        <text
+        <Label
+          middle
+          voice="value"
           x={x(Math.max(r.before, r.after)) + VALUE_GAP}
           y={cy}
-          dy="0.34em"
-          className={VALUE}
         >
           {props.delta(r.after - r.before)}
-        </text>
+        </Label>
       </g>
     </g>
   );
@@ -143,7 +140,7 @@ export const Dumbbell = (props: {
   ends: [string, string];
   label: string;
 }) => {
-  const [hover, setHover] = useState<string | null>(null);
+  const hover = useHover<string>();
   const worst = worstRow(props.rows);
 
   return (
@@ -181,31 +178,28 @@ export const Dumbbell = (props: {
           .range([m.top, h - m.bottom]);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            label={props.label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{props.label}</title>
             <VGrid xs={props.ticks.map(x)} y0={m.top} y1={h - m.bottom} />
             {thinTicks(
               props.ticks,
               x,
               labelGap(props.ticks.map(props.tickFormat))
             ).map((t) => (
-              <text
+              <Label
+                anchor="middle"
+                dy="0.71em"
                 key={t}
-                className={TICK}
+                voice="axis"
                 x={x(t)}
                 y={h - m.bottom + 14}
-                dy="0.71em"
-                textAnchor="middle"
               >
                 {props.tickFormat(t)}
-              </text>
+              </Label>
             ))}
             {props.rows.map((r, i) => (
               <DumbbellRow
@@ -217,12 +211,14 @@ export const Dumbbell = (props: {
                 y={y}
                 width={width}
                 labelX={m.left - NAME_GAP}
-                dim={hover !== null && hover !== r.name}
+                dim={hover.dim(r.name)}
                 delta={props.deltaFormat}
-                onHover={setHover}
+                onHover={(name) => {
+                  hover.show(name);
+                }}
               />
             ))}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

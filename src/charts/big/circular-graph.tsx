@@ -2,8 +2,11 @@ import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { TipText } from "../hover";
 import { RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing } from "../texture";
 import { noteSpace, sansWidth, stagger } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
@@ -299,14 +302,18 @@ const BeadLabel = (props: { bead: Bead; bright: boolean }) => {
   const deg = (bead.angle * 180) / Math.PI + (left ? 180 : 0);
   const off = bead.r + LABEL_GAP;
   return (
-    <text
-      className={`t-name pointer-events-none ${props.bright ? "fill-ink" : "fill-muted"}`}
+    <Label
+      anchor={left ? "end" : "start"}
+      className={
+        props.bright ? "fill-ink pointer-events-none" : "pointer-events-none"
+      }
       dy="0.35em"
-      textAnchor={left ? "end" : "start"}
+      muted={!props.bright}
       transform={`translate(${bead.x + off * Math.cos(bead.angle)},${bead.y + off * Math.sin(bead.angle)}) rotate(${deg})`}
+      voice="name"
     >
       {bead.id}
-    </text>
+    </Label>
   );
 };
 
@@ -325,7 +332,7 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
   ];
   return (
     <g className="transition-opacity group-data-[focus=true]/ring:opacity-25">
-      <g className="fade" style={{ "--i": 0 }}>
+      <g className="fade" style={stagger(0)}>
         <DotRing cx={cx} cy={cy} r={R} step={RING_STEP.guide} tone="fill-l5" />
       </g>
       <g className="cap-round stroke-ink" fill="none">
@@ -355,7 +362,7 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
         />
       ))}
       {/* Small plots name only the hero: there is no room round the ring for the rest. */}
-      <g className="fade" style={{ "--i": 12 }}>
+      <g className="fade" style={stagger(12)}>
         {beads.flatMap((b) =>
           b.hero || (b.hub && !props.small)
             ? [<BeadLabel bead={b} bright={b.hero} key={b.id} />]
@@ -460,18 +467,17 @@ const RingSvg = (props: {
   };
 
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="group/ring cursor-pointer"
       data-focus={focus !== null}
       height={height}
-      onPointerUp={props.onReplay}
-      onPointerLeave={() => {
+      label={label}
+      leave={() => {
         onFocus(null, null);
       }}
+      onPointerUp={props.onReplay}
       width={width}
     >
-      <title>{label}</title>
       {base}
       {focus !== null && (
         <FocusLayer focus={focus} layout={layout} small={small} />
@@ -487,13 +493,8 @@ const RingSvg = (props: {
           />
         ))}
       </g>
-      <PlotNote
-        text={props.note}
-        width={width - 16}
-        x={width / 2}
-        y={height - 6}
-      />
-    </svg>
+      <FootNote height={height} text={props.note} width={width} />
+    </ChartSvg>
   );
 };
 
@@ -514,9 +515,13 @@ export const CircularGraph = (props: CircularGraphProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip below={tip.below} x={tip.x} y={tip.y}>
-            <b>{tip.id}</b> · {format(tip.size)}{" "}
-            {props.sizeUnit ?? "land neighbours"} · {tip.linked}{" "}
-            {props.linkUnit ?? "shown"}
+            <TipText
+              facts={[
+                `${format(tip.size)} ${props.sizeUnit ?? "land neighbours"}`,
+                `${tip.linked} ${props.linkUnit ?? "shown"}`,
+              ]}
+              lead={tip.id}
+            />
           </Tooltip>
         )
       }

@@ -1,15 +1,16 @@
 // What a time chart shows at its cursor: a lone value, one big figure, or a
 // name-and-value tag beside each dot.
 
-import { TICK, VALUE, VALUE_LG } from "../roles";
+import { VALUE } from "../roles";
+import { Label } from "../text";
 import { PlateLabel } from "../texture";
 import { relax } from "./spread";
 
 /** The lone value over the cursor. */
 export const ValueReadout = (props: { text: string; x: number; y: number }) => (
-  <text x={props.x} y={props.y} textAnchor="middle" className={VALUE}>
+  <Label anchor="middle" voice="value" x={props.x} y={props.y}>
     {props.text}
-  </text>
+  </Label>
 );
 
 /** The one big figure at the top left, with its date beneath. */
@@ -19,12 +20,12 @@ export const FigureReadout = (props: {
   x: number;
 }) => (
   <g>
-    <text className={VALUE_LG} x={props.x} y={30}>
+    <Label voice="value-lg" x={props.x} y={30}>
       {props.value}
-    </text>
-    <text className={TICK} x={props.x} y={50}>
+    </Label>
+    <Label voice="axis" x={props.x} y={50}>
       {props.date}
-    </text>
+    </Label>
   </g>
 );
 
@@ -73,16 +74,17 @@ export const CursorTags = (props: {
     ));
   }
   return props.tags.map((t, i) => (
-    <text
+    <Label
+      anchor={flip ? "end" : "start"}
+      halo
       key={t.id}
-      className={`${TICK} t-halo`}
+      middle
+      voice="axis"
       x={flip ? props.cx - TAG_GAP : props.cx + TAG_GAP}
       y={ys[i]}
-      dy="0.34em"
-      textAnchor={flip ? "end" : "start"}
     >
       {t.name === undefined ? "" : `${t.name} `}
       <tspan className={VALUE}>{t.value}</tspan>
-    </text>
+    </Label>
   ));
 };

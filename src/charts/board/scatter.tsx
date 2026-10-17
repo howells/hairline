@@ -1,15 +1,18 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { crisp } from "../axes";
 import { Chart } from "../core";
+import { useHover } from "../hooks";
 import { Dot, Ring } from "../markers";
-import { CURSOR, OUTLINE, POINT, RULE_TARGET, TICK, VALUE } from "../roles";
-import { HGrid, VGrid } from "../rules";
+import { OUTLINE, POINT, TICK, VALUE } from "../roles";
+import { Cursor, HGrid, HRule, VGrid } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
+import { stagger } from "../util";
 import { Key } from "./key";
 import { scaleWidth } from "./room";
 import { TICK_CHAR } from "./thin-ticks";
@@ -125,47 +128,42 @@ const Axes = (props: { frame: Frame }) => {
   const lastX = axis.xTicks.at(-1);
   return (
     <>
-      <text
-        className={TICK}
-        x={width - m.right}
-        y={m.top - 12}
-        textAnchor="end"
-      >
+      <Label anchor="end" voice="axis" x={width - m.right} y={m.top - 12}>
         {axis.yTitle}
-      </text>
+      </Label>
       {axis.yTicks.map((t) => (
-        <text
+        <Label
+          anchor="end"
           key={t}
-          className={TICK}
+          middle
+          voice="axis"
           x={m.left - TICK_GAP}
           y={y(t)}
-          dy="0.34em"
-          textAnchor="end"
         >
           {axis.yTickFormat(t)}
-        </text>
+        </Label>
       ))}
       {axis.xTicks.map((t) => (
-        <text
+        <Label
+          anchor={t === lastX ? "end" : "middle"}
+          dy="0.71em"
           key={t}
-          className={TICK}
+          voice="axis"
           x={x(t)}
           y={h - m.bottom + 14}
-          dy="0.71em"
-          textAnchor={t === lastX ? "end" : "middle"}
         >
           {axis.xTickFormat(t)}
-        </text>
+        </Label>
       ))}
-      <text
-        className={TICK}
+      <Label
+        anchor="end"
+        dy="0.71em"
+        voice="axis"
         x={width - m.right}
         y={h - m.bottom + 30}
-        dy="0.71em"
-        textAnchor="end"
       >
         {axis.xTitle}
-      </text>
+      </Label>
     </>
   );
 };
@@ -195,22 +193,23 @@ const LimitRule = (props: { frame: Frame; zone: string; limit: number }) => {
         width={zoneW - 1}
         height={zoneH - 1}
       />
-      <line
-        className={`${RULE_TARGET} fade`}
-        x1={m.left}
-        x2={width - m.right}
-        y1={crisp(y(props.limit))}
-        y2={crisp(y(props.limit))}
+      <HRule
+        className="fade"
+        kind="target"
+        x0={m.left}
+        x1={width - m.right}
+        y={y(props.limit)}
       />
       {axis.limitLabel !== "" && (
-        <text
-          className={`${TICK} t-halo`}
+        <Label
+          anchor="end"
+          halo
+          voice="axis"
           x={width - m.right - 8}
           y={y(props.limit) + 16}
-          textAnchor="end"
         >
           {axis.limitLabel}
-        </text>
+        </Label>
       )}
     </>
   );
@@ -293,7 +292,7 @@ const PointMark = (props: {
   const px = crisp(x(p.x));
   const py = crisp(y(p.y));
   return (
-    <g className="fade" style={{ "--i": props.i * 0.4 }}>
+    <g className="fade" style={stagger(props.i * 0.4)}>
       {hollow ? (
         <Ring
           className={`${POINT} ${tone.stroke}`}
@@ -347,13 +346,7 @@ const HoverReadout = (props: {
   const readout = `${name === "" ? "" : `${name} `}${axis.yFormat(hp.y)} · ${axis.xFormat(hp.x)}`;
   return (
     <g pointerEvents="none">
-      <line
-        className={CURSOR}
-        x1={crisp(x(hp.x))}
-        x2={crisp(x(hp.x))}
-        y1={Math.round(y(hp.y) + 8)}
-        y2={h - m.bottom}
-      />
+      <Cursor x={x(hp.x)} y0={Math.round(y(hp.y) + 8)} y1={h - m.bottom} />
       <ZoneText
         anchor={labelAnchor(readout, x(hp.x), props.frame)}
         baseline={y(hp.y) - 14}
@@ -383,7 +376,7 @@ const worstIndex = (points: ScatterPoint[], limit: number | undefined) => {
 
 /** One measure against another; the highest point over the limit, if any, is the one red. */
 export const Scatter = (props: ScatterProps) => {
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const tex = useTextureIds("sc");
   const axis = axisConfig(props);
   const worst = worstIndex(props.points, props.limit);
@@ -424,23 +417,28 @@ export const Scatter = (props: ScatterProps) => {
         };
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const r = e.currentTarget.getBoundingClientRect();
-          setHover(
-            nearest(props.points, frame, e.clientX - r.left, e.clientY - r.top)
+          const at = nearest(
+            props.points,
+            frame,
+            e.clientX - r.left,
+            e.clientY - r.top
           );
+          if (at === null) {
+            hover.clear();
+          } else {
+            hover.show(at);
+          }
         };
-        const hp = hover === null ? null : props.points[hover];
+        const hp = hover.key === null ? null : props.points[hover.key];
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
+            label={props.label}
+            leave={hover.clear}
             onPointerMove={onMove}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            width={width}
           >
-            <title>{props.label}</title>
             <defs>
               <Stipple id={tex("zone")} tone="fill-l4" />
             </defs>
@@ -461,14 +459,14 @@ export const Scatter = (props: ScatterProps) => {
                 i={i}
                 frame={frame}
                 worst={i === worst}
-                active={hover === i}
+                active={hover.key === i}
                 limit={props.limit}
               />
             ))}
             {hp !== null && (
               <HoverReadout point={hp} frame={frame} limit={props.limit} />
             )}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

@@ -1,11 +1,14 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Chart } from "../core";
+import { useHover } from "../hooks";
 import { Dot, Ring } from "../markers";
-import { GRID_V, LABEL, TICK, VALUE } from "../roles";
+import { LABEL, VALUE } from "../roles";
+import { VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { stagger } from "../util";
 import { nameWidth } from "./room";
 import { relax } from "./spread";
 
@@ -24,16 +27,10 @@ const Columns = (props: {
 }) =>
   props.xs.map((x, i) => (
     <g key={x}>
-      <line
-        className={GRID_V}
-        x1={crisp(x)}
-        x2={crisp(x)}
-        y1={props.top}
-        y2={props.height}
-      />
-      <text className={TICK} x={x} y={props.top - 14} textAnchor="middle">
+      <VRule kind="grid" x={x} y0={props.top} y1={props.height} />
+      <Label anchor="middle" voice="axis" x={x} y={props.top - 14}>
         {props.labels[i]}
-      </text>
+      </Label>
     </g>
   ));
 
@@ -97,7 +94,7 @@ const SlopeRow = (props: {
   return (
     <g
       className={`fade transition-opacity ${props.dim ? "opacity-25" : "opacity-100"}`}
-      style={{ "--i": i }}
+      style={stagger(i)}
       onPointerEnter={() => {
         props.onHover(row.name);
       }}
@@ -172,7 +169,7 @@ export const Slope = (props: {
   domain: [number, number];
   label: string;
 }) => {
-  const [hover, setHover] = useState<string | null>(null);
+  const hover = useHover<string>();
 
   return (
     <Chart>
@@ -216,15 +213,12 @@ export const Slope = (props: {
         );
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            label={props.label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{props.label}</title>
             <Columns xs={xs} labels={props.labels} top={top} height={h} />
             {props.rows.map((r, i) => (
               <SlopeRow
@@ -234,13 +228,15 @@ export const Slope = (props: {
                 xs={xs}
                 labelYs={[lys[i], rys[i]]}
                 y={y}
-                dim={hover !== null && hover !== r.name}
+                dim={hover.dim(r.name)}
                 role={roleOf(r, props.rows)}
                 format={format}
-                onHover={setHover}
+                onHover={(name) => {
+                  hover.show(name);
+                }}
               />
             ))}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

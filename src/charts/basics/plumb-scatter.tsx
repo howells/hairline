@@ -3,22 +3,18 @@ import type { ScaleLinear } from "d3-scale";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
-import { STEM } from "../marks";
 import { PlotNote } from "../plot-note";
+import { HRule, Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import {
-  NOTE_LINE,
-  dimClass,
-  hasText,
-  noteLines,
-  sansWidth,
-  stagger,
-} from "../util";
+import { NOTE_LINE, hasText, noteLines, sansWidth, stagger } from "../util";
 import { plumbScatterDemo } from "./plumb-scatter.data";
 import type { PlumbDatum } from "./plumb-scatter.data";
-import { isDim, useHoverTip } from "./util-a";
 
 interface PlumbScatterProps {
   data?: PlumbDatum[];
@@ -51,22 +47,16 @@ interface FloorProps {
 /** The floor: one hairline with the axis names; the y name sits top left. */
 const Floor = ({ floor, highName, lowName, x0, x1, yLabel }: FloorProps) => (
   <g>
-    <line
-      className="hairline"
-      x1={Math.round(x0)}
-      x2={Math.round(x1)}
-      y1={crisp(floor)}
-      y2={crisp(floor)}
-    />
-    <text className="t-axis" x={x0} y={floor + 20}>
+    <HRule x0={Math.round(x0)} x1={Math.round(x1)} y={floor} />
+    <Label voice="axis" x={x0} y={floor + 20}>
       {lowName}
-    </text>
-    <text className="t-axis" textAnchor="end" x={x1} y={floor + 20}>
+    </Label>
+    <Label anchor="end" voice="axis" x={x1} y={floor + 20}>
       {highName}
-    </text>
-    <text className="t-axis" x={x0} y={20}>
+    </Label>
+    <Label voice="axis" x={x0} y={20}>
       {yLabel}
-    </text>
+    </Label>
   </g>
 );
 
@@ -162,28 +152,21 @@ const Point = ({
   const px = x(datum.x);
   const py = y(datum.y);
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(px, py - (named ? 28 : 10));
       }}
     >
-      <rect
-        className="fill-transparent"
-        height={floor - py + 10}
-        width={18}
-        x={px - 9}
-        y={py - 10}
-      />
+      <HitRect height={floor - py + 10} width={18} x={px - 9} y={py - 10} />
       {hero ? (
-        <line
-          className="grow-y stroke-hero shape-crisp"
-          strokeWidth={STEM.hero}
+        <Stem
+          className="grow-y stroke-hero"
+          hero
           style={stagger(order, "mark")}
-          x1={Math.round(px)}
-          x2={Math.round(px)}
-          y1={Math.round(floor)}
-          y2={py}
+          x={px}
+          y0={Math.round(floor)}
+          y1={py}
         />
       ) : (
         <g className="fade" style={stagger(order, "mark")}>
@@ -205,17 +188,19 @@ const Point = ({
         style={stagger(order + 6, "mark")}
       />
       {named ? (
-        <text
-          className={`fade t-halo ${hero ? "t-label" : "t-axis"}`}
-          style={stagger(order + 8, "mark")}
-          textAnchor={place.anchor}
+        <Label
+          anchor={place.anchor}
+          halo
+          order={order + 8}
+          tier="mark"
+          voice={hero ? "label" : "axis"}
           x={px + place.dx}
           y={py + place.dy}
         >
           {datum.label} · {format(datum.y)}
-        </text>
+        </Label>
       ) : null}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -231,7 +216,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
   const formatX = props.formatX ?? ((v: number) => `${Math.round(v)}`);
   const [lowName, highName] = props.xLabels ?? ["Low", "High"];
   const hasNote = hasText(props.note);
-  const { clear, hover, show, tip } = useHoverTip();
+  const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
   const xs = data.map((d) => d.x);
@@ -256,10 +241,15 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {formatX(data[tip.i].x)} ·{" "}
-            {format(data[tip.i].y)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                formatX(data[hover.at.key].x),
+                format(data[hover.at.key].y),
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -279,13 +269,12 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
           .domain(yDomain)
           .range([floor - 14, 46]);
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={clear}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <Floor
               floor={floor}
               highName={highName}
@@ -309,14 +298,14 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
                   width
                 )}
                 datum={d}
-                dim={isDim(hover, i)}
+                dim={hover.dim(i)}
                 floor={floor}
                 format={format}
                 hero={hero === i}
                 key={d.label}
                 named={labelled.has(i)}
                 onEnter={(px, py) => {
-                  show(i, px, py);
+                  hover.show(i, px, py);
                 }}
                 order={order.get(i) ?? i}
                 x={x}
@@ -329,7 +318,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
               x={width / 2}
               y={height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

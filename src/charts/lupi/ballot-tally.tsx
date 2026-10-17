@@ -1,9 +1,11 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { TICK } from "../marks";
-import { PlotNote } from "../plot-note";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { noteSpace, sansWidth, stagger } from "../util";
 import { ballotTallyDemo } from "./ballot-tally.data";
 import type { TallyDatum } from "./ballot-tally.data";
 import { argMax } from "./util-b";
@@ -80,21 +82,17 @@ const RulerRow = ({
   const end = x0 + pitch * (n - 1) + 1;
   return (
     <>
-      <rect
-        fill="transparent"
-        height={band.h}
-        width={band.w}
-        x={band.x}
-        y={band.y}
-      />
-      <text
-        className={`fade t-label ${hero ? "" : "fill-muted"}`}
-        style={stagger(index, "series")}
+      <HitRect height={band.h} width={band.w} x={band.x} y={band.y} />
+      <Label
+        muted={!hero}
+        order={index}
+        tier="series"
+        voice="label"
         x={x0}
         y={base - tall - 12}
       >
         {row.label}
-      </text>
+      </Label>
       <g className="fade fill-l5" style={stagger(index, "series")}>
         {Array.from({ length: Math.max(0, ruler - n) }, (_, j) => {
           const k = n + j;
@@ -127,14 +125,15 @@ const RulerRow = ({
           );
         })}
       </g>
-      <text
-        className="fade t-value"
-        style={stagger(index + 3, "series")}
+      <Label
+        order={index + 3}
+        tier="series"
+        voice="value"
         x={end + 6}
         y={base - tall + 9}
       >
         {format(row.value)}
-      </text>
+      </Label>
     </>
   );
 };
@@ -150,7 +149,7 @@ export const BallotTally = (props: BallotTallyProps) => {
   const total = props.total ?? 100;
   const format = props.format ?? String;
   const height = props.height ?? 460;
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const hero = props.highlight ?? argMax(data.map((d) => d.value));
   const ruler = rulerLength(data, total);
 
@@ -181,26 +180,24 @@ export const BallotTally = (props: BallotTallyProps) => {
           tall,
           x0,
         });
-        const tip = hover === null ? undefined : data[hover];
+        const tip = hover.key === null ? undefined : data[hover.key];
         return (
           <div className="relative">
-            <svg
-              aria-label={data
+            <ChartSvg
+              height={height}
+              label={data
                 .map((d) => `${d.label}: ${format(d.value)} of ${total}`)
                 .join(", ")}
-              height={height}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              leave={hover.clear}
+              title="Days out"
               width={width}
             >
-              <title>Days out</title>
               {data.map((d, i) => (
-                <g
-                  className={dimClass(hover !== null && hover !== i)}
+                <DimGroup
+                  dim={hover.dim(i)}
                   key={d.label}
                   onPointerEnter={() => {
-                    setHover(i);
+                    hover.show(i);
                   }}
                 >
                   <RulerRow
@@ -212,22 +209,20 @@ export const BallotTally = (props: BallotTallyProps) => {
                     row={d}
                     ruler={ruler}
                   />
-                </g>
+                </DimGroup>
               ))}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={height - 6}
-              />
-            </svg>
-            {tip !== undefined && hover !== null && (
+              <FootNote height={height} text={props.note} width={width} />
+            </ChartSvg>
+            {tip !== undefined && hover.key !== null && (
               <Tooltip
                 x={x0 + pitch * Math.round(tip.value) * 0.5}
                 // Over the row's label, so the label stays readable.
-                y={layoutAt(hover).base - tall - 24}
+                y={layoutAt(hover.key).base - tall - 24}
               >
-                <b>{tip.label}</b> · {format(tip.value)} of {total} went
+                <TipText
+                  facts={[`${format(tip.value)} of ${total} went`]}
+                  lead={tip.label}
+                />
               </Tooltip>
             )}
           </div>

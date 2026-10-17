@@ -1,9 +1,11 @@
-import { useState } from "react";
-
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { FILL_FAMILIES, FILL_LADDERS, FILL_TONES, toneClass } from "../fills";
 import type { FillTone } from "../fills";
+import { useHover } from "../hooks";
+import { HitRect } from "../hover";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { EngravedRect, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
@@ -40,16 +42,12 @@ const sheetFor = (width: number): Sheet => {
   };
 };
 
-interface Hover {
-  label: string;
-  x: number;
-  y: number;
-}
+type Hover = ReturnType<typeof useHover<string>>;
 
 interface TileProps {
   fill: string;
+  hover: Hover;
   label: string;
-  onHover: (h: Hover | null) => void;
   order: number;
   solid: string | undefined;
   w: number;
@@ -64,10 +62,10 @@ const Tile = (p: TileProps) => (
     className="fade"
     style={stagger(p.order, "fine")}
     onPointerEnter={() => {
-      p.onHover({ label: p.label, x: p.x + p.w / 2, y: p.y });
+      p.hover.show(p.label, p.x + p.w / 2, p.y);
     }}
     onPointerLeave={() => {
-      p.onHover(null);
+      p.hover.clear();
     }}
   >
     {p.solid === undefined ? (
@@ -92,19 +90,13 @@ const RungTile = (p: Omit<TileProps, "solid">) => (
     className="fade"
     style={stagger(p.order, "fine")}
     onPointerEnter={() => {
-      p.onHover({ label: p.label, x: p.x + p.w / 2, y: p.y });
+      p.hover.show(p.label, p.x + p.w / 2, p.y);
     }}
     onPointerLeave={() => {
-      p.onHover(null);
+      p.hover.clear();
     }}
   >
-    <rect
-      className="fill-transparent"
-      height={p.h}
-      width={p.w}
-      x={p.x}
-      y={p.y}
-    />
+    <HitRect height={p.h} width={p.w} x={p.x} y={p.y} />
     {Array.from({ length: Math.floor((p.h - 4) / 6) + 1 }, (_, k) => (
       <rect
         fill={p.fill}
@@ -119,24 +111,24 @@ const RungTile = (p: Omit<TileProps, "solid">) => (
 );
 
 const RowName = (p: { label: string; y: number }) => (
-  <text className="t-label fill-muted" dy="0.34em" x={0} y={p.y}>
+  <Label middle muted voice="label" x={0} y={p.y}>
     {p.label}
-  </text>
+  </Label>
 );
 
 interface BodyProps {
+  hover: Hover;
   id: (name: string) => string;
-  onHover: (h: Hover | null) => void;
   s: Sheet;
 }
 
 /** Families × tones: a tile wherever the taxonomy allows that pairing. */
-const FamilyRows = ({ id, onHover, s }: BodyProps) => (
+const FamilyRows = ({ hover, id, s }: BodyProps) => (
   <g>
     {FILL_TONES.map((t, k) => (
-      <text className="t-axis" key={t.id} x={s.col(k)} y={s.top - 10}>
+      <Label key={t.id} voice="axis" x={s.col(k)} y={s.top - 10}>
         {t.label}
-      </text>
+      </Label>
     ))}
     {FILL_FAMILIES.map((family, r) => {
       const y = s.top + r * s.rowH;
@@ -151,8 +143,8 @@ const FamilyRows = ({ id, onHover, s }: BodyProps) => (
             const common = {
               fill: paint(id(`${family.id}-${t.id}`)),
               h: s.tileH,
+              hover,
               label: `${family.label} · ${t.label.toLowerCase()}`,
-              onHover,
               order: r + k,
               w: s.tileW,
               x: s.col(k),
@@ -176,23 +168,22 @@ const FamilyRows = ({ id, onHover, s }: BodyProps) => (
 );
 
 /** The value ladders, lightest step first, under their own step numbers. */
-const LadderRows = ({ id, onHover, s, top }: BodyProps & { top: number }) => {
+const LadderRows = ({ hover, id, s, top }: BodyProps & { top: number }) => {
   const rows = FILL_LADDERS.flatMap((ladder) =>
     ladder.tones.map((tone) => ({ ladder, tone }))
   );
   return (
     <g>
-      <line
-        className="rule"
-        x1={0}
-        x2={s.col(FILL_TONES.length - 1) + s.tileW}
-        y1={crisp(top - 26)}
-        y2={crisp(top - 26)}
+      <HRule
+        kind="rule"
+        x0={0}
+        x1={s.col(FILL_TONES.length - 1) + s.tileW}
+        y={top - 26}
       />
       {[1, 2, 3, 4, 5].map((n, k) => (
-        <text className="t-axis" key={n} x={s.col(k)} y={top - 10}>
+        <Label key={n} voice="axis" x={s.col(k)} y={top - 10}>
           {n}
-        </text>
+        </Label>
       ))}
       {rows.map(({ ladder, tone }, r) => {
         const y = top + r * s.rowH;
@@ -208,8 +199,8 @@ const LadderRows = ({ id, onHover, s, top }: BodyProps & { top: number }) => {
                 key={`${step.pitch}-${step.r}`}
                 fill={paint(id(`${ladder.id}-${tone}-${k}`))}
                 h={s.tileH}
+                hover={hover}
                 label={`${name} · step ${k + 1}`}
-                onHover={onHover}
                 order={r + k + 8}
                 solid={undefined}
                 w={s.tileW}
@@ -233,14 +224,13 @@ const LABEL_SPECIMENS = [
 ] as const;
 
 /** Text on a fill: a paper plate cut out of it, or an ink plate on the hero. */
-const LabelRow = ({ id, onHover, s, top }: BodyProps & { top: number }) => (
+const LabelRow = ({ hover, id, s, top }: BodyProps & { top: number }) => (
   <g>
-    <line
-      className="rule"
-      x1={0}
-      x2={s.col(FILL_TONES.length - 1) + s.tileW}
-      y1={crisp(top - 26)}
-      y2={crisp(top - 26)}
+    <HRule
+      kind="rule"
+      x0={0}
+      x1={s.col(FILL_TONES.length - 1) + s.tileW}
+      y={top - 26}
     />
     <RowName label="Labels on fills" y={top + s.tileH / 2} />
     {LABEL_SPECIMENS.map((sp, k) => (
@@ -248,12 +238,12 @@ const LabelRow = ({ id, onHover, s, top }: BodyProps & { top: number }) => (
         <Tile
           fill={paint(id(sp.fill))}
           h={s.tileH}
+          hover={hover}
           label={
             sp.hero
               ? "Label on the hero · ink plate"
               : "Label on a fill · paper plate"
           }
-          onHover={onHover}
           order={k + 12}
           solid={undefined}
           w={s.tileW}
@@ -279,14 +269,14 @@ const LabelRow = ({ id, onHover, s, top }: BodyProps & { top: number }) => (
  */
 export const FillSheet = () => {
   const id = useTextureIds("fills");
-  const [hover, setHover] = useState<Hover | null>(null);
+  const hover = useHover<string>();
   const ladderRows = FILL_LADDERS.reduce((n, l) => n + l.tones.length, 0);
   return (
     <Plot
       overlay={
-        hover === null ? null : (
-          <Tooltip x={hover.x} y={hover.y - 6}>
-            {hover.label}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y - 6}>
+            {hover.at.key}
           </Tooltip>
         )
       }
@@ -297,17 +287,17 @@ export const FillSheet = () => {
         const labelTop = ladderTop + ladderRows * s.rowH + 44;
         const height = labelTop + s.rowH;
         return (
-          <svg
-            aria-label="The fills every chart may use"
+          <ChartSvg
             height={height}
+            label="The fills every chart may use"
+            title="Fills"
             width={width}
           >
-            <title>Fills</title>
             <FillPatterns id={id} />
-            <FamilyRows id={id} onHover={setHover} s={s} />
-            <LadderRows id={id} onHover={setHover} s={s} top={ladderTop} />
-            <LabelRow id={id} onHover={setHover} s={s} top={labelTop} />
-          </svg>
+            <FamilyRows hover={hover} id={id} s={s} />
+            <LadderRows hover={hover} id={id} s={s} top={ladderTop} />
+            <LabelRow hover={hover} id={id} s={s} top={labelTop} />
+          </ChartSvg>
         );
       }}
     </Plot>

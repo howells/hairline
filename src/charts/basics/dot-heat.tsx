@@ -1,14 +1,15 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect } from "../hover";
 import { RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing } from "../texture";
-import { dimClass, stagger } from "../util";
+import { stagger } from "../util";
 import { dotHeatDemo } from "./dot-heat.data";
 import type { DotHeatData } from "./dot-heat.data";
 import { inkWidth } from "./util-b";
-import type { Tip } from "./util-b";
 
 interface DotHeatProps {
   data?: DotHeatData;
@@ -210,28 +211,29 @@ const Axes = (props: { data: DotHeatData; every: number; grid: Grid }) => {
   return (
     <g>
       {props.data.rows.map((row, r) => (
-        <text
-          className="t-label fill-muted"
-          dy="0.34em"
+        <Label
+          anchor="end"
           key={row}
-          textAnchor="end"
+          middle
+          muted
+          voice="label"
           x={grid.x0 - NAME_GAP}
           y={grid.cy(r)}
         >
           {grid.narrow ? row.slice(0, 2) : row}
-        </text>
+        </Label>
       ))}
       {props.data.columns.map((col, c) =>
         c % step === 0 ? (
-          <text
-            className="t-axis"
+          <Label
+            anchor="middle"
             key={col}
-            textAnchor="middle"
+            voice="axis"
             x={grid.cx(c)}
             y={grid.gridBottom + 18}
           >
             {col}
-          </text>
+          </Label>
         ) : null
       )}
     </g>
@@ -241,26 +243,22 @@ const Axes = (props: { data: DotHeatData; every: number; grid: Grid }) => {
 interface DotsProps {
   cells: Cell[];
   grid: Grid;
+  dim: (k: number) => boolean;
   hero: string;
-  hover: string | null;
   span: Span;
-  onHover: (tip: Tip<Cell>) => void;
+  onHover: (k: number, x: number, y: number) => void;
 }
 
 const Dots = (props: DotsProps) => {
   const { grid } = props;
   return (
     <g>
-      {props.cells.map((cell) => (
-        <g
-          className={dimClass(props.hover !== null && props.hover !== cell.id)}
+      {props.cells.map((cell, k) => (
+        <DimGroup
+          dim={props.dim(k)}
           key={cell.id}
           onPointerEnter={() => {
-            props.onHover({
-              item: cell,
-              x: grid.cx(cell.c),
-              y: grid.top - 2,
-            });
+            props.onHover(k, grid.cx(cell.c), grid.top - 2);
           }}
         >
           <circle
@@ -270,14 +268,13 @@ const Dots = (props: DotsProps) => {
             r={grid.radius(cell.v)}
             style={stagger(cell.r + cell.c, "mark")}
           />
-          <rect
-            className="fill-transparent"
+          <HitRect
             height={grid.rowH}
             width={grid.colW}
             x={grid.cx(cell.c) - grid.colW / 2}
             y={grid.cy(cell.r) - grid.rowH / 2}
           />
-        </g>
+        </DimGroup>
       ))}
     </g>
   );
@@ -293,7 +290,7 @@ export const DotHeat = (props: DotHeatProps) => {
   const data = props.data ?? dotHeatDemo;
   const height = props.height ?? 460;
   const format = props.format ?? String;
-  const [tip, setTip] = useState<Tip<Cell> | null>(null);
+  const hover = useHover<number>();
 
   const cells: Cell[] = data.values.flatMap((row, r) =>
     row.map((v, c) => ({ c, id: `${data.rows[r]}-${data.columns[c]}`, r, v }))
@@ -311,12 +308,13 @@ export const DotHeat = (props: DotHeatProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
             <b>
-              {data.rows[tip.item.r]} {data.columns[tip.item.c]}
+              {data.rows[cells[hover.at.key].r]}{" "}
+              {data.columns[cells[hover.at.key].c]}
             </b>{" "}
-            · {format(tip.item.v)}
+            · {format(cells[hover.at.key].v)}
           </Tooltip>
         )
       }
@@ -331,23 +329,22 @@ export const DotHeat = (props: DotHeatProps) => {
           props.labelEvery ?? 2
         );
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={grid.height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <Axes data={data} every={props.labelEvery ?? 2} grid={grid} />
             <Dots
               cells={cells}
               grid={grid}
+              dim={hover.dim}
               hero={peakId}
-              hover={tip?.item.id ?? null}
               span={span}
-              onHover={setTip}
+              onHover={(k, x, y) => {
+                hover.show(k, x, y);
+              }}
             />
             <DotRing
               className="fade pointer-events-none"
@@ -357,13 +354,8 @@ export const DotHeat = (props: DotHeatProps) => {
               r={ringRadius(grid, data.values, peakR, peakC)}
               step={RING_STEP.mark}
             />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={grid.height - 6}
-            />
-          </svg>
+            <FootNote height={grid.height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

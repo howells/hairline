@@ -3,9 +3,12 @@ import type { PointerEvent } from "react";
 
 import { rndSigned } from "../../lib/random";
 import { Plot } from "../core";
+import { HitRect } from "../hover";
 import { Dot, Ring } from "../markers";
 import { LABEL_TICK } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { noteSpace, sansWidth, stagger } from "../util";
 import { threadTriptychDemo } from "./thread-triptych.data";
@@ -249,14 +252,15 @@ const DestinationMark = (props: {
           size="md"
         />
       )}
-      <text
-        className={`t-label ${textTone(props.bright || props.hero, "fill-text")}`}
+      <Label
+        className={textTone(props.bright || props.hero, "fill-text")}
         dy="0.35em"
+        voice="label"
         x={x + LABEL_INSET}
         y={stop.y}
       >
         {stop.name}
-      </text>
+      </Label>
     </>
   );
 };
@@ -282,15 +286,16 @@ const StopMark = (props: {
           x={Math.round(x) - 2 - LABEL_TICK.w}
           y={tickY}
         />
-        <text
-          className={`t-name ${textTone(bright, "fill-text")}`}
+        <Label
+          anchor="end"
+          className={textTone(bright, "fill-text")}
           dy="0.35em"
-          textAnchor="end"
+          voice="name"
           x={x - LABEL_INSET}
           y={stop.y}
         >
           {stop.name}
-        </text>
+        </Label>
       </g>
     );
   }
@@ -306,14 +311,16 @@ const StopMark = (props: {
           y={tickY}
         />
         {((triptych.wide && stop.index % every === 0) || bright) && (
-          <text
-            className={`t-axis t-halo ${textTone(bright, "fill-muted")}`}
+          <Label
+            className={textTone(bright, "fill-muted")}
             dy="0.35em"
+            halo
+            voice="axis"
             x={x + 9}
             y={stop.y}
           >
             {stop.name}
-          </text>
+          </Label>
         )}
       </g>
     );
@@ -349,8 +356,7 @@ const StopLayer = (props: { lit: Set<string> | null; triptych: Triptych }) => {
         const pitch = triptych.pitch[stop.column] ?? ROW_MAX;
         return (
           <g className="cursor-pointer" key={stop.key}>
-            <rect
-              className="fill-transparent"
+            <HitRect
               data-stop={stop.key}
               height={pitch}
               y={stop.y - pitch / 2}
@@ -381,15 +387,17 @@ const Heading = (props: {
   x: number;
   y: number;
 }) => (
-  <text
-    className="fade t-label fill-muted"
-    textAnchor={props.anchor}
+  <Label
+    anchor={props.anchor}
+    className="fade"
+    muted
+    voice="label"
     x={props.x}
     y={props.y}
   >
     <tspan>{props.label}</tspan>{" "}
     <tspan className="t-value">{props.count}</tspan>
-  </text>
+  </Label>
 );
 
 const Headings = (props: {
@@ -532,12 +540,12 @@ const TriptychSvg = (props: {
     .join(" in ")}`;
 
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="group/threads"
       data-focus={focus !== null}
       height={height}
-      onPointerLeave={() => {
+      label={label}
+      leave={() => {
         props.onHover(null);
       }}
       onPointerMove={(e) => {
@@ -548,8 +556,7 @@ const TriptychSvg = (props: {
       }}
       width={width}
     >
-      <title>{label}</title>
-      <rect className="fill-transparent" height={height} width={width} />
+      <HitRect height={height} width={width} />
       <Headings
         headings={props.headings}
         paths={focus === null ? data.paths : litThreads.map((t) => t.path)}
@@ -568,8 +575,8 @@ const TriptychSvg = (props: {
         ))}
       </g>
       <StopLayer lit={litStops} triptych={triptych} />
-      <PlotNote text={note} width={width - 16} x={width / 2} y={height - 6} />
-    </svg>
+      <FootNote height={height} text={note} width={width} />
+    </ChartSvg>
   );
 };
 

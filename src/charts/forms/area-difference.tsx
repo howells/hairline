@@ -2,13 +2,16 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { area, curveMonotoneX, line } from "d3-shape";
 import { utcFormat } from "d3-time-format";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { fmtDegC, monthTickLabels } from "../../lib/format";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { Dot } from "../markers";
+import { HRule, Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, sansWidth } from "../util";
@@ -80,22 +83,22 @@ const EndLabels = (props: { data: PlanWeek[]; frame: Frame }) => {
   const actualUp = ya <= yp;
   return (
     <g className="fade">
-      <text
-        className="t-label"
-        dy="0.34em"
+      <Label
+        middle
+        voice="label"
         x={props.frame.x1 + 8}
         y={actualUp ? mid - half : mid + half}
       >
         {ACTUAL_NAME}
-      </text>
-      <text
-        className="t-axis"
-        dy="0.34em"
+      </Label>
+      <Label
+        middle
+        voice="axis"
         x={props.frame.x1 + 8}
         y={actualUp ? mid + half : mid - half}
       >
         {NORMAL_NAME}
-      </text>
+      </Label>
     </g>
   );
 };
@@ -122,15 +125,15 @@ const Axes = (props: { data: PlanWeek[]; frame: Frame; width: number }) => {
         y={frame.y}
       />
       {firsts.map((i, k) => (
-        <text
-          className="t-axis"
+        <Label
+          anchor="middle"
           key={props.data[i].week.toISOString()}
-          textAnchor="middle"
+          voice="axis"
           x={frame.x(i)}
           y={frame.bottom + 22}
         >
           {labels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -143,13 +146,11 @@ const GapReading = (props: { d: PlanWeek; frame: Frame; i: number }) => {
   const yp = props.frame.y(props.d.plan);
   return (
     <g className="pointer-events-none">
-      <line
-        className="stroke-ink shape-crisp"
-        strokeWidth={1}
-        x1={crisp(x)}
-        x2={crisp(x)}
-        y1={Math.min(ya, yp)}
-        y2={Math.max(ya, yp)}
+      <Stem
+        className="stroke-ink"
+        x={x}
+        y0={Math.min(ya, yp)}
+        y1={Math.max(ya, yp)}
       />
       <Dot className="fill-l4" cx={x} cy={yp} size="sm" />
       <Dot className="fill-hero" cx={x} cy={ya} size="md" />
@@ -157,18 +158,10 @@ const GapReading = (props: { d: PlanWeek; frame: Frame; i: number }) => {
   );
 };
 
-/** The hovered week and where its tooltip sits. */
-interface Hover {
-  i: number;
-  x: number;
-  y: number;
-}
-
 interface SvgProps {
   data: PlanWeek[];
   height: number;
-  hover: number | null;
-  setHover: (h: Hover | null) => void;
+  hover: ReturnType<typeof useHover<number>>;
   width: number;
 }
 
@@ -205,25 +198,18 @@ const AreaDifferenceSvg = (props: SvgProps) => {
     const t = (px - frame.x0) / (frame.x1 - frame.x0);
     const i = clamp(Math.round(t * (data.length - 1)), 0, data.length - 1);
     const d = data[i];
-    props.setHover({
-      i,
-      x: frame.x(i),
-      y: frame.y(Math.max(d.actual, d.plan)) - 8,
-    });
+    props.hover.show(i, frame.x(i), frame.y(Math.max(d.actual, d.plan)) - 8);
   };
 
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="touch-pan-y"
       height={props.height}
-      onPointerLeave={() => {
-        props.setHover(null);
-      }}
+      label={label}
+      leave={props.hover.clear}
       onPointerMove={onMove}
       width={props.width}
     >
-      <title>{label}</title>
       <defs>
         <CrossHatch id={tex("lead")} tone="fill-hero" />
         <Hatch angle="rising" id={tex("hatch")} tone="fill-l4" />
@@ -247,13 +233,7 @@ const AreaDifferenceSvg = (props: SvgProps) => {
           fill={paint(tex("hatch"))}
         />
       </g>
-      <line
-        className="hairline"
-        x1={frame.x0}
-        x2={frame.x1}
-        y1={crisp(frame.bottom)}
-        y2={crisp(frame.bottom)}
-      />
+      <HRule x0={frame.x0} x1={frame.x1} y={frame.bottom} />
       <path
         className="draw stroke-l3 stroke-medium cap-round fill-none"
         d={trace("plan")}
@@ -265,10 +245,14 @@ const AreaDifferenceSvg = (props: SvgProps) => {
         pathLength={1}
       />
       <EndLabels data={data} frame={frame} />
-      {props.hover === null ? null : (
-        <GapReading d={data[props.hover]} frame={frame} i={props.hover} />
+      {props.hover.key === null ? null : (
+        <GapReading
+          d={data[props.hover.key]}
+          frame={frame}
+          i={props.hover.key}
+        />
       )}
-    </svg>
+    </ChartSvg>
   );
 };
 
@@ -289,14 +273,19 @@ const gapText = (d: PlanWeek) => {
  */
 export const AreaDifference = (props: { data?: PlanWeek[] }) => {
   const data = props.data ?? planWeeksDemo;
-  const [hover, setHover] = useState<Hover | null>(null);
+  const hover = useHover<number>();
   return (
     <Plot
       overlay={
-        hover === null ? null : (
-          <Tooltip x={hover.x} y={hover.y}>
-            <b>Week of {fmtWeek(data[hover.i].week)}</b> ·{" "}
-            {degrees(data[hover.i].actual)} · {gapText(data[hover.i])}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                degrees(data[hover.at.key].actual),
+                gapText(data[hover.at.key]),
+              ]}
+              lead={`Week of ${fmtWeek(data[hover.at.key].week)}`}
+            />
           </Tooltip>
         )
       }
@@ -305,8 +294,7 @@ export const AreaDifference = (props: { data?: PlanWeek[] }) => {
         <AreaDifferenceSvg
           data={data}
           height={460}
-          hover={hover?.i ?? null}
-          setHover={setHover}
+          hover={hover}
           width={width}
         />
       )}

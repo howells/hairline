@@ -6,10 +6,14 @@ import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotScreen, PlateLabel } from "../texture";
 import { HALFTONE_R, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger } from "../util";
 import { mainCentroid } from "./geo";
 import type { ChoroplethDatum, Region } from "./geo";
 import { Legend } from "./legend";
@@ -60,12 +64,6 @@ type Focus =
   | { bin: number; kind: "bin" }
   | { key: string; kind: "region" }
   | null;
-
-interface MapTip {
-  key: string;
-  x: number;
-  y: number;
-}
 
 /** Room under the map for the key row. */
 const LEGEND_H = 52;
@@ -345,7 +343,7 @@ const MapLabels = (props: MapLabelsProps) => (
   <g className="pointer-events-none">
     {placeLabels(props).map((p, i) => (
       <g className="fade" key={p.key} style={stagger(10 + i, "mark")}>
-        <g className={dimClass(props.lit !== null && !props.lit.has(p.key))}>
+        <DimGroup dim={props.lit !== null && !props.lit.has(p.key)}>
           {p.leader && (
             <line
               className="rule"
@@ -356,15 +354,16 @@ const MapLabels = (props: MapLabelsProps) => (
             />
           )}
           {p.leader ? (
-            <text
-              className="t-value t-halo"
+            <Label
+              anchor={p.anchor}
               dy="0.35em"
-              textAnchor={p.anchor}
+              halo
+              voice="value"
               x={p.x}
               y={p.y}
             >
               {p.text}
-            </text>
+            </Label>
           ) : (
             <PlateLabel
               anchor={p.anchor}
@@ -374,7 +373,7 @@ const MapLabels = (props: MapLabelsProps) => (
               y={p.y}
             />
           )}
-        </g>
+        </DimGroup>
       </g>
     ))}
   </g>
@@ -403,12 +402,12 @@ const MapSvg = (
   props: ChoroplethProps & {
     focus: Focus;
     onFocus: (f: Focus) => void;
-    onTip: (t: MapTip | null) => void;
+    hover: ReturnType<typeof useHover<string>>;
     values: Map<string, ChoroplethDatum>;
     width: number;
   }
 ) => {
-  const { focus, onFocus, onTip, values, width } = props;
+  const { focus, hover, onFocus, values, width } = props;
   const mapH = Math.round(
     Math.min(props.maxHeight ?? Infinity, width * props.aspect)
   );
@@ -460,23 +459,22 @@ const MapSvg = (
     const box = (
       e.currentTarget.ownerSVGElement ?? e.currentTarget
     ).getBoundingClientRect();
-    onTip({ key, x: e.clientX - box.left, y: e.clientY - box.top - 6 });
+    hover.show(key, e.clientX - box.left, e.clientY - box.top - 6);
   };
   const clear = () => {
     onFocus(null);
-    onTip(null);
+    hover.clear();
   };
 
   return (
-    <svg
-      aria-label={props.ariaLabel}
+    <ChartSvg
       className="group/map"
       data-focus={focus !== null}
       height={height}
-      onPointerLeave={clear}
+      label={props.ariaLabel}
+      leave={clear}
       width={width}
     >
-      <title>{props.ariaLabel}</title>
       <ScreenDefs pid={pid} />
       <g onPointerLeave={clear} onPointerMove={onMove}>
         {regionLayer}
@@ -495,7 +493,7 @@ const MapSvg = (
         active={focusBin}
         emptyLabel={props.emptyLabel}
         onStep={(bin) => {
-          onTip(null);
+          hover.clear();
           onFocus(bin === null ? null : { bin, kind: "bin" });
         }}
         pid={pid}
@@ -504,13 +502,8 @@ const MapSvg = (
         width={width}
         y={mapH + LEGEND_Y}
       />
-      <PlotNote
-        text={props.note}
-        width={width - 16}
-        x={width / 2}
-        y={height - 6}
-      />
-    </svg>
+      <FootNote height={height} text={props.note} width={width} />
+    </ChartSvg>
   );
 };
 
@@ -522,7 +515,7 @@ const MapSvg = (
  */
 export const Choropleth = (props: ChoroplethProps) => {
   const [focus, setFocus] = useState<Focus>(null);
-  const [tip, setTip] = useState<MapTip | null>(null);
+  const hover = useHover<string>();
   const values = useMemo(
     () => new Map(props.data.map((d) => [d.key, d])),
     [props.data]
@@ -543,9 +536,12 @@ export const Choropleth = (props: ChoroplethProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{names.get(tip.key)}</b> · {tipValue(tip.key)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[tipValue(hover.at.key)]}
+              lead={names.get(hover.at.key) ?? ""}
+            />
           </Tooltip>
         )
       }
@@ -554,8 +550,8 @@ export const Choropleth = (props: ChoroplethProps) => {
         <MapSvg
           {...props}
           focus={focus}
+          hover={hover}
           onFocus={setFocus}
-          onTip={setTip}
           values={values}
           width={width}
         />

@@ -3,13 +3,16 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { DimGroup, TipText } from "../hover";
 import { Ring } from "../markers";
 import { DOT, MARK_WEIGHT } from "../marks";
 import type { DotSize } from "../marks";
-import { PlotNote } from "../plot-note";
-import { dimClass, noteSpace, stagger } from "../util";
+import { FootNote } from "../plot-note";
+import { VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { noteSpace, stagger } from "../util";
 import { jitterStripDemo } from "./jitter-strip.data";
 import type { JitterGroup } from "./jitter-strip.data";
 import { labelRoom, textWidth } from "./util-a";
@@ -108,15 +111,17 @@ const Band = (p: BandProps) => {
     p.x(0) + radius + 2
   );
   return (
-    <g className={dimClass(p.hover !== null && p.hover.g !== p.g)}>
-      <text
-        className={`t-label ${p.heroRow ? "fill-ink" : "fill-muted"}`}
+    <DimGroup dim={p.hover !== null && p.hover.g !== p.g}>
+      <Label
+        className={p.heroRow ? "fill-ink" : undefined}
+        dy="0.35em"
+        muted={!p.heroRow}
+        voice="label"
         x={p.labelX}
         y={p.top + p.band / 2}
-        dy="0.35em"
       >
         {p.group.label}
-      </text>
+      </Label>
       {p.group.values.map((_, k) => {
         const seat = lattice[k];
         const on = p.hover !== null && p.hover.g === p.g && p.hover.k === k;
@@ -140,7 +145,7 @@ const Band = (p: BandProps) => {
       {p.heroRow ? (
         <line
           className="fade stroke-ink"
-          style={{ "--i": 8 + p.g }}
+          style={stagger(8 + p.g)}
           x1={Math.round(p.x(p.med))}
           x2={Math.round(p.x(p.med))}
           y1={Math.round(p.top + p.band * 0.04)}
@@ -150,7 +155,7 @@ const Band = (p: BandProps) => {
       ) : (
         <line
           className="fade stroke-rule"
-          style={{ "--i": 8 + p.g }}
+          style={stagger(8 + p.g)}
           x1={Math.round(p.x(p.med))}
           x2={Math.round(p.x(p.med))}
           y1={Math.round(p.top + p.band * 0.04)}
@@ -158,7 +163,7 @@ const Band = (p: BandProps) => {
           strokeWidth={MARK_WEIGHT}
         />
       )}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -185,10 +190,13 @@ export const JitterStrip = (props: JitterStripProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data[hover.g].label}</b> ·{" "}
-            {data[hover.g].names?.[hover.k] ?? `this ${unit}`}{" "}
-            {format(data[hover.g].values[hover.k])} · median{" "}
-            {format(medians[hover.g])}
+            <TipText
+              facts={[
+                `${data[hover.g].names?.[hover.k] ?? `this ${unit}`} ${format(data[hover.g].values[hover.k])}`,
+                `median ${format(medians[hover.g])}`,
+              ]}
+              lead={data[hover.g].label}
+            />
           </Tooltip>
         )
       }
@@ -213,43 +221,31 @@ export const JitterStrip = (props: JitterStripProps) => {
         const floor = height - m.bottom;
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             {ticks.map((t) => (
               <g key={t}>
-                <line
-                  className={t === 0 ? "hairline" : "grid-line"}
-                  x1={crisp(x(t))}
-                  x2={crisp(x(t))}
-                  y1={m.top}
-                  y2={floor}
-                />
-                <text
-                  className="t-axis"
+                <VRule
+                  kind={t === 0 ? "hairline" : "grid"}
                   x={x(t)}
-                  y={floor + 16}
-                  textAnchor="middle"
-                >
+                  y0={m.top}
+                  y1={floor}
+                />
+                <Label anchor="middle" voice="axis" x={x(t)} y={floor + 16}>
                   {tickFormat(t)}
-                </text>
+                </Label>
               </g>
             ))}
             {props.axisLabel === undefined ? null : (
-              <text
-                className="t-note"
-                x={width}
-                y={floor + 34}
-                textAnchor="end"
-              >
+              <Label anchor="end" voice="note" x={width} y={floor + 34}>
                 {props.axisLabel}
-              </text>
+              </Label>
             )}
             {data.map((d, g) => (
               <Band
@@ -268,13 +264,8 @@ export const JitterStrip = (props: JitterStripProps) => {
                 x={x}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -1,12 +1,15 @@
 import { scaleLinear } from "d3-scale";
 import { curveCatmullRomClosed, lineRadial } from "d3-shape";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { fmtDegC, fmtMonth, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { Dot } from "../markers";
 import { RING_STEP } from "../marks";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
@@ -30,12 +33,6 @@ const polar = (angle: number, r: number) => ({
   x: Math.sin(angle) * r,
   y: -Math.cos(angle) * r,
 });
-
-interface Hover {
-  i: number;
-  x: number;
-  y: number;
-}
 
 interface DialProps {
   data: MonthValue[];
@@ -97,15 +94,9 @@ const Furniture = (props: DialProps) => {
                 y={at.y}
               />
             ) : (
-              <text
-                className="t-axis t-halo"
-                dy="0.34em"
-                textAnchor="middle"
-                x={at.x}
-                y={at.y}
-              >
+              <Label anchor="middle" halo middle voice="axis" x={at.x} y={at.y}>
                 {fmtRing(v)}
-              </text>
+              </Label>
             )}
           </g>
         );
@@ -113,16 +104,16 @@ const Furniture = (props: DialProps) => {
       {props.data.map((d, i) => {
         const p = polar(angleOf(i, n), props.outer + EDGE / 2);
         return (
-          <text
-            className={props.hover === i ? "t-label" : "t-axis"}
-            dy="0.34em"
+          <Label
+            anchor="middle"
             key={d.date.toISOString()}
-            textAnchor="middle"
+            middle
+            voice={props.hover === i ? "label" : "axis"}
             x={p.x}
             y={p.y}
           >
             {names[i]}
-          </text>
+          </Label>
         );
       })}
     </g>
@@ -168,17 +159,19 @@ const Trace = (props: DialProps & { peak: number }) => {
         size="md"
         style={stagger(4, "series")}
       />
-      <text
-        className="fade t-value t-halo"
+      <Label
+        anchor={pp.x >= 0 ? "start" : "end"}
         dx={pp.x >= 0 ? 10 : -10}
-        dy="0.34em"
-        style={stagger(4, "series")}
-        textAnchor={pp.x >= 0 ? "start" : "end"}
+        halo
+        middle
+        order={4}
+        tier="series"
+        voice="value"
         x={pp.x}
         y={pp.y}
       >
         {fmt(peak.value)}
-      </text>
+      </Label>
     </g>
   );
 };
@@ -189,17 +182,19 @@ const Trace = (props: DialProps & { peak: number }) => {
  */
 export const RadialYear = (props: { data?: MonthValue[] }) => {
   const data = props.data ?? signupMonthsDemo;
-  const [hover, setHover] = useState<Hover | null>(null);
+  const hover = useHover<number>();
   const hatch = useTextureIds("year")("hatch");
   const values = data.map((d) => d.value);
   const peak = values.indexOf(Math.max(...values));
   return (
     <Plot
       overlay={
-        hover === null ? null : (
-          <Tooltip x={hover.x} y={hover.y}>
-            <b>{fmtMonth(data[hover.i].date)}</b> · {fmt(data[hover.i].value)}{" "}
-            mean daily maximum
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[`${fmt(data[hover.at.key].value)} mean daily maximum`]}
+              lead={fmtMonth(data[hover.at.key].date)}
+            />
           </Tooltip>
         )
       }
@@ -223,27 +218,24 @@ export const RadialYear = (props: { data?: MonthValue[] }) => {
           const i =
             Math.round((turn / (Math.PI * 2)) * data.length) % data.length;
           const p = polar(angleOf(i, data.length), scale(data[i].value));
-          setHover({ i, x: cx + p.x, y: cy + p.y - 10 });
+          hover.show(i, cx + p.x, cy + p.y - 10);
         };
         const dial: DialProps = {
           data,
-          hover: hover?.i ?? null,
+          hover: hover.key,
           outer: scale(scale.domain()[1]),
           r: scale,
           rings,
         };
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             className="touch-pan-y"
             height={size}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            label={label}
+            leave={hover.clear}
             onPointerMove={onMove}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={hatch} tone="fill-l5" />
             </defs>
@@ -252,7 +244,7 @@ export const RadialYear = (props: { data?: MonthValue[] }) => {
               <Furniture {...dial} />
               <Trace {...dial} peak={peak} />
             </g>
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

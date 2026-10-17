@@ -1,19 +1,22 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Ring } from "../markers";
 import { MARK_WEIGHT } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, stagger } from "../util";
+import { stagger } from "../util";
 import { tickBoxDemo } from "./tick-box.data";
 import type { BoxDatum } from "./tick-box.data";
-import { inkWidth, isActive } from "./util-b";
-import type { Tip } from "./util-b";
+import { inkWidth } from "./util-b";
 
 interface TickBoxProps {
   data?: BoxDatum[];
@@ -124,22 +127,21 @@ const Grid = (props: {
     <g>
       {props.ticks.map((t) => (
         <g key={t}>
-          <line
-            className={t === 0 ? "hairline" : "grid-line"}
-            x1={Math.round(layout.px0 - 8)}
-            x2={Math.round(layout.px0 + layout.plotW)}
-            y1={crisp(layout.y(t))}
-            y2={crisp(layout.y(t))}
+          <HRule
+            kind={t === 0 ? "hairline" : "grid"}
+            x0={Math.round(layout.px0 - 8)}
+            x1={Math.round(layout.px0 + layout.plotW)}
+            y={layout.y(t)}
           />
-          <text
-            className="t-axis"
-            dy="0.34em"
-            textAnchor="end"
+          <Label
+            anchor="end"
+            middle
+            voice="axis"
             x={layout.px0 - 16}
             y={layout.y(t)}
           >
             {props.format(t)}
-          </text>
+          </Label>
         </g>
       ))}
     </g>
@@ -187,11 +189,11 @@ interface GroupProps {
   hero: boolean;
   /** Pattern ids: diagonal hatch for the boxes, crosshatch for the hero. */
   textures: (name: (typeof TEXTURES)[number]) => string;
+  dim: boolean;
   format: (v: number) => string;
-  hover: string | null;
   index: number;
   layout: Layout;
-  onHover: (tip: Tip<BoxDatum>) => void;
+  onHover: (x: number, y: number) => void;
 }
 
 const Group = (props: GroupProps) => {
@@ -204,14 +206,13 @@ const Group = (props: GroupProps) => {
   const boxX = Math.round(cx - boxW / 2);
   const boxR = Math.round(boxW);
   return (
-    <g
-      className={dimClass(isActive(props.hover, datum.label) === false)}
+    <DimGroup
+      dim={props.dim}
       onPointerEnter={() => {
-        props.onHover({ item: datum, x: cx, y: y(datum.max) - 10 });
+        props.onHover(cx, y(datum.max) - 10);
       }}
     >
-      <rect
-        className="fill-transparent"
+      <HitRect
         height={layout.floor - layout.top + 24}
         width={bw}
         x={cx - bw / 2}
@@ -260,25 +261,21 @@ const Group = (props: GroupProps) => {
           style={stagger(index * 3 + j + 6, "mark")}
         />
       ))}
-      <text
-        className="fade t-value"
-        dy="0.34em"
-        style={stagger(index + 3, "series")}
-        textAnchor={layout.narrow ? "middle" : "start"}
+      <Label
+        anchor={layout.narrow ? "middle" : "start"}
+        middle
+        order={index + 3}
+        tier="series"
+        voice="value"
         x={layout.narrow ? cx : cx + boxW / 2 + 10}
         y={layout.narrow ? layout.floor + 38 : y(datum.median)}
       >
         {props.format(datum.median)}
-      </text>
-      <text
-        className="t-label fill-muted"
-        textAnchor="middle"
-        x={cx}
-        y={layout.floor + 22}
-      >
+      </Label>
+      <Label anchor="middle" muted voice="label" x={cx} y={layout.floor + 22}>
         {datum.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -298,7 +295,7 @@ export const TickBox = (props: TickBoxProps) => {
   const data = props.data ?? tickBoxDemo;
   const height = props.height ?? 400;
   const format = props.format ?? String;
-  const [tip, setTip] = useState<Tip<BoxDatum> | null>(null);
+  const hover = useHover<number>();
   const textures = useTextureIds("box");
   const [hero] = data.toSorted((a, b) =>
     props.darkest === "high" ? b.median - a.median : a.median - b.median
@@ -310,9 +307,12 @@ export const TickBox = (props: TickBoxProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.item.label}</b> · {describe(tip.item, format)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[describe(data[hover.at.key], format)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -327,15 +327,12 @@ export const TickBox = (props: TickBoxProps) => {
           props.ticks
         );
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={textures("hatch")} tone="fill-l4" />
               <CrossHatch id={textures("cross")} tone="fill-hero" />
@@ -344,23 +341,20 @@ export const TickBox = (props: TickBoxProps) => {
             {data.map((d, i) => (
               <Group
                 datum={d}
+                dim={hover.dim(i)}
                 hero={d === hero}
                 textures={textures}
                 format={format}
-                hover={tip?.item.label ?? null}
                 index={i}
                 key={d.label}
                 layout={layout}
-                onHover={setTip}
+                onHover={(x, y) => {
+                  hover.show(i, x, y);
+                }}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

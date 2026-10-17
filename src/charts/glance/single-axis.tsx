@@ -5,10 +5,14 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { DimGroup, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, ranks, sansWidth, stagger } from "../util";
+import { noteSpace, ranks, sansWidth, stagger } from "../util";
 import { singleAxisDemo } from "./single-axis.data";
 import type { SingleAxisRow } from "./single-axis.data";
 
@@ -64,11 +68,11 @@ const oneDp = d3format(".1f");
 const Row = (p: RowProps) => {
   const y = crisp(p.grid.cy(p.i));
   return (
-    <g className={dimClass(p.dimmed)}>
-      <line className="rule" x1={p.x0} x2={p.x1} y1={y} y2={y} />
-      <text className={`t-label ${p.labelClass}`} x={0} y={y} dy="0.35em">
+    <DimGroup dim={p.dimmed}>
+      <HRule kind="rule" x0={p.x0} x1={p.x1} y={p.grid.cy(p.i)} />
+      <Label className={p.labelClass} dy="0.35em" voice="label" x={0} y={y}>
         {p.row.label}
-      </text>
+      </Label>
       {p.row.values.map((v, c) =>
         v > 0 ? (
           <circle
@@ -83,7 +87,7 @@ const Row = (p: RowProps) => {
           />
         ) : null
       )}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -163,10 +167,10 @@ export const SingleAxis = (props: SingleAxisProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>
-              {data[hover.r].label} {columns[hover.c]} {zone}
-            </b>{" "}
-            · {format(data[hover.r].values[hover.c])} {unit}
+            <TipText
+              facts={[`${format(data[hover.r].values[hover.c])} ${unit}`]}
+              lead={`${data[hover.r].label} ${columns[hover.c]} ${zone}`}
+            />
           </Tooltip>
         )
       }
@@ -202,15 +206,14 @@ export const SingleAxis = (props: SingleAxisProps) => {
         const floor = svgH - m.bottom;
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={svgH}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={tex("hatch")} tone="fill-l4" />
             </defs>
@@ -235,31 +238,21 @@ export const SingleAxis = (props: SingleAxisProps) => {
               onEnter={setHover}
             />
             {ticks.map((c) => (
-              <text
+              <Label
+                anchor="middle"
                 key={columns[c]}
-                className="t-axis"
+                voice="axis"
                 x={grid.cx(c)}
                 y={floor + 16}
-                textAnchor="middle"
               >
                 {columns[c]}
-              </text>
+              </Label>
             ))}
-            <text
-              className="t-axis"
-              x={width - m.right}
-              y={floor + 16}
-              textAnchor="end"
-            >
+            <Label anchor="end" voice="axis" x={width - m.right} y={floor + 16}>
               {zone}
-            </text>
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            </Label>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

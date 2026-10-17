@@ -2,15 +2,19 @@ import { extent, median, quantile } from "d3-array";
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { area, curveBasis } from "d3-shape";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { MARK_WEIGHT } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, ranks, stagger } from "../util";
+import { noteSpace, ranks, stagger } from "../util";
 import { labelRoom } from "./util-a";
 import { density, silverman } from "./util-b";
 import { violinDemo } from "./violin.data";
@@ -29,12 +33,6 @@ interface ViolinProps {
   highlight?: number;
 }
 
-interface Hit {
-  i: number;
-  x: number;
-  y: number;
-}
-
 interface GroupStats {
   at: number[];
   dens: number[];
@@ -50,7 +48,7 @@ interface FigureProps {
   cx: number;
   dimmed: boolean;
   left: number;
-  onEnter: (hit: Hit) => void;
+  onEnter: (x: number, y: number) => void;
   top: number;
   fill: string;
   /** Engraved pattern fill; omit for a solid silhouette. */
@@ -165,19 +163,13 @@ const Figure = (p: FigureProps) => {
     .x1((_, k) => p.cx + wd(s.dens[k]));
   const medW = medianHalf(s, p.half);
   return (
-    <g
-      className={dimClass(p.dimmed)}
+    <DimGroup
+      dim={p.dimmed}
       onPointerEnter={() => {
-        p.onEnter({ i: p.i, x: p.cx, y: p.y(s.hi) - 8 });
+        p.onEnter(p.cx, p.y(s.hi) - 8);
       }}
     >
-      <rect
-        className="fill-transparent"
-        x={p.left}
-        y={p.top}
-        width={p.bw}
-        height={p.floor - p.top}
-      />
+      <HitRect x={p.left} y={p.top} width={p.bw} height={p.floor - p.top} />
       <g className="grow-y" style={stagger(p.i, "series")}>
         <path
           d={silhouette(s.at) ?? ""}
@@ -194,24 +186,26 @@ const Figure = (p: FigureProps) => {
           strokeWidth={MARK_WEIGHT}
         />
       </g>
-      <text
-        className={`fade t-value ${p.hero ? "" : "fill-muted"}`}
-        style={{ "--i": p.i + 4 }}
+      <Label
+        dy="0.36em"
+        muted={!p.hero}
+        order={p.i + 4}
+        voice="value"
         x={p.cx + medW + 9}
         y={p.y(s.med)}
-        dy="0.36em"
       >
         {p.valueText}
-      </text>
-      <text
-        className={`t-label ${p.hero ? "" : "fill-muted"}`}
+      </Label>
+      <Label
+        anchor="middle"
+        muted={!p.hero}
+        voice="label"
         x={p.cx}
         y={p.floor + 20}
-        textAnchor="middle"
       >
         {p.group.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -227,7 +221,7 @@ export const Violin = (props: ViolinProps) => {
   const height = props.height ?? 420;
   const format = props.format ?? hundredweight;
   const unit = props.unit ?? "towers";
-  const [hover, setHover] = useState<Hit | null>(null);
+  const hover = useHover<number>();
   const stats = useMemo(() => data.map((g) => statsOf(g)), [data]);
   const order = ranks(
     stats.map((s) => s.med),
@@ -241,11 +235,16 @@ export const Violin = (props: ViolinProps) => {
   return (
     <Plot
       overlay={
-        hover === null ? null : (
-          <Tooltip x={hover.x} y={hover.y}>
-            <b>{data[hover.i].label}</b> · median {format(stats[hover.i].med)}{" "}
-            {UNIT} · 90% under {format(stats[hover.i].p90)} {UNIT} ·{" "}
-            {stats[hover.i].n} {unit}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `median ${format(stats[hover.at.key].med)} ${UNIT}`,
+                `90% under ${format(stats[hover.at.key].p90)} ${UNIT}`,
+                `${stats[hover.at.key].n} ${unit}`,
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -279,36 +278,26 @@ export const Violin = (props: ViolinProps) => {
         const floor = height - m.bottom;
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={tex("hatch")} tone="fill-l4" />
             </defs>
             {y.ticks(4).map((t) => (
               <g key={t}>
-                <line
-                  className={t === 0 ? "hairline" : "grid-line"}
-                  x1={m.left}
-                  x2={width - m.right}
-                  y1={crisp(y(t))}
-                  y2={crisp(y(t))}
-                />
-                <text
-                  className="t-axis"
-                  x={m.left - 8}
+                <HRule
+                  kind={t === 0 ? "hairline" : "grid"}
+                  x0={m.left}
+                  x1={width - m.right}
                   y={y(t)}
-                  dy="0.34em"
-                  textAnchor="end"
-                >
+                />
+                <Label anchor="end" middle voice="axis" x={m.left - 8} y={y(t)}>
                   {t === y.ticks(4).at(-1) ? `${format(t)} ${UNIT}` : format(t)}
-                </text>
+                </Label>
               </g>
             ))}
             {data.map((g, i) => (
@@ -316,7 +305,7 @@ export const Violin = (props: ViolinProps) => {
                 key={g.label}
                 bw={bw}
                 cx={(x(g.label) ?? 0) + centreOf(bw, narrow)}
-                dimmed={hover !== null && hover.i !== i}
+                dimmed={hover.dim(i)}
                 fill={heroIndex === i ? "fill-hero" : "stroke-l5"}
                 pattern={heroIndex === i ? undefined : paint(tex("hatch"))}
                 floor={floor}
@@ -324,7 +313,9 @@ export const Violin = (props: ViolinProps) => {
                 hero={heroIndex === i}
                 i={i}
                 left={x(g.label) ?? 0}
-                onEnter={setHover}
+                onEnter={(tipX, tipY) => {
+                  hover.show(i, tipX, tipY);
+                }}
                 stats={stats[i]}
                 top={m.top}
                 valueText={format(stats[i].med)}
@@ -332,13 +323,8 @@ export const Violin = (props: ViolinProps) => {
                 y={y}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

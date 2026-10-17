@@ -3,7 +3,10 @@ import { useState } from "react";
 
 import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { HitCircle, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { clamp, noteSpace, sansWidth, stagger } from "../util";
 import { arcMatrixDemo } from "./arc-matrix.data";
 import type { ArcMatrixData } from "./arc-matrix.data";
@@ -135,14 +138,18 @@ const Frame = (props: {
   return (
     <g>
       {props.data.cols.map((col, ci) => (
-        <text
-          className={`fade t-label ${hover !== null && hover.c === ci ? "fill-text" : "fill-muted"}`}
+        <Label
+          className={
+            hover !== null && hover.c === ci ? "fill-text" : "fill-muted"
+          }
           key={col}
-          style={stagger(ci, "mark")}
+          order={ci}
+          tier="mark"
           transform={`translate(${colX(ci) + 2},${arcY(0, colX(ci)) - rowPitch * 1.15}) rotate(${colTilt})`}
+          voice="label"
         >
           {col}
-        </text>
+        </Label>
       ))}
       {props.data.rows.map((row, ri) => (
         <g key={row}>
@@ -154,15 +161,18 @@ const Frame = (props: {
             strokeWidth={1}
             style={stagger(ri, "series")}
           />
-          <text
-            className={`t-name ${hover !== null && hover.r === ri ? "fill-text" : "fill-muted"}`}
-            dy="0.34em"
-            textAnchor="end"
+          <Label
+            anchor="end"
+            className={
+              hover !== null && hover.r === ri ? "fill-text" : "fill-muted"
+            }
+            middle
+            voice="name"
             x={rowLabelX}
             y={arcY(ri, x0)}
           >
             {row}
-          </text>
+          </Label>
         </g>
       ))}
     </g>
@@ -195,8 +205,13 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data.rows[hover.r]}</b> · {data.cols[hover.c]} ·{" "}
-            {format(data.values[hover.r][hover.c])} {noun}
+            <TipText
+              facts={[
+                data.cols[hover.c],
+                `${format(data.values[hover.r][hover.c])} ${noun}`,
+              ]}
+              lead={data.rows[hover.r]}
+            />
           </Tooltip>
         )
       }
@@ -206,15 +221,15 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
         const layout = arcLayout(width, height, data, max, noteH);
         const svgH = Math.min(height, Math.round(layout.bottom));
         return (
-          <svg
-            aria-label={`Matrix of ${data.rows.length} by ${data.cols.length}. Largest: ${ranked.map((d) => `${data.rows[d.r]} in ${data.cols[d.c]} ${format(d.v)}`).join(", ")}`}
+          <ChartSvg
             height={svgH}
-            onPointerLeave={() => {
+            label={`Matrix of ${data.rows.length} by ${data.cols.length}. Largest: ${ranked.map((d) => `${data.rows[d.r]} in ${data.cols[d.c]} ${format(d.v)}`).join(", ")}`}
+            leave={() => {
               setHover(null);
             }}
+            title="Bubble matrix with bowed rows"
             width={width}
           >
-            <title>Bubble matrix with bowed rows</title>
             <Frame data={data} hover={hover} layout={layout} />
             {cells.map((d) => {
               const x = layout.colX(d.c);
@@ -229,10 +244,9 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
                     setHover({ c: d.c, r: d.r, x, y: y - rr - 4 });
                   }}
                 >
-                  <circle
+                  <HitCircle
                     cx={x}
                     cy={y}
-                    fill="transparent"
                     r={Math.max(rr, layout.colPitch / 2.2)}
                   />
                   <circle
@@ -243,25 +257,21 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
                     style={stagger(d.r * 3 + d.c, "dense")}
                   />
                   {isTop ? (
-                    <text
-                      className={`fade ${d.id === heroId ? "t-value" : "t-axis"}`}
-                      textAnchor="middle"
+                    <Label
+                      anchor="middle"
+                      className="fade"
+                      voice={d.id === heroId ? "value" : "axis"}
                       x={x}
                       y={y - rr - 6}
                     >
                       {format(d.v)}
-                    </text>
+                    </Label>
                   ) : null}
                 </g>
               );
             })}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

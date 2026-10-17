@@ -1,10 +1,12 @@
-import { useState } from "react";
-
 import { fmtInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitCircle, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
-import { PlotNote } from "../plot-note";
-import { clamp, dimClass, noteSpace, sansWidth, stagger, sum } from "../util";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { clamp, noteSpace, sansWidth, stagger, sum } from "../util";
 import { clusterFieldDemo } from "./cluster-field.data";
 import type {
   ClusterDatum,
@@ -150,8 +152,8 @@ const Cluster = (props: ClusterProps) => {
   const { p } = props;
   const dotScale = clamp(props.s + 0.25, 0.7, 1.2);
   return (
-    <g className={dimClass(props.dim)} onPointerEnter={props.onEnter}>
-      <circle cx={p.x} cy={p.y} fill="transparent" r={p.R} />
+    <DimGroup dim={props.dim} onPointerEnter={props.onEnter}>
+      <HitCircle cx={p.x} cy={p.y} r={p.R} />
       {members(p).map((m) => (
         <g key={m.id}>
           <line
@@ -178,15 +180,17 @@ const Cluster = (props: ClusterProps) => {
       ) : (
         <Ring className="pop stroke-l2" cx={p.x} cy={p.y} size="sm" />
       )}
-      <text
-        className={`fade t-label ${p.core ? "" : "fill-muted"}`}
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        className="fade"
+        muted={!p.core}
+        voice="label"
         x={p.x}
         y={p.y + p.R + 22}
       >
         {p.cluster.label} · {p.cluster.members.length}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -238,20 +242,24 @@ export const ClusterField = (props: ClusterFieldProps) => {
   const sizeNoun = props.sizeNoun ?? "ha";
   const nouns = props.nouns ?? "varieties";
   const maxSize = Math.max(1, ...data.clusters.flatMap((c) => c.members));
-  const [tip, setTip] = useState<{
-    cluster: ClusterDatum;
-    x: number;
-    y: number;
-  } | null>(null);
+  const hover = useHover<string>();
+  const tipCluster =
+    hover.key === null
+      ? undefined
+      : data.clusters.find((c) => c.id === hover.key);
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.cluster.label}</b> · {tip.cluster.members.length}{" "}
-            {tip.cluster.members.length === 1 ? noun : nouns} ·{" "}
-            {fmtInt(sum(tip.cluster.members))} {sizeNoun}
+        hover.at === null || tipCluster === undefined ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `${tipCluster.members.length} ${tipCluster.members.length === 1 ? noun : nouns}`,
+                `${fmtInt(sum(tipCluster.members))} ${sizeNoun}`,
+              ]}
+              lead={tipCluster.label}
+            />
           </Tooltip>
         )
       }
@@ -261,37 +269,28 @@ export const ClusterField = (props: ClusterFieldProps) => {
         const height =
           props.height ?? layout.height + noteSpace(props.note, width - 16, 24);
         return (
-          <svg
-            aria-label={`Grape families: ${data.clusters.map((c) => `${c.label} ${c.members.length}`).join(", ")}`}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={`Grape families: ${data.clusters.map((c) => `${c.label} ${c.members.length}`).join(", ")}`}
+            leave={hover.clear}
+            title="Grape families as a core cluster with satellite islands"
             width={width}
           >
-            <title>
-              Grape families as a core cluster with satellite islands
-            </title>
             <Paths links={data.links} placed={layout.placed} />
             {layout.placed.map((p) => (
               <Cluster
-                dim={tip !== null && tip.cluster.id !== p.cluster.id}
+                dim={hover.dim(p.cluster.id)}
                 key={p.cluster.id}
                 maxSize={maxSize}
                 onEnter={() => {
-                  setTip({ cluster: p.cluster, x: p.x, y: p.y - p.R - 4 });
+                  hover.show(p.cluster.id, p.x, p.y - p.R - 4);
                 }}
                 p={p}
                 s={layout.s}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

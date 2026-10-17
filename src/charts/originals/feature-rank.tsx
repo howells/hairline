@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { PointerEvent } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { DimGroup, TipText } from "../hover";
+import { HRule, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, ranks, sansWidth, stagger } from "../util";
+import { clamp, ranks, sansWidth, stagger } from "../util";
 import { featureUse, QUARTERS } from "./feature-rank.data";
 import type { FeatureUse } from "./feature-rank.data";
 
@@ -121,9 +124,8 @@ interface TrackProps {
 const Track = ({ datum, dim, hero, i, lay, rank, tex, width }: TrackProps) => {
   const last = rank.at(-1) ?? 0;
   const y = lay.y(last);
-  const tone = hero ? "" : "fill-muted";
   return (
-    <g className={dimClass(dim)}>
+    <DimGroup dim={dim}>
       <path
         className={`grow-x ${hero ? "stroke-ink" : "stroke-l5"}`}
         d={bandPath(rank, datum.weekly, lay)}
@@ -132,26 +134,28 @@ const Track = ({ datum, dim, hero, i, lay, rank, tex, width }: TrackProps) => {
         strokeWidth={1}
         style={stagger(i, "series")}
       />
-      <text
-        className={`fade t-label ${tone}`}
-        dy="0.34em"
-        style={stagger(i + 8)}
+      <Label
+        middle
+        muted={!hero}
+        order={i + 8}
+        voice="label"
         x={lay.x1 + GAP}
         y={y}
       >
         {datum.feature}
-      </text>
-      <text
-        className={`fade t-value ${tone}`}
-        dy="0.34em"
-        style={stagger(i + 8)}
-        textAnchor="end"
+      </Label>
+      <Label
+        anchor="end"
+        middle
+        muted={!hero}
+        order={i + 8}
+        voice="value"
         x={width}
         y={y}
       >
         {fmtUsers(datum.weekly.at(-1) ?? 0)}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -161,36 +165,26 @@ const Track = ({ datum, dim, hero, i, lay, rank, tex, width }: TrackProps) => {
  */
 const Staff = ({ count, lay }: { count: number; lay: Layout }) => (
   <g>
-    {QUARTERS.slice(1).map((q, k) => {
-      const bx = crisp((lay.cx(k) + lay.cx(k + 1)) / 2);
-      return (
-        <line
-          className="grid-line"
-          key={q}
-          x1={bx}
-          x2={bx}
-          y1={lay.y(0) - 14}
-          y2={lay.y(count - 1) + 14}
-        />
-      );
-    })}
+    {QUARTERS.slice(1).map((q, k) => (
+      <VRule
+        key={q}
+        kind="grid"
+        x={(lay.cx(k) + lay.cx(k + 1)) / 2}
+        y0={lay.y(0) - 14}
+        y1={lay.y(count - 1) + 14}
+      />
+    ))}
     {QUARTERS.map((q, k) => (
-      <text className="t-axis" key={q} textAnchor="middle" x={lay.cx(k)} y={14}>
+      <Label anchor="middle" key={q} voice="axis" x={lay.cx(k)} y={14}>
         {q}
-      </text>
+      </Label>
     ))}
     {Array.from({ length: count }, (_, r) => (
       <g key={`rank-${r + 1}`}>
-        <line
-          className="grid-line"
-          x1={Math.round(lay.x0)}
-          x2={lay.x1}
-          y1={crisp(lay.y(r))}
-          y2={crisp(lay.y(r))}
-        />
-        <text className="t-axis" dy="0.34em" x={0} y={lay.y(r)}>
+        <HRule kind="grid" x0={Math.round(lay.x0)} x1={lay.x1} y={lay.y(r)} />
+        <Label middle voice="axis" x={0} y={lay.y(r)}>
           {r + 1}
-        </text>
+        </Label>
       </g>
     ))}
   </g>
@@ -240,17 +234,16 @@ export const FeatureRank = (props: FeatureRankProps) => {
         };
         return (
           <>
-            <svg
-              aria-label={label}
+            <ChartSvg
               className="touch-pan-y"
               height={height}
-              onPointerLeave={() => {
+              label={label}
+              leave={() => {
                 setHover(null);
               }}
               onPointerMove={onMove}
               width={width}
             >
-              <title>{label}</title>
               <defs>
                 <Hatch id={tex("band")} tone="fill-l4" />
                 <CrossHatch id={tex("hero")} tone="fill-hero" />
@@ -269,15 +262,20 @@ export const FeatureRank = (props: FeatureRankProps) => {
                   width={width}
                 />
               ))}
-            </svg>
+            </ChartSvg>
             {hover === null ? null : (
               <Tooltip
                 x={lay.cx(hover.q)}
                 y={lay.y(rankOf[hover.f][hover.q]) - 6}
               >
-                <b>{data[hover.f].feature}</b> · {QUARTERS[hover.q]} ·{" "}
-                {fmtRank(rankOf[hover.f][hover.q])} ·{" "}
-                {fmtUsers(data[hover.f].weekly[hover.q])}
+                <TipText
+                  facts={[
+                    QUARTERS[hover.q],
+                    fmtRank(rankOf[hover.f][hover.q]),
+                    fmtUsers(data[hover.f].weekly[hover.q]),
+                  ]}
+                  lead={data[hover.f].feature}
+                />
               </Tooltip>
             )}
           </>

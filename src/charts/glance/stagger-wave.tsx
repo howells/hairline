@@ -1,16 +1,19 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { utcFormat } from "d3-time-format";
-import { useState } from "react";
 
 import { fmtDegC } from "../../lib/format";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
-import { barPath } from "../shapes";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { Bar } from "../markers";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { cx, noteSpace, stagger } from "../util";
 import { staggerWaveDemo } from "./stagger-wave.data";
 import type { WaveDatum } from "./stagger-wave.data";
 import { labelRoom } from "./util-a";
@@ -22,12 +25,6 @@ interface StaggerWaveProps {
   note?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
-}
-
-interface Tip {
-  i: number;
-  x: number;
-  y: number;
 }
 
 interface WaveBarProps {
@@ -42,31 +39,26 @@ interface WaveBarProps {
   top: number;
 }
 
-/** The path of a bar: up from the zero line for a positive value, down for a negative one. */
-const wavePath = (p: WaveBarProps) => {
+/**
+ * The extreme in solid ink; every other bar hatched inside a crisp outline.
+ * A bar stands up from the zero line for a positive value, down for a
+ * negative one.
+ */
+const WaveBar = (p: WaveBarProps) => {
   const up = p.top <= p.zero;
-  if (p.hero) {
-    return up
-      ? barPath(p.left, p.top, p.bw, p.zero - p.top, "up")
-      : barPath(p.left, p.zero, p.bw, p.top - p.zero, "down");
-  }
-  const w = Math.round(p.bw) - 1;
-  const z = Math.round(p.zero);
-  return up
-    ? barPath(crisp(p.left), crisp(p.top), w, z - Math.round(p.top), "up")
-    : barPath(crisp(p.left), crisp(z), w, Math.round(p.top) - z, "down");
+  return (
+    <Bar
+      className={cx("grow-y", up ? null : "from-top", p.hero && "fill-hero")}
+      dir={up ? "up" : "down"}
+      fill={p.hero ? undefined : paint(p.hatch)}
+      h={up ? p.zero - p.top : p.top - p.zero}
+      style={stagger(p.i, "fine")}
+      w={p.bw}
+      x={p.left}
+      y={up ? p.top : p.zero}
+    />
+  );
 };
-
-/** The extreme in solid ink; every other bar hatched inside a crisp outline. */
-const WaveBar = (p: WaveBarProps) => (
-  <path
-    className={`grow-y ${p.top <= p.zero ? "" : "from-top"} ${p.hero ? "fill-hero" : "stroke-l5 shape-crisp"}`}
-    style={stagger(p.i, "fine")}
-    d={wavePath(p)}
-    fill={p.hero ? undefined : paint(p.hatch)}
-    strokeWidth={p.hero ? undefined : 1}
-  />
-);
 
 /** Gridlines with their values: a hairline at zero, the grid above it. */
 const YGrid = (p: {
@@ -78,22 +70,15 @@ const YGrid = (p: {
   <g>
     {p.y.ticks(6).map((t) => (
       <g key={t}>
-        <line
-          className={t === 0 ? "hairline" : "grid-line"}
-          x1={p.left}
-          x2={p.right}
-          y1={crisp(p.y(t))}
-          y2={crisp(p.y(t))}
-        />
-        <text
-          className="t-axis"
-          x={p.left - 10}
+        <HRule
+          kind={t === 0 ? "hairline" : "grid"}
+          x0={p.left}
+          x1={p.right}
           y={p.y(t)}
-          dy="0.35em"
-          textAnchor="end"
-        >
+        />
+        <Label anchor="end" dy="0.35em" voice="axis" x={p.left - 10} y={p.y(t)}>
           {p.format(t)}
-        </text>
+        </Label>
       </g>
     ))}
   </g>
@@ -130,16 +115,16 @@ const DayTicks = (props: {
   y: number;
 }) =>
   props.ticks.map((t, k) => (
-    <text
+    <Label
+      anchor={k === 0 ? "start" : "middle"}
+      dx={k === 0 ? -props.bw / 2 : 0}
       key={t.d.date.toISOString()}
-      className="t-axis"
+      voice="axis"
       x={t.at + props.bw / 2}
       y={props.y}
-      textAnchor={k === 0 ? "start" : "middle"}
-      dx={k === 0 ? -props.bw / 2 : 0}
     >
       {props.labels[k]}
-    </text>
+    </Label>
   ));
 
 /**
@@ -153,7 +138,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
   const data = props.data ?? staggerWaveDemo;
   const height = props.height ?? 340;
   const format = props.format ?? defaultFormat;
-  const [tip, setTip] = useState<Tip | null>(null);
+  const hover = useHover<number>();
   const max = Math.max(...data.map((d) => d.value));
   const heroIndex = props.highlight ?? data.findIndex((d) => d.value === max);
   const tex = useTextureIds("wave");
@@ -164,9 +149,12 @@ export const StaggerWave = (props: StaggerWaveProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{weekday(data[tip.i].date)}</b> · {format(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={weekday(data[hover.at.key].date)}
+            />
           </Tooltip>
         )
       }
@@ -193,15 +181,12 @@ export const StaggerWave = (props: StaggerWaveProps) => {
         const tickLabels = dayTickLabels(ticks.map((t) => t.d.date));
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={hatch} tone="fill-l4" />
             </defs>
@@ -217,23 +202,18 @@ export const StaggerWave = (props: StaggerWaveProps) => {
                 const top = y(d.value);
                 const zero = y(0);
                 return (
-                  <g
+                  <DimGroup
                     key={d.date.toISOString()}
-                    className={dimClass(tip !== null && tip.i !== i)}
+                    dim={hover.dim(i)}
                     onPointerEnter={() => {
-                      setTip({
-                        i,
-                        x: left + bw / 2,
-                        y: Math.min(top, zero) - 4,
-                      });
+                      hover.show(i, left + bw / 2, Math.min(top, zero) - 4);
                     }}
                   >
-                    <rect
+                    <HitRect
                       x={left - (x.step() - bw) / 2}
                       y={m.top}
                       width={x.step()}
                       height={floor - m.top}
-                      fill="transparent"
                     />
                     {/* The wave: grow-y re-timed to overshoot and settle, 32ms after its left neighbour. */}
                     <WaveBar
@@ -245,7 +225,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
                       left={left}
                       top={top}
                     />
-                  </g>
+                  </DimGroup>
                 );
               })}
             </g>
@@ -255,13 +235,8 @@ export const StaggerWave = (props: StaggerWaveProps) => {
               ticks={ticks.map((t) => ({ at: x(t.i) ?? 0, d: t.d }))}
               y={floor + 16}
             />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

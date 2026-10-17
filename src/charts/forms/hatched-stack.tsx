@@ -1,7 +1,10 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { KEY } from "../marks";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import {
   CrossHatch,
   DotScreen,
@@ -177,34 +180,28 @@ interface KeyProps {
 const Key = (props: KeyProps) => (
   <g>
     {props.items.map(({ k, kind, w, x, y }) => (
-      <g
-        className={dimClass(props.hover !== null && props.hover !== k)}
+      <DimGroup
+        dim={props.hover !== null && props.hover !== k}
         key={kind.name}
         onPointerEnter={() => {
           props.onHover(k);
         }}
       >
-        <rect
-          className="fill-transparent"
-          height={KEY_LINE}
-          width={w}
-          x={x}
-          y={y}
-        />
+        <HitRect height={KEY_LINE} width={w} x={x} y={y} />
         <KeySwatch
           fill={paint(props.tex(kind.texture))}
           x={x}
           y={y + KEY_LINE / 2 - SWATCH / 2}
         />
-        <text
-          className="t-note"
-          dy="0.34em"
+        <Label
+          middle
+          voice="note"
           x={x + SWATCH + SWATCH_GAP}
           y={y + KEY_LINE / 2}
         >
           {kind.name}
-        </text>
-      </g>
+        </Label>
+      </DimGroup>
     ))}
   </g>
 );
@@ -235,14 +232,15 @@ const Rows = (props: RowsProps) => {
         const heroRow = r === props.hero.row;
         return (
           <g key={row.team}>
-            <text
-              className={`t-label ${heroRow ? "" : "fill-muted"}`}
-              dy="0.34em"
+            <Label
+              middle
+              muted={!heroRow}
+              voice="label"
               x={0}
               y={y + BAR_H / 2}
             >
               {row.team}
-            </text>
+            </Label>
             {segments(row.shares, x0, x1).map((s) => {
               const hero = heroRow && s.k === props.hero.kind;
               const { texture } = props.data.kinds[s.k];
@@ -269,15 +267,17 @@ const Rows = (props: RowsProps) => {
                 />
               );
             })}
-            <text
-              className={`fade t-value ${heroRow ? "" : "fill-muted"}`}
-              dy="0.34em"
-              textAnchor="end"
+            <Label
+              anchor="end"
+              className="fade"
+              middle
+              muted={!heroRow}
+              voice="value"
               x={props.width}
               y={y + BAR_H / 2}
             >
               {`${row.shares[props.hero.kind]}%`}
-            </text>
+            </Label>
           </g>
         );
       })}
@@ -304,9 +304,12 @@ export const HatchedStack = (props: { data?: ShareTable }) => {
       overlay={
         hover === null || row === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{data.rows[row].team}</b> ·{" "}
-            {data.kinds[hover.kind].name.toLowerCase()}{" "}
-            {data.rows[row].shares[hover.kind]}%
+            <TipText
+              facts={[
+                `${data.kinds[hover.kind].name.toLowerCase()} ${data.rows[row].shares[hover.kind]}%`,
+              ]}
+              lead={data.rows[row].team}
+            />
           </Tooltip>
         )
       }
@@ -317,15 +320,14 @@ export const HatchedStack = (props: { data?: ShareTable }) => {
         const height = top + data.rows.length * ROW - (ROW - BAR_H);
         const label = `Share of land by nation, 2021: ${data.rows.map((r) => `${r.team} ${r.shares[hero.kind]}% ${kindName}`).join(", ")}`;
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
             width={width}
           >
-            <title>{label}</title>
             <Textures heroTexture={data.kinds[hero.kind].texture} tex={tex} />
             <Key
               hover={hover?.kind ?? null}
@@ -347,7 +349,7 @@ export const HatchedStack = (props: { data?: ShareTable }) => {
               top={top}
               width={width}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

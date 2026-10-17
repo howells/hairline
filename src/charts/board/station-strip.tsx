@@ -1,14 +1,17 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
-import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { crisp } from "../axes";
 import { Chart } from "../core";
+import { useHover } from "../hooks";
 import { Dot } from "../markers";
 import { MARK_WEIGHT, TICK as TICK_LEN } from "../marks";
-import { LABEL, POINT, TICK, VALUE } from "../roles";
+import { LABEL, POINT } from "../roles";
 import { VGrid } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { stagger } from "../util";
 import { nameWidth } from "./room";
 import { labelGap, thinTicks } from "./thin-ticks";
 
@@ -122,14 +125,15 @@ const StationDot = (props: {
         size={props.active ? "md" : "sm"}
       />
       {named && (
-        <text
-          className={`${props.active ? VALUE : TICK} t-halo`}
+        <Label
+          anchor={anchor}
+          halo
+          voice={props.active ? "value" : "axis"}
           x={anchor === "end" ? cx + 6 : cx}
           y={cy - 10}
-          textAnchor={anchor}
         >
           {e.name} {props.format(e.value)}
-        </text>
+        </Label>
       )}
     </g>
   );
@@ -155,7 +159,7 @@ const StripRow = (props: {
   return (
     <g
       className={`fade transition-opacity ${props.dim ? "opacity-25" : "opacity-100"}`}
-      style={{ "--i": props.i }}
+      style={stagger(props.i)}
     >
       <text
         className={LABEL}
@@ -192,15 +196,16 @@ const StripRow = (props: {
           active={e.name === props.active}
         />
       ))}
-      <text
-        className={`${VALUE} ${tone.value}`}
+      <Label
+        anchor="end"
+        className={tone.value}
+        middle
+        voice="value"
         x={width}
         y={cy}
-        dy="0.34em"
-        textAnchor="end"
       >
         {props.format(row.median)}
-      </text>
+      </Label>
     </g>
   );
 };
@@ -221,20 +226,20 @@ const StripAxes = (props: {
         x,
         labelGap(props.ticks.map(props.tickFormat))
       ).map((t) => (
-        <text
+        <Label
+          anchor="middle"
+          dy="0.71em"
           key={t}
-          className={TICK}
+          voice="axis"
           x={x(t)}
           y={h - m.bottom + 12}
-          dy="0.71em"
-          textAnchor="middle"
         >
           {props.tickFormat(t)}
-        </text>
+        </Label>
       ))}
-      <text className={TICK} x={width} y={m.top - 10} textAnchor="end">
+      <Label anchor="end" voice="axis" x={width} y={m.top - 10}>
         {props.medianTitle}
-      </text>
+      </Label>
     </>
   );
 };
@@ -245,9 +250,10 @@ const StripAxes = (props: {
  * The row with the highest median is inked.
  */
 export const StationStrip = (props: StationStripProps) => {
-  const [hover, setHover] = useState<string | null>(null);
+  const hover = useHover<string>();
   const rows = groupRows(props.stations);
-  const hoverRow = props.stations.find((e) => e.name === hover)?.group ?? null;
+  const hoverRow =
+    props.stations.find((e) => e.name === hover.key)?.group ?? null;
   const tickFormat = props.tickFormat ?? props.format;
 
   return (
@@ -278,21 +284,26 @@ export const StationStrip = (props: StationStripProps) => {
         };
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
+            label={props.label}
+            leave={hover.clear}
             onPointerMove={(e: PointerEvent<SVGSVGElement>) => {
               const r = e.currentTarget.getBoundingClientRect();
-              setHover(
-                nearestIn(rows, frame, e.clientX - r.left, e.clientY - r.top)
+              const name = nearestIn(
+                rows,
+                frame,
+                e.clientX - r.left,
+                e.clientY - r.top
               );
+              if (name === null) {
+                hover.clear();
+              } else {
+                hover.show(name);
+              }
             }}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            width={width}
           >
-            <title>{props.label}</title>
             <StripAxes
               frame={frame}
               ticks={props.ticks}
@@ -307,11 +318,11 @@ export const StationStrip = (props: StationStripProps) => {
                 format={props.format}
                 frame={frame}
                 tone={i === 0 ? "hero" : "rest"}
-                active={hover}
+                active={hover.key}
                 dim={hoverRow !== null && hoverRow !== row.name}
               />
             ))}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

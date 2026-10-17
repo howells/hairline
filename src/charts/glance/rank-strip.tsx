@@ -2,10 +2,13 @@ import { useState } from "react";
 
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { DimGroup, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, PlateLabel } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { rankStripDemo } from "./rank-strip.data";
 import type { RankSeries, RankStripData } from "./rank-strip.data";
 import { textWidth } from "./util-a";
@@ -97,11 +100,11 @@ const Row = (p: RowProps) => {
   const { cell, gap, gridW, ring, x0 } = p.geo;
   const delta = climb(p.series);
   return (
-    <g className={dimClass(p.dimmed)}>
+    <DimGroup dim={p.dimmed}>
       {p.hero ? (
         <rect
           className="fade stroke-hero fill-none"
-          style={{ "--i": p.periods.length + 2 }}
+          style={stagger(p.periods.length + 2)}
           x={x0 - ring}
           y={p.y - ring}
           width={gridW + ring * 2}
@@ -110,15 +113,17 @@ const Row = (p: RowProps) => {
           strokeWidth={2}
         />
       ) : null}
-      <text
-        className={`t-name ${p.hero ? "fill-ink" : "fill-muted"}`}
+      <Label
+        anchor="end"
+        className={p.hero ? "fill-ink" : undefined}
+        dy="0.36em"
+        muted={!p.hero}
+        voice="name"
         x={x0 - nameGap(p.hero)}
         y={p.y + cell / 2}
-        dy="0.36em"
-        textAnchor="end"
       >
         {p.series.label}
-      </text>
+      </Label>
       {p.series.ranks.map((r, j) => {
         const cx = x0 + j * (cell + gap);
         const period = p.periods[j];
@@ -149,16 +154,17 @@ const Row = (p: RowProps) => {
           </g>
         );
       })}
-      <text
-        className={`fade t-value ${p.hero ? "" : "fill-muted"}`}
-        style={{ "--i": p.periods.length + 3 }}
+      <Label
+        dy="0.36em"
+        muted={!p.hero}
+        order={p.periods.length + 3}
+        voice="value"
         x={x0 + gridW + deltaGap(p.hero)}
         y={p.y + cell / 2}
-        dy="0.36em"
       >
         {deltaText(delta)}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -226,8 +232,13 @@ export const RankStrip = (props: RankStripProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{rows[hover.r].label}</b> · {data.periods[hover.c]} · #
-            {rows[hover.r].ranks[hover.c]} of {data.outOf ?? nS}
+            <TipText
+              facts={[
+                data.periods[hover.c],
+                `#${rows[hover.r].ranks[hover.c]} of ${data.outOf ?? nS}`,
+              ]}
+              lead={rows[hover.r].label}
+            />
           </Tooltip>
         )
       }
@@ -265,36 +276,36 @@ export const RankStrip = (props: RankStripProps) => {
             noteSpace(props.note, width - 16, 34);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             <ScreenDefs tex={tex} />
             {header.map((h, j) => (
               <g key={data.periods[j]}>
                 {h.year === undefined ? null : (
-                  <text
-                    className="t-axis"
+                  <Label
+                    anchor="middle"
+                    voice="axis"
                     x={geo.x0 + j * (cell + gap) + cell / 2}
                     y={top - 30}
-                    textAnchor="middle"
                   >
                     {h.year}
-                  </text>
+                  </Label>
                 )}
-                <text
-                  className="t-label fill-muted"
+                <Label
+                  anchor="middle"
+                  muted
+                  voice="label"
                   x={geo.x0 + j * (cell + gap) + cell / 2}
                   y={top - 12 - (crowded && j % 2 === 0 ? 14 : 0)}
-                  textAnchor="middle"
                 >
                   {h.part}
-                </text>
+                </Label>
               </g>
             ))}
             {rows.map((s, i) => (
@@ -311,13 +322,8 @@ export const RankStrip = (props: RankStripProps) => {
                 y={top + i * (cell + rowGap)}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

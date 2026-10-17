@@ -7,11 +7,14 @@ import { fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useScrub } from "../hooks";
+import { TipText } from "../hover";
 import { Dot } from "../markers";
-import { STEM } from "../marks";
+import { Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, KeySwatch, Stipple } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { stagger, weeklyMean } from "../util";
+import { cx, stagger, weeklyMean } from "../util";
 import { ValueGrid } from "../value-grid";
 import { dailyUsers } from "./daily-users.data";
 import type { DayCount } from "./daily-users.data";
@@ -53,17 +56,20 @@ const Stems = ({ data, frame, hero, hover, mean }: StemsProps) => (
   <g>
     {data.map((d, i) => {
       const above = d.value >= mean[i];
-      const x = i === hero ? Math.round(frame.x(i)) : crisp(frame.x(i));
       return (
-        <line
-          className={`grow-y transition-tone shape-crisp ${above ? "" : "from-top"} ${stemClass(i === hero, hover === i)}`}
+        <Stem
+          className={cx(
+            "grow-y",
+            "transition-tone",
+            !above && "from-top",
+            stemClass(i === hero, hover === i)
+          )}
+          hero={i === hero}
           key={d.date.toISOString()}
-          strokeWidth={i === hero ? STEM.hero : STEM.rest}
           style={stagger(i, "dense")}
-          x1={x}
-          x2={x}
-          y1={frame.y(mean[i])}
-          y2={frame.y(d.value)}
+          x={frame.x(i)}
+          y0={frame.y(mean[i])}
+          y1={frame.y(d.value)}
         />
       );
     })}
@@ -150,14 +156,14 @@ const Axes = ({ data, frame, width }: AxesProps) => {
         y={frame.y}
       />
       {firsts.map((i, k) => (
-        <text
-          className="t-axis"
+        <Label
           key={data[i].date.toISOString()}
+          voice="axis"
           x={frame.x(i)}
           y={frame.floor + 22}
         >
           {months[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -233,13 +239,12 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
 
   return (
     <>
-      <svg
-        aria-label={label}
+      <ChartSvg
         height={height}
+        label={label}
         width={width}
         {...scrub.bind(data.map((_, i) => frame.x(i)))}
       >
-        <title>{label}</title>
         <Axes data={data} frame={frame} width={width} />
         <Excursions frame={frame} mean={mean} tex={tex} values={values} />
         <Stems
@@ -262,15 +267,15 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           size="md"
           style={stagger(8)}
         />
-        <text
-          className="fade t-value"
-          style={stagger(8)}
-          textAnchor="middle"
+        <Label
+          anchor="middle"
+          order={8}
+          voice="value"
           x={frame.x(hero)}
           y={frame.y(values[hero]) - 10}
         >
           {fmtDegC(values[hero])}
-        </text>
+        </Label>
         {hover === null || hover === hero ? null : (
           <Dot
             className="fill-l2"
@@ -280,14 +285,19 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
           />
         )}
         <Key items={keyItems(tex)} right={width} y={10} />
-      </svg>
+      </ChartSvg>
       {hover === null ? null : (
         <Tooltip
           x={frame.x(hover)}
           y={Math.min(frame.y(values[hover]), frame.y(mean[hover])) - 6}
         >
-          <b>{fmtDay(data[hover].date)}</b> · {fmtDegC(values[hover])} ·{" "}
-          {fmtSigned(values[hover] - mean[hover])} vs mean
+          <TipText
+            facts={[
+              fmtDegC(values[hover]),
+              `${fmtSigned(values[hover] - mean[hover])} vs mean`,
+            ]}
+            lead={fmtDay(data[hover].date)}
+          />
         </Tooltip>
       )}
     </>

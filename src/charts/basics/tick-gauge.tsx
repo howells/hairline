@@ -1,14 +1,15 @@
-import { useState } from "react";
-
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { MARK_WEIGHT, RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing } from "../texture";
 import { clamp, stagger } from "../util";
 import { tickGaugeDemo } from "./tick-gauge.data";
 import type { TickGaugeDatum } from "./tick-gauge.data";
 import { polar } from "./util-b";
-import type { Tip } from "./util-b";
 
 interface TickGaugeProps {
   /** Line under the big number; receives the ticks still to come. Defaults to the amount to come. */
@@ -145,16 +146,16 @@ const Scale = (props: { dial: Dial }) => {
         const end = polar(dial.cx, dial.cy, dial.radius - dial.len - 14, a);
         const last = s === 1;
         return (
-          <text
-            className="t-axis"
-            dy="0.34em"
+          <Label
+            anchor={last ? "end" : "middle"}
             key={s}
-            textAnchor={last ? "end" : "middle"}
+            middle
+            voice="axis"
             x={last ? end.x - 4 : label.x}
             y={last ? end.y : label.y}
           >
             {Math.round(s * dial.n)}
-          </text>
+          </Label>
         );
       })}
     </g>
@@ -166,28 +167,33 @@ const Centre = (props: { caption: string; dial: Dial; pct: number }) => {
   const baseline = dial.cy + 6;
   return (
     <g>
-      <text
-        className="fade t-value-lg"
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        className="fade"
+        voice="value-lg"
         x={dial.cx}
         y={baseline}
       >
         {props.pct}%
-      </text>
-      <text
-        className="fade t-axis"
-        textAnchor="middle"
+      </Label>
+      <Label
+        anchor="middle"
+        className="fade"
+        voice="axis"
         x={dial.cx}
         y={baseline + 20}
       >
         {props.caption}
-      </text>
+      </Label>
     </g>
   );
 };
 
 /** Invisible bands over the earned arc and the remainder, for the tooltip. */
-const HitBands = (props: { dial: Dial; onHover: (tip: Tip<Part>) => void }) => {
+const HitBands = (props: {
+  dial: Dial;
+  onHover: (part: Part, x: number, y: number) => void;
+}) => {
   const { dial } = props;
   const mid = dial.radius - dial.len / 2;
   const end = dial.a0 + dial.sweep + dial.step / 2;
@@ -221,7 +227,7 @@ const HitBands = (props: { dial: Dial; onHover: (tip: Tip<Part>) => void }) => {
                 dial.radius + 6,
                 (b.a0 + b.a1) / 2
               );
-              props.onHover({ item: b.part, x: p.x, y: p.y });
+              props.onHover(b.part, p.x, p.y);
             }}
             strokeWidth={dial.len + 12}
           />
@@ -249,24 +255,26 @@ export const TickGauge = (props: TickGaugeProps) => {
     `${format(Math.max(0, data.target - data.value))} to come`;
   const pct = Math.round(share * 100);
   const label = `${pct}% of target: ${format(data.value)} of ${format(data.target)}`;
-  const [tip, setTip] = useState<Tip<Part> | null>(null);
+  const hover = useHover<Part>();
 
   const tooltip =
-    tip?.item === "earned" ? (
-      <>
-        <b>Fallen</b> · {format(data.value)} of {format(data.target)}
-      </>
+    hover.key === "earned" ? (
+      <TipText
+        facts={[`${format(data.value)} of ${format(data.target)}`]}
+        lead="Fallen"
+      />
     ) : (
-      <>
-        <b>To come</b> · {format(Math.max(0, data.target - data.value))}
-      </>
+      <TipText
+        facts={[format(Math.max(0, data.target - data.value))]}
+        lead="To come"
+      />
     );
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
             {tooltip}
           </Tooltip>
         )
@@ -282,15 +290,12 @@ export const TickGauge = (props: TickGaugeProps) => {
           props.note !== undefined
         );
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={dial.height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <Ticks dial={dial} />
             <DotRing
               className="fade"
@@ -304,14 +309,14 @@ export const TickGauge = (props: TickGaugeProps) => {
             />
             <Scale dial={dial} />
             <Centre caption={caption} dial={dial} pct={pct} />
-            <HitBands dial={dial} onHover={setTip} />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={dial.height - 6}
+            <HitBands
+              dial={dial}
+              onHover={(part, x, y) => {
+                hover.show(part, x, y);
+              }}
             />
-          </svg>
+            <FootNote height={dial.height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

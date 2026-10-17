@@ -6,8 +6,10 @@ import { useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { monthTickLabels } from "../../lib/format";
-import { crisp } from "../axes";
+import { HitRect } from "../hover";
 import { MARK_WEIGHT } from "../marks";
+import { HRule } from "../rules";
+import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { centreOn, dragTo, keyTo } from "./brush-math";
@@ -48,14 +50,14 @@ const StripMonths = (props: {
   return (
     <g>
       {firsts.map((i, k) => (
-        <text
-          className="t-axis"
+        <Label
           key={props.data[i].date.toISOString()}
+          voice="axis"
           x={props.x(i) + 4}
           y={STRIP_H + 16}
         >
           {labels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -131,24 +133,24 @@ const Window = (props: {
           y2={STRIP_H / 2 + 8}
         />
       ))}
-      <rect
-        className="cursor-grab fill-transparent active:cursor-grabbing"
+      <HitRect
+        className="cursor-grab active:cursor-grabbing"
         height={STRIP_H}
         width={Math.max(0, xb - xa)}
         x={xa}
         y={0}
         {...props.grip("body")}
       />
-      <rect
-        className="cursor-ew-resize fill-transparent"
+      <HitRect
+        className="cursor-ew-resize"
         height={STRIP_H}
         width={GRIP + inner}
         x={xa - GRIP}
         y={0}
         {...props.grip("start")}
       />
-      <rect
-        className="cursor-ew-resize fill-transparent"
+      <HitRect
+        className="cursor-ew-resize"
         height={STRIP_H}
         width={GRIP + inner}
         x={xb - inner}
@@ -240,13 +242,7 @@ export const BrushStrip = (props: StripProps) => {
           <Stipple id={tex("out")} pitch={TEXTURE_PITCH.dense} tone="fill-l5" />
           <Stipple id={tex("sel")} pitch={TEXTURE_PITCH.dense} tone="fill-l4" />
         </defs>
-        <line
-          className="hairline"
-          x1={props.x0}
-          x2={props.x1}
-          y1={crisp(STRIP_H - 1)}
-          y2={crisp(STRIP_H - 1)}
-        />
+        <HRule x0={props.x0} x1={props.x1} y={STRIP_H - 1} />
         <path d={tint} fill={paint(tex("out"))} />
         <path clipPath={paint(tex("in"))} d={tint} fill={paint(tex("sel"))} />
         <path
@@ -263,8 +259,7 @@ export const BrushStrip = (props: StripProps) => {
           every={monthStep(props.x1 - props.x0)}
           x={(i) => x(i)}
         />
-        <rect
-          className="fill-transparent"
+        <HitRect
           height={STRIP_H}
           width={props.x1 - props.x0}
           x={props.x0}

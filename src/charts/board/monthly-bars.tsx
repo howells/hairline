@@ -3,21 +3,15 @@ import type { ScaleBand, ScaleLinear } from "d3-scale";
 import type { ReactNode } from "react";
 
 import { MONTHS } from "../../lib/data";
-import { crisp, phase } from "../axes";
+import { phase } from "../axes";
 import type { Margin } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import type { Sync } from "../hooks";
-import {
-  CAPTION,
-  LABEL,
-  MARK,
-  OUTLINE,
-  RULE_TARGET,
-  RULE_ZERO,
-  TICK,
-  VALUE,
-} from "../roles";
+import { CAPTION, LABEL, MARK, OUTLINE, TICK } from "../roles";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
@@ -274,7 +268,7 @@ const DivergingBar = (props: {
   const yv = Math.round(frame.y(value));
   const neg = value < 0;
   return (
-    <g className={`grow-y ${neg ? "from-top" : ""}`} style={{ "--i": i }}>
+    <g className={`grow-y ${neg ? "from-top" : ""}`} style={stagger(i)}>
       <SegmentRect
         paint={segmentPaint(neg ? "loss" : "gain", tone, frame)}
         {...barX(frame, i)}
@@ -400,14 +394,13 @@ const Bars = (props: {
 /** The plan line, drawn behind the bars. */
 const PlanRule = (props: { plan: Plan; frame: Frame }) => {
   const { m, width, y } = props.frame;
-  const by = crisp(y(props.plan.value));
   return (
-    <line
-      className={`${RULE_TARGET} fade`}
-      x1={m.left}
-      x2={width - m.right}
-      y1={by}
-      y2={by}
+    <HRule
+      className="fade"
+      kind="target"
+      x0={m.left}
+      x1={width - m.right}
+      y={y(props.plan.value)}
     />
   );
 };
@@ -507,15 +500,15 @@ const ValueReadout = (props: {
     y = end + VALUE_LIFT;
   }
   return (
-    <text
+    <Label
+      anchor="middle"
+      dy={below ? "0.71em" : undefined}
+      voice="value"
       x={frame.center(index)}
       y={y}
-      dy={below ? "0.71em" : undefined}
-      textAnchor="middle"
-      className={VALUE}
     >
       {chart.format(value)}
-    </text>
+    </Label>
   );
 };
 
@@ -571,18 +564,17 @@ const MonthlyBarsPlot = (props: {
   const ruleX1 = gridEnd(chart.y, width, m.right);
   const diverging = chart.diverging === true;
   // The baseline: zero for signed bars, else the bottom of the scale.
-  const baseY = crisp(frame.y(diverging ? 0 : chart.y.domain[0]));
+  const baseY = frame.y(diverging ? 0 : chart.y.domain[0]);
   // Signed bars rule every tick, the bottom one too; the zero rule covers its own.
   const floor = diverging ? frame.plotBottom + 2 : frame.plotBottom;
 
   return (
-    <svg
-      width={width}
+    <ChartSvg
       height={chart.height}
-      aria-label={chart.label}
+      label={chart.label}
+      width={width}
       {...scrub.bind(positions)}
     >
-      <title>{chart.label}</title>
       <BarPatterns tex={props.tex} />
       {!compact && (
         <ValueGrid
@@ -598,13 +590,7 @@ const MonthlyBarsPlot = (props: {
       )}
       {chart.plan !== undefined && <PlanRule plan={chart.plan} frame={frame} />}
       <Bars chart={chart} frame={frame} cursor={cursor} />
-      <line
-        className={RULE_ZERO}
-        x1={ruleX0}
-        x2={ruleX1}
-        y1={baseY}
-        y2={baseY}
-      />
+      <HRule x0={ruleX0} x1={ruleX1} y={baseY} />
       {!compact && (
         <Axes chart={chart} frame={frame} readout={readout} ticks={ticks} />
       )}
@@ -619,7 +605,7 @@ const MonthlyBarsPlot = (props: {
           scrubbing={scrub.isHovering}
         />
       )}
-    </svg>
+    </ChartSvg>
   );
 };
 

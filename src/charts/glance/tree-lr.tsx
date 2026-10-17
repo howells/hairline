@@ -4,8 +4,11 @@ import { linkHorizontal } from "d3-shape";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { dimClass, noteSpace, stagger } from "../util";
 import { treeLRDemo } from "./tree-lr.data";
 import type { TreeDatum } from "./tree-lr.data";
@@ -97,13 +100,12 @@ const TreeNode = ({ n, x, y, k, tone, lit, hitRight, onEnter }: NodeProps) => {
   const above = n.x <= (n.ancestors().at(-1)?.x ?? n.x);
   const at = labelAt(role, x, y, above);
   return (
-    <g className={dimClass(!lit)} onPointerEnter={onEnter}>
-      <rect
+    <DimGroup dim={!lit} onPointerEnter={onEnter}>
+      <HitRect
         x={leaf ? x - 8 : x - 40}
         y={leaf || !above ? y - 10 : y - 24}
         width={leaf ? hitRight + 8 : 80}
         height={leaf ? 20 : 34}
-        fill="transparent"
       />
       {leaf ? null : (
         <Dot
@@ -114,17 +116,19 @@ const TreeNode = ({ n, x, y, k, tone, lit, hitRight, onEnter }: NodeProps) => {
           size="md"
         />
       )}
-      <text
-        className={`fade t-name ${TEXT_TONE[role]}`}
-        style={stagger(n.depth * 4 + k * 0.2, "series")}
+      <Label
+        anchor={at.anchor}
+        className={TEXT_TONE[role]}
+        dy="0.35em"
+        order={n.depth * 4 + k * 0.2}
+        tier="series"
+        voice="name"
         x={at.x}
         y={at.y}
-        dy="0.35em"
-        textAnchor={at.anchor}
       >
         {n.data.name}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -145,10 +149,14 @@ export const TreeLR = (props: TreeLRProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{pathOf(tip.node)}</b>
-            {tip.node.children === undefined
-              ? ""
-              : ` · ${tip.node.leaves().length} languages`}
+            <TipText
+              facts={
+                tip.node.children === undefined
+                  ? []
+                  : [`${tip.node.leaves().length} languages`]
+              }
+              lead={pathOf(tip.node)}
+            />
           </Tooltip>
         )
       }
@@ -185,15 +193,14 @@ export const TreeLR = (props: TreeLRProps) => {
         const lit = (n: P) => tip === null || trail.has(pathOf(n));
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setTip(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             <g fill="none" strokeWidth={1}>
               {laid.links().map((l) => (
                 <path
@@ -227,13 +234,8 @@ export const TreeLR = (props: TreeLRProps) => {
                 }}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -2,11 +2,14 @@ import { scaleQuantize } from "d3-scale";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { DimGroup, TipText } from "../hover";
 import { KEY } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotScreen, KeySwatch, PlateLabel } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { matrixHeatGlanceDemo } from "./matrix-heat-glance.data";
 import type { MatrixGlanceData } from "./matrix-heat-glance.data";
 import { labelRoom, textWidth } from "./util-a";
@@ -70,8 +73,9 @@ interface CellProps {
  * way against its outline.
  */
 const Cell = (p: CellProps) => (
-  <g
-    className={`pop ${dimClass(p.dimmed)}`}
+  <DimGroup
+    className="pop"
+    dim={p.dimmed}
     style={stagger(p.stagger, "mark")}
     transform={`translate(${p.x} ${p.y})`}
     onPointerEnter={() => {
@@ -89,7 +93,7 @@ const Cell = (p: CellProps) => (
       strokeWidth={1}
     />
     <PlateLabel hero={p.hero} text={p.text} x={p.w / 2} y={p.h / 2} />
-  </g>
+  </DimGroup>
 );
 
 interface KeyProps {
@@ -121,14 +125,14 @@ const Key = (p: KeyProps) => {
       {entries.map((e) => (
         <g key={e.l}>
           <KeySwatch fill={e.screen} x={e.at} y={p.y} />
-          <text
-            className="t-note"
+          <Label
+            dy="0.35em"
+            voice="note"
             x={e.at + SWATCH + SWATCH_GAP}
             y={p.y + SWATCH / 2}
-            dy="0.35em"
           >
             {e.l}
-          </text>
+          </Label>
         </g>
       ))}
     </g>
@@ -159,15 +163,16 @@ const TileRows = (p: TileRowsProps) => (
       const cy = p.top + i * (p.pitch + p.gap);
       return (
         <g key={row}>
-          <text
-            className="t-label fill-muted"
+          <Label
+            anchor="end"
+            dy="0.36em"
+            muted
+            voice="label"
             x={p.x0 - p.labelGap}
             y={cy + p.pitch / 2}
-            dy="0.36em"
-            textAnchor="end"
           >
             {row}
-          </text>
+          </Label>
           {p.data.columns.map((col, j) => {
             const cx = p.x0 + j * (p.cell + p.gap);
             return (
@@ -246,11 +251,10 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>
-              {data.rows[hover.r]} · {data.columns[hover.c]}
-            </b>{" "}
-            · {format(data.values[hover.r][hover.c])}
-            {unit}
+            <TipText
+              facts={[`${format(data.values[hover.r][hover.c])}${unit}`]}
+              lead={`${data.rows[hover.r]} · ${data.columns[hover.c]}`}
+            />
           </Tooltip>
         )
       }
@@ -279,30 +283,30 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
           keyY + SWATCH + 6 + noteSpace(props.note, width - 16, 30);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={height}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               {DOT_RADII.map((r, k) => (
                 <DotScreen key={r} id={tex(`s${k}`)} r={r} tone="fill-l3" />
               ))}
             </defs>
             {data.columns.map((c, j) => (
-              <text
+              <Label
+                anchor="middle"
                 key={c}
-                className="t-label fill-muted"
+                muted
+                voice="label"
                 x={x0 + j * (cell + gap) + cell / 2}
                 y={top - 12 - (crowded && j % 2 === 0 ? 14 : 0)}
-                textAnchor="middle"
               >
                 {c}
-              </text>
+              </Label>
             ))}
             <TileRows
               cell={cell}
@@ -326,13 +330,8 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
               screens={screens}
               y={keyY}
             />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

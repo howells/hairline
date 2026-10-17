@@ -16,7 +16,10 @@ import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal } from "../hooks";
-import { PlotNote } from "../plot-note";
+import { DimGroup, HitCircle, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { dimClass, noteSpace } from "../util";
 import { forceGraphDemo } from "./force-graph.data";
 import type { ForceLink, ForceNode } from "./force-graph.data";
@@ -272,15 +275,16 @@ const ForceDot = ({
   onPointerMove,
   onPointerUp,
 }: DotProps) => (
-  <g
-    className={`${dimClass(dim)} ${grabbing ? "cursor-grabbing" : "cursor-grab"}`}
+  <DimGroup
+    className={grabbing ? "cursor-grabbing" : "cursor-grab"}
+    dim={dim}
     onPointerEnter={onPointerEnter}
     onPointerDown={onPointerDown}
     onPointerMove={onPointerMove}
     onPointerUp={onPointerUp}
     onPointerCancel={onPointerUp}
   >
-    <circle cx={at.x} cy={at.y} r={r + 6} fill="transparent" />
+    <HitCircle cx={at.x} cy={at.y} r={r + 6} />
     {/* The hub is the one solid node; satellites are hollow rings. */}
     <circle
       className={n.hub ? "fill-hero" : "fill-paper stroke-l3"}
@@ -290,16 +294,20 @@ const ForceDot = ({
       strokeWidth={n.hub ? undefined : 1.5}
     />
     {/* The hub carries its name inside; satellites beside them. */}
-    <text
-      className={`t-name pointer-events-none ${n.hub ? "fill-paper" : "fill-muted"}`}
+    <Label
+      anchor={labelAnchor(n.hub, left)}
+      className={
+        n.hub ? "fill-paper pointer-events-none" : "pointer-events-none"
+      }
+      dy="0.35em"
+      muted={!n.hub}
+      voice="name"
       x={labelX(n.hub, left, at.x, r)}
       y={at.y}
-      dy="0.35em"
-      textAnchor={labelAnchor(n.hub, left)}
     >
       {n.datum.id}
-    </text>
-  </g>
+    </Label>
+  </DimGroup>
 );
 
 /** How far a node and its name reach left and right of its centre. */
@@ -383,18 +391,17 @@ const ForceField = (props: FieldProps) => {
 
   return (
     <div ref={wrap} className="relative">
-      <svg
+      <ChartSvg
         className={`duration-enter touch-none transition-opacity ${shown ? "opacity-100" : "opacity-0"}`}
-        width={width}
         height={height}
-        aria-label={label}
-        onPointerLeave={() => {
+        label={label}
+        leave={() => {
           if (dragging === null) {
             setHover(null);
           }
         }}
+        width={width}
       >
-        <title>{label}</title>
         <ForceLinks graph={graph} focus={focus} at={place} />
         {graph.nodes.map((n) => (
           <ForceDot
@@ -434,16 +441,14 @@ const ForceField = (props: FieldProps) => {
             }}
           />
         ))}
-        <PlotNote
-          text={props.note}
-          width={width - 16}
-          x={width / 2}
-          y={height - 6}
-        />
-      </svg>
+        <FootNote height={height} text={props.note} width={width} />
+      </ChartSvg>
       {focus === null ? null : (
         <Tooltip x={place(focus).x} y={place(focus).y - focus.r * scale - 4}>
-          <b>{focus.datum.id}</b> · {props.format(focus.datum.value)}
+          <TipText
+            facts={[props.format(focus.datum.value)]}
+            lead={focus.datum.id}
+          />
         </Tooltip>
       )}
     </div>

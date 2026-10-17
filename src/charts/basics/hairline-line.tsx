@@ -6,23 +6,21 @@ import type { PointerEvent } from "react";
 import { dayTickLabels, fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
-import { STEM } from "../marks";
 import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
+import { HRule, Stem, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label, XLabels } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
 import { stagger } from "../util";
 import { ValueGrid } from "../value-grid";
 import { hairlineLineDemo } from "./hairline-line.data";
 import type { DailyDatum } from "./hairline-line.data";
-import {
-  VALUE_AXIS_ROOM,
-  dailyFloor,
-  fmtMonthDay,
-  isWeekend,
-  useHoverTip,
-} from "./util-a";
+import { VALUE_AXIS_ROOM, dailyFloor, fmtMonthDay, isWeekend } from "./util-a";
 
 interface HairlineLineProps {
   data?: DailyDatum[];
@@ -94,16 +92,17 @@ const Dots = ({ data, format, frame, hero, hover }: DotsProps) => {
         );
       })}
       {labels.map((i) => (
-        <text
-          className={`fade ${i === hero ? "t-value" : "t-axis"}`}
+        <Label
+          anchor="middle"
           key={dayKey(data[i])}
-          style={stagger(last, "mark")}
-          textAnchor="middle"
+          order={last}
+          tier="mark"
+          voice={i === hero ? "value" : "axis"}
           x={frame.x(i)}
           y={frame.y(data[i].value) - 12}
         >
           {format(data[i].value)}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -123,15 +122,14 @@ const Stems = ({ data, floor, frame, hero }: StemsProps) => (
       const px = frame.x(i);
       if (i === hero) {
         return (
-          <line
-            className="grow-y stroke-hero shape-crisp"
+          <Stem
+            className="grow-y stroke-hero"
+            hero
             key={dayKey(d)}
-            strokeWidth={STEM.hero}
             style={stagger(i, "mark")}
-            x1={Math.round(px)}
-            x2={Math.round(px)}
-            y1={Math.round(floor)}
-            y2={frame.y(d.value)}
+            x={px}
+            y0={Math.round(floor)}
+            y1={frame.y(d.value)}
           />
         );
       }
@@ -173,19 +171,10 @@ const DayAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
   const mondays = data.flatMap((d, i) => (d.date.getUTCDay() === 1 ? [i] : []));
   const labels = dayTickLabels(mondays.map((i) => data[i].date));
   return (
-    <g>
-      {mondays.map((i, k) => (
-        <text
-          className="t-axis"
-          key={dayKey(data[i])}
-          textAnchor="middle"
-          x={frame.x(i)}
-          y={frame.floor + 20}
-        >
-          {labels[k]}
-        </text>
-      ))}
-    </g>
+    <XLabels
+      ticks={mondays.map((i, k) => ({ label: labels[k], x: frame.x(i) }))}
+      y={frame.floor + 20}
+    />
   );
 };
 
@@ -249,15 +238,14 @@ const HairlineLineSvg = ({
   };
 
   return (
-    <svg
-      aria-label={label}
+    <ChartSvg
       className="touch-pan-y"
       height={height}
-      onPointerLeave={clear}
+      label={label}
+      leave={clear}
       onPointerMove={onMove}
       width={width}
     >
-      <title>{label}</title>
       <ValueGrid
         labelFloor
         side="right"
@@ -268,21 +256,14 @@ const HairlineLineSvg = ({
         x1={x1}
         y={y}
       />
-      <line
-        className="hairline"
-        x1={x0}
-        x2={x1}
-        y1={crisp(floor)}
-        y2={crisp(floor)}
-      />
+      <HRule x0={x0} x1={x1} y={floor} />
       <Stems data={data} floor={floor} frame={frame} hero={hero} />
       {hover === null || hover === hero ? null : (
-        <line
-          className="rule"
-          x1={crisp(frame.x(hover))}
-          x2={crisp(frame.x(hover))}
-          y1={frame.y(data[hover].value)}
-          y2={crisp(floor)}
+        <VRule
+          kind="rule"
+          x={frame.x(hover)}
+          y0={frame.y(data[hover].value)}
+          y1={crisp(floor)}
         />
       )}
       <path
@@ -299,7 +280,7 @@ const HairlineLineSvg = ({
       />
       <DayAxis data={data} frame={frame} />
       <PlotNote text={note} width={width - 24} x={width / 2} y={height - 6} />
-    </svg>
+    </ChartSvg>
   );
 };
 
@@ -314,15 +295,20 @@ export const HairlineLine = (props: HairlineLineProps) => {
   const data = props.data ?? hairlineLineDemo;
   const format = props.format ?? fmtInt;
   const fmtDate = props.formatDate ?? fmtMonthDay;
-  const { clear, hover, show, tip } = useHoverTip();
+  const { at, clear, key: hover, show } = useHover<number>();
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{fmtDate(data[tip.i].date)}</b> · {format(data[tip.i].value)}
-            {isWeekend(data[tip.i].date) ? " · weekend" : ""}
+        at === null ? null : (
+          <Tooltip x={at.x} y={at.y}>
+            <TipText
+              facts={[
+                format(data[at.key].value),
+                ...(isWeekend(data[at.key].date) ? ["weekend"] : []),
+              ]}
+              lead={fmtDate(data[at.key].date)}
+            />
           </Tooltip>
         )
       }

@@ -4,7 +4,10 @@ import type { PointerEvent, RefObject } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { useReveal } from "../hooks";
-import { PlotNote } from "../plot-note";
+import { HitRect, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { clamp, noteSpace } from "../util";
@@ -241,13 +244,15 @@ const GalaxyMarks = (props: {
                   y={0}
                 />
               </g>
-              <text
-                className="t-label t-halo group-data-[plate=true]/hub:hidden"
+              <Label
+                anchor="middle"
+                className="group-data-[plate=true]/hub:hidden"
                 dy="0.35em"
-                textAnchor="middle"
+                halo
+                voice="label"
               >
                 {ring.hub.id}
-              </text>
+              </Label>
             </g>
           );
         })}
@@ -437,10 +442,10 @@ const GalaxySvg = (props: {
       className={`duration-enter transition-opacity ${shown ? "opacity-100" : "opacity-0"}`}
       ref={wrap}
     >
-      <svg
-        aria-label={label}
+      <ChartSvg
         className="group/galaxy touch-pan-y data-[dragging=true]:cursor-grabbing"
         height={height}
+        label={label}
         ref={(el) => {
           if (el !== null) {
             handles.frame.set("root", el);
@@ -449,17 +454,11 @@ const GalaxySvg = (props: {
         width={width}
         {...pointer}
       >
-        <title>{label}</title>
         <HubDefs pid={pid} />
-        <rect className="fill-transparent" height={height} width={width} />
+        <HitRect height={height} width={width} />
         {marks}
-        <PlotNote
-          text={props.note}
-          width={width - 16}
-          x={width / 2}
-          y={height - 6}
-        />
-      </svg>
+        <FootNote height={height} text={props.note} width={width} />
+      </ChartSvg>
     </div>
   );
 };
@@ -480,8 +479,13 @@ export const ForceGalaxy = (props: ForceGalaxyProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.id}</b> · {format(tip.volume)}{" "}
-            {props.unit ?? "entries and exits a year"} · {tip.degree} links
+            <TipText
+              facts={[
+                `${format(tip.volume)} ${props.unit ?? "entries and exits a year"}`,
+                `${tip.degree} links`,
+              ]}
+              lead={tip.id}
+            />
           </Tooltip>
         )
       }

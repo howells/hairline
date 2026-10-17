@@ -4,7 +4,8 @@
 import { area } from "d3-shape";
 
 import type { Point } from "../../lib/data";
-import { OUTLINE, TICK } from "../roles";
+import { OUTLINE } from "../roles";
+import { Label } from "../text";
 import { DotScreen, Hatch, Rules, Stipple } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
 import { TICK_CHAR } from "./thin-ticks";
@@ -101,14 +102,14 @@ const BandLabel = (props: {
   const left = m.left + half;
   const right = width - m.right - half;
   return (
-    <text
-      className={TICK}
+    <Label
+      anchor="middle"
+      voice="axis"
       x={Math.max(left, Math.min(right, mid))}
       y={m.top - 8}
-      textAnchor="middle"
     >
       {props.band.label}
-    </text>
+    </Label>
   );
 };
 

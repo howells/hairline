@@ -1,19 +1,20 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { TICK } from "../marks";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { HRule, Tick } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DottedLine } from "../texture";
-import { dimClass, stagger } from "../util";
+import { stagger } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { binMedian, rungHistogramDemo } from "./rung-histogram.data";
 import type { HistBin } from "./rung-histogram.data";
 import { Rungs } from "./rungs";
-import { isActive, maxIndex } from "./util-b";
-import type { Tip } from "./util-b";
+import { maxIndex } from "./util-b";
 
 interface RungHistogramProps {
   data?: HistBin[];
@@ -90,31 +91,23 @@ const Axis = (props: {
   const y = layout.floor + 4;
   return (
     <g>
-      <line
-        className="hairline"
-        x1={Math.round(layout.x0 - 8)}
-        x2={Math.round(layout.x0 + layout.plotW + 8)}
-        y1={crisp(y)}
-        y2={crisp(y)}
+      <HRule
+        x0={Math.round(layout.x0 - 8)}
+        x1={Math.round(layout.x0 + layout.plotW + 8)}
+        y={y}
       />
       {edges.map((e, k) => (
         <g key={e}>
-          <line
-            className="hairline"
-            x1={crisp(layout.x(e))}
-            x2={crisp(layout.x(e))}
-            y1={y + 1}
-            y2={y + 1 + (k % step === 0 ? TICK.md : TICK.sm)}
-          />
+          <Tick size={k % step === 0 ? "md" : "sm"} x={layout.x(e)} y={y + 1} />
           {k % step === 0 ? (
-            <text
-              className="t-axis"
-              textAnchor="middle"
+            <Label
+              anchor="middle"
+              voice="axis"
               x={layout.x(e)}
               y={layout.floor + 30}
             >
               {props.formatX(e)}
-            </text>
+            </Label>
           ) : null}
         </g>
       ))}
@@ -124,11 +117,11 @@ const Axis = (props: {
 
 interface BinProps {
   bin: HistBin;
+  dim: boolean;
   format: (v: number) => string;
-  hover: number | null;
   index: number;
   layout: Layout;
-  onHover: (tip: Tip<HistBin>) => void;
+  onHover: (x: number, y: number) => void;
   peak: boolean;
   unit: number;
 }
@@ -141,23 +134,13 @@ const Bin = (props: BinProps) => {
   const top = rungY(layout.floor, count - 1, layout.pitch);
   const hitTop = Math.min(top, layout.floor - 30) - 12;
   return (
-    <g
-      className={dimClass(isActive(props.hover, bin.x0) === false)}
+    <DimGroup
+      dim={props.dim}
       onPointerEnter={() => {
-        props.onHover({
-          item: bin,
-          x: left + bw / 2,
-          y: top - (props.peak ? 26 : 6),
-        });
+        props.onHover(left + bw / 2, top - (props.peak ? 26 : 6));
       }}
     >
-      <rect
-        className="fill-transparent"
-        height={layout.floor - hitTop}
-        width={bw}
-        x={left}
-        y={hitTop}
-      />
+      <HitRect height={layout.floor - hitTop} width={bw} x={left} y={hitTop} />
       <Rungs
         accent={props.peak ? "fill-hero" : "fill-l2"}
         className={props.peak ? "fill-hero" : "fill-l4"}
@@ -170,17 +153,18 @@ const Bin = (props: BinProps) => {
         width={bw * 0.76}
       />
       {props.peak ? (
-        <text
-          className="fade t-value"
-          style={stagger(index, "series")}
-          textAnchor="middle"
+        <Label
+          anchor="middle"
+          order={index}
+          tier="series"
+          voice="value"
           x={left + bw / 2}
           y={top - 10}
         >
           {props.format(bin.count)}
-        </text>
+        </Label>
       ) : null}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -198,14 +182,15 @@ const Marker = (props: { label: string; layout: Layout; value: number }) => {
         y0={layout.top - 2}
         y1={layout.floor + 3}
       />
-      <text
-        className="t-axis t-halo"
-        textAnchor={flip ? "end" : "start"}
+      <Label
+        anchor={flip ? "end" : "start"}
+        halo
+        voice="axis"
         x={mx + (flip ? -8 : 8)}
         y={layout.top + 2}
       >
         {props.label}
-      </text>
+      </Label>
     </g>
   );
 };
@@ -222,7 +207,7 @@ export const RungHistogram = (props: RungHistogramProps) => {
   const format = props.format ?? String;
   const marker = props.marker === undefined ? binMedian(data) : props.marker;
   const peak = maxIndex(data.map((d) => d.count));
-  const [tip, setTip] = useState<Tip<HistBin> | null>(null);
+  const hover = useHover<number>();
   const label = data
     .map((d) => `${formatX(d.x0)}–${formatX(d.x1)}: ${format(d.count)}`)
     .join(", ");
@@ -232,12 +217,12 @@ export const RungHistogram = (props: RungHistogramProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>
-              {formatX(tip.item.x0)}–{formatX(tip.item.x1)}
-            </b>{" "}
-            · {format(tip.item.count)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].count)]}
+              lead={`${formatX(data[hover.at.key].x0)}–${formatX(data[hover.at.key].x1)}`}
+            />
           </Tooltip>
         )
       }
@@ -251,15 +236,12 @@ export const RungHistogram = (props: RungHistogramProps) => {
           props.note !== undefined
         );
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <Axis
               data={data}
               every={props.labelEvery ?? 3}
@@ -269,12 +251,14 @@ export const RungHistogram = (props: RungHistogramProps) => {
             {data.map((bin, i) => (
               <Bin
                 bin={bin}
+                dim={hover.dim(i)}
                 format={format}
-                hover={tip?.item.x0 ?? null}
                 index={i}
                 key={bin.x0}
                 layout={layout}
-                onHover={setTip}
+                onHover={(x, y) => {
+                  hover.show(i, x, y);
+                }}
                 peak={i === peak}
                 unit={unit}
               />
@@ -288,13 +272,8 @@ export const RungHistogram = (props: RungHistogramProps) => {
                 value={marker}
               />
             ) : null}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

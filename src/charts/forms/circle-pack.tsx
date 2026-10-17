@@ -3,6 +3,9 @@ import type { HierarchyCircularNode } from "d3-hierarchy";
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { TipText } from "../hover";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { PlateLabel, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger } from "../util";
@@ -68,16 +71,18 @@ const LeafLabel = (props: { hero: boolean; n: Circle }) => {
     );
   }
   return (
-    <text
-      className="fade t-axis pointer-events-none"
-      dy="0.34em"
-      style={stagger(6, "mark")}
-      textAnchor="middle"
+    <Label
+      anchor="middle"
+      className="pointer-events-none"
+      middle
+      order={6}
+      tier="mark"
+      voice="axis"
       x={n.x}
       y={n.y}
     >
       {n.data.name}
-    </text>
+    </Label>
   );
 };
 
@@ -103,7 +108,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
-            <b>{hover.name}</b> · {hover.value} towers
+            <TipText facts={[`${hover.value} towers`]} lead={hover.name} />
           </Tooltip>
         )
       }
@@ -122,15 +127,14 @@ export const CirclePack = (props: { data?: OrgNode }) => {
         const dx = Math.round((width - size) / 2);
         const label = `Towers with a ring of bells, by county, ${root.value} in all; most in ${hero.data.name}, ${hero.value}`;
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={size}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Stipple id={stipple} tone="fill-l4" />
             </defs>
@@ -164,7 +168,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
                 <LeafLabel hero={n === hero} key={`label-${keyOf(n)}`} n={n} />
               ))}
             </g>
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

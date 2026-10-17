@@ -4,12 +4,15 @@ import { area, curveMonotoneX, line } from "d3-shape";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent, RefObject } from "react";
 
-import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { useHover, useReducedMotion, useReveal, useSvgId } from "../hooks";
+import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { HRule, VRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint } from "../texture-ids";
 import { noteSpace } from "../util";
@@ -31,12 +34,6 @@ interface DynamicStreamProps {
   height?: number;
   format?: (v: number) => string;
   note?: string;
-}
-
-interface Hit {
-  s: number;
-  x: number;
-  y: number;
 }
 
 const whole = (v: number) => `${Math.round(v)}`;
@@ -163,17 +160,11 @@ const StreamLayer = (p: LayerProps) => (
       strokeLinejoin="round"
       strokeLinecap="round"
     />
-    <line
-      className="hairline"
-      x1={p.left}
-      x2={p.width}
-      y1={crisp(p.floor)}
-      y2={crisp(p.floor)}
-    />
+    <HRule x0={p.left} x1={p.width} y={p.floor} />
     <Dot className="fill-hero" cx={p.right} cy={p.headY} size="md" />
-    <text className="t-value t-halo" x={p.right + 9} y={p.headY} dy="0.35em">
+    <Label dy="0.35em" halo voice="value" x={p.right + 9} y={p.headY}>
       {p.format(p.latest)}
-    </text>
+    </Label>
   </>
 );
 
@@ -193,7 +184,7 @@ export const DynamicStream = (props: DynamicStreamProps) => {
   const clip = useSvgId("stream");
   const box = useRef<HTMLDivElement>(null);
   const clock = useStreamClock(box, interval);
-  const [hover, setHover] = useState<Hit | null>(null);
+  const hover = useHover<number>();
   const auto = useMemo(() => domainOf(feed), [feed]);
   const [lo, hi] = props.domain ?? auto;
   const head = win + Math.floor(clock.elapsed / interval);
@@ -217,12 +208,12 @@ export const DynamicStream = (props: DynamicStreamProps) => {
       </ControlSlot>
       <Plot
         overlay={
-          hover === null ? null : (
-            <Tooltip x={hover.x} y={hover.y}>
-              <b>
-                {(((head - 1 - hover.s) * interval) / 1000).toFixed(1)}s ago
-              </b>{" "}
-              · {format(feed(hover.s))}
+          hover.at === null ? null : (
+            <Tooltip x={hover.at.x} y={hover.at.y}>
+              <TipText
+                facts={[format(feed(hover.at.key))]}
+                lead={`${(((head - 1 - hover.at.key) * interval) / 1000).toFixed(1)}s ago`}
+              />
             </Tooltip>
           )
         }
@@ -247,20 +238,17 @@ export const DynamicStream = (props: DynamicStreamProps) => {
             const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
             const s = Math.round(head - 1 + frac - (right - px) / dx);
             const k = Math.max(head - win + 1, Math.min(head - 1, s));
-            setHover({ s: k, x: xOf(k), y: y(feed(k)) - 10 });
+            hover.show(k, xOf(k), y(feed(k)) - 10);
           };
           return (
-            <svg
-              width={width}
-              height={height}
-              aria-label={label}
+            <ChartSvg
               className="touch-pan-y"
+              height={height}
+              label={label}
+              leave={hover.clear}
               onPointerMove={handleMove}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              width={width}
             >
-              <title>{label}</title>
               <StreamLayer
                 clip={clip}
                 floor={height - m.bottom}
@@ -273,31 +261,25 @@ export const DynamicStream = (props: DynamicStreamProps) => {
                 width={width}
                 y={y}
               />
-              {hover === null ? null : (
+              {hover.key === null ? null : (
                 <g pointerEvents="none">
-                  <line
-                    className="stroke-faint shape-crisp"
-                    x1={crisp(xOf(hover.s))}
-                    x2={crisp(xOf(hover.s))}
-                    y1={m.top - 6}
-                    y2={height - m.bottom}
+                  <VRule
+                    kind="cursor"
+                    x={xOf(hover.key)}
+                    y0={m.top - 6}
+                    y1={height - m.bottom}
                   />
                   <Ring
                     className="stroke-ink"
-                    cx={xOf(hover.s)}
-                    cy={y(feed(hover.s))}
+                    cx={xOf(hover.key)}
+                    cy={y(feed(hover.key))}
                     size="md"
                     weight="cursor"
                   />
                 </g>
               )}
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={height - 6}
-              />
-            </svg>
+              <FootNote height={height} text={props.note} width={width} />
+            </ChartSvg>
           );
         }}
       </Plot>

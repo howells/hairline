@@ -1,9 +1,12 @@
-import { useState } from "react";
-
 import { fmtInt } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { PlotNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { TEXTURE_PITCH } from "../texture-ids";
 import { dimClass, noteSpace, sansWidth, stagger } from "../util";
 import { hourglassDemo } from "./hourglass-stream.data";
@@ -111,12 +114,11 @@ const StageRow = ({
   format,
 }: StageProps) => (
   <>
-    <rect
+    <HitRect
       x={strip.x0 - 6}
       y={y - h / 2 - 6}
       width={labelX + 100 - strip.x0}
       height={h + 12}
-      fill="transparent"
     />
     {strip.bars.map((b, k) => (
       <line
@@ -132,31 +134,21 @@ const StageRow = ({
     ))}
     {labelX - 10 - (strip.x0 + strip.w + 14) < 16 ? null : (
       // The leader to the label, dropped when it would be only a stub.
-      <line
-        className="fade rule"
+      <HRule
+        className="fade"
+        kind="rule"
         style={stagger(index, "series")}
-        x1={strip.x0 + strip.w + 14}
-        x2={labelX - 10}
-        y1={crisp(y)}
-        y2={crisp(y)}
+        x0={strip.x0 + strip.w + 14}
+        x1={labelX - 10}
+        y={y}
       />
     )}
-    <text
-      className="fade t-label"
-      style={stagger(index, "series")}
-      x={labelX}
-      y={y - 4}
-    >
+    <Label order={index} tier="series" voice="label" x={labelX} y={y - 4}>
       {stage.label}
-    </text>
-    <text
-      className="fade t-value"
-      style={stagger(index, "series")}
-      x={labelX}
-      y={y + 13}
-    >
+    </Label>
+    <Label order={index} tier="series" voice="value" x={labelX} y={y + 13}>
       {format(stage.value)}
-    </text>
+    </Label>
   </>
 );
 
@@ -188,16 +180,15 @@ const StepShares = ({ data, left, strips, yOf }: StepProps) => (
           className="fade"
           style={stagger(j + 3, "series")}
         >
-          <text className="t-value" dy="0.34em" x={left} y={y}>
+          <Label middle voice="value" x={left} y={y}>
             {share}
-          </text>
+          </Label>
           {fan - 10 - from < 16 ? null : (
-            <line
-              className="rule"
-              x1={Math.round(from)}
-              x2={Math.round(fan - 10)}
-              y1={crisp(y)}
-              y2={crisp(y)}
+            <HRule
+              kind="rule"
+              x0={Math.round(from)}
+              x1={Math.round(fan - 10)}
+              y={y}
             />
           )}
         </g>
@@ -217,7 +208,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
   const data = props.data ?? hourglassDemo;
   const height = props.height ?? 470;
   const format = props.format ?? fmtInt;
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const max = Math.max(...data.map((d) => d.value));
 
   return (
@@ -249,25 +240,25 @@ export const HourglassStream = (props: HourglassStreamProps) => {
         const strips = data.map((d) =>
           stripFor(d, max, cx, Math.floor((a1 - a0) / PITCH))
         );
-        const tip = hover === null ? undefined : data[hover];
+        const tip = hover.key === null ? undefined : data[hover.key];
         const [first] = data;
         return (
           <div className="relative">
-            <svg
-              width={width}
+            <ChartSvg
               height={height}
-              aria-label={`Payments by size: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={`Payments by size: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
+              leave={hover.clear}
+              title="Library earnings"
+              width={width}
             >
-              <title>Library earnings</title>
               <g className="stroke-l5 fill-none">
                 {threadsFor(strips, yOf, h).map((t) => (
                   <path
                     key={t.id}
                     className={`draw ${dimClass(
-                      hover !== null && hover !== t.step && hover !== t.step + 1
+                      hover.key !== null &&
+                        hover.key !== t.step &&
+                        hover.key !== t.step + 1
                     )}`}
                     pathLength={1}
                     style={stagger(t.step * 10 + (t.k % 10), "fine")}
@@ -278,11 +269,11 @@ export const HourglassStream = (props: HourglassStreamProps) => {
               </g>
               <StepShares data={data} left={left} strips={strips} yOf={yOf} />
               {data.map((d, i) => (
-                <g
+                <DimGroup
                   key={d.label}
-                  className={dimClass(hover !== null && hover !== i)}
+                  dim={hover.dim(i)}
                   onPointerEnter={() => {
-                    setHover(i);
+                    hover.show(i);
                   }}
                 >
                   <StageRow
@@ -295,15 +286,23 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                     hero={(props.highlight ?? data.length - 1) === i}
                     format={format}
                   />
-                </g>
+                </DimGroup>
               ))}
               <PlotNote text={props.note} width={noteW} x={cx} y={height - 6} />
-            </svg>
-            {tip !== undefined && hover !== null && first !== undefined && (
-              <Tooltip x={cx} y={yOf(hover) - h / 2 - 4}>
-                <b>{tip.label}</b> · {format(tip.value)}
-                {hover > 0 &&
-                  ` · ${Math.round((tip.value / first.value) * 100)}% of ${first.label.toLowerCase()}`}
+            </ChartSvg>
+            {tip !== undefined && hover.key !== null && first !== undefined && (
+              <Tooltip x={cx} y={yOf(hover.key) - h / 2 - 4}>
+                <TipText
+                  facts={[
+                    format(tip.value),
+                    ...(hover.key > 0
+                      ? [
+                          `${Math.round((tip.value / first.value) * 100)}% of ${first.label.toLowerCase()}`,
+                        ]
+                      : []),
+                  ]}
+                  lead={tip.label}
+                />
               </Tooltip>
             )}
           </div>

@@ -18,6 +18,9 @@ import { Plot, Tooltip } from "../core";
 import { useSvgId } from "../hooks";
 import { MARK_WEIGHT, TICK } from "../marks";
 import { PlotNote } from "../plot-note";
+import { HRule, Stem } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger, sum } from "../util";
@@ -249,13 +252,11 @@ const Bands = (props: {
         />
       )}
       {hover === null ? null : (
-        <line
-          className="stroke-paper shape-crisp"
-          strokeWidth={1}
-          x1={crisp(hover.x)}
-          x2={crisp(hover.x)}
-          y1={hoverTop}
-          y2={hoverBottom}
+        <Stem
+          className="stroke-paper"
+          x={hover.x}
+          y0={hoverTop}
+          y1={hoverBottom}
         />
       )}
     </g>
@@ -316,12 +317,12 @@ const Total = (props: {
   const mid = (top + bottom) / 2;
   return (
     <g className="fade" style={stagger(9)}>
-      <text className="t-value" x={x + 10} y={mid - 2}>
+      <Label voice="value" x={x + 10} y={mid - 2}>
         {format(river.totals.at(-1) ?? 0)}
-      </text>
-      <text className="t-note" x={x + 10} y={mid + 12}>
+      </Label>
+      <Label voice="note" x={x + 10} y={mid + 12}>
         Total
-      </text>
+      </Label>
     </g>
   );
 };
@@ -364,12 +365,10 @@ const TimeAxis = (props: {
     : monthTickLabels(ticks.map((t) => t.date));
   return (
     <g>
-      <line
-        className="hairline"
-        x1={Math.round(layout.px0 - 10)}
-        x2={Math.round(layout.px0 + layout.plotW + 10)}
-        y1={crisp(props.y)}
-        y2={crisp(props.y)}
+      <HRule
+        x0={Math.round(layout.px0 - 10)}
+        x1={Math.round(layout.px0 + layout.plotW + 10)}
+        y={props.y}
       />
       {ticks.map((t) => (
         <line
@@ -382,15 +381,15 @@ const TimeAxis = (props: {
         />
       ))}
       {ticks.map((t, k) => (
-        <text
-          className="t-axis"
+        <Label
+          anchor={k === 0 ? "start" : "middle"}
           key={t.date.getTime()}
-          textAnchor={k === 0 ? "start" : "middle"}
+          voice="axis"
           x={k === 0 ? t.x - 2 : t.x}
           y={props.y + 20}
         >
           {labels[k]}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -503,10 +502,10 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
         const hasNote = props.note !== undefined;
         const layout = buildLayout(width, height, data, river, hasNote, format);
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={layout.height}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setHover(null);
             }}
             onPointerMove={(e) => {
@@ -514,7 +513,6 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
             }}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <clipPath id={clip}>
                 <rect
@@ -553,7 +551,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
               x={layout.px0 + layout.plotW / 2}
               y={layout.height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

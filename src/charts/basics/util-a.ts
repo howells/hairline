@@ -1,33 +1,6 @@
 import { utcFormat } from "d3-time-format";
-import { useState } from "react";
 
 import { NOTE_LINE, noteLines } from "../util";
-
-/** Where a tooltip sits and which record it describes. */
-export interface TipState {
-  i: number;
-  x: number;
-  y: number;
-}
-
-/** Hover state shared by the basics-a charts: one hovered record plus a tooltip anchor. */
-export const useHoverTip = () => {
-  const [tip, setTip] = useState<TipState | null>(null);
-  return {
-    clear: () => {
-      setTip(null);
-    },
-    hover: tip?.i ?? null,
-    show: (i: number, x: number, y: number) => {
-      setTip({ i, x, y });
-    },
-    tip,
-  };
-};
-
-/** True when another record is hovered, so this one should dim. */
-export const isDim = (hover: number | null, i: number) =>
-  hover !== null && hover !== i;
 
 /** Saturday or Sunday, in UTC. */
 export const isWeekend = (d: Date) =>

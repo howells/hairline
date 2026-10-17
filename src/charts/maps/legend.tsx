@@ -3,9 +3,11 @@
  * target that isolates its step on hover, and the step fills they share with
  * the map.
  */
+import { DimGroup, HitRect } from "../hover";
 import { KEY } from "../marks";
+import { Label } from "../text";
 import { KeySwatch } from "../texture";
-import { clamp, dimClass, sansWidth } from "../util";
+import { clamp, sansWidth } from "../util";
 import { stepFill } from "./step-fill";
 
 /** Side of a key swatch (KeySwatch), and the gap before its label. */
@@ -74,8 +76,8 @@ const LegendKey = (props: {
   const f = stepFill(k.bin, props.pid);
   const left = k.x + (k.slot - k.w) / 2;
   return (
-    <g
-      className={dimClass(props.active !== null && props.active !== k.bin)}
+    <DimGroup
+      dim={props.active !== null && props.active !== k.bin}
       onPointerEnter={() => {
         props.onStep(k.bin);
       }}
@@ -83,28 +85,23 @@ const LegendKey = (props: {
         props.onStep(null);
       }}
     >
-      <rect
-        className="fill-transparent"
-        height={HIT}
-        width={k.slot}
-        x={k.x}
-        y={-HIT / 2}
-      />
+      <HitRect height={HIT} width={k.slot} x={k.x} y={-HIT / 2} />
       <KeySwatch
         fill={f.fill}
         tone={f.fill === undefined ? f.className : undefined}
         x={left}
         y={-SWATCH / 2}
       />
-      <text
-        className="t-axis pointer-events-none"
+      <Label
+        className="pointer-events-none"
         dy="0.35em"
+        voice="axis"
         x={left + SWATCH + SWATCH_GAP}
         y={0}
       >
         {k.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 

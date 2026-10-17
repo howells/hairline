@@ -1,16 +1,19 @@
 import { scaleBand } from "d3-scale";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { PlotNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Beads } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { NOTE_LINE, dimClass, hasText, noteLines, stagger } from "../util";
+import { NOTE_LINE, hasText, noteLines, stagger } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { rungWaterfallDemo } from "./rung-waterfall.data";
 import type { WaterfallDatum } from "./rung-waterfall.data";
 import { Rungs } from "./rungs";
-import { isDim, useHoverTip } from "./util-a";
 
 interface RungWaterfallProps {
   data?: WaterfallDatum[];
@@ -76,8 +79,6 @@ const accentClass = (c: Step, hero: boolean) => {
   return "fill-l2";
 };
 
-const valueClass = (c: Step) => (c.step ? "fade t-axis" : "fade t-value");
-
 interface BlockProps {
   /** Pattern id of the beads for deductions. */
   beads: string;
@@ -113,14 +114,13 @@ const Block = ({
   const hi = Math.round(Math.max(col.from, col.to) / unit);
   const top = rungY(floor, hi - 1, pitch);
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(left + bw / 2, top - 26);
       }}
     >
-      <rect
-        className="fill-transparent"
+      <HitRect
         height={floor - top + 26}
         width={bw + 12}
         x={left - 6}
@@ -139,24 +139,26 @@ const Block = ({
         pitch={pitch}
         width={bw}
       />
-      <text
-        className={valueClass(col)}
-        style={stagger(index, "series")}
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        order={index}
+        tier="series"
+        voice={col.step ? "axis" : "value"}
         x={left + bw / 2}
         y={top - 11}
       >
         {shownText(col, format)}
-      </text>
-      <text
-        className="t-label fill-muted"
-        textAnchor="middle"
+      </Label>
+      <Label
+        anchor="middle"
+        muted
+        voice="label"
         x={left + bw / 2}
         y={floor + 18}
       >
         {col.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -172,7 +174,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
   const height = props.height ?? 440;
   const format = props.format ?? String;
   const hasNote = hasText(props.note);
-  const { clear, hover, show, tip } = useHoverTip();
+  const hover = useHover<number>();
   const ids = useTextureIds("waterfall");
   const label = cols
     .map((c) => `${c.label} ${shownText(c, format)}`)
@@ -181,10 +183,14 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{cols[tip.i].label}</b> · {shownText(cols[tip.i], format)}
-            {cols[tip.i].step ? ` → ${format(cols[tip.i].to)}` : ""}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `${shownText(cols[hover.at.key], format)}${cols[hover.at.key].step ? ` → ${format(cols[hover.at.key].to)}` : ""}`,
+              ]}
+              lead={cols[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -215,35 +221,28 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
           x1: (x(c.label) ?? 0) + bw,
           x2: x(cols[i + 1].label) ?? 0,
           // Level with the top edge of the highest rung at this level.
-          y: crisp(rungY(floor, Math.round(c.to / unit) - 1, pitch)),
+          y: rungY(floor, Math.round(c.to / unit) - 1, pitch),
         }));
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={clear}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             <defs>
               <Beads id={ids("beads")} tone="fill-l3" />
             </defs>
-            <line
-              className="hairline"
-              x1={Math.round(x0)}
-              x2={Math.round(x0 + plotW)}
-              y1={crisp(floor)}
-              y2={crisp(floor)}
-            />
+            <HRule x0={Math.round(x0)} x1={Math.round(x0 + plotW)} y={floor} />
             {links.map((link, i) => (
-              <line
-                className="fade rule"
+              <HRule
+                className="fade"
                 key={link.id}
+                kind="rule"
                 style={stagger(i + 2, "series")}
-                x1={Math.round(link.x1)}
-                x2={Math.round(link.x2)}
-                y1={link.y}
-                y2={link.y}
+                x0={Math.round(link.x1)}
+                x1={Math.round(link.x2)}
+                y={link.y}
               />
             ))}
             {cols.map((c, i) => (
@@ -251,7 +250,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
                 beads={ids("beads")}
                 bw={bw}
                 col={c}
-                dim={isDim(hover, i)}
+                dim={hover.dim(i)}
                 floor={floor}
                 format={format}
                 hero={hero === i}
@@ -259,7 +258,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
                 key={c.label}
                 left={x(c.label) ?? 0}
                 onEnter={(px, py) => {
-                  show(i, px, py);
+                  hover.show(i, px, py);
                 }}
                 pitch={pitch}
                 unit={unit}
@@ -271,7 +270,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
               x={width / 2}
               y={height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

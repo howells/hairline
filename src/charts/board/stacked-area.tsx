@@ -3,11 +3,13 @@ import type { ScaleLinear, ScaleTime } from "d3-scale";
 import { area, line } from "d3-shape";
 
 import { fmtDay } from "../../lib/format";
-import { crisp } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import { Ring } from "../markers";
-import { CURSOR, LABEL, LINE, RULE_ZERO, TICK_STRONG, VALUE } from "../roles";
+import { LABEL, LINE, VALUE } from "../roles";
+import { Cursor, HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
@@ -168,13 +170,7 @@ const ScrubCursor = (props: {
   const { height: h, m, tops, y } = props.frame;
   return (
     <g>
-      <line
-        className={CURSOR}
-        x1={crisp(cx)}
-        x2={crisp(cx)}
-        y1={m.top}
-        y2={h - m.bottom}
-      />
+      <Cursor x={cx} y0={m.top} y1={h - m.bottom} />
       {props.chart.layers.map((layer, li) => (
         <Ring
           key={layer.label}
@@ -185,15 +181,16 @@ const ScrubCursor = (props: {
           weight="cursor"
         />
       ))}
-      <text
-        className={TICK_STRONG}
+      <Label
+        anchor="middle"
+        className="fill-text"
+        dy="0.71em"
+        voice="axis"
         x={cx}
         y={h - m.bottom + 14}
-        dy="0.71em"
-        textAnchor="middle"
       >
         {fmtDay(props.frame.dates[index])}
-      </text>
+      </Label>
     </g>
   );
 };
@@ -217,16 +214,7 @@ const Gridlines = (props: { chart: StackedAreaProps; frame: Frame }) => {
 /** The ink baseline, drawn over the layers' foot. */
 const Baseline = (props: { frame: Frame }) => {
   const { height: h, m, width } = props.frame;
-  const baseY = crisp(h - m.bottom);
-  return (
-    <line
-      className={RULE_ZERO}
-      x1={m.left}
-      x2={width - m.right}
-      y1={baseY}
-      y2={baseY}
-    />
-  );
+  return <HRule x0={m.left} x1={width - m.right} y={h - m.bottom} />;
 };
 
 /** Clear space kept around the date under the cursor, px. */
@@ -281,13 +269,12 @@ export const StackedArea = (props: StackedAreaProps) => {
         const cx = positions[scrub.index];
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
+            label={props.label}
+            width={width}
             {...scrub.bind(positions)}
           >
-            <title>{props.label}</title>
             <LayerPatterns tex={tex} />
             <defs>
               <clipPath id={`${tex("clip")}-sweep`}>
@@ -318,7 +305,7 @@ export const StackedArea = (props: StackedAreaProps) => {
                 index={scrub.index}
               />
             )}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

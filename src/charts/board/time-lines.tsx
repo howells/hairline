@@ -4,22 +4,14 @@ import type { ReactNode } from "react";
 
 import type { Point } from "../../lib/data";
 import { fmtDay } from "../../lib/format";
-import { crisp } from "../axes";
 import type { Margin } from "../axes";
 import { Chart, SplitClips } from "../core";
 import { useScrub } from "../hooks";
 import { Ring } from "../markers";
-import {
-  CAPTION,
-  CURSOR,
-  DOT,
-  LINE,
-  RULE_TARGET,
-  RULE_ZERO,
-  TICK,
-  TICK_STRONG,
-} from "../roles";
-import { HGrid } from "../rules";
+import { CAPTION, DOT, LINE, RULE_ZERO } from "../roles";
+import { Cursor, HGrid, HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DottedPath } from "../texture";
 import { useTextureIds } from "../texture-ids";
 import { ValueGrid } from "../value-grid";
@@ -204,23 +196,18 @@ const ThresholdRule = (props: { frame: Frame; threshold: Threshold }) => {
   const thY = y(th.value);
   return (
     <g className="fade">
-      <line
-        className={RULE_TARGET}
-        x1={m.left}
-        x2={width - m.right}
-        y1={crisp(thY)}
-        y2={crisp(thY)}
-      />
+      <HRule kind="target" x0={m.left} x1={width - m.right} y={thY} />
       {/* The label sits on the side the line keeps clear of. */}
       {th.label !== undefined && th.label !== "" && (
-        <text
-          className={`${TICK} t-halo`}
+        <Label
+          anchor="end"
+          halo
+          voice="axis"
           x={width - m.right}
           y={th.alert === "below" ? thY + 14 : thY - 6}
-          textAnchor="end"
         >
           {th.label}
-        </text>
+        </Label>
       )}
     </g>
   );
@@ -262,13 +249,7 @@ const ScrubCursor = (props: {
   const red = inRun(props.run, index);
   return (
     <g>
-      <line
-        className={CURSOR}
-        x1={crisp(cx)}
-        x2={crisp(cx)}
-        y1={compact ? m.top : m.top - lift}
-        y2={plotBottom}
-      />
+      <Cursor x={cx} y0={compact ? m.top : m.top - lift} y1={plotBottom} />
       {chart.series.map((s, i) => (
         <Ring
           key={seriesKey(s)}
@@ -303,15 +284,16 @@ const ScrubCursor = (props: {
         />
       )}
       {chart.dateReadout === true && (
-        <text
-          className={TICK_STRONG}
+        <Label
+          anchor="middle"
+          className="fill-text"
+          dy="0.71em"
+          voice="axis"
           x={cx}
           y={plotBottom + 14}
-          dy="0.71em"
-          textAnchor="middle"
         >
           {fmtDay(chart.series[0].data[index].date)}
-        </text>
+        </Label>
       )}
     </g>
   );
@@ -401,13 +383,12 @@ const TimeLinesPlot = (props: {
   const cursor = scrub.index;
 
   return (
-    <svg
-      width={width}
+    <ChartSvg
       height={chart.height}
-      aria-label={chart.label}
+      label={chart.label}
+      width={width}
       {...scrub.bind(positions)}
     >
-      <title>{chart.label}</title>
       <SplitClips id={frame.id} x={cx} width={width} height={chart.height} />
       <Patterns chart={chart} frame={frame} />
       {chart.threshold !== undefined && (
@@ -441,7 +422,7 @@ const TimeLinesPlot = (props: {
           run={run}
         />
       )}
-    </svg>
+    </ChartSvg>
   );
 };
 

@@ -2,14 +2,17 @@ import { scaleRadial } from "d3-scale";
 import type { ScaleRadial } from "d3-scale";
 import { arc, pie } from "d3-shape";
 import type { PieArcDatum } from "d3-shape";
-import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, ranks, sansWidth, stagger } from "../util";
+import { noteSpace, ranks, sansWidth, stagger } from "../util";
 import { bigSliceDemo } from "./big-slice.data";
 import type { SliceDatum } from "./big-slice.data";
 
@@ -31,12 +34,6 @@ interface BigSliceProps {
   highlight?: number;
 }
 
-interface Tip {
-  i: number;
-  x: number;
-  y: number;
-}
-
 interface Wedge {
   endAngle: number;
   outer: number;
@@ -48,16 +45,17 @@ interface SliceProps {
   centre: { cx: number; cy: number };
   d: SliceDatum;
   fill: string;
+  /** Another slice is hovered. */
+  dim: boolean;
   /** Engraved pattern fill; omit for a solid wedge. */
   pattern?: string;
   i: number;
   labelRadius: number;
   narrow: boolean;
-  onEnter: (tip: Tip) => void;
+  onEnter: (x: number, y: number) => void;
   r: ScaleRadial<number, number>;
   shareText: string;
   slice: PieArcDatum<SliceDatum>;
-  tip: Tip | null;
   valueText: string;
   wedge: (w: Wedge) => string | null;
 }
@@ -253,24 +251,19 @@ const tangent = (angle: number) => {
 /** A ring's value: along the ring in a gap when there is one, else tucked left of 12 o'clock. */
 const RingLabel = (p: RingLabelProps) =>
   p.angle === null ? (
-    <text
-      className="t-note t-halo"
-      x={-5}
-      y={-p.radius + 3}
-      dy="0.7em"
-      textAnchor="end"
-    >
+    <Label anchor="end" dy="0.7em" halo voice="note" x={-5} y={-p.radius + 3}>
       {p.text}
-    </text>
+    </Label>
   ) : (
-    <text
-      className="t-note t-halo"
+    <Label
+      anchor="middle"
       dy="0.35em"
-      textAnchor="middle"
+      halo
       transform={`translate(${Math.sin(p.angle) * p.radius},${-Math.cos(p.angle) * p.radius}) rotate(${tangent(p.angle)})`}
+      voice="note"
     >
       {p.text}
-    </text>
+    </Label>
   );
 
 /** One slice: the wedge plus its outside label. */
@@ -283,14 +276,13 @@ const Slice = (p: SliceProps) => {
   const anchor = Math.sin(mid) >= 0 ? "start" : "end";
   const { cx, cy } = p.centre;
   return (
-    <g
-      className={dimClass(p.tip !== null && p.tip.i !== p.i)}
+    <DimGroup
+      dim={p.dim}
       onPointerEnter={() => {
-        p.onEnter({
-          i: p.i,
-          x: cx + Math.sin(mid) * ro * 0.7,
-          y: cy - Math.cos(mid) * ro * 0.7 - 8,
-        });
+        p.onEnter(
+          cx + Math.sin(mid) * ro * 0.7,
+          cy - Math.cos(mid) * ro * 0.7 - 8
+        );
       }}
     >
       <path
@@ -314,7 +306,7 @@ const Slice = (p: SliceProps) => {
       {/* Narrow: the name keeps its share and drops the duration, never the name. */}
       <text
         className="fade fill-text"
-        style={{ "--i": p.i + 3 }}
+        style={stagger(p.i + 3)}
         x={lx}
         y={ly}
         dy="0.35em"
@@ -325,7 +317,7 @@ const Slice = (p: SliceProps) => {
           {p.narrow ? p.shareText : `${p.shareText} · ${p.valueText}`}
         </tspan>
       </text>
-    </g>
+    </DimGroup>
   );
 };
 
@@ -399,7 +391,7 @@ export const BigSlice = (props: BigSliceProps) => {
   const fmtShare = props.formatShare ?? pct;
   const format = props.format ?? minutes;
   const ringFormat = props.ringFormat ?? ringHours;
-  const [tip, setTip] = useState<Tip | null>(null);
+  const hover = useHover<number>();
   const rank = ranks(data.map((d) => d.intensity));
   const heroIndex = props.highlight ?? rank.indexOf(0);
   const tex = useTextureIds("slice");
@@ -412,11 +404,15 @@ export const BigSlice = (props: BigSliceProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {shareOf(data[tip.i])} of adults ·{" "}
-            {format(data[tip.i].intensity)}
-            {suffix}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `${shareOf(data[hover.at.key])} of adults`,
+                `${format(data[hover.at.key].intensity)}${suffix}`,
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -462,15 +458,12 @@ export const BigSlice = (props: BigSliceProps) => {
           .padRadius(outer);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={svgH}
-            aria-label={label}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{label}</title>
             <defs>
               <Hatch id={tex("hatch")} tone="fill-l4" />
             </defs>
@@ -481,16 +474,18 @@ export const BigSlice = (props: BigSliceProps) => {
                   key={s.data.label}
                   centre={centre}
                   d={s.data}
+                  dim={hover.dim(i)}
                   fill={heroIndex === i ? "fill-hero" : "stroke-l5"}
                   pattern={heroIndex === i ? undefined : paint(tex("hatch"))}
                   i={i}
                   labelRadius={r(rings.at(-1) ?? max)}
                   narrow={narrow}
-                  onEnter={setTip}
+                  onEnter={(tipX, tipY) => {
+                    hover.show(i, tipX, tipY);
+                  }}
                   r={r}
                   shareText={shareOf(s.data)}
                   slice={s}
-                  tip={tip}
                   valueText={format(s.data.intensity)}
                   wedge={wedge}
                 />
@@ -504,13 +499,8 @@ export const BigSlice = (props: BigSliceProps) => {
                 />
               ))}
             </g>
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

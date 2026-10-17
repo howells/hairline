@@ -1,12 +1,15 @@
 import { arc as d3arc } from "d3-shape";
 
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, TipText } from "../hover";
 import { MARK_WEIGHT, RING_STEP } from "../marks";
 import { PlotNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing } from "../texture";
 import {
   NOTE_LINE,
-  dimClass,
   noteLines,
   ranks,
   sansWidth,
@@ -15,7 +18,6 @@ import {
 } from "../util";
 import { tickDonutDemo } from "./tick-donut.data";
 import type { ShareDatum } from "./tick-donut.data";
-import { isDim, useHoverTip } from "./util-a";
 import { inkWidth } from "./util-b";
 
 interface TickDonutProps {
@@ -244,8 +246,8 @@ const Source = ({
   const anchorPt = polar(dial, mid, dial.rOut);
 
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(anchorPt.x, anchorPt.y - 8);
       }}
@@ -272,11 +274,7 @@ const Source = ({
           />
         </g>
       ))}
-      <text
-        className={`fade t-label ${hero ? "" : "fill-muted"}`}
-        style={stagger(4 + rank)}
-        textAnchor={place.anchor}
-      >
+      <Label anchor={place.anchor} muted={!hero} order={4 + rank} voice="label">
         {lines.map((line, k) => (
           <tspan
             dy={k === 0 ? place.dy : LABEL_LINE}
@@ -287,8 +285,8 @@ const Source = ({
             {line}
           </tspan>
         ))}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -296,10 +294,10 @@ interface SvgProps {
   center: { caption: string; value: string };
   clear: () => void;
   data: ShareDatum[];
+  dim: (i: number) => boolean;
   format: (v: number) => string;
   height: number;
   highlight: number | undefined;
-  hover: number | null;
   note: string | undefined;
   show: (i: number, x: number, y: number) => void;
   width: number;
@@ -309,10 +307,10 @@ const TickDonutSvg = ({
   center,
   clear,
   data,
+  dim,
   format,
   height,
   highlight,
-  hover,
   note,
   show,
   width,
@@ -369,13 +367,7 @@ const TickDonutSvg = ({
   const label = `Shares of the whole: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
 
   return (
-    <svg
-      aria-label={label}
-      height={plotH + noteH}
-      onPointerLeave={clear}
-      width={width}
-    >
-      <title>{label}</title>
+    <ChartSvg height={plotH + noteH} label={label} leave={clear} width={width}>
       <DotRing
         className="fade"
         tone="fill-l4"
@@ -389,7 +381,7 @@ const TickDonutSvg = ({
           count={counts[i]}
           datum={d}
           dial={dial}
-          dim={isDim(hover, i)}
+          dim={dim(i)}
           hero={(highlight ?? order.indexOf(0)) === i}
           key={d.label}
           lines={lines[i]}
@@ -400,25 +392,27 @@ const TickDonutSvg = ({
           start={starts[i]}
         />
       ))}
-      <text
-        className="fade t-value-lg"
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        className="fade"
+        voice="value-lg"
         x={dial.cx}
         y={dial.cy + 6}
       >
         {center.value}
-      </text>
+      </Label>
       {noteLines(dial.rIn < 56 ? "" : center.caption, dial.rIn * 1.7).map(
         (line, k) => (
-          <text
-            className="fade t-note"
+          <Label
+            anchor="middle"
+            className="fade"
             key={line}
-            textAnchor="middle"
+            voice="note"
             x={dial.cx}
             y={dial.cy + 24 + k * NOTE_LINE}
           >
             {line}
-          </text>
+          </Label>
         )
       )}
       <PlotNote
@@ -427,7 +421,7 @@ const TickDonutSvg = ({
         x={width / 2}
         y={plotH + noteH - 6}
       />
-    </svg>
+    </ChartSvg>
   );
 };
 
@@ -440,7 +434,7 @@ const TickDonutSvg = ({
 export const TickDonut = (props: TickDonutProps) => {
   const data = props.data ?? tickDonutDemo;
   const format = props.format ?? String;
-  const { clear, hover, show, tip } = useHoverTip();
+  const hover = useHover<number>();
   const total = data.reduce((a, d) => a + d.value, 0);
   const pct = (v: number) =>
     `${total > 0 ? Math.round((v / total) * 100) : 0}%`;
@@ -448,10 +442,15 @@ export const TickDonut = (props: TickDonutProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)} ·{" "}
-            {pct(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                format(data[hover.at.key].value),
+                pct(data[hover.at.key].value),
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -464,14 +463,14 @@ export const TickDonut = (props: TickDonutProps) => {
               value: format(total),
             }
           }
-          clear={clear}
+          clear={hover.clear}
           data={data}
+          dim={hover.dim}
           format={format}
           height={props.height ?? 420}
           highlight={props.highlight}
-          hover={hover}
           note={props.note}
-          show={show}
+          show={hover.show}
           width={width}
         />
       )}

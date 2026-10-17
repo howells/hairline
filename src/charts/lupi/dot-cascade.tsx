@@ -1,10 +1,12 @@
-import { useState } from "react";
-
 import { fmtKInt } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { PixelLine } from "../texture";
-import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger } from "../util";
 import { dotCascadeDemo } from "./dot-cascade.data";
 import type { DotCascadeDatum } from "./dot-cascade.data";
 
@@ -106,14 +108,13 @@ const Column = ({
   const topY = base - (count - 1) * dy;
   const units = Array.from({ length: count - 1 }, (_, r) => r);
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(x, topY - 22);
       }}
     >
-      <rect
-        fill="transparent"
+      <HitRect
         height={floorY(x) - topY + 70}
         width={pitch}
         x={x - pitch / 2}
@@ -138,24 +139,26 @@ const Column = ({
         x={Math.round(x - capW / 2)}
         y={topY - 1}
       />
-      <text
-        className={`fade ${hero ? "t-value" : "t-axis"}`}
-        style={stagger(i, "mark")}
-        textAnchor="middle"
+      <Label
+        anchor="middle"
+        order={i}
+        tier="mark"
+        voice={hero ? "value" : "axis"}
         x={x}
         y={topY - 9}
       >
         {format(datum.value)}
-      </text>
-      <text
-        className="t-label fill-muted"
-        dy="0.34em"
-        textAnchor="end"
+      </Label>
+      <Label
+        anchor="end"
+        middle
+        muted
         transform={`translate(${x},${floorY(x) + 10}) rotate(-90)`}
+        voice="label"
       >
         {datum.label}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -172,18 +175,19 @@ export const DotCascade = (props: DotCascadeProps) => {
   const height = props.height ?? 440;
   const format = props.format ?? fmtKInt;
   const noun = props.noun ?? "puzzles";
-  const [tip, setTip] = useState<{ i: number; x: number; y: number } | null>(
-    null
-  );
+  const hover = useHover<number>();
   const hero = props.highlight ?? data.at(-1)?.label;
   const counts = data.map((d) => Math.max(1, Math.ceil(d.value / unit)));
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)} {noun}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[`${format(data[hover.at.key].value)} ${noun}`]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -199,15 +203,13 @@ export const DotCascade = (props: DotCascadeProps) => {
         const fx0 = layout.colX(0) - layout.pitch * 0.7;
         const fx1 = layout.colX(data.length - 1) + layout.pitch * 0.7;
         return (
-          <svg
-            aria-label={`Puzzles by mate: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
+          <ChartSvg
             height={layout.height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={`Puzzles by mate: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`}
+            leave={hover.clear}
+            title="Puzzles by named mate as stacked unit ticks"
             width={width}
           >
-            <title>Puzzles by named mate as stacked unit ticks</title>
             <PixelLine
               className="fade"
               tone="fill-l5"
@@ -220,24 +222,19 @@ export const DotCascade = (props: DotCascadeProps) => {
               <Column
                 count={counts[i]}
                 datum={d}
-                dim={tip !== null && tip.i !== i}
+                dim={hover.dim(i)}
                 format={format}
                 hero={hero === d.label}
                 i={i}
                 key={d.label}
                 layout={layout}
                 onEnter={(x, y) => {
-                  setTip({ i, x, y });
+                  hover.show(i, x, y);
                 }}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={layout.height - 6}
-            />
-          </svg>
+            <FootNote height={layout.height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

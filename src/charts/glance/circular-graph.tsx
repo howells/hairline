@@ -1,8 +1,11 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { DimGroup, HitCircle, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { noteSpace, sansWidth, stagger } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { CircleLink, CircleNode } from "./circular-graph.data";
 import { LinkBundle } from "./link-bundle";
@@ -112,8 +115,8 @@ const labelOf = (p: Placed) => {
 const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
   const { right, x: lx } = labelOf(p);
   return (
-    <g className={dimClass(dim)} onPointerEnter={onEnter}>
-      <circle cx={p.x} cy={p.y} r={p.r + 8} fill="transparent" />
+    <DimGroup dim={dim} onPointerEnter={onEnter}>
+      <HitCircle cx={p.x} cy={p.y} r={p.r + 8} />
       <circle
         className={`pop ${hero ? "fill-hero" : "fill-paper stroke-l3"}`}
         style={stagger(p.i, "mark")}
@@ -122,17 +125,19 @@ const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
         r={hero ? p.r : p.r - 0.75}
         strokeWidth={hero ? undefined : 1.5}
       />
-      <text
-        className={`fade t-name ${hero ? "" : "fill-muted"}`}
-        style={stagger(p.i, "mark")}
+      <Label
+        anchor={right ? "start" : "end"}
+        dy="0.35em"
+        muted={!hero}
+        order={p.i}
+        tier="mark"
+        voice="name"
         x={lx}
         y={p.y + Math.sin(p.a) * 6}
-        dy="0.35em"
-        textAnchor={right ? "start" : "end"}
       >
         {p.node.id}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -170,8 +175,13 @@ export const CircularGraph = (props: CircularGraphProps) => {
       overlay={
         focus === null ? null : (
           <Tooltip x={focus.x} y={focus.y - focus.r - 4}>
-            <b>{focus.node.id}</b> · {format(focus.node.value)} · most with{" "}
-            {partnerOf(links, focus.node.id)}
+            <TipText
+              facts={[
+                format(focus.node.value),
+                `most with ${partnerOf(links, focus.node.id)}`,
+              ]}
+              lead={focus.node.id}
+            />
           </Tooltip>
         )
       }
@@ -221,15 +231,14 @@ export const CircularGraph = (props: CircularGraphProps) => {
         const at = new Map(placed.map((p) => [p.node.id, p]));
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={svgH}
-            aria-label={label}
-            onPointerLeave={() => {
+            label={label}
+            leave={() => {
               setFocus(null);
             }}
+            width={width}
           >
-            <title>{label}</title>
             <RingLinks
               links={links}
               at={at}
@@ -253,13 +262,8 @@ export const CircularGraph = (props: CircularGraphProps) => {
                 }}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

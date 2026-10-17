@@ -1,10 +1,13 @@
 import { useState } from "react";
 
 import { Plot, Tooltip } from "../core";
+import { DimGroup, HitCircle, TipText } from "../hover";
 import { RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { DotRing } from "../texture";
-import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger } from "../util";
 import { radialConvergenceDemo } from "./radial-convergence.data";
 import type { ConvergenceItem } from "./radial-convergence.data";
 import { clock } from "./util-a";
@@ -94,24 +97,38 @@ const ThemeLabel = (props: {
     lx = Math.max(px, textW + 2);
   }
   const lit = props.focus === null || props.focus.theme === hub.theme;
-  const tone = `fade t-label ${props.hero ? "" : "fill-muted"}`;
   return (
-    <g className={dimClass(!lit)} onPointerEnter={props.onEnter}>
+    <DimGroup dim={!lit} onPointerEnter={props.onEnter}>
       {stack ? (
-        <text className={tone} textAnchor={anchor} x={lx} y={ly}>
+        <Label
+          anchor={anchor}
+          className="fade"
+          muted={!props.hero}
+          voice="label"
+          x={lx}
+          y={ly}
+        >
           <tspan x={lx} dy="-0.2em">
             {hub.theme}
           </tspan>
           <tspan x={lx} dy="1.25em">
             {hub.count}
           </tspan>
-        </text>
+        </Label>
       ) : (
-        <text className={tone} dy="0.34em" textAnchor={anchor} x={lx} y={ly}>
+        <Label
+          anchor={anchor}
+          className="fade"
+          middle
+          muted={!props.hero}
+          voice="label"
+          x={lx}
+          y={ly}
+        >
           {hub.theme} · {hub.count}
-        </text>
+        </Label>
       )}
-    </g>
+    </DimGroup>
   );
 };
 
@@ -146,7 +163,7 @@ const RimItem = ({ focused, hub, k, lit, onEnter, rim }: RimItemProps) => {
         strokeWidth={1.5}
         style={stagger(k, "fine")}
       />
-      <circle cx={px} cy={py} fill="transparent" r={7} />
+      <HitCircle cx={px} cy={py} r={7} />
     </g>
   );
 };
@@ -165,7 +182,7 @@ const HubDots = (props: {
         cy={hub.y}
         key={`hub-${hub.theme}`}
         r={hubR(hub.count, props.R)}
-        style={{ "--i": 6 }}
+        style={stagger(6)}
       />
     ))}
   </g>
@@ -259,7 +276,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.label}</b> · {tip.value}
+            <TipText facts={[tip.value]} lead={tip.label} />
           </Tooltip>
         )
       }
@@ -271,13 +288,13 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
         const hubOf = new Map(hubs.map((h) => [h.theme, h]));
         const hero = hubs.at(argMax(hubs.map((h) => h.count)))?.theme;
         return (
-          <svg
-            aria-label={`${data.length} named storms in ${hubs.length} seasons: ${hubs.map((h) => `${h.theme} ${h.count}`).join(", ")}`}
+          <ChartSvg
             height={plotH}
-            onPointerLeave={clear}
+            label={`${data.length} named storms in ${hubs.length} seasons: ${hubs.map((h) => `${h.theme} ${h.count}`).join(", ")}`}
+            leave={clear}
+            title="Named storms on a rim bundled into season hubs"
             width={width}
           >
-            <title>Named storms on a rim bundled into season hubs</title>
             <DotRing
               className="fade"
               cx={rim.cx}
@@ -325,13 +342,8 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
               );
             })}
             <HubDots R={rim.R} hero={hero} hubs={hubs} />
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={plotH - 6}
-            />
-          </svg>
+            <FootNote height={plotH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

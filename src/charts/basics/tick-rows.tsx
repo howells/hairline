@@ -1,18 +1,14 @@
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { PlotNote } from "../plot-note";
-import {
-  NOTE_LINE,
-  dimClass,
-  hasText,
-  noteLines,
-  stagger,
-  wrapWords,
-} from "../util";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { NOTE_LINE, hasText, noteLines, stagger, wrapWords } from "../util";
 import { RUNG } from "./rung-geometry";
 import { tickRowsDemo } from "./tick-rows.data";
 import type { CountDatum } from "./tick-rows.data";
-import { isDim, useHoverTip } from "./util-a";
 import { inkWidth, maxIndex } from "./util-b";
 
 interface TickRowsProps {
@@ -106,25 +102,23 @@ const Row = ({
   }));
 
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onEnter(end, base - frame.tickH - 8);
       }}
     >
-      <rect
-        className="fill-transparent"
+      <HitRect
         height={frame.pitchY}
         width={frame.labelW + frame.gap + frame.track + 40}
         x={frame.x0 - frame.labelW - frame.gap}
         y={mid - frame.pitchY / 2}
       />
-      <line
-        className="rule"
-        x1={frame.x0 - 3}
-        x2={frame.x0 + frame.track}
-        y1={crisp(base)}
-        y2={crisp(base)}
+      <HRule
+        kind="rule"
+        x0={frame.x0 - 3}
+        x1={frame.x0 + frame.track}
+        y={base}
       />
       {ticks.map((tick) => (
         <rect
@@ -137,9 +131,10 @@ const Row = ({
           y={base - frame.tickH}
         />
       ))}
-      <text
-        className="t-label fill-muted"
-        textAnchor="end"
+      <Label
+        anchor="end"
+        muted
+        voice="label"
         y={mid - ((lines.length - 1) * LABEL_LINE) / 2}
       >
         {lines.map((line, k) => (
@@ -151,17 +146,18 @@ const Row = ({
             {line}
           </tspan>
         ))}
-      </text>
-      <text
-        className={`fade t-value ${hero ? "fill-hero" : ""}`}
+      </Label>
+      <Label
+        className={hero ? "fill-hero" : ""}
         dy="0.35em"
-        style={stagger(index + 2)}
+        order={index + 2}
+        voice="value"
         x={end + 12}
         y={mid}
       >
         {format(datum.value)}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -176,15 +172,18 @@ export const TickRows = (props: TickRowsProps) => {
   const format = props.format ?? String;
   const hasNote = hasText(props.note);
   const baseHeight = props.height ?? data.length * 66 + (hasNote ? 56 : 24);
-  const { clear, hover, show, tip } = useHoverTip();
+  const hover = useHover<number>();
   const label = data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
 
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].label}</b> · {format(data[tip.i].value)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[format(data[hover.at.key].value)]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -232,17 +231,16 @@ export const TickRows = (props: TickRowsProps) => {
         };
         const hero = props.highlight ?? maxIndex(data.map((d) => d.value));
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={clear}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             {data.map((d, i) => (
               <Row
                 datum={d}
-                dim={isDim(hover, i)}
+                dim={hover.dim(i)}
                 format={format}
                 frame={frame}
                 hero={hero === i}
@@ -250,7 +248,7 @@ export const TickRows = (props: TickRowsProps) => {
                 key={d.label}
                 lines={lines[i]}
                 onEnter={(x, y) => {
-                  show(i, x, y);
+                  hover.show(i, x, y);
                 }}
                 unit={unit}
               />
@@ -261,7 +259,7 @@ export const TickRows = (props: TickRowsProps) => {
               x={width / 2}
               y={height - 6}
             />
-          </svg>
+          </ChartSvg>
         );
       }}
     </Plot>

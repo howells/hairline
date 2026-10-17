@@ -1,17 +1,19 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { area, curveBasis, line } from "d3-shape";
-import { useState } from "react";
 
 import { fmtDegC } from "../../lib/format";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
-import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
+import { HRule, Tick } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger } from "../util";
 import { ridgelineDemo } from "./ridgeline.data";
 import type { RidgeSeries } from "./ridgeline.data";
 
@@ -136,17 +138,11 @@ const RidgeLayer = ({
   return (
     <>
       <path d={crest ?? ""} className="fill-paper" />
-      <g className={dimClass(dim)}>
+      <DimGroup dim={dim}>
         <g className="fade" style={stagger(index, "series")}>
           <path d={crest ?? ""} fill={paint(hero ? fills.hero : fills.hatch)} />
         </g>
-        <line
-          className="hairline"
-          x1={x.range()[0]}
-          x2={x.range()[1]}
-          y1={crisp(base)}
-          y2={crisp(base)}
-        />
+        <HRule x0={x.range()[0]} x1={x.range()[1]} y={base} />
         <path
           d={outline ?? ""}
           className={`draw cap-round fill-none ${hero ? "stroke-hero" : "stroke-l3"}`}
@@ -154,16 +150,18 @@ const RidgeLayer = ({
           style={stagger(index, "series")}
           strokeWidth={hero ? 2 : 1.5}
         />
-        <text
-          className={`fade t-label ${hero ? "" : "fill-muted"}`}
-          style={stagger(index, "series")}
+        <Label
+          anchor="end"
+          muted={!hero}
+          order={index}
+          tier="series"
+          voice="label"
           x={x.range()[0] - 18}
           y={base - 4}
-          textAnchor="end"
         >
           {label}
-        </text>
-      </g>
+        </Label>
+      </DimGroup>
     </>
   );
 };
@@ -199,10 +197,7 @@ const Peaks = ({
       const hero = heroOf(r);
       const base = baseOf(i);
       return (
-        <g
-          className={dimClass(hover !== null && hover !== i)}
-          key={`peak-${r.label}`}
-        >
+        <DimGroup dim={hover !== null && hover !== i} key={`peak-${r.label}`}>
           <Dot
             className={`pop ${hero ? "fill-hero" : "fill-l3"}`}
             cx={x(r.peak)}
@@ -210,15 +205,17 @@ const Peaks = ({
             size={hero ? "md" : "sm"}
             style={stagger(i * 6 + 30, "fine")}
           />
-          <text
-            className={`fade t-value ${hero ? "" : "fill-muted"}`}
-            style={stagger(i + 6, "series")}
+          <Label
+            muted={!hero}
+            order={i + 6}
+            tier="series"
+            voice="value"
             x={x.range()[1] + 8}
             y={base - 4}
           >
             {format(r.peak)}
-          </text>
-        </g>
+          </Label>
+        </DimGroup>
       );
     })}
   </g>
@@ -241,16 +238,10 @@ const Axis = ({ x, y, ticks, format }: AxisProps) => {
     <g className="fade">
       {values.map((v) => (
         <g key={`tick-${v}`}>
-          <line
-            className="hairline"
-            x1={crisp(x(v))}
-            x2={crisp(x(v))}
-            y1={Math.round(y)}
-            y2={Math.round(y) + TICK.md}
-          />
-          <text className="t-axis" x={x(v)} y={y + 20} textAnchor="middle">
+          <Tick x={x(v)} y={Math.round(y)} />
+          <Label anchor="middle" voice="axis" x={x(v)} y={y + 20}>
             {format(v)}
-          </text>
+          </Label>
         </g>
       ))}
     </g>
@@ -270,7 +261,7 @@ export const Ridgeline = (props: RidgelineProps) => {
   const format = props.format ?? fmtTemperature;
   const height = props.height ?? 440;
   const ticks = props.ticks ?? 4;
-  const [hover, setHover] = useState<number | null>(null);
+  const hover = useHover<number>();
   const id = useTextureIds("ridge");
   const hatchId = id("hatch");
   const heroId = id("hero");
@@ -302,18 +293,16 @@ export const Ridgeline = (props: RidgelineProps) => {
         const ridgeH = rowGap * 1.9;
         const baseOf = (i: number) =>
           height - bottom - rowGap * (ridges.length - 1 - i);
-        const tip = hover === null ? undefined : ridges[hover];
+        const tip = hover.key === null ? undefined : ridges[hover.key];
         return (
           <div className="relative">
-            <svg
-              width={width}
+            <ChartSvg
               height={height}
-              aria-label={`Ridgeline of ${ridges.length} distributions; peaks: ${ridges.map((r) => `${r.label} ${format(r.peak)}`).join(", ")}`}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={`Ridgeline of ${ridges.length} distributions; peaks: ${ridges.map((r) => `${r.label} ${format(r.peak)}`).join(", ")}`}
+              leave={hover.clear}
+              title="January daily mean temperature by decade"
+              width={width}
             >
-              <title>January daily mean temperature by decade</title>
               <defs>
                 <Hatch id={hatchId} tone="fill-l5" />
                 <CrossHatch id={heroId} tone="fill-hero" />
@@ -322,15 +311,14 @@ export const Ridgeline = (props: RidgelineProps) => {
                 <g
                   key={r.label}
                   onPointerEnter={() => {
-                    setHover(i);
+                    hover.show(i);
                   }}
                 >
-                  <rect
+                  <HitRect
                     x={0}
                     y={baseOf(i) - rowGap}
                     width={width}
                     height={rowGap}
-                    fill="transparent"
                   />
                   <RidgeLayer
                     ridge={r}
@@ -340,7 +328,7 @@ export const Ridgeline = (props: RidgelineProps) => {
                     maxD={maxD}
                     x={x}
                     hero={heroOf(r)}
-                    dim={hover !== null && hover !== i}
+                    dim={hover.dim(i)}
                     label={r.label}
                     fills={{ hatch: hatchId, hero: heroId }}
                   />
@@ -353,7 +341,7 @@ export const Ridgeline = (props: RidgelineProps) => {
                 maxD={maxD}
                 x={x}
                 heroOf={heroOf}
-                hover={hover}
+                hover={hover.key}
                 format={format}
               />
               <Axis
@@ -368,11 +356,17 @@ export const Ridgeline = (props: RidgelineProps) => {
                 x={x0 + plotW / 2}
                 y={height - 6}
               />
-            </svg>
-            {tip !== undefined && hover !== null && (
-              <Tooltip x={x(tip.peak)} y={baseOf(hover) - ridgeH * 0.5}>
-                <b>{tip.label}</b> · peak {format(tip.peak)} · median{" "}
-                {format(tip.median)} · n = {tip.n}
+            </ChartSvg>
+            {tip !== undefined && hover.key !== null && (
+              <Tooltip x={x(tip.peak)} y={baseOf(hover.key) - ridgeH * 0.5}>
+                <TipText
+                  facts={[
+                    `peak ${format(tip.peak)}`,
+                    `median ${format(tip.median)}`,
+                    `n = ${tip.n}`,
+                  ]}
+                  lead={tip.label}
+                />
               </Tooltip>
             )}
           </div>

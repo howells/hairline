@@ -3,7 +3,9 @@ import type { ScaleBand } from "d3-scale";
 import { useState } from "react";
 
 import { Chart } from "../core";
-import { CAPTION, TICK } from "../roles";
+import { CAPTION } from "../roles";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { CrossHatch, DotScreen } from "../texture";
 import {
   HALFTONE_R,
@@ -11,6 +13,7 @@ import {
   paint,
   useTextureIds,
 } from "../texture-ids";
+import { stagger } from "../util";
 import { Key } from "./key";
 import { nameWidth } from "./room";
 
@@ -141,16 +144,16 @@ const HalfDay = (props: {
   return (
     <g>
       {chart.rows.map((row, r) => (
-        <text
+        <Label
+          anchor="end"
           key={row}
-          className={TICK}
+          middle
+          voice="axis"
           x={labelW - LABEL_GAP}
           y={top + r * rowH + rowH / 2}
-          dy="0.34em"
-          textAnchor="end"
         >
           {row}
-        </text>
+        </Label>
       ))}
       {chart.values.map((rowValues, r) =>
         cols.map((c) => {
@@ -162,7 +165,7 @@ const HalfDay = (props: {
             <g
               key={`${chart.rows[r]}-${hour(c)}`}
               className="fade"
-              style={{ "--i": (c - from) * 0.25 + r * 0.5 }}
+              style={stagger((c - from) * 0.25 + r * 0.5)}
               transform={`translate(${cx} ${cy})`}
               onPointerEnter={() => {
                 props.onHover([r, c]);
@@ -188,15 +191,15 @@ const HalfDay = (props: {
         })
       )}
       {HOUR_TICKS.map((t) => (
-        <text
+        <Label
+          dy="0.71em"
           key={t}
-          className={TICK}
+          voice="axis"
           x={Math.round(x(t) ?? 0)}
           y={top + chart.rows.length * rowH + 8}
-          dy="0.71em"
         >
           {hour(from + t)}
-        </text>
+        </Label>
       ))}
     </g>
   );
@@ -261,15 +264,14 @@ export const Heatmap = (props: HeatmapProps) => {
           .range([labelW, width]);
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
-            onPointerLeave={() => {
+            label={props.label}
+            leave={() => {
               setHover(null);
             }}
+            width={width}
           >
-            <title>{props.label}</title>
             <CellPatterns tex={tex} />
             {HALVES.map((from, k) => (
               <HalfDay
@@ -286,7 +288,7 @@ export const Heatmap = (props: HeatmapProps) => {
                 onHover={setHover}
               />
             ))}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>

@@ -2,17 +2,19 @@ import { scaleLinear } from "d3-scale";
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { crisp } from "../axes";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
-import { useReducedMotion, useReveal } from "../hooks";
-import { Dot, Ring } from "../markers";
+import { useHover, useReducedMotion, useReveal } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
+import { Bar, Dot, Ring } from "../markers";
 import { easeTravel } from "../motion";
-import { PlotNote } from "../plot-note";
-import { barPath } from "../shapes";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth } from "../util";
+import { noteSpace, sansWidth } from "../util";
 import { barRaceDemo } from "./bar-race.data";
 import type { RaceData, RaceSeries } from "./bar-race.data";
 import { ControlSlot } from "./control-slot";
@@ -28,12 +30,6 @@ interface BarRaceProps {
   note?: string;
   /** Label of a series to keep in the hero colour whatever its rank. */
   highlight?: string;
-}
-
-interface Hit {
-  i: number;
-  x: number;
-  y: number;
 }
 
 interface Standing {
@@ -206,13 +202,7 @@ const Track = (p: TrackProps) => {
       );
   return (
     <g>
-      <line
-        className="rule"
-        x1={x(0)}
-        x2={x(last)}
-        y1={crisp(p.y)}
-        y2={crisp(p.y)}
-      />
+      <HRule kind="rule" x0={x(0)} x1={x(last)} y={p.y} />
       <line
         className="stroke-ink"
         x1={x(0)}
@@ -222,8 +212,8 @@ const Track = (p: TrackProps) => {
         strokeWidth={2}
       />
       {/* One 44px-tall target along the whole track: a tap seeks the nearest stop. */}
-      <rect
-        className="cursor-pointer fill-transparent"
+      <HitRect
+        className="cursor-pointer"
         x={x(0) - 22}
         y={p.y - 30}
         width={x(last) - x(0) + 44}
@@ -248,15 +238,15 @@ const Track = (p: TrackProps) => {
               <Ring className="stroke-l5" cx={x(k)} cy={p.y} size="sm" />
             )}
             {text === undefined ? null : (
-              <text
-                className={period === p.current ? "t-value" : "t-axis"}
+              <Label
+                anchor={k === last ? "end" : "middle"}
+                dx={k === last ? 4 : 0}
+                voice={period === p.current ? "value" : "axis"}
                 x={x(k)}
                 y={p.y - 10}
-                textAnchor={k === last ? "end" : "middle"}
-                dx={k === last ? 4 : 0}
               >
                 {text}
-              </text>
+              </Label>
             )}
           </g>
         );
@@ -265,7 +255,7 @@ const Track = (p: TrackProps) => {
   );
 };
 
-interface BarProps {
+interface RacerProps {
   barH: number;
   /** Reduced motion: the bar jumps to its new rank with no travel. */
   jump: boolean;
@@ -274,10 +264,9 @@ interface BarProps {
   fill: string | undefined;
   /** Pattern id of the hatch for engraved bars. */
   hatch: string;
-  i: number;
   labelX: number;
   leader: boolean;
-  onEnter: (hit: Hit) => void;
+  onEnter: (x: number, y: number) => void;
   pitch: number;
   series: RaceSeries;
   value: string;
@@ -287,58 +276,47 @@ interface BarProps {
 }
 
 /** One racer: label, squared bar and value, sliding to its rank's row. */
-const Bar = (p: BarProps) => (
-  <g
-    className={`${p.jump ? "" : "ease-travel duration-change transition-transform"} ${dimClass(p.dimmed)}`}
+const Racer = (p: RacerProps) => (
+  <DimGroup
+    className={
+      p.jump ? undefined : "ease-travel duration-change transition-transform"
+    }
+    dim={p.dimmed}
     style={{ transform: `translateY(${Math.round(p.y)}px)` }}
     onPointerEnter={() => {
-      p.onEnter({ i: p.i, x: p.labelX + p.w / 2, y: p.y - p.barH / 2 - 4 });
+      p.onEnter(p.labelX + p.w / 2, p.y - p.barH / 2 - 4);
     }}
   >
-    <rect
-      className="fill-transparent"
-      x={0}
-      y={-p.pitch / 2}
-      width={p.width}
-      height={p.pitch}
-    />
-    <text
-      className={`t-name ${p.leader ? "" : "fill-muted"}`}
+    <HitRect x={0} y={-p.pitch / 2} width={p.width} height={p.pitch} />
+    <Label
+      anchor="end"
+      dy="0.35em"
+      muted={!p.leader}
+      voice="name"
       x={p.labelX - 10}
       y={0}
-      dy="0.35em"
-      textAnchor="end"
     >
       {p.series.label}
-    </text>
-    {p.fill === undefined ? (
-      <path
-        className="stroke-l5 shape-crisp"
-        d={barPath(
-          crisp(p.labelX),
-          crisp(-p.barH / 2),
-          Math.round(p.w),
-          Math.round(p.barH) - 1,
-          "right"
-        )}
-        fill={paint(p.hatch)}
-        strokeWidth={1}
-      />
-    ) : (
-      <path
-        className={p.fill}
-        d={barPath(p.labelX, -p.barH / 2, p.w, p.barH, "right")}
-      />
-    )}
-    <text
-      className={`t-value ${p.leader ? "" : "fill-muted"}`}
+    </Label>
+    <Bar
+      className={p.fill}
+      dir="right"
+      fill={p.fill === undefined ? paint(p.hatch) : undefined}
+      h={p.barH}
+      w={p.w}
+      x={p.labelX}
+      y={-p.barH / 2}
+    />
+    <Label
+      dy="0.36em"
+      muted={!p.leader}
+      voice="value"
       x={p.labelX + p.w + 8}
       y={0}
-      dy="0.36em"
     >
       {p.value}
-    </text>
-  </g>
+    </Label>
+  </DimGroup>
 );
 
 const PlayIcon = (props: { done: boolean; playing: boolean }) => {
@@ -402,7 +380,7 @@ export const BarRace = (props: BarRaceProps) => {
   const tex = useTextureIds("race");
   const hatch = tex("hatch");
   const clock = useRaceClock(box, last, props.speed ?? 1500);
-  const [hover, setHover] = useState<Hit | null>(null);
+  const hover = useHover<number>();
 
   const values = valuesAt(data, clock.t);
   const order: Standing[] = values
@@ -428,10 +406,15 @@ export const BarRace = (props: BarRaceProps) => {
       </ControlSlot>
       <Plot
         overlay={
-          hover === null ? null : (
-            <Tooltip x={hover.x} y={hover.y}>
-              <b>{data.series[hover.i].label}</b> · {format(values[hover.i])} ·
-              #{rank[hover.i] + 1} in {period}
+          hover.at === null ? null : (
+            <Tooltip x={hover.at.x} y={hover.at.y}>
+              <TipText
+                facts={[
+                  format(values[hover.at.key]),
+                  `#${rank[hover.at.key] + 1} in ${period}`,
+                ]}
+                lead={data.series[hover.at.key].label}
+              />
             </Tooltip>
           )
         }
@@ -444,34 +427,32 @@ export const BarRace = (props: BarRaceProps) => {
             .range([0, width - m.left - m.right]);
           const svgH = height + noteSpace(props.note, width - 16, 22);
           return (
-            <svg
-              width={width}
+            <ChartSvg
               height={svgH}
-              aria-label={label}
-              onPointerLeave={() => {
-                setHover(null);
-              }}
+              label={label}
+              leave={hover.clear}
+              width={width}
             >
-              <title>{label}</title>
               <defs>
                 <Hatch id={hatch} tone="fill-l4" />
               </defs>
               {data.series.map((s, i) => (
-                <Bar
+                <Racer
                   key={s.label}
                   barH={Math.min(36, pitch * 0.68)}
                   jump={clock.reduced}
-                  dimmed={hover !== null && hover.i !== i}
+                  dimmed={hover.dim(i)}
                   fill={
                     props.highlight === s.label || rank[i] === 0
                       ? "fill-hero"
                       : undefined
                   }
                   hatch={hatch}
-                  i={i}
                   labelX={m.left}
                   leader={rank[i] === 0}
-                  onEnter={setHover}
+                  onEnter={(tipX, tipY) => {
+                    hover.show(i, tipX, tipY);
+                  }}
                   pitch={pitch}
                   series={s}
                   value={format(values[i])}
@@ -490,13 +471,8 @@ export const BarRace = (props: BarRaceProps) => {
                 width={width}
                 y={height - 14}
               />
-              <PlotNote
-                text={props.note}
-                width={width - 16}
-                x={width / 2}
-                y={svgH - 6}
-              />
-            </svg>
+              <FootNote height={svgH} text={props.note} width={width} />
+            </ChartSvg>
           );
         }}
       </Plot>

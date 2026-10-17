@@ -3,9 +3,12 @@ import { useState } from "react";
 
 import { fmtDay, fmtMonth, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
-import { PlotNote } from "../plot-note";
+import { DimGroup, HitCircle, TipText } from "../hover";
+import { FootNote } from "../plot-note";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { PixelLine } from "../texture";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger } from "../util";
 import {
   ARRIVAL_WEEKS,
   arrivalWeekDate,
@@ -176,21 +179,15 @@ const Rings = (props: RingsProps) => {
         const r = ringR(w);
         const [lx, ly] = clock(cx, cy, r, a0 - 4);
         return (
-          <g className="fade" key={`ring-${w}`} style={{ "--i": k }}>
+          <g className="fade" key={`ring-${w}`} style={stagger(k)}>
             <path
               className="grid-line shape-smooth"
               d={arcPath(cx, cy, r, a0 - 3, a1 + 2)}
               fill="none"
             />
-            <text
-              className="t-note"
-              dy="0.34em"
-              textAnchor="end"
-              x={lx - 2}
-              y={ly}
-            >
+            <Label anchor="end" middle voice="note" x={lx - 2} y={ly}>
               {props.labels[k]}
-            </text>
+            </Label>
           </g>
         );
       })}
@@ -221,8 +218,8 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
   );
   const fallback = Math.max(...(datum.weekly ?? [1])) * 0.3;
   return (
-    <g
-      className={dimClass(dim)}
+    <DimGroup
+      dim={dim}
       onPointerEnter={() => {
         onTip({ i, x: bx, y: by - sizeR(datum.size) - 4 });
       }}
@@ -260,7 +257,7 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
             }}
             style={stagger(i * 3 + w, "dense")}
           >
-            <circle cx={x} cy={y} fill="transparent" r={5} />
+            <HitCircle cx={x} cy={y} r={5} />
             <PixelLine
               tone="fill-l3"
               x0={x - ux * half}
@@ -279,15 +276,17 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
         strokeWidth={1.5}
         style={stagger(i, "mark")}
       />
-      <text
-        className={`fade t-name ${hero ? "" : "fill-muted"}`}
-        dy="0.34em"
-        style={stagger(i, "mark")}
+      <Label
+        middle
+        muted={!hero}
+        order={i}
+        tier="mark"
         transform={`translate(${tx},${ty}) rotate(${a - 90})`}
+        voice="name"
       >
         {datum.name}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -345,8 +344,10 @@ export const LaunchFan = (props: LaunchFanProps) => {
       overlay={
         tip === null ? null : (
           <Tooltip x={tip.x} y={tip.y}>
-            <b>{data[tip.i].name}</b> · arrived {name(data[tip.i].launch)} ·{" "}
-            {tipText(tip)}
+            <TipText
+              facts={[`arrived ${name(data[tip.i].launch)}`, tipText(tip)]}
+              lead={data[tip.i].name}
+            />
           </Tooltip>
         )
       }
@@ -357,17 +358,15 @@ export const LaunchFan = (props: LaunchFanProps) => {
         // On narrow screens the fan is width-bound: drop the unused height.
         const svgH = Math.min(height, Math.round(layout.bottom + 6 + noteH));
         return (
-          <svg
-            aria-label={`Arrival fan: ${data.map((d) => `${d.name} arrived ${name(d.launch)}, peak ${format(d.size)}`).join("; ")}`}
+          <ChartSvg
             height={svgH}
-            onPointerLeave={() => {
+            label={`Arrival fan: ${data.map((d) => `${d.name} arrived ${name(d.launch)}, peak ${format(d.size)}`).join("; ")}`}
+            leave={() => {
               setTip(null);
             }}
+            title={`Arrival ${word} and peak reporting of each migrant, one spoke each`}
             width={width}
           >
-            <title>
-              Arrival {word} and peak reporting of each migrant, one spoke each
-            </title>
             <Rings labels={ringLabels} layout={layout} rings={rings} />
             {data.map((d, i) => (
               <Spoke
@@ -381,13 +380,8 @@ export const LaunchFan = (props: LaunchFanProps) => {
                 weeks={weeks}
               />
             ))}
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={svgH - 6}
-            />
-          </svg>
+            <FootNote height={svgH} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -1,18 +1,20 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
-import { useState } from "react";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { DOT, MARK_WEIGHT } from "../marks";
 import type { DotSize } from "../marks";
-import { PlotNote } from "../plot-note";
-import { dimClass, stagger } from "../util";
+import { FootNote } from "../plot-note";
+import { HRule } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
+import { stagger } from "../util";
 import { dumbbellQueueDemo } from "./dumbbell-queue.data";
 import type { DumbbellDatum } from "./dumbbell-queue.data";
-import { inkWidth, isActive, maxIndex } from "./util-b";
-import type { Tip } from "./util-b";
+import { inkWidth, maxIndex } from "./util-b";
 
 interface DumbbellQueueProps {
   /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
@@ -42,12 +44,12 @@ interface RowProps {
   /** Which direction of change draws its rungs in the alert colour. */
   alert: "fall" | "rise";
   datum: DumbbellDatum;
+  dim: boolean;
   format: (v: number) => string;
   hero: boolean;
-  hover: string | null;
   index: number;
   layout: Layout;
-  onHover: (tip: Tip<DumbbellDatum>) => void;
+  onHover: (x: number, y: number) => void;
   unit: number;
   width: number;
 }
@@ -169,35 +171,27 @@ const Row = (props: RowProps) => {
     Math.abs(datum.before - datum.after) / props.unit
   );
   return (
-    <g
-      className={dimClass(isActive(props.hover, datum.label) === false)}
+    <DimGroup
+      dim={props.dim}
       onPointerEnter={() => {
-        props.onHover({ item: datum, x: (xa + xb) / 2, y: y - 16 });
+        props.onHover((xa + xb) / 2, y - 16);
       }}
     >
-      <rect
-        className="fill-transparent"
+      <HitRect
         height={layout.pitch}
         width={props.width}
         x={0}
         y={y - layout.pitch / 2}
       />
-      <line
-        className="rule"
-        x1={Math.round(layout.x(0))}
-        x2={Math.round(layout.x.range()[1])}
-        y1={crisp(y)}
-        y2={crisp(y)}
-      />
-      <text
-        className="t-label fill-muted"
-        dy="0.34em"
-        textAnchor="end"
-        x={layout.labelW}
+      <HRule
+        kind="rule"
+        x0={Math.round(layout.x(0))}
+        x1={Math.round(layout.x.range()[1])}
         y={y}
-      >
+      />
+      <Label anchor="end" middle muted voice="label" x={layout.labelW} y={y}>
         {datum.label}
-      </text>
+      </Label>
       <ChangeRungs
         alert={props.alert}
         datum={datum}
@@ -220,25 +214,27 @@ const Row = (props: RowProps) => {
         size={layout.dotSize}
         style={stagger(props.index * 3 + beadCount * 0.6, "mark")}
       />
-      <text
-        className="fade t-value"
-        style={stagger(props.index + 4, "mark")}
-        textAnchor={afterLeft ? "end" : "start"}
+      <Label
+        anchor={afterLeft ? "end" : "start"}
+        order={props.index + 4}
+        tier="mark"
+        voice="value"
         x={xa + (afterLeft ? -R - 2 : R + 2)}
         y={y - 12}
       >
         {props.format(datum.after)}
-      </text>
-      <text
-        className="fade t-axis"
-        style={stagger(props.index + 4, "mark")}
-        textAnchor={afterLeft ? "start" : "end"}
+      </Label>
+      <Label
+        anchor={afterLeft ? "start" : "end"}
+        order={props.index + 4}
+        tier="mark"
+        voice="axis"
         x={xb + (afterLeft ? R + 2 : -R - 2)}
         y={y - 12}
       >
         {props.format(datum.before)}
-      </text>
-    </g>
+      </Label>
+    </DimGroup>
   );
 };
 
@@ -262,7 +258,7 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
   const hero =
     props.highlight ??
     data[maxIndex(data.map((d) => Math.abs(d.before - d.after)))]?.label;
-  const [tip, setTip] = useState<Tip<DumbbellDatum> | null>(null);
+  const hover = useHover<number>();
   const label = data
     .map((d) => `${d.label}: ${format(d.before)} to ${format(d.after)}`)
     .join(", ");
@@ -270,10 +266,15 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
   return (
     <Plot
       overlay={
-        tip === null ? null : (
-          <Tooltip x={tip.x} y={tip.y}>
-            <b>{tip.item.label}</b> · {format(tip.item.before)} →{" "}
-            {format(tip.item.after)} · {describe(tip.item, format)}
+        hover.at === null ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `${format(data[hover.at.key].before)} → ${format(data[hover.at.key].after)}`,
+                describe(data[hover.at.key], format),
+              ]}
+              lead={data[hover.at.key].label}
+            />
           </Tooltip>
         )
       }
@@ -288,48 +289,37 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
         );
         const endsY = height - (props.note === undefined ? 10 : 40);
         return (
-          <svg
-            aria-label={label}
+          <ChartSvg
             height={height}
-            onPointerLeave={() => {
-              setTip(null);
-            }}
+            label={label}
+            leave={hover.clear}
             width={width}
           >
-            <title>{label}</title>
             {data.map((d, i) => (
               <Row
                 alert={alert}
                 datum={d}
+                dim={hover.dim(i)}
                 format={format}
                 hero={hero === d.label}
-                hover={tip?.item.label ?? null}
                 index={i}
                 key={d.label}
                 layout={layout}
-                onHover={setTip}
+                onHover={(x, y) => {
+                  hover.show(i, x, y);
+                }}
                 unit={unit}
                 width={width}
               />
             ))}
-            <text className="t-axis" x={layout.x(0)} y={endsY}>
+            <Label voice="axis" x={layout.x(0)} y={endsY}>
               {ends[0]}
-            </text>
-            <text
-              className="t-axis"
-              textAnchor="end"
-              x={layout.x.range()[1]}
-              y={endsY}
-            >
+            </Label>
+            <Label anchor="end" voice="axis" x={layout.x.range()[1]} y={endsY}>
               {ends[1]}
-            </text>
-            <PlotNote
-              text={props.note}
-              width={width - 16}
-              x={width / 2}
-              y={height - 6}
-            />
-          </svg>
+            </Label>
+            <FootNote height={height} text={props.note} width={width} />
+          </ChartSvg>
         );
       }}
     </Plot>

@@ -1,13 +1,16 @@
 import { scaleBand, scaleLinear } from "d3-scale";
-import { useState } from "react";
 
 import { fmtKInt } from "../../lib/format";
 import { Chart } from "../core";
-import { LABEL, MARK, OUTLINE, TICK, VALUE } from "../roles";
+import { useHover } from "../hooks";
+import { HitRect } from "../hover";
+import { LABEL, MARK, OUTLINE } from "../roles";
 import { VGrid } from "../rules";
+import { ChartSvg } from "../svg";
+import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { sansWidth } from "../util";
+import { sansWidth, stagger } from "../util";
 import { nameWidth } from "./room";
 import { labelGap, thinTicks } from "./thin-ticks";
 
@@ -61,7 +64,7 @@ const Bar = (props: {
   return (
     <g
       className={`grow-x transition-opacity ${props.bar.dim ? "opacity-30" : "opacity-100"}`}
-      style={{ "--i": props.i }}
+      style={stagger(props.i)}
     >
       <rect
         className={`${MARK} ${inked ? "fill-hero" : ""}`}
@@ -86,7 +89,7 @@ const Bar = (props: {
 
 /** Ranked horizontal bars with the value at the tip; the leader is inked. */
 export const HBars = (props: HBarsProps) => {
-  const [hover, setHover] = useState<string | null>(null);
+  const hover = useHover<string>();
   const tex = useTextureIds("hb");
   const format = props.format ?? fmtKInt;
   const tickFormat = props.tickFormat ?? format;
@@ -113,15 +116,12 @@ export const HBars = (props: HBarsProps) => {
         const bh = y.bandwidth();
 
         return (
-          <svg
-            width={width}
+          <ChartSvg
             height={h}
-            aria-label={props.label}
-            onPointerLeave={() => {
-              setHover(null);
-            }}
+            label={props.label}
+            leave={hover.clear}
+            width={width}
           >
-            <title>{props.label}</title>
             <defs>
               <Hatch id={tex("bar")} tone="fill-l3" />
             </defs>
@@ -131,35 +131,29 @@ export const HBars = (props: HBarsProps) => {
               x,
               labelGap(props.ticks.map(tickFormat))
             ).map((t) => (
-              <text
+              <Label
+                anchor="middle"
+                dy="0.71em"
                 key={t}
-                className={TICK}
+                voice="axis"
                 x={x(t)}
                 y={h - m.bottom + 14}
-                dy="0.71em"
-                textAnchor="middle"
               >
                 {tickFormat(t)}
-              </text>
+              </Label>
             ))}
             {props.rows.map((r, i) => {
               const cy = (y(r.name) ?? 0) + bh / 2;
-              const active = hover === r.name;
-              const dim = hover !== null && !active;
+              const active = hover.key === r.name;
+              const dim = hover.dim(r.name);
               return (
                 <g
                   key={r.name}
                   onPointerEnter={() => {
-                    setHover(r.name);
+                    hover.show(r.name);
                   }}
                 >
-                  <rect
-                    x={0}
-                    y={y(r.name)}
-                    width={width}
-                    height={bh}
-                    fill="transparent"
-                  />
+                  <HitRect height={bh} width={width} x={0} y={y(r.name)} />
                   <text
                     className={LABEL}
                     x={m.left - NAME_GAP}
@@ -178,19 +172,19 @@ export const HBars = (props: HBarsProps) => {
                     y={cy - BAR_H / 2}
                     width={x(r.value) - x(0)}
                   />
-                  <text
-                    className={`${VALUE} fade`}
-                    style={{ "--i": i }}
+                  <Label
+                    middle
+                    order={i}
+                    voice="value"
                     x={x(r.value) + 14}
                     y={cy}
-                    dy="0.34em"
                   >
                     {format(r.value)}
-                  </text>
+                  </Label>
                 </g>
               );
             })}
-          </svg>
+          </ChartSvg>
         );
       }}
     </Chart>
