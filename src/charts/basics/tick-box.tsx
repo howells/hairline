@@ -8,7 +8,7 @@ import { DimGroup, HitRect, TipText } from "../hover";
 import { Ring } from "../markers";
 import { MARK_WEIGHT } from "../marks";
 import { FootNote } from "../plot-note";
-import { HRule } from "../rules";
+import { HRule, VRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
@@ -157,7 +157,6 @@ const Whiskers = (props: {
 }) => {
   const { cx, datum, layout } = props;
   const { cap, y } = layout;
-  const x = crisp(cx);
   const capL = Math.round(cx - cap);
   const capR = Math.round(cx + cap) + 1;
   return (
@@ -166,20 +165,10 @@ const Whiskers = (props: {
       strokeWidth={1}
       style={stagger(props.index + 2, "series")}
     >
-      <line x1={x} x2={x} y1={crisp(y(datum.max))} y2={y(datum.q3)} />
-      <line x1={x} x2={x} y1={y(datum.q1)} y2={crisp(y(datum.min))} />
-      <line
-        x1={capL}
-        x2={capR}
-        y1={crisp(y(datum.max))}
-        y2={crisp(y(datum.max))}
-      />
-      <line
-        x1={capL}
-        x2={capR}
-        y1={crisp(y(datum.min))}
-        y2={crisp(y(datum.min))}
-      />
+      <VRule kind="plain" x={cx} y0={crisp(y(datum.max))} y1={y(datum.q3)} />
+      <VRule kind="plain" x={cx} y0={y(datum.q1)} y1={crisp(y(datum.min))} />
+      <HRule kind="plain" x0={capL} x1={capR} y={y(datum.max)} />
+      <HRule kind="plain" x0={capL} x1={capR} y={y(datum.min)} />
     </g>
   );
 };
@@ -348,9 +337,7 @@ export const TickBox = (props: TickBoxProps) => {
                 index={i}
                 key={d.label}
                 layout={layout}
-                onHover={(x, y) => {
-                  hover.show(i, x, y);
-                }}
+                onHover={hover.showAt(i)}
               />
             ))}
             <FootNote height={height} text={props.note} width={width} />

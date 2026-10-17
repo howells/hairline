@@ -1,7 +1,7 @@
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -247,17 +247,15 @@ export const TickRows = (props: TickRowsProps) => {
                 index={i}
                 key={d.label}
                 lines={lines[i]}
-                onEnter={(x, y) => {
-                  hover.show(i, x, y);
-                }}
+                onEnter={hover.showAt(i)}
                 unit={unit}
               />
             ))}
-            <PlotNote
+            <FootNote
+              gutter={12}
+              height={height}
               text={props.note}
-              width={width - 24}
-              x={width / 2}
-              y={height - 6}
+              width={width}
             />
           </ChartSvg>
         );

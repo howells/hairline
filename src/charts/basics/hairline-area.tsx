@@ -9,7 +9,7 @@ import { useHover } from "../hooks";
 import { TipText } from "../hover";
 import { Dot } from "../markers";
 import { MARK_WEIGHT } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -271,7 +271,7 @@ const HairlineAreaSvg = ({
         {format(values[hero])}
       </Label>
       <MonthAxis data={data} frame={frame} />
-      <PlotNote text={note} width={width - 24} x={width / 2} y={height - 6} />
+      <FootNote gutter={12} height={height} text={note} width={width} />
     </ChartSvg>
   );
 };

@@ -313,9 +313,7 @@ export const Violin = (props: ViolinProps) => {
                 hero={heroIndex === i}
                 i={i}
                 left={x(g.label) ?? 0}
-                onEnter={(tipX, tipY) => {
-                  hover.show(i, tipX, tipY);
-                }}
+                onEnter={hover.showAt(i)}
                 stats={stats[i]}
                 top={m.top}
                 valueText={format(stats[i].med)}

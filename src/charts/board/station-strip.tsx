@@ -9,7 +9,7 @@ import { DimGroup } from "../hover";
 import { Dot } from "../markers";
 import { MARK_WEIGHT, TICK as TICK_LEN } from "../marks";
 import { LABEL, POINT } from "../roles";
-import { VGrid } from "../rules";
+import { HRule, VGrid } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger } from "../util";
@@ -154,7 +154,8 @@ const StripRow = (props: {
   const { m, width, x, y } = frame;
   // The range is a 1px rule on the half pixel; the dots and the median tick
   // centre on it.
-  const cy = crisp((y(row.name) ?? 0) + y.bandwidth() / 2);
+  const mid = (y(row.name) ?? 0) + y.bandwidth() / 2;
+  const cy = crisp(mid);
   const ps = row.stations.map((e) => e.value);
   const tone = TONE[props.tone];
   return (
@@ -169,12 +170,11 @@ const StripRow = (props: {
       >
         {row.name}
       </text>
-      <line
-        className="rule"
-        x1={Math.round(x(Math.min(...ps)))}
-        x2={Math.round(x(Math.max(...ps)))}
-        y1={cy}
-        y2={cy}
+      <HRule
+        kind="rule"
+        x0={Math.round(x(Math.min(...ps)))}
+        x1={Math.round(x(Math.max(...ps)))}
+        y={mid}
       />
       <rect
         className={tone.tick}
@@ -294,11 +294,7 @@ export const StationStrip = (props: StationStripProps) => {
                 e.clientX - r.left,
                 e.clientY - r.top
               );
-              if (name === null) {
-                hover.clear();
-              } else {
-                hover.show(name);
-              }
+              hover.set(name);
             }}
             width={width}
           >

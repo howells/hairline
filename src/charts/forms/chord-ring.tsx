@@ -6,6 +6,7 @@ import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
+import type { Hover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -291,7 +292,7 @@ const teamAt = (geometry: Geometry, angle: number) => {
 /** The ring at one width: geometry built once per size, focus moved by the pointer. */
 const ChordSvg = (props: {
   data: SharedWork;
-  hover: ReturnType<typeof useHover<number>>;
+  hover: Hover<number>;
   totals: number[];
   width: number;
 }) => {

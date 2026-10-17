@@ -480,9 +480,7 @@ export const BigSlice = (props: BigSliceProps) => {
                   i={i}
                   labelRadius={r(rings.at(-1) ?? max)}
                   narrow={narrow}
-                  onEnter={(tipX, tipY) => {
-                    hover.show(i, tipX, tipY);
-                  }}
+                  onEnter={hover.showAt(i)}
                   r={r}
                   shareText={shareOf(s.data)}
                   slice={s}

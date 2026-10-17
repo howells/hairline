@@ -7,6 +7,7 @@ import type { PointerEvent } from "react";
 import { fmtDegC, monthTickLabels } from "../../lib/format";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
+import type { Hover } from "../hooks";
 import { TipText } from "../hover";
 import { Dot } from "../markers";
 import { HRule, Stem } from "../rules";
@@ -161,7 +162,7 @@ const GapReading = (props: { d: PlanWeek; frame: Frame; i: number }) => {
 interface SvgProps {
   data: PlanWeek[];
   height: number;
-  hover: ReturnType<typeof useHover<number>>;
+  hover: Hover<number>;
   width: number;
 }
 

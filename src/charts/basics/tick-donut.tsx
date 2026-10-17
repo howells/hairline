@@ -2,9 +2,9 @@ import { arc as d3arc } from "d3-shape";
 
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
-import { DimGroup, TipText } from "../hover";
+import { DimGroup, HitPath, TipText } from "../hover";
 import { MARK_WEIGHT, RING_STEP } from "../marks";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
@@ -252,11 +252,7 @@ const Source = ({
         onEnter(anchorPt.x, anchorPt.y - 8);
       }}
     >
-      <path
-        className="fill-transparent"
-        d={hit}
-        transform={`translate(${dial.cx},${dial.cy})`}
-      />
+      <HitPath d={hit} transform={`translate(${dial.cx},${dial.cy})`} />
       {ticks.map((tick) => (
         <g
           key={tick.id}
@@ -415,12 +411,7 @@ const TickDonutSvg = ({
           </Label>
         )
       )}
-      <PlotNote
-        text={note}
-        width={width - 24}
-        x={width / 2}
-        y={plotH + noteH - 6}
-      />
+      <FootNote gutter={12} height={plotH + noteH} text={note} width={width} />
     </ChartSvg>
   );
 };

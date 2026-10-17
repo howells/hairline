@@ -205,9 +205,11 @@ export const StaggerWave = (props: StaggerWaveProps) => {
                   <DimGroup
                     key={d.date.toISOString()}
                     dim={hover.dim(i)}
-                    onPointerEnter={() => {
-                      hover.show(i, left + bw / 2, Math.min(top, zero) - 4);
-                    }}
+                    onPointerEnter={hover.enter(
+                      i,
+                      left + bw / 2,
+                      Math.min(top, zero) - 4
+                    )}
                   >
                     <HitRect
                       x={left - (x.step() - bw) / 2}

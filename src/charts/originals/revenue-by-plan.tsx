@@ -359,9 +359,7 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
                   gMax={gMax}
                   key={seg.plan}
                   lay={lay}
-                  onEnter={() => {
-                    hover.show(seg.k);
-                  }}
+                  onEnter={hover.enter(seg.k)}
                   seg={seg}
                   ticks={ticksOf(seg, seg.k === segments.length - 1)}
                   width={width}

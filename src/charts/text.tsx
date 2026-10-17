@@ -88,25 +88,3 @@ export const XLabels = (props: {
     ))}
   </g>
 );
-
-/** A column of axis labels, each centred on its y, set to one x. */
-export const YLabels = (props: {
-  anchor?: "end" | "start";
-  ticks: readonly { label: string; y: number }[];
-  x: number;
-}) => (
-  <g>
-    {props.ticks.map((t) => (
-      <Label
-        anchor={props.anchor ?? "end"}
-        key={t.label}
-        middle
-        voice="axis"
-        x={props.x}
-        y={t.y}
-      >
-        {t.label}
-      </Label>
-    ))}
-  </g>
-);

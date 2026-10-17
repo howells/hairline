@@ -122,9 +122,7 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
                 <DimGroup
                   dim={hover.dim(i)}
                   key={d.label}
-                  onPointerEnter={() => {
-                    hover.show(i, cx, top - 34);
-                  }}
+                  onPointerEnter={hover.enter(i, cx, top - 34)}
                 >
                   <HitRect
                     height={floor - m.top + 60}

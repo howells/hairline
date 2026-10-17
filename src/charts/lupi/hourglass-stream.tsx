@@ -272,9 +272,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                 <DimGroup
                   key={d.label}
                   dim={hover.dim(i)}
-                  onPointerEnter={() => {
-                    hover.show(i);
-                  }}
+                  onPointerEnter={hover.enter(i)}
                 >
                   <StageRow
                     stage={d}

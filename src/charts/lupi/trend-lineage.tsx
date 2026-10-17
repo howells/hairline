@@ -317,9 +317,7 @@ export const TrendLineage = (props: TrendLineageProps) => {
                 <DimGroup
                   key={d.name}
                   dim={hover.dim(i)}
-                  onPointerEnter={() => {
-                    hover.show(i);
-                  }}
+                  onPointerEnter={hover.enter(i)}
                 >
                   <FeatureColumn
                     feature={d}

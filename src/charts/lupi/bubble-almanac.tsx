@@ -356,9 +356,7 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
                 )}
                 layout={layout}
                 screen={screen}
-                onEnter={(x, y) => {
-                  hover.show(cellId(d), x, y);
-                }}
+                onEnter={hover.showAt(cellId(d))}
               />
             ))}
             <FootNote height={height} text={props.note} width={width} />

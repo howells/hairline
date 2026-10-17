@@ -305,9 +305,7 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
                 index={i}
                 key={d.label}
                 layout={layout}
-                onHover={(x, y) => {
-                  hover.show(i, x, y);
-                }}
+                onHover={hover.showAt(i)}
                 unit={unit}
                 width={width}
               />

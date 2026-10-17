@@ -356,12 +356,7 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
               label={describe(days, unit, peak)}
               leave={hover.clear}
               onPointerMove={(e) => {
-                const day = dayAt(e, g, index);
-                if (day === null) {
-                  hover.clear();
-                } else {
-                  hover.show(day);
-                }
+                hover.set(dayAt(e, g, index));
               }}
               title={`Daily ${unit}`}
               width={width}

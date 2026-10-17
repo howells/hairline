@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { crisp } from "../axes";
 import { Plot } from "../core";
 import { Dot, Ring } from "../markers";
 import {
@@ -283,13 +282,13 @@ const ROWS: SheetRow[] = [
         detail: "4 3",
         label: "Target",
         mark: (x, y) => (
-          <line
+          <HRule
             className="stroke-l3 dash-rule"
+            kind="plain"
             strokeWidth={1}
-            x1={x - 22}
-            x2={x + 22}
-            y1={crisp(y)}
-            y2={crisp(y)}
+            x0={x - 22}
+            x1={x + 22}
+            y={y}
           />
         ),
       },

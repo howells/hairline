@@ -355,13 +355,11 @@ export const PictorialBar = (props: PictorialBarProps) => {
                 width={width}
                 dim={hover.dim(r.i)}
                 label={format(r.datum.value)}
-                onEnter={() => {
-                  hover.show(
-                    r.i,
-                    x0 + Math.min(r.n, perLine) * pitch,
-                    r.cy - (lines * g.ih + (lines - 1) * LINE_GAP) / 2 - 4
-                  );
-                }}
+                onEnter={hover.enter(
+                  r.i,
+                  x0 + Math.min(r.n, perLine) * pitch,
+                  r.cy - (lines * g.ih + (lines - 1) * LINE_GAP) / 2 - 4
+                )}
               />
             ))}
             <FootNote height={svgH} text={props.note} width={width} />

@@ -1,6 +1,6 @@
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
-import { TipText } from "../hover";
+import { HitPath, TipText } from "../hover";
 import { TICK } from "../marks";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
@@ -204,8 +204,8 @@ const HitWedges = (props: {
         const hovered = props.hovered === i;
         const [tx, ty] = clock(cx, cy, span.reach, (span.a0 + span.a1) / 2);
         return (
-          <path
-            className={`transition-tone fill-transparent ${hovered ? "stroke-ink" : "stroke-none"}`}
+          <HitPath
+            className={`transition-tone ${hovered ? "stroke-ink" : "stroke-none"}`}
             d={sectorPath(cx, cy, r0, span.reach, span.a0, span.a1)}
             key={`hit-${span.a0}-${span.a1}-${span.reach}`}
             onPointerEnter={() => {

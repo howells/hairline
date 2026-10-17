@@ -196,9 +196,7 @@ export const BallotTally = (props: BallotTallyProps) => {
                 <DimGroup
                   dim={hover.dim(i)}
                   key={d.label}
-                  onPointerEnter={() => {
-                    hover.show(i);
-                  }}
+                  onPointerEnter={hover.enter(i)}
                 >
                   <RulerRow
                     band={{ h: rowH, w: width, x: 0, y: rowH * i }}

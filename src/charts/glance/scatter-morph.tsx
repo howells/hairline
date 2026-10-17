@@ -587,9 +587,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                     dim={hover.dim(i)}
                     fill={tones[i] === 0 ? undefined : paint(tex("hatch"))}
                     i={i}
-                    onPointerEnter={() => {
-                      hover.show(i);
-                    }}
+                    onPointerEnter={hover.enter(i)}
                   />
                 ))}
                 {morph.settled ? (

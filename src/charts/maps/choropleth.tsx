@@ -7,6 +7,7 @@ import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
+import type { Hover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
@@ -402,7 +403,7 @@ const MapSvg = (
   props: ChoroplethProps & {
     focus: Focus;
     onFocus: (f: Focus) => void;
-    hover: ReturnType<typeof useHover<string>>;
+    hover: Hover<string>;
     values: Map<string, ChoroplethDatum>;
     width: number;
   }

@@ -9,6 +9,7 @@ import { dayTickLabels, fmtDegC, monthTickLabels } from "../../lib/format";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
+import type { Hover } from "../hooks";
 import { TipText } from "../hover";
 import { Dot } from "../markers";
 import { HRule, Stem } from "../rules";
@@ -50,7 +51,7 @@ const tickLabels = (dates: Date[]) =>
 
 interface DetailProps {
   data: DayValue[];
-  hover: ReturnType<typeof useHover<number>>;
+  hover: Hover<number>;
   mean: number[];
   span: Span;
   width: number;

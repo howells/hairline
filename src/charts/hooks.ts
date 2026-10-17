@@ -164,7 +164,8 @@ export interface HoverAt<K> {
  * The one hover state: a record key (an index, an id) plus a tooltip anchor.
  * `dim(key)` is true for every record but the hovered one, and only while
  * something is hovered. `enter(key, x, y)` makes the pointer handler for a
- * record; `set` takes a key or null, as a nearest-point search returns.
+ * record, `showAt(key)` the `(x, y)` callback for a mark that finds its own
+ * anchor; `set` takes a key or null, as a nearest-point search returns.
  * Re-showing the same record at the same spot does not re-render.
  */
 export const useHover = <K>() => {
@@ -196,6 +197,9 @@ export const useHover = <K>() => {
       }
     },
     show,
+    showAt: (key: K) => (x: number, y: number) => {
+      show(key, x, y);
+    },
   };
 };
 

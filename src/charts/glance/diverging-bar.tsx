@@ -273,9 +273,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
                   band={y.step()}
                   dim={hover.dim(i)}
                   text={format(d.value)}
-                  onPointerEnter={() => {
-                    hover.show(i, x(d.value), cy - bh / 2 - 2);
-                  }}
+                  onPointerEnter={hover.enter(i, x(d.value), cy - bh / 2 - 2)}
                 />
               );
             })}

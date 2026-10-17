@@ -48,6 +48,3 @@ export const RING_STEP = { guide: 4, mark: 3 } as const;
 
 /** Key swatch size, swatch-to-label gap and gap between key entries. */
 export const KEY = { entryGap: 16, gap: 6, swatch: 12 } as const;
-
-/** Radius of an invisible hit circle around a small point. */
-export const HIT_R = 8;

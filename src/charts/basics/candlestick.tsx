@@ -290,9 +290,7 @@ export const Candlestick = (props: CandlestickProps) => {
                 index={i}
                 key={keyOf(d)}
                 layout={layout}
-                onHover={(x, y) => {
-                  hover.show(i, x, y);
-                }}
+                onHover={hover.showAt(i)}
               />
             ))}
             {top === undefined ? null : (

@@ -11,14 +11,10 @@ export const PANEL =
 
 /** Ticks, scale labels and small secondary labels (the axis role). */
 export const TICK = "t-axis";
-/** The tick under the cursor, one step stronger. */
-export const TICK_STRONG = "t-axis fill-text";
 /** Category and series names. */
 export const LABEL = "text-tick font-medium";
 /** Data values (the value role). */
 export const VALUE = "t-value";
-/** The one big figure, when a chart has one. */
-export const VALUE_LG = "t-value-lg";
 /** A small heading over an HTML block, in the axis voice. */
 export const CAPTION = "text-tick text-muted";
 

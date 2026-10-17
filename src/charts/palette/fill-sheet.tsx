@@ -2,6 +2,7 @@ import { Plot, Tooltip } from "../core";
 import { FILL_FAMILIES, FILL_LADDERS, FILL_TONES, toneClass } from "../fills";
 import type { FillTone } from "../fills";
 import { useHover } from "../hooks";
+import type { Hover } from "../hooks";
 import { HitRect } from "../hover";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
@@ -42,11 +43,9 @@ const sheetFor = (width: number): Sheet => {
   };
 };
 
-type Hover = ReturnType<typeof useHover<string>>;
-
 interface TileProps {
   fill: string;
-  hover: Hover;
+  hover: Hover<string>;
   label: string;
   order: number;
   solid: string | undefined;
@@ -61,9 +60,7 @@ const Tile = (p: TileProps) => (
   <g
     className="fade"
     style={stagger(p.order, "fine")}
-    onPointerEnter={() => {
-      p.hover.show(p.label, p.x + p.w / 2, p.y);
-    }}
+    onPointerEnter={p.hover.enter(p.label, p.x + p.w / 2, p.y)}
     onPointerLeave={() => {
       p.hover.clear();
     }}
@@ -89,9 +86,7 @@ const RungTile = (p: Omit<TileProps, "solid">) => (
   <g
     className="fade"
     style={stagger(p.order, "fine")}
-    onPointerEnter={() => {
-      p.hover.show(p.label, p.x + p.w / 2, p.y);
-    }}
+    onPointerEnter={p.hover.enter(p.label, p.x + p.w / 2, p.y)}
     onPointerLeave={() => {
       p.hover.clear();
     }}
@@ -117,7 +112,7 @@ const RowName = (p: { label: string; y: number }) => (
 );
 
 interface BodyProps {
-  hover: Hover;
+  hover: Hover<string>;
   id: (name: string) => string;
   s: Sheet;
 }

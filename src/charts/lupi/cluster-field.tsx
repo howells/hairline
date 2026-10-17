@@ -282,9 +282,7 @@ export const ClusterField = (props: ClusterFieldProps) => {
                 dim={hover.dim(p.cluster.id)}
                 key={p.cluster.id}
                 maxSize={maxSize}
-                onEnter={() => {
-                  hover.show(p.cluster.id, p.x, p.y - p.R - 4);
-                }}
+                onEnter={hover.enter(p.cluster.id, p.x, p.y - p.R - 4)}
                 p={p}
                 s={layout.s}
               />

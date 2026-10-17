@@ -308,12 +308,7 @@ export const Ridgeline = (props: RidgelineProps) => {
                 <CrossHatch id={heroId} tone="fill-hero" />
               </defs>
               {ridges.map((r, i) => (
-                <g
-                  key={r.label}
-                  onPointerEnter={() => {
-                    hover.show(i);
-                  }}
-                >
+                <g key={r.label} onPointerEnter={hover.enter(i)}>
                   <HitRect
                     x={0}
                     y={baseOf(i) - rowGap}

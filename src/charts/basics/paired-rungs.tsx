@@ -3,7 +3,7 @@ import { scaleBand } from "d3-scale";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
-import { PlotNote } from "../plot-note";
+import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -223,18 +223,16 @@ export const PairedRungs = (props: PairedRungsProps) => {
                 index={i}
                 key={d.label}
                 left={x(d.label) ?? 0}
-                onEnter={(px, py) => {
-                  hover.show(i, px, py);
-                }}
+                onEnter={hover.showAt(i)}
                 pitch={pitch}
                 unit={unit}
               />
             ))}
-            <PlotNote
+            <FootNote
+              gutter={12}
+              height={height}
               text={props.note}
-              width={width - 24}
-              x={width / 2}
-              y={height - 6}
+              width={width}
             />
           </ChartSvg>
         );

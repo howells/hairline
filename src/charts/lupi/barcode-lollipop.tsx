@@ -11,7 +11,7 @@ import { Dot } from "../markers";
 import { DOT } from "../marks";
 import type { DotSize } from "../marks";
 import { PlotNote } from "../plot-note";
-import { Stem } from "../rules";
+import { Stem, VRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { clamp, noteSpace, sansWidth, stagger } from "../util";
@@ -191,14 +191,14 @@ const Barcode = (props: {
 }) => (
   <g>
     {props.data.map((d, i) => (
-      <line
+      <VRule
         className={`grow-y ${props.hover === i ? "stroke-l5 shape-crisp" : "grid-line"}`}
         key={`bar-${d.date.toISOString()}`}
+        kind="plain"
         style={stagger(i, "dense")}
-        x1={crisp(props.x(i))}
-        x2={crisp(props.x(i))}
-        y1={props.top}
-        y2={props.floor}
+        x={props.x(i)}
+        y0={props.top}
+        y1={props.floor}
       />
     ))}
     <MonthTicks data={props.data} floor={props.floor} x={props.x} />

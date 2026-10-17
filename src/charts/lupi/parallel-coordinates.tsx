@@ -1,14 +1,13 @@
 import { quantile } from "d3-array";
 import { scaleLinear } from "d3-scale";
 
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
 import { Dot } from "../markers";
 import { TICK } from "../marks";
 import { PlotNote } from "../plot-note";
-import { VRule } from "../rules";
+import { HRule, VRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Stipple } from "../texture";
@@ -114,14 +113,14 @@ const AxisRule = ({
     ))}
     <VRule kind="rule" x={x} y0={Math.round(top)} y1={Math.round(bottom)} />
     {rug.map((ty) => (
-      <line
+      <HRule
         className="stroke-l2 shape-crisp"
         key={`${axis.key}-${ty}`}
+        kind="plain"
         strokeWidth={1}
-        x1={Math.round(x) + 1 - RUG}
-        x2={Math.round(x) + 1}
-        y1={crisp(ty)}
-        y2={crisp(ty)}
+        x0={Math.round(x) + 1 - RUG}
+        x1={Math.round(x) + 1}
+        y={ty}
       />
     ))}
     <Label middle muted voice="axis" x={x + 9} y={top}>
@@ -377,9 +376,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
                   hero={props.highlight === r.name}
                   index={i}
                   key={r.name}
-                  onEnter={() => {
-                    hover.show(i);
-                  }}
+                  onEnter={hover.enter(i)}
                   pts={pointsOf(r)}
                   row={r}
                 />

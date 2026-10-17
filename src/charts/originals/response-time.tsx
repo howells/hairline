@@ -269,9 +269,7 @@ export const ResponseTime = (props: ResponseTimeProps) => {
                   hero={k === hero}
                   k={k}
                   key={d.channel}
-                  onEnter={() => {
-                    hover.show(k);
-                  }}
+                  onEnter={hover.enter(k)}
                   width={width}
                 />
               ))}

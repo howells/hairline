@@ -407,9 +407,7 @@ export const BarRace = (props: BarRaceProps) => {
                   hatch={hatch}
                   labelX={m.left}
                   leader={rank[i] === 0}
-                  onEnter={(tipX, tipY) => {
-                    hover.show(i, tipX, tipY);
-                  }}
+                  onEnter={hover.showAt(i)}
                   pitch={pitch}
                   series={s}
                   value={format(values[i])}

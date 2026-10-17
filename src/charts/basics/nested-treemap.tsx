@@ -354,9 +354,11 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
               <DimGroup
                 dim={hover.dim(tile.id)}
                 key={tile.id}
-                onPointerEnter={() => {
-                  hover.show(tile.id, tile.x + tile.w / 2, tile.y + 10);
-                }}
+                onPointerEnter={hover.enter(
+                  tile.id,
+                  tile.x + tile.w / 2,
+                  tile.y + 10
+                )}
               >
                 <TileMark
                   fill={paint(textures(textureOf(bands, tile.group)))}

@@ -256,9 +256,7 @@ export const RungHistogram = (props: RungHistogramProps) => {
                 index={i}
                 key={bin.x0}
                 layout={layout}
-                onHover={(x, y) => {
-                  hover.show(i, x, y);
-                }}
+                onHover={hover.showAt(i)}
                 peak={i === peak}
                 unit={unit}
               />

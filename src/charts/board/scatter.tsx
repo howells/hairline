@@ -423,11 +423,7 @@ export const Scatter = (props: ScatterProps) => {
             e.clientX - r.left,
             e.clientY - r.top
           );
-          if (at === null) {
-            hover.clear();
-          } else {
-            hover.show(at);
-          }
+          hover.set(at);
         };
         const hp = hover.key === null ? null : props.points[hover.key];
 

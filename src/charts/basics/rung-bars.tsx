@@ -226,13 +226,11 @@ export const RungBars = (props: RungBarsProps) => {
                   pitch={pitch}
                   rungs={rungs}
                   tex={tex}
-                  onEnter={() => {
-                    hover.show(
-                      index,
-                      left + x.bandwidth() / 2,
-                      rungY(floor, rungs - 1, pitch) - 22
-                    );
-                  }}
+                  onEnter={hover.enter(
+                    index,
+                    left + x.bandwidth() / 2,
+                    rungY(floor, rungs - 1, pitch) - 22
+                  )}
                 />
               );
             })}

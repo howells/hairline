@@ -147,12 +147,7 @@ export const HBars = (props: HBarsProps) => {
               const active = hover.key === r.name;
               const dim = hover.dim(r.name);
               return (
-                <g
-                  key={r.name}
-                  onPointerEnter={() => {
-                    hover.show(r.name);
-                  }}
-                >
+                <g key={r.name} onPointerEnter={hover.enter(r.name)}>
                   <HitRect height={bh} width={width} x={0} y={y(r.name)} />
                   <text
                     className={LABEL}

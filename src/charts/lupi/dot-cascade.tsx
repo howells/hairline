@@ -228,9 +228,7 @@ export const DotCascade = (props: DotCascadeProps) => {
                 i={i}
                 key={d.label}
                 layout={layout}
-                onEnter={(x, y) => {
-                  hover.show(i, x, y);
-                }}
+                onEnter={hover.showAt(i)}
               />
             ))}
             <FootNote height={layout.height} text={props.note} width={width} />

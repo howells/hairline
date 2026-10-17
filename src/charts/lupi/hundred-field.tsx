@@ -1,6 +1,6 @@
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
-import { DimGroup, TipText } from "../hover";
+import { DimGroup, HitPath, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { DOT, RING_STEP } from "../marks";
 import type { DotSize } from "../marks";
@@ -243,7 +243,7 @@ const WedgeMarks = ({ head, w }: { head: Head; w: Wedge }) => {
   const label = labelAt(head, w);
   return (
     <>
-      <path d={slicePath(head, w, head.R + head.c * 2)} fill="transparent" />
+      <HitPath d={slicePath(head, w, head.R + head.c * 2)} />
       {w.seeds.map((seed) => (
         <SeedMark
           glyph={w.glyph}
@@ -380,9 +380,7 @@ export const HundredField = (props: HundredFieldProps) => {
                 <DimGroup
                   dim={hover.dim(w.index)}
                   key={w.group.label}
-                  onPointerEnter={() => {
-                    hover.show(w.index);
-                  }}
+                  onPointerEnter={hover.enter(w.index)}
                 >
                   <WedgeMarks head={head} w={w} />
                 </DimGroup>
