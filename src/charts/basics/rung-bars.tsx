@@ -186,8 +186,14 @@ export const RungBars = (props: RungBarsProps) => {
           .paddingInner(0.42)
           .paddingOuter(0.3);
         const max = Math.max(...data.map((d) => d.value / unit));
-        const floor = Math.round(height - margin.bottom);
-        const pitch = rungPitch(floor - margin.top, max);
+        const pitch = rungPitch(height - margin.bottom - margin.top, max);
+        // When the pitch reaches its cap the columns stop short of the
+        // room, so the plot closes up round them instead of leaving air.
+        const fitted = Math.min(
+          height,
+          margin.top + Math.ceil(max) * pitch + margin.bottom
+        );
+        const floor = Math.round(fitted - margin.bottom);
         const hero = props.highlight ?? maxIndex(data.map((d) => d.value));
         const label = data
           .map((d) => `${d.label} ${format(d.value)}`)
@@ -195,7 +201,7 @@ export const RungBars = (props: RungBarsProps) => {
 
         return (
           <ChartSvg
-            height={height}
+            height={fitted}
             label={label}
             leave={hover.clear}
             width={width}
@@ -234,7 +240,7 @@ export const RungBars = (props: RungBarsProps) => {
                 />
               );
             })}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={fitted} text={props.note} width={width} />
           </ChartSvg>
         );
       }}

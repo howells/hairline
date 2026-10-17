@@ -15,7 +15,7 @@ interface PlotNoteProps {
 }
 
 /**
- * The in-plot unit footnote ("ONE DOT = ONE DAY"), fading in with the
+ * The in-plot unit footnote ("One dot = one day"), fading in with the
  * labels. Wraps at " · " to fit `width` and renders nothing when even one
  * segment can't fit. Reserve room for it with `noteSpace` from ./util,
  * using the same width.
