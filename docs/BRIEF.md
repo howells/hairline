@@ -91,7 +91,7 @@ export const Foo = (props: FooProps) => (
 );
 ```
 
-- Charts render **only the plot**. Title, subtitle, form name and source come from `<Card>`, which the gallery wraps around your component using the entry metadata.
+- Charts render **only the plot**. The gallery's cell sets the chart's name above it, with an (i) that opens one sentence on what the data is and its sources (`src/gallery/about.json` and `sources.json`, keyed by cell). A new chart needs a line in each.
 - Props should be general enough that a worked-example page can pass its own data, labels and units. Keep them typed and minimal. No `any`.
 - Width comes from `Plot` (it measures); choose height from props. Lay out responsively from `width` down to ~340px (mobile), shrinking or dropping labels sensibly rather than overflowing.
 - `src/charts/core.tsx` exports components: `Plot`, `Tooltip` (and board helpers). `src/charts/hooks.ts` exports `useSvgId` (safe ids for clipPath/gradients), `useMeasure`, `useReveal`. `src/charts/axes.ts` has small helpers (`crisp` for pixel-snapped 1px lines). `src/lib/random.ts` exports `rnd(i, k)`, `rndSigned`, `mulberry32`. **Never use `Math.random()`**: renders must be identical on every load. `src/lib/format.ts` has number/date formatters (true minus sign `−`).

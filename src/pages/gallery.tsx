@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ALL_ENTRIES, KIT_ENTRIES, entryById } from "../gallery/registry";
 import type { GalleryEntry } from "../gallery/types";
+import { ChartNote } from "./chart-note";
 
 const ground = (entry: GalleryEntry) => {
   if (entry.dark === true) {
@@ -45,21 +46,24 @@ const useNear = () => {
 };
 
 /**
- * One chart in the house frame: its name, then the chart centred in the room
- * left. Every cell is set the same way, so the grid reads as one desk's work.
- * The chart itself mounts as the cell nears the viewport; until then the cell
- * holds a chart's usual height.
+ * One chart in the house frame: its name and (i), then the chart centred in
+ * the room left. Every cell is set the same way, so the grid reads as one
+ * desk's work. The chart itself mounts as the cell nears the viewport; until
+ * then the cell holds a chart's usual height.
  */
 const Cell = (props: { entry: GalleryEntry }) => {
   const [ref, near] = useNear();
   return (
     <figure
+      // Named for the chart alone: the caption also holds the (i) and its note.
+      aria-label={props.entry.name}
       id={props.entry.id}
       ref={ref}
       className={`m-0 flex min-w-0 flex-col gap-8 p-6 md:p-10 ${ground(props.entry)} ${props.entry.span === "full" ? "col-span-full" : ""}`}
     >
-      <figcaption className="text-small text-text">
+      <figcaption className="text-small text-text flex items-center justify-between gap-4">
         {props.entry.name}
+        <ChartNote entry={props.entry} />
       </figcaption>
       <div
         className={`flex min-w-0 flex-1 flex-col justify-center ${near ? "" : "min-h-[440px]"}`}
