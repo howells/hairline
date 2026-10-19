@@ -72,7 +72,7 @@ const withUnit = (
 
 interface AxisProps {
   axis: ParallelAxis;
-  /** Every row's value on this axis, in px: the rug. */
+  /** Each distinct value on this axis, in px: the rug. */
   rug: number[];
   index: number;
   x: number;
@@ -362,9 +362,14 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
                   format={format}
                   index={k}
                   key={a.key}
-                  rug={data.rows.map((r) =>
-                    ys[k](r.values[a.key] ?? a.domain[0])
-                  )}
+                  rug={[
+                    // One tick per value: rows that share one share a tick.
+                    ...new Set(
+                      data.rows.map((r) =>
+                        ys[k](r.values[a.key] ?? a.domain[0])
+                      )
+                    ),
+                  ]}
                   lines={wrapWords(a.label, gap - 10, textW)}
                   top={top}
                   x={ax(k)}
