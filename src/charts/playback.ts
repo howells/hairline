@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { useReducedMotion, useReveal } from "./hooks";
+import { useMotionPreference, useReveal } from "./hooks";
 
 /*
  * Scripted motion: the one clock behind every chart that animates from
@@ -105,6 +105,13 @@ interface PlayheadOptions {
   step?: { every: number; unit: number };
 }
 
+const initialPlayheadTime = (o: PlayheadOptions, reduced: boolean) => {
+  if (!reduced) {
+    return 0;
+  }
+  return o.reduced === "end" ? o.end : (o.start ?? 0);
+};
+
 /**
  * A playhead from 0 to `end` that advances while playing and live. Toggle
  * plays and pauses (and restarts once finished), seek jumps and pauses,
@@ -112,14 +119,18 @@ interface PlayheadOptions {
  */
 export const usePlayhead = (o: PlayheadOptions) => {
   const live = useLive(o.box);
-  const reduced = useReducedMotion();
-  const [t, setT] = useState(() => {
-    if (!reduced) {
-      return 0;
-    }
-    return o.reduced === "end" ? o.end : (o.start ?? 0);
-  });
+  const preference = useMotionPreference();
+  const reduced = preference ?? true;
+  const [initialised, setInitialised] = useState(preference !== null);
+  const [t, setT] = useState(() => initialPlayheadTime(o, reduced));
   const [playing, setPlaying] = useState(() => !reduced);
+  // Hydration uses the server's still frame. Initialise playback once the
+  // client's preference arrives, before committing its first live frame.
+  if (!initialised && preference !== null) {
+    setInitialised(true);
+    setT(initialPlayheadTime(o, reduced));
+    setPlaying(!reduced);
+  }
   const done = t >= o.end;
   const running = playing && live && !done;
   const unit = o.step?.unit ?? 1;

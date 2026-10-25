@@ -16,6 +16,7 @@ export type { FillTone, FillFamily } from "./charts/fills";
 export {
   useMeasure,
   useReveal,
+  useMotionPreference,
   useReducedMotion,
   useSvgId,
   useScrub,

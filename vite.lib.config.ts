@@ -3,12 +3,12 @@ import { defineConfig } from "vite";
 
 /*
  * The library build: charts (index) and the kit of parts, as ES modules for a
- * React host. React, d3 and the atlases stay as the host's dependencies. Every
+ * React host. React and d3 stay as the host's dependencies; atlas JSON is
+ * bundled so the entry also loads in native Node ESM. Every
  * chunk is marked "use client": charts measure, hover and animate, so in a
  * React Server Components host they render on the client.
  */
-const external =
-  /^(?:react|react-dom|d3-[\w-]+|topojson-client|world-atlas|us-atlas)(?:\/.*)?$/u;
+const external = /^(?:react|react-dom|d3-[\w-]+|topojson-client)(?:\/.*)?$/u;
 
 export default defineConfig({
   build: {

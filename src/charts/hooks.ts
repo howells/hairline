@@ -81,17 +81,16 @@ const subscribeReduced = (onChange: () => void) => {
   };
 };
 
-/**
- * True when the reader asks for reduced motion; follows changes live. On the
- * server, and in the first client render, motion is assumed reduced, so a
- * server-rendered chart never paints mid-animation.
- */
-export const useReducedMotion = () =>
+/** The reader's live preference, or null until the client snapshot is available. */
+export const useMotionPreference = () =>
   useSyncExternalStore(
     subscribeReduced,
     () => window.matchMedia(REDUCED).matches,
-    () => true
+    (): boolean | null => null
   );
+
+/** Assume reduced motion until hydration supplies the reader's preference. */
+export const useReducedMotion = () => useMotionPreference() ?? true;
 
 /** React's useId, made safe for url(#id) references. */
 export const useSvgId = (prefix: string) =>
