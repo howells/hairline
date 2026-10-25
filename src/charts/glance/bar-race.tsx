@@ -145,9 +145,14 @@ const narrowStops = (
  */
 const Track = (p: TrackProps) => {
   const last = p.periods.length - 1;
+  // Every label is centred on its stop, so the track stops half the last
+  // label short of the edge rather than pulling that label onto its neighbour.
   const x = scaleLinear()
     .domain([0, last])
-    .range([p.left, p.width - 4]);
+    .range([
+      p.left,
+      p.width - Math.max(4, sansWidth(p.periods[last] ?? "") / 2),
+    ]);
   const cur = p.periods.indexOf(p.current);
   // Narrow: each year's first period and the current one, in full.
   const labels = p.narrow
@@ -196,8 +201,7 @@ const Track = (p: TrackProps) => {
             )}
             {text === undefined ? null : (
               <Label
-                anchor={k === last ? "end" : "middle"}
-                dx={k === last ? 4 : 0}
+                anchor="middle"
                 voice={period === p.current ? "value" : "axis"}
                 x={x(k)}
                 y={p.y - 10}

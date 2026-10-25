@@ -1,5 +1,12 @@
 import { bisectCenter } from "d3-array";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type {
   CSSProperties,
   KeyboardEvent,
@@ -66,23 +73,25 @@ export const useReveal = (ref: RefObject<HTMLElement | null>) => {
 
 const REDUCED = "(prefers-reduced-motion: reduce)";
 
-/** True when the reader asks for reduced motion; follows changes live. */
-export const useReducedMotion = () => {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia(REDUCED).matches
-  );
-  useEffect(() => {
-    const mq = window.matchMedia(REDUCED);
-    const onChange = () => {
-      setReduced(mq.matches);
-    };
-    mq.addEventListener("change", onChange);
-    return () => {
-      mq.removeEventListener("change", onChange);
-    };
-  }, []);
-  return reduced;
+const subscribeReduced = (onChange: () => void) => {
+  const mq = window.matchMedia(REDUCED);
+  mq.addEventListener("change", onChange);
+  return () => {
+    mq.removeEventListener("change", onChange);
+  };
 };
+
+/**
+ * True when the reader asks for reduced motion; follows changes live. On the
+ * server, and in the first client render, motion is assumed reduced, so a
+ * server-rendered chart never paints mid-animation.
+ */
+export const useReducedMotion = () =>
+  useSyncExternalStore(
+    subscribeReduced,
+    () => window.matchMedia(REDUCED).matches,
+    () => true
+  );
 
 /** React's useId, made safe for url(#id) references. */
 export const useSvgId = (prefix: string) =>

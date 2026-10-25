@@ -26,6 +26,14 @@ interface BrandSpectrumProps {
   us?: string;
   height?: number;
   note?: string;
+  /**
+   * A position in words, for the tooltip and the accessible label. Defaults
+   * to how far it leans toward a pole ("74% toward Authority"); pass this
+   * when the poles are measured values and the reading is a value too.
+   */
+  describe?: (row: SpectrumRow, position: number) => string;
+  /** The drawing's accessible title. */
+  title?: string;
 }
 
 interface SpectrumHover {
@@ -317,6 +325,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
   const data = props.data ?? brandSpectrumDemo;
   const competitors = props.competitors ?? brandSpectrumCompetitors;
   const usName = props.us ?? "Ben Nevis";
+  const describe = props.describe ?? lean;
   const height = props.height ?? 440;
   const [hover, setHover] = useState<SpectrumHover | null>(null);
   const gap = useTextureIds("brand")("gap");
@@ -324,7 +333,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
     s === 0 ? usName : (competitors.at(s - 1) ?? `Other ${s}`);
   const tipValue = (h: SpectrumHover) => {
     const row = data[h.row];
-    return lean(
+    return describe(
       row,
       h.series === 0 ? row.us : (row.others.at(h.series - 1) ?? 0.5)
     );
@@ -357,11 +366,14 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
         return (
           <ChartSvg
             height={layout.height}
-            label={`Positions between opposing poles: ${data.map((row) => `${usName} ${lean(row, row.us)}`).join("; ")}`}
+            label={`Positions between opposing poles: ${data.map((row) => `${usName} ${describe(row, row.us)}`).join("; ")}`}
             leave={() => {
               setHover(null);
             }}
-            title="Where one hill sits between opposing poles, against others"
+            title={
+              props.title ??
+              "Where one hill sits between opposing poles, against others"
+            }
             width={width}
           >
             <defs>

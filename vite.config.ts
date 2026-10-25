@@ -27,5 +27,7 @@ export default defineConfig({
       },
     },
   },
+  // Scan only the app for dependencies; reference/ holds saved third-party pages.
+  optimizeDeps: { entries: ["index.html"] },
   plugins: [react(), tailwindcss()],
 });

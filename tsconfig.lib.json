@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "outDir": "lib/types",
+    "rootDir": "src",
+    "types": []
+  },
+  "include": [
+    "src/index.ts",
+    "src/kit.ts",
+    "src/system/css-custom-properties.d.ts"
+  ]
+}

@@ -210,8 +210,6 @@
   --alert-rule: color-mix(in oklab, var(--alert) 55%, var(--paper));
   --hero-soft: color-mix(in oklab, var(--hero) 25%, var(--paper));
   --panel: color-mix(in oklab, var(--paper) 96%, var(--ink));
-
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 /*

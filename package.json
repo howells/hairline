@@ -1,15 +1,40 @@
 {
-  "name": "charts",
+  "name": "@howells/hairline",
   "version": "0.1.0",
   "private": true,
+  "description": "An engraved chart library for React: pixel-snapped hairlines, one ink hero per chart, and banknote textures.",
+  "homepage": "https://hairline.danielhowells.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/howells/hairline.git"
+  },
+  "files": [
+    "lib"
+  ],
   "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./kit": {
+      "types": "./lib/types/kit.d.ts",
+      "default": "./lib/kit.js"
+    },
+    "./tokens.css": "./lib/tokens.css",
+    "./theme.css": "./lib/theme.css"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -b && tsc -p scripts",
     "lint": "howells-check .",
-    "lint:fix": "howells-fix ."
+    "lint:fix": "howells-fix .",
+    "build:lib": "node scripts/library-index.ts && howells-oxfmt src/index.ts src/kit.ts && vite build -c vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/library-css.ts"
   },
   "dependencies": {
     "d3-array": "^3.2.4",
@@ -27,8 +52,6 @@
     "d3-shape": "^3.2.0",
     "d3-time": "^3.1.0",
     "d3-time-format": "^4.1.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
     "topojson-client": "^3.1.0",
     "us-atlas": "^3.0.1",
     "world-atlas": "^2.0.2"
@@ -52,13 +75,20 @@
     "@types/d3-time": "^3.0.4",
     "@types/d3-time-format": "^4.0.3",
     "@types/geojson": "^7946.0.16",
+    "@types/node": "^24",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/topojson-client": "^3.1.5",
     "@vitejs/plugin-react": "^6.1.2",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "packageManager": "pnpm@9.0.0"
 }

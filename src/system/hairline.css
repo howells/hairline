@@ -1,0 +1,381 @@
+/*
+ * Hairline's chart styles: the colour names, text roles, rules, motion and
+ * textures every chart draws with. Import it after Tailwind in the host's CSS:
+ *
+ *   @import "tailwindcss";
+ *   @import "@howells/hairline/tokens.css";
+ *   @import "@howells/hairline/theme.css";
+ *
+ * The palette itself is CSS variables (tokens.css): override --paper, --ink,
+ * --muted, --rule, --l0 … --l6, --hero and --alert to match the host.
+ */
+/*
+ * Palette variables (tokens.css) exposed as Tailwind colours, so markup reads
+ * `bg-paper text-muted fill-ink stroke-rule`. `inline` keeps them as live
+ * var() references, so palette switches and dark cards recolour utilities too.
+ */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-panel: var(--panel);
+  --color-ink: var(--ink);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-grid: var(--grid);
+  --color-rule: var(--rule);
+  --color-l0: var(--l0);
+  --color-l1: var(--l1);
+  --color-l2: var(--l2);
+  --color-l3: var(--l3);
+  --color-l4: var(--l4);
+  --color-l5: var(--l5);
+  --color-l6: var(--l6);
+  --color-hero: var(--hero);
+  --color-hero-soft: var(--hero-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+  --color-alert-faded: var(--alert-faded);
+  --color-alert-rule: var(--alert-rule);
+  --color-cat-1: var(--cat-1);
+  --color-cat-2: var(--cat-2);
+  --color-cat-3: var(--cat-3);
+  --color-cat-4: var(--cat-4);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
+  --color-heat-5: var(--heat-5);
+
+  /* Board colours: only defined inside .surface-board. */
+  --color-s1: var(--s1);
+  --color-s1-active: var(--s1-active);
+  --color-s1-future: var(--s1-future);
+  --color-s2: var(--s2);
+  --color-s2-active: var(--s2-active);
+  --color-s2-future: var(--s2-future);
+  --color-s3: var(--s3);
+  --color-s3-active: var(--s3-active);
+  --color-s3-future: var(--s3-future);
+  --color-line1: var(--line1);
+  --color-line1-future: var(--line1-future);
+  --color-line2: var(--line2);
+  --color-line2-future: var(--line2-future);
+  --color-area1: var(--area1);
+  --color-area2: var(--area2);
+  --color-area3: var(--area3);
+  --color-band-past: var(--band-past);
+  --color-band-future: var(--band-future);
+  --color-red: var(--red);
+  --color-red-past: var(--red-past);
+  --color-red-future: var(--red-future);
+  --color-red-soft: var(--red-soft);
+  --color-red-rule: var(--red-rule);
+  --color-board-bar: var(--board-bar);
+  --color-board-label-2: var(--board-label-2);
+  --color-board-swatch-3: var(--board-swatch-3);
+  --color-board-link: var(--board-link);
+  --color-board-link-hot: var(--board-link-hot);
+  --color-board-hot: var(--board-hot);
+
+  /*
+   * The type case: three sizes, five roles. Every chart word is 11px (the
+   * t-axis, t-label and t-value roles, told apart by weight); a chart may
+   * lead with one 30px figure (t-figure); the page around the charts (chart
+   * names, the header, sources) is 13.5px. howells/no-raw-type-utilities
+   * (oxlint.config.ts) rejects any other size, weight, leading or tracking.
+   */
+  --text-tick: 11px;
+  --text-figure: 30px;
+
+  --radius-tip: 10px;
+
+  --shadow-ring: inset 0 0 0 1px var(--rule);
+  --shadow-hollow: inset 0 0 0 1.5px currentColor;
+  --shadow-swatch: 0 0 0 1px var(--paper);
+
+  /* `stroke-medium`: board lines, between the 1px rule and 2px glance marks. */
+  --stroke-width-medium: 1.5;
+
+  /* The motion curves, from tokens.css, for `ease-enter` and kin. */
+  --ease-enter: var(--ease-enter);
+  --ease-travel: var(--ease-travel);
+  --ease-tone: var(--ease-tone);
+}
+
+/*
+ * SVG text roles. Charts pick a role, never a font. Everything is Inter, in
+ * sentence case, with tabular figures wherever numbers line up. Axis, label
+ * and value share one size and differ by weight and tone only; figure is the
+ * single big number a chart may lead with.
+ */
+/* Ticks, scale labels, keys, units and notes. */
+@utility t-axis {
+  fill: var(--muted);
+  font-family: var(--font-sans);
+  font-size: --theme(--text-tick);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Category, series and place names. */
+@utility t-label {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: --theme(--text-tick);
+  font-weight: 500;
+}
+
+/* Data values. */
+@utility t-value {
+  fill: var(--ink);
+  font-family: var(--font-sans);
+  font-size: --theme(--text-tick);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one big figure a chart may lead with. */
+@utility t-figure {
+  fill: var(--ink);
+  font-family: var(--font-sans);
+  font-size: --theme(--text-figure);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text over marks: a paper-coloured stroke behind the glyphs. */
+@utility t-halo {
+  paint-order: stroke;
+  stroke: var(--paper);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Hover on anything whose colour (text, fill or stroke) and opacity both change. */
+@utility transition-tone {
+  transition-property: color, fill, stroke, opacity;
+  transition-timing-function: var(--tw-ease, var(--ease-tone));
+  transition-duration: var(--tw-duration, var(--duration-hover));
+}
+
+/* Hover swell on SVG circles; no stock utility transitions `r`. */
+@utility transition-radius {
+  transition-property: r;
+  transition-timing-function: var(--tw-ease, var(--ease-tone));
+  transition-duration: var(--tw-duration, var(--duration-hover));
+}
+
+/* Duration tokens as utilities, for transitions that aren't hover. */
+@utility duration-change {
+  --tw-duration: var(--duration-change);
+  transition-duration: var(--duration-change);
+}
+
+@utility duration-enter {
+  --tw-duration: var(--duration-enter);
+  transition-duration: var(--duration-enter);
+}
+
+/* Baselines and axes: full ink, sharply distinct from the faint grid. */
+@utility hairline {
+  stroke: var(--ink);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+/* Quiet structural rules: leaders, connectors, tracks, per-row lines. */
+@utility rule {
+  stroke: var(--rule);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+/*
+ * The paper's grain, under everything on a surface: a very faint noise in the
+ * ink's colour. It sits behind the marks, never over them, so ink stays crisp.
+ */
+@utility grain {
+  background-image: var(--grain);
+}
+
+/* The grid: solid 1px hairlines in --grid, snapped. Never dotted. */
+@utility grid-line {
+  stroke: var(--grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+/* Pixel-snapped straight rules, or anti-aliased curves (e.g. a dotted ring). */
+@utility shape-crisp {
+  shape-rendering: crispEdges;
+}
+
+@utility shape-smooth {
+  shape-rendering: auto;
+}
+
+/* The one dash: a target or SLA rule. Everything provisional is dotted (texture.tsx). */
+@utility dash-rule {
+  stroke-dasharray: 4 3;
+}
+
+/* Round joins and caps for data lines. */
+@utility cap-round {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/*
+ * Entry motion. A Plot is .is-hidden until it scrolls into view, then
+ * .is-shown. Marks that appear in place arrive on --ease-enter; lines and
+ * wipes that cross the chart travel on --ease-travel. Durations and steps are
+ * the tokens in tokens.css. Order marks with stagger(i, tier) from charts/util.
+ *
+ * Bars and areas grow from scale 0 on purpose: that edge is their baseline,
+ * so the mark rises from the axis rather than appearing from a point.
+ *
+ * Under reduced motion nothing travels: the marks are simply there, and the
+ * whole plot fades in (bottom of this file).
+ */
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+/*
+ * The dash exists only while the line draws on: fill-mode is backwards, so
+ * once it ends the line is whole again (round caps and all) with no dash.
+ */
+@keyframes draw {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@utility grow-y {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.is-hidden) & {
+      transform: scaleY(0);
+    }
+    :where(.is-shown) & {
+      animation: grow-y var(--duration-grow) var(--ease-enter) both;
+      animation-delay: calc(var(--i, 0) * var(--stagger, var(--stagger-mark)));
+    }
+  }
+}
+
+@utility from-top {
+  &.grow-y {
+    transform-origin: 50% 0%;
+  }
+}
+
+@utility grow-x {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.is-hidden) & {
+      transform: scaleX(0);
+    }
+    :where(.is-shown) & {
+      animation: grow-x var(--duration-grow) var(--ease-enter) both;
+      animation-delay: calc(var(--i, 0) * var(--stagger, var(--stagger-mark)));
+    }
+  }
+}
+
+@utility from-right {
+  &.grow-x {
+    transform-origin: 100% 50%;
+  }
+}
+
+@utility pop {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.is-hidden) & {
+      opacity: 0;
+    }
+    :where(.is-shown) & {
+      animation: pop var(--duration-enter) var(--ease-enter) both;
+      animation-delay: calc(var(--i, 0) * var(--stagger, var(--stagger-fine)));
+    }
+  }
+}
+
+/* The left-to-right wipe that reveals board charts: one long arrival. */
+@utility sweep {
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.is-hidden) & {
+      transform: scaleX(0);
+    }
+    :where(.is-shown) & {
+      animation: grow-x var(--duration-long) var(--ease-travel) both;
+    }
+  }
+}
+
+@utility fade {
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.is-hidden) & {
+      opacity: 0;
+    }
+    :where(.is-shown) & {
+      animation: fade-in var(--duration-enter) var(--ease-enter) both;
+      animation-delay: calc(
+        var(--i, 0) * var(--stagger, var(--stagger-mark)) + var(--fade-lag)
+      );
+    }
+  }
+}
+
+@utility draw {
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.is-hidden) & {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+    }
+    :where(.is-shown) & {
+      animation: draw var(--duration-long) var(--ease-travel) backwards;
+      animation-delay: calc(
+        var(--i, 0) * var(--stagger, var(--stagger-series))
+      );
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-hidden {
+    opacity: 0;
+  }
+  .is-shown {
+    animation: fade-in var(--duration-change) var(--ease-enter) both;
+  }
+}

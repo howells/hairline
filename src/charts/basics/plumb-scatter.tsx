@@ -29,7 +29,10 @@ interface PlumbScatterProps {
   yLabel?: string;
   xDomain?: [number, number];
   yDomain?: [number, number];
-  /** Indices to name beside their dot. Defaults to the highest and lowest. */
+  /**
+   * Indices to name beside their dot. Defaults to the highest and lowest. A
+   * name with nowhere to sit clear of the other stems is left to the tooltip.
+   */
   labelled?: number[];
   /** Index drawn in the hero colour. */
   highlight?: number;
@@ -92,13 +95,16 @@ const extent = (place: Placement, px: number, w: number) => {
 /**
  * The first placement whose name stays inside the svg and crosses no other
  * point's stem: a stem runs from its dot down to the floor, so a name set low
- * beside a tall stem would cut it. Failing that, the first that stays inside.
+ * beside a tall stem would cut it. Failing that, the hero's name takes the
+ * first that stays inside, or sits above slid in from the edge; any other
+ * name is left to the tooltip.
  */
 const placeName = (
   self: { px: number; py: number; w: number },
   stems: { px: number; py: number }[],
-  width: number
-) => {
+  width: number,
+  hero: boolean
+): Placement | undefined => {
   const inside = (place: Placement) => {
     const [l, r] = extent(place, self.px, self.w);
     return l >= EDGE && r <= width - EDGE && self.py + place.dy - 10 > 0;
@@ -113,10 +119,19 @@ const placeName = (
         st.py > self.py + place.dy + 2
     );
   };
+  const clean = PLACEMENTS.find((place) => inside(place) && clear(place));
+  if (clean !== undefined || !hero) {
+    return clean;
+  }
+  const half = self.w / 2;
   return (
-    PLACEMENTS.find((place) => inside(place) && clear(place)) ??
-    PLACEMENTS.find(inside) ??
-    ABOVE
+    PLACEMENTS.find(inside) ?? {
+      ...ABOVE,
+      dx: Math.max(
+        EDGE + half - self.px,
+        Math.min(0, width - EDGE - half - self.px)
+      ),
+    }
   );
 };
 
@@ -126,11 +141,10 @@ interface PointProps {
   floor: number;
   format: (v: number) => string;
   hero: boolean;
-  named: boolean;
   onEnter: (x: number, y: number) => void;
   order: number;
-  /** Where the name sits, when named. */
-  place: Placement;
+  /** Where the name sits; undefined when the point is not named. */
+  place: Placement | undefined;
   x: ScaleLinear<number, number>;
   y: ScaleLinear<number, number>;
 }
@@ -142,7 +156,6 @@ const Point = ({
   floor,
   format,
   hero,
-  named,
   onEnter,
   order,
   place,
@@ -151,6 +164,7 @@ const Point = ({
 }: PointProps) => {
   const px = x(datum.x);
   const py = y(datum.y);
+  const named = place !== undefined;
   return (
     <DimGroup
       dim={dim}
@@ -187,7 +201,7 @@ const Point = ({
         size={hero ? "md" : "sm"}
         style={stagger(order + 6, "mark")}
       />
-      {named ? (
+      {place === undefined ? null : (
         <Label
           anchor={place.anchor}
           halo
@@ -199,7 +213,7 @@ const Point = ({
         >
           {datum.label} · {format(datum.y)}
         </Label>
-      ) : null}
+      )}
     </DimGroup>
   );
 };
@@ -285,25 +299,29 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
             />
             {data.map((d, i) => (
               <Point
-                place={placeName(
-                  {
-                    px: x(d.x),
-                    py: y(d.y),
-                    w: sansWidth(
-                      `${d.label} · ${format(d.y)}`,
-                      hero === i ? 12 : 11
-                    ),
-                  },
-                  data.map((o) => ({ px: x(o.x), py: y(o.y) })),
-                  width
-                )}
+                place={
+                  labelled.has(i)
+                    ? placeName(
+                        {
+                          px: x(d.x),
+                          py: y(d.y),
+                          w: sansWidth(
+                            `${d.label} · ${format(d.y)}`,
+                            hero === i ? 12 : 11
+                          ),
+                        },
+                        data.map((o) => ({ px: x(o.x), py: y(o.y) })),
+                        width,
+                        hero === i
+                      )
+                    : undefined
+                }
                 datum={d}
                 dim={hover.dim(i)}
                 floor={floor}
                 format={format}
                 hero={hero === i}
                 key={d.label}
-                named={labelled.has(i)}
                 onEnter={hover.showAt(i)}
                 order={order.get(i) ?? i}
                 x={x}
