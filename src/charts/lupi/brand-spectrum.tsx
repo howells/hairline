@@ -24,6 +24,8 @@ interface BrandSpectrumProps {
   competitors?: string[];
   /** Name for the inked position. */
   us?: string;
+  /** The gap bar's name in the key. Defaults to "Gap to their mean". */
+  gapLabel?: string;
   height?: number;
   note?: string;
   /**
@@ -268,11 +270,16 @@ const KEY_LINE = 20;
  * The key: the inked hill's swatch, a hollow swatch for the others and the
  * gap bar's hatch, wrapping onto a second line when the row is too narrow.
  */
-const keyEntries = (gap: string, us: string, span: number) => {
+const keyEntries = (
+  gap: string,
+  us: string,
+  gapLabel: string,
+  span: number
+) => {
   const items = [
     { name: us, tone: "fill-hero" },
     { name: "Others", tone: "fill-paper" },
-    { fill: paint(gap), name: "Gap to their mean" },
+    { fill: paint(gap), name: gapLabel },
   ];
   let cx = 0;
   let line = 0;
@@ -325,6 +332,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
   const data = props.data ?? brandSpectrumDemo;
   const competitors = props.competitors ?? brandSpectrumCompetitors;
   const usName = props.us ?? "Ben Nevis";
+  const gapLabel = props.gapLabel ?? "Gap to their mean";
   const describe = props.describe ?? lean;
   const height = props.height ?? 440;
   const [hover, setHover] = useState<SpectrumHover | null>(null);
@@ -355,7 +363,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
       {(width) => {
         const axis = spectrumAxis(width, data);
         // The key starts under the rail and may run on under the right-hand labels.
-        const key = keyEntries(gap, usName, width - axis.x0 - 8);
+        const key = keyEntries(gap, usName, gapLabel, width - axis.x0 - 8);
         const footH =
           54 +
           10 +
