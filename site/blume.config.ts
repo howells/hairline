@@ -18,6 +18,7 @@ export default defineConfig({
     llmsTxt: { details: agentDetails(registry) },
     markdownComponents,
   },
+  deployment: { base: "/docs", site: "https://hairline.danielhowells.com" },
   content: {
     sources: [filesystem({ root: "docs" }), custom(chartPages)],
   },
