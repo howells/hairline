@@ -1,0 +1,38 @@
+// Printing the all-slides page: every page of the PDF must carry a drawn chart.
+// A chart that is hidden, or never drew, leaves a page of one background fill
+// and no text; a drawn one has hundreds of path operations and its labels.
+import { expect, test } from "@playwright/test";
+import { OPS, getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
+
+import { SLIDE_COUNT } from "./slides.ts";
+
+const PATH_OPS = new Set<number>([OPS.constructPath, OPS.stroke, OPS.fill]);
+const TEXT_OPS = new Set<number>([OPS.showText, OPS.showSpacedText]);
+
+// "scroll" is the default and the hard case: nothing scrolls, so no chart ever
+// reaches ready, and the print rules alone must show them.
+for (const animate of ["off", "scroll"]) {
+  test(`animate ${animate}: every PDF page has a drawn chart`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "dpr1", "paper has no pixel ratio");
+    await page.goto(`/${animate}.html`);
+    await page.evaluate(() => document.fonts.ready);
+    const bytes = await page.pdf({
+      height: "1080px",
+      preferCSSPageSize: true,
+      printBackground: true,
+      width: "1920px",
+    });
+
+    const pdf = await getDocument({ data: new Uint8Array(bytes) }).promise;
+    expect(pdf.numPages).toBe(SLIDE_COUNT);
+    for (let number = 1; number <= pdf.numPages; number += 1) {
+      const { fnArray } = await (await pdf.getPage(number)).getOperatorList();
+      const paths = fnArray.filter((op) => PATH_OPS.has(op)).length;
+      const text = fnArray.filter((op) => TEXT_OPS.has(op)).length;
+      expect(paths, `page ${number} paths`).toBeGreaterThan(20);
+      expect(text, `page ${number} text`).toBeGreaterThan(4);
+    }
+  });
+}
