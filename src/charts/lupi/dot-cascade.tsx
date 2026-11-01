@@ -6,7 +6,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { PixelLine } from "../texture";
-import { clamp, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { dotCascadeDemo } from "./dot-cascade.data";
 import type { DotCascadeDatum } from "./dot-cascade.data";
 
@@ -20,7 +20,9 @@ interface DotCascadeProps {
   format?: (v: number) => string;
   /** Words after the value in the tooltip, e.g. "puzzles". */
   noun?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Label of the column drawn in ink. Defaults to the last (largest). */
   highlight?: string;
 }
@@ -198,7 +200,7 @@ export const DotCascade = (props: DotCascadeProps) => {
           height,
           counts,
           data.map((d) => d.label),
-          noteSpace(props.note, width - 16, 20)
+          noteSpace(noteOf(props), width - 16, 20)
         );
         const fx0 = layout.colX(0) - layout.pitch * 0.7;
         const fx1 = layout.colX(data.length - 1) + layout.pitch * 0.7;
@@ -231,7 +233,11 @@ export const DotCascade = (props: DotCascadeProps) => {
                 onEnter={hover.showAt(i)}
               />
             ))}
-            <FootNote height={layout.height} text={props.note} width={width} />
+            <FootNote
+              height={layout.height}
+              text={noteOf(props)}
+              width={width}
+            />
           </ChartSvg>
         );
       }}

@@ -50,8 +50,8 @@ export const rungBarsSchema = z
     initialWidth: z.number().int().positive().optional(),
     /** Glyph widths of a face other than Inter, so notes wrap and reserve room for it. */
     metrics: fontMetricsSchema.optional(),
-    /** Footnote under the axis, e.g. "One rung = 100 rings". */
-    note: z.string().optional(),
+    // The old name for `unitNote`; JSON Schema marks it deprecated.
+    note: z.string().optional().meta({ deprecated: true }),
     scale: scaleShape.scale,
     strokes: scaleShape.strokes,
     /** Show the data table to sighted readers too. It is always there for screen readers. */
@@ -60,6 +60,8 @@ export const rungBarsSchema = z
     title: z.string().min(1).optional(),
     /** Units per rung. */
     unit: z.number().positive().optional(),
+    /** The in-plot key under the axis, e.g. "One rung = 100 rings". */
+    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -79,6 +81,8 @@ export type RungDatum = z.infer<typeof rungDatumSchema>;
 export type RungBarsData = z.infer<typeof rungBarsSchema>;
 /** What `<RungBars>` takes: the payload, with `format` also allowed as a function. */
 export type RungBarsProps = MotionCallbacks &
-  Omit<z.input<typeof rungBarsSchema>, "format"> & {
+  Omit<z.input<typeof rungBarsSchema>, "format" | "note"> & {
     format?: FormatInput;
+    /** @deprecated Use `unitNote`. */
+    note?: string;
   };

@@ -10,7 +10,14 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger, wrapWords } from "../util";
+import {
+  dimClass,
+  noteSpace,
+  sansWidth,
+  stagger,
+  noteOf,
+  wrapWords,
+} from "../util";
 import { typeColonnadeDemo } from "./type-colonnade.data";
 import type { OwnershipDatum } from "./type-colonnade.data";
 
@@ -21,7 +28,9 @@ interface TypeColonnadeProps {
   strong?: number;
   /** Noun for the tooltip count, e.g. "lights". */
   unit?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Owner to draw in the hero colour. */
   highlight?: string;
 }
@@ -384,7 +393,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
           height,
           data,
           owners,
-          noteSpace(props.note, width - 16, 24)
+          noteSpace(noteOf(props), width - 16, 24)
         );
         const layer: LayerProps = {
           at,
@@ -415,7 +424,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
               </defs>
               <Lights {...layer} />
               <Owners {...layer} />
-              <FootNote height={at.height} text={props.note} width={width} />
+              <FootNote height={at.height} text={noteOf(props)} width={width} />
             </ChartSvg>
             {focusOwner !== undefined && (
               <Tooltip

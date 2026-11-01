@@ -15,7 +15,14 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { NOTE_LINE, hasText, noteLines, sansWidth, stagger } from "../util";
+import {
+  NOTE_LINE,
+  hasText,
+  noteLines,
+  sansWidth,
+  stagger,
+  noteOf,
+} from "../util";
 
 interface FloorProps {
   floor: number;
@@ -279,7 +286,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
       ? (v: number) => `${Math.round(v)}`
       : resolveFormat(props.formatX);
   const [lowName, highName] = props.xLabels ?? ["Low", "High"];
-  const hasNote = hasText(props.note);
+  const hasNote = hasText(noteOf(props));
   const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
@@ -321,7 +328,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
       {(width) => {
         const plotW = Math.min(width - EDGE * 2, 600);
         const x0 = (width - plotW) / 2;
-        const notes = noteLines(props.note, width - 24);
+        const notes = noteLines(noteOf(props), width - 24);
         const floor =
           Math.round(height) -
           (hasNote ? 58 : 36) -
@@ -381,7 +388,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={props.note}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

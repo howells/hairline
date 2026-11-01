@@ -12,7 +12,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth, stagger, wrapWords } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf, wrapWords } from "../util";
 import { parallelDemo } from "./parallel-coordinates.data";
 import type {
   ParallelAxis,
@@ -24,7 +24,9 @@ interface ParallelCoordinatesProps {
   data?: ParallelData;
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Name of the entity to draw in ink and label at the end. */
   highlight?: string;
   /**
@@ -320,7 +322,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
         const right = (width + blockW) / 2 - edge.r;
         const top = 58;
         const noteW = width - 16 - Math.abs(left + right - width);
-        const bottom = height - (30 + noteSpace(props.note, noteW, 24));
+        const bottom = height - (30 + noteSpace(noteOf(props), noteW, 24));
         const ax = (k: number) =>
           left + ((right - left) * k) / Math.max(1, data.axes.length - 1);
         const ys = scalesOf(data, top, bottom);
@@ -387,7 +389,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
                 />
               ))}
               <PlotNote
-                text={props.note}
+                text={noteOf(props)}
                 width={noteW}
                 x={(left + right) / 2}
                 y={height - 6}

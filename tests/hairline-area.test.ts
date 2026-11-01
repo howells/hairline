@@ -135,6 +135,7 @@ describe("the registry", () => {
       "maxWidth",
       "note",
       "ticks",
+      "unitNote",
       "width",
     ]);
   });

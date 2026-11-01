@@ -14,7 +14,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, stagger } from "../util";
+import { noteSpace, ranks, stagger, noteOf } from "../util";
 import { labelRoom } from "./util-a";
 import { density, silverman } from "./util-b";
 import { violinDemo } from "./violin.data";
@@ -28,7 +28,9 @@ interface ViolinProps {
   unit?: string;
   /** Darkest = lowest median (true) or highest (false, e.g. the heaviest bells). */
   lowIsBest?: boolean;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the group to draw in the hero colour. */
   highlight?: number;
 }
@@ -251,7 +253,7 @@ export const Violin = (props: ViolinProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        const bottom = 32 + noteSpace(props.note, width - 16, 20);
+        const bottom = 32 + noteSpace(noteOf(props), width - 16, 20);
         const y = scaleLinear()
           .domain([0, maxV])
           .nice()
@@ -321,7 +323,7 @@ export const Violin = (props: ViolinProps) => {
                 y={y}
               />
             ))}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

@@ -7,7 +7,7 @@ import type { DotSize } from "../marks";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { DotRing } from "../texture";
-import { noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { hundredFieldDemo } from "./hundred-field.data";
 import type { ShareDatum } from "./hundred-field.data";
 
@@ -16,7 +16,9 @@ interface HundredFieldProps {
   height?: number;
   /** What one seed stands for, used in the tooltip ("donors"). */
   unit?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Group drawn in the hero colour. Defaults to the largest. */
   highlight?: string;
 }
@@ -321,7 +323,7 @@ export const HundredField = (props: HundredFieldProps) => {
   return (
     <Plot>
       {(width) => {
-        const noteH = noteSpace(props.note, width - 16, 24);
+        const noteH = noteSpace(noteOf(props), width - 16, 24);
         // The wedge angles don't depend on the radius, so a probe head gives
         // the label sides; the head then grows until head and labels fill
         // the width, and the whole is centred.
@@ -385,7 +387,7 @@ export const HundredField = (props: HundredFieldProps) => {
                   <WedgeMarks head={head} w={w} />
                 </DimGroup>
               ))}
-              <FootNote height={svgH} text={props.note} width={width} />
+              <FootNote height={svgH} text={noteOf(props)} width={width} />
             </ChartSvg>
             {tip !== undefined && tipAt !== undefined && (
               <Tooltip

@@ -86,6 +86,7 @@
    */
   --text-tick: 11px;
   --text-figure: 30px;
+  --text-small: 13.5px;
 
   --radius-tip: 10px;
 
@@ -387,6 +388,46 @@
   }
   .is-shown {
     animation: fade-in var(--hl-duration-change) var(--hl-ease-enter) both;
+  }
+}
+
+/*
+ * A chart's note (Frame, and the gallery cell): a popover hung below its (i) and
+ * running left, since the (i) ends a cell's caption row, or above it where
+ * it only fits above. A note that fits neither way scrolls inside the room
+ * below. Without anchor positioning it keeps the browser's own place, centred
+ * in the viewport. It settles 4px into place as it fades in; under reduced
+ * motion it is simply there.
+ */
+@position-try --note-scroll {
+  position-area: bottom span-left;
+  max-height: calc(100% - 1.5rem);
+}
+
+@utility note-pop {
+  width: min(20rem, calc(100vw - 2rem));
+  @supports (position-area: bottom) {
+    inset: auto;
+    margin: 0.625rem 0 0;
+    position-area: bottom span-left;
+    position-try-fallbacks: flip-block, --note-scroll;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    transition:
+      opacity var(--hl-duration-hover) var(--hl-ease-enter),
+      translate var(--hl-duration-hover) var(--hl-ease-enter),
+      display var(--hl-duration-hover) allow-discrete,
+      overlay var(--hl-duration-hover) allow-discrete;
+    &:not(:popover-open) {
+      opacity: 0;
+      translate: 0 -4px;
+    }
+    @starting-style {
+      &:popover-open {
+        opacity: 0;
+        translate: 0 -4px;
+      }
+    }
   }
 }
 

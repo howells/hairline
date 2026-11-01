@@ -13,7 +13,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { maxIndex } from "./util-b";
@@ -214,7 +214,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
     >
       {(width) => {
         const margin = {
-          bottom: 30 + noteSpace(props.note, width - 16, 20, props.metrics),
+          bottom: 30 + noteSpace(noteOf(props), width - 16, 20, props.metrics),
           left: 16,
           right: 16,
           top: 28,
@@ -304,7 +304,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
             <FootNote
               height={fitted}
               metrics={props.metrics}
-              text={props.note}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

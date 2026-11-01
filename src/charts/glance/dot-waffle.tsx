@@ -7,7 +7,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, KeySwatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, ranks, stagger } from "../util";
+import { dimClass, noteSpace, ranks, stagger, noteOf } from "../util";
 import { dotWaffleDemo } from "./dot-waffle.data";
 import type { WaffleDatum } from "./dot-waffle.data";
 import { labelRoom } from "./util-a";
@@ -17,7 +17,9 @@ interface DotWaffleProps {
   height?: number;
   format?: (v: number) => string;
   /** Footnote under the grid. */
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the category to draw in the hero colour. */
   highlight?: number;
 }
@@ -250,7 +252,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
         const narrow = width < 460;
         const entryW = narrow ? 0 : entryWidth(data, format);
         const legendW = narrow ? 0 : entryW + 20;
-        const noteH = noteSpace(props.note, width - 16, 22);
+        const noteH = noteSpace(noteOf(props), width - 16, 22);
         const legendRows = narrow ? Math.ceil(data.length / 2) : 0;
         const pitch =
           Math.min(
@@ -310,7 +312,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
               inset={narrow ? 0 : 8}
               onEnter={enter}
             />
-            <FootNote height={svgH} text={props.note} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

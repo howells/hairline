@@ -20,7 +20,7 @@ import { DimGroup, HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { dimClass, noteSpace } from "../util";
+import { dimClass, noteSpace, noteOf } from "../util";
 import { forceGraphDemo } from "./force-graph.data";
 import type { ForceLink, ForceNode } from "./force-graph.data";
 import { LinkBundle } from "./link-bundle";
@@ -32,7 +32,9 @@ interface ForceGraphProps {
   links?: ForceLink[];
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface SimNode extends SimulationNodeDatum {
@@ -476,7 +478,7 @@ export const ForceGraph = (props: ForceGraphProps) => {
           nodes={nodes}
           links={links}
           format={format}
-          note={props.note}
+          note={noteOf(props)}
         />
       )}
     </Plot>

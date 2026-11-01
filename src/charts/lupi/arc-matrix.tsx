@@ -7,7 +7,7 @@ import { HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { clamp, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { arcMatrixDemo } from "./arc-matrix.data";
 import type { ArcMatrixData } from "./arc-matrix.data";
 
@@ -17,7 +17,9 @@ interface ArcMatrixProps {
   format?: (v: number) => string;
   /** Words after the value in the tooltip, e.g. "of new woodland". */
   noun?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** How many top cells to label; the largest is inked. Default 3. */
   top?: number;
 }
@@ -217,7 +219,7 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
       }
     >
       {(width) => {
-        const noteH = noteSpace(props.note, width - 16, 20);
+        const noteH = noteSpace(noteOf(props), width - 16, 20);
         const layout = arcLayout(width, height, data, max, noteH);
         const svgH = Math.min(height, Math.round(layout.bottom));
         return (
@@ -270,7 +272,7 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
                 </g>
               );
             })}
-            <FootNote height={svgH} text={props.note} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

@@ -17,6 +17,7 @@ export default defineConfig({
     emptyOutDir: true,
     lib: {
       entry: {
+        frame: "src/frame.ts",
         index: "src/index.ts",
         kit: "src/kit.ts",
         schema: "src/schema.ts",

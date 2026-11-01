@@ -38,8 +38,10 @@ export const plumbScatterSchema = z
     initialWidth: z.number().int().positive().optional(),
     /** Points to name beside their dot, by key. Defaults to the highest and lowest. */
     labelled: z.array(z.string()).optional(),
-    /** Footnote under the axis. */
-    note: z.string().optional(),
+    // The old name for `unitNote`; JSON Schema marks it deprecated.
+    note: z.string().optional().meta({ deprecated: true }),
+    /** The in-plot key under the axis. */
+    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
     /** The x axis range, [low, high]. */
@@ -89,8 +91,10 @@ export type PlumbScatterData = z.infer<typeof plumbScatterSchema>;
 /** What `<PlumbScatter>` takes: the payload, with formats also allowed as functions. */
 export type PlumbScatterProps = Omit<
   z.input<typeof plumbScatterSchema>,
-  "format" | "formatX"
+  "format" | "formatX" | "note"
 > & {
   format?: FormatInput;
   formatX?: FormatInput;
+  /** @deprecated Use `unitNote`. */
+  note?: string;
 };

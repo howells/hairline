@@ -17,7 +17,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { stagger } from "../util";
+import { stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { candlestickDemo } from "./candlestick.data";
 import type { CandleDatum } from "./candlestick.data";
@@ -35,7 +35,9 @@ interface CandlestickProps {
    */
   formatPrice?: (v: number) => string;
   height?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface Layout {
@@ -255,7 +257,7 @@ export const Candlestick = (props: CandlestickProps) => {
           height,
           data,
           [d0, d1],
-          props.note !== undefined,
+          noteOf(props) !== undefined,
           [top, bottom].flatMap((d, k) =>
             d === undefined ? [] : [{ d, text: fmtPrice(k === 0 ? hi : lo) }]
           )
@@ -316,7 +318,7 @@ export const Candlestick = (props: CandlestickProps) => {
                 {fmtPrice(lo)}
               </Label>
             )}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}
