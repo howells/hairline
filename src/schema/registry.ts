@@ -3,6 +3,8 @@
 // checks it with `validate`. Add one entry per chart, in kind order.
 import type { ZodType } from "zod";
 
+import { hairlineAreaSchema } from "./hairline-area";
+import { hairlineLineSchema } from "./hairline-line";
 import { rungBarsSchema } from "./rung-bars";
 import { validate } from "./validate";
 import type { Validated } from "./validate";
@@ -48,6 +50,32 @@ const entry = <T>(details: Omit<ChartEntry<T>, "validate">): ChartEntry<T> => ({
 
 /** Every chart by kind, typed: `charts["rung-bars"].validate(x)` returns that chart's data. */
 export const charts = {
+  "hairline-area": entry({
+    component: "HairlineArea",
+    dataShape:
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date), format, dateFormat, ticks (value-axis ticks from 0), maxWidth, note. A null value is a gap.",
+    jobs: ["change-over-time", "magnitude"],
+    kind: "hairline-area",
+    limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },
+    schema: hairlineAreaSchema,
+    whenNotToUse:
+      "Values that go negative (the area is drawn from zero), several series, readings that are not daily, or a chart where the exact path matters more than the volume under it.",
+    whenToUse:
+      "One quantity measured every day over weeks to a year, where the volume under the line is the story: daylight, sales, traffic.",
+  }),
+  "hairline-line": entry({
+    component: "HairlineLine",
+    dataShape:
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date), extreme (peak or trough, when no emphasis), format, dateFormat, note. A null value is a gap.",
+    jobs: ["change-over-time", "ranking"],
+    kind: "hairline-line",
+    limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },
+    schema: hairlineLineSchema,
+    whenNotToUse:
+      "More than one series, readings that are not daily, or hundreds of points where individual dots stop being readable (use the area).",
+    whenToUse:
+      "One quantity read every day for a few weeks, where each day is worth a dot and the peak or trough is the point: a price, a temperature.",
+  }),
   "rung-bars": entry({
     component: "RungBars",
     dataShape:

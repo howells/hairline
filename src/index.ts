@@ -70,6 +70,15 @@ export { DailyUsers } from "./charts/originals/daily-users";
 export { FeatureRank } from "./charts/originals/feature-rank";
 export { ResponseTime } from "./charts/originals/response-time";
 export { RevenueByPlan } from "./charts/originals/revenue-by-plan";
+export type { DailyDatum } from "./schema/daily";
+export type {
+  HairlineAreaData,
+  HairlineAreaProps,
+} from "./schema/hairline-area";
+export type {
+  HairlineLineData,
+  HairlineLineProps,
+} from "./schema/hairline-line";
 export type {
   RungDatum,
   RungBarsData,
