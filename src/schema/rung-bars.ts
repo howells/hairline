@@ -13,10 +13,8 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
-import { fontMetricsSchema } from "./metrics";
-import { motionShape } from "./motion";
-import type { MotionCallbacks } from "./motion";
-import { scaleShape } from "./scale";
+import { sharedShape } from "./options";
+import type { SharedCallbacks } from "./options";
 
 /** The bars: a label, a value, and an optional key for when labels repeat. */
 export const rungDatumSchema = z.strictObject({
@@ -26,38 +24,22 @@ export const rungDatumSchema = z.strictObject({
   value: z.number(),
 });
 
-/** The key a datum is addressed by: `id`, else `label`. */
-export const keyOf = (datum: { id?: string; label: string }) =>
-  datum.id ?? datum.label;
+export { keyOf } from "./key";
 
 export const rungBarsSchema = z
   .strictObject({
-    ...motionShape,
+    ...sharedShape,
     data: z.array(rungDatumSchema).min(1).max(24),
     /** The bar to draw in the hero colour, by key. Defaults to the largest. */
     emphasis: z.string().optional(),
-    fit: scaleShape.fit,
     /** How values print: a preset name or Intl number-format options. */
     format: formatSchema.optional(),
     /** Fixed height in px. Without it a bar chart is 460 tall. */
     height: z.number().int().positive().optional(),
-    /** Leads every SVG id, to separate charts rendered in separate React roots on one page. */
-    idPrefix: z
-      .string()
-      .regex(/^[A-Za-z][\w-]*$/u)
-      .optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
-    /** Glyph widths of a face other than Inter, so notes wrap and reserve room for it. */
-    metrics: fontMetricsSchema.optional(),
     /** Footnote under the axis, e.g. "One rung = 100 rings". */
     note: z.string().optional(),
-    scale: scaleShape.scale,
-    strokes: scaleShape.strokes,
-    /** Show the data table to sighted readers too. It is always there for screen readers. */
-    table: z.boolean().optional(),
-    /** The chart's accessible name. Defaults to "Bar chart of N values". */
-    title: z.string().min(1).optional(),
     /** Units per rung. */
     unit: z.number().positive().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
@@ -78,7 +60,7 @@ export type RungDatum = z.infer<typeof rungDatumSchema>;
 /** The validated payload. */
 export type RungBarsData = z.infer<typeof rungBarsSchema>;
 /** What `<RungBars>` takes: the payload, with `format` also allowed as a function. */
-export type RungBarsProps = MotionCallbacks &
+export type RungBarsProps = SharedCallbacks &
   Omit<z.input<typeof rungBarsSchema>, "format"> & {
     format?: FormatInput;
   };
