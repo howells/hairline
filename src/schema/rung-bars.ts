@@ -38,6 +38,11 @@ export const rungBarsSchema = z
     format: formatSchema.optional(),
     /** Fixed height in px. Without it a bar chart is 460 tall. */
     height: z.number().int().positive().optional(),
+    /** Leads every SVG id, to separate charts rendered in separate React roots on one page. */
+    idPrefix: z
+      .string()
+      .regex(/^[A-Za-z][\w-]*$/u)
+      .optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
     /** Glyph widths of a face other than Inter, so notes wrap and reserve room for it. */

@@ -149,6 +149,7 @@ describe("the registry", () => {
       "fit",
       "format",
       "height",
+      "idPrefix",
       "initialWidth",
       "metrics",
       "note",

@@ -18,6 +18,7 @@ export {
   useReveal,
   useMotionPreference,
   useReducedMotion,
+  IdScope,
   useSvgId,
   useScrub,
   useHover,
