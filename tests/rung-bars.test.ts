@@ -146,11 +146,16 @@ describe("the registry", () => {
       "animate",
       "data",
       "emphasis",
+      "fit",
       "format",
       "height",
       "initialWidth",
       "note",
       "replayKey",
+      "scale",
+      "strokes",
+      "table",
+      "title",
       "unit",
       "width",
     ]);
@@ -271,5 +276,63 @@ describe("sizing", () => {
 
   it("a responsive chart with no width at all draws nothing yet", () => {
     expect(render({ data: bars })).not.toContain("<svg");
+  });
+});
+
+const svgOf = (props: RungBarsProps) =>
+  /<svg[^>]*>/u.exec(render(props))?.[0] ?? "";
+
+describe("scale for slides", () => {
+  const slide = { data: bars, height: 320, width: 768 };
+
+  it("scale={2.5} on a 768 px chart fills a 1920 px box, type scaled with it", () => {
+    const svg = svgOf({ ...slide, scale: 2.5 });
+    expect(svg).toContain('width="1920"');
+    expect(svg).toContain('height="800"');
+    // Labels are 11 units in a 768-unit viewBox shown at 1920 px: 27.5 px.
+    expect(svg).toContain('viewBox="0 0 768 320"');
+  });
+
+  it("fit fills the container at the chart's aspect ratio", () => {
+    const svg = svgOf({ ...slide, fit: true });
+    expect(svg).toContain('viewBox="0 0 768 320"');
+    expect(svg).toContain('width="100%"');
+    expect(svg).toMatch(/aspect-ratio:\s*768\s*\/\s*320/u);
+    expect(svg).not.toContain('width="768"');
+  });
+
+  it("proportional strokes are the default and carry no policy mark", () => {
+    expect(svgOf({ ...slide, scale: 2 })).not.toContain("data-hl-strokes");
+  });
+
+  it("the one-device-pixel policy marks the chart, and the stylesheet keeps rules at a device pixel", () => {
+    expect(svgOf({ ...slide, scale: 2, strokes: "device" })).toContain(
+      'data-hl-strokes="device"'
+    );
+    const css = readFileSync(
+      new URL("../lib/theme.css", import.meta.url),
+      "utf-8"
+    );
+    expect(css).toMatch(
+      /data-hl-strokes=.device.[^{]*\{[^}]*vector-effect:\s*non-scaling-stroke/u
+    );
+  });
+
+  it("unscaled output is unchanged", () => {
+    const svg = svgOf(slide);
+    expect(svg).toContain('width="768"');
+    expect(svg).toContain('height="320"');
+    expect(svg).not.toContain("viewBox");
+    expect(svg).not.toContain("data-hl-strokes");
+  });
+
+  it("scale, fit and strokes validate through the registry", () => {
+    const chart = getChart("rung-bars");
+    expect(chart.validate({ ...slide, scale: 2.5, strokes: "device" }).ok).toBe(
+      true
+    );
+    expect(
+      pointers({ ...slide, scale: -1, strokes: "thick" }).toSorted()
+    ).toStrictEqual(["scale", "strokes"]);
   });
 });

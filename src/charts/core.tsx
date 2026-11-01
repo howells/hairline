@@ -1,9 +1,11 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
+import type { ScaleOptions } from "../schema/scale";
 import { useEntry, useMeasure, useReveal } from "./hooks";
 import type { Animate } from "./hooks";
 import { PANEL } from "./roles";
+import { ScaleContext } from "./scale-context";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
 /** A plot with nothing to animate carries neither class: it is simply drawn. */
@@ -56,7 +58,14 @@ interface PlotProps {
   overlay?: ReactNode;
   /** Change it to replay the entry without remounting. */
   replayKey?: number | string;
+  /** Slide scale (see schema/scale.ts), applied to every ChartSvg inside. */
+  scaling?: ScaleOptions;
   style?: CSSProperties;
+  /**
+   * The chart's data table (<DataTable>), rendered after the marks whether or
+   * not a width is known yet, so it is in the first server HTML.
+   */
+  table?: ReactNode;
   /**
    * Fixed mode: draw at exactly this width, in px. Nothing is measured, so
    * the first render, on the server too, is the complete chart. Leave it out
@@ -74,6 +83,8 @@ interface PlotProps {
  * <Card>. Tooltips and other HTML overlays go in `overlay`, positioned against
  * this box.
  */
+const NO_SCALE: ScaleOptions = {};
+
 export const Plot = (props: PlotProps) => {
   const fixed = props.width !== undefined;
   const [ref, measured] = useMeasure<HTMLDivElement>(
@@ -89,8 +100,11 @@ export const Plot = (props: PlotProps) => {
       className={`[&_svg:focus-visible]:outline-muted relative min-w-0 [&_svg]:block [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-solid ${phaseClass(entry.phase)} ${props.className ?? ""}`}
       style={props.style}
     >
-      {width > 0 && props.children(width)}
+      <ScaleContext.Provider value={props.scaling ?? NO_SCALE}>
+        {width > 0 && props.children(width)}
+      </ScaleContext.Provider>
       {props.overlay}
+      {props.table}
     </div>
   );
 };
