@@ -58,7 +58,7 @@ export const hasText = (s: string | undefined): s is string =>
 export const stagger = (i: number, tier?: StaggerTier): CSSProperties =>
   tier === undefined
     ? { "--i": i }
-    : { "--i": i, "--stagger": `var(--stagger-${tier})` };
+    : { "--i": i, "--stagger": `var(--hl-stagger-${tier})` };
 
 /**
  * The default hover: the hovered record stays, the rest drop to 30%.
