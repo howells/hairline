@@ -14,7 +14,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, noteOf } from "../util";
+import { noteSpace, stagger, noteOf, countingUnit } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { maxIndex } from "./util-b";
@@ -177,7 +177,10 @@ const rungTip = (
 
 const RungBarsPlot = (props: RungBarsProps) => {
   const data = (props.data ?? []).filter((d) => Number.isFinite(d.value));
-  const unit = props.unit !== undefined && props.unit > 0 ? props.unit : 1;
+  const unit = countingUnit(
+    props.unit !== undefined && props.unit > 0 ? props.unit : 1,
+    Math.max(0, ...data.map((d) => d.value))
+  );
   const fixedHeight = props.width !== undefined && props.height !== undefined;
   const height = props.height ?? 460;
   const format = resolveFormat(props.format);

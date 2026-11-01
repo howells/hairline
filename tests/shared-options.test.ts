@@ -307,6 +307,12 @@ describe.each(kinds)("%s shares the options", (kind) => {
     }
   });
 
+  it("sets its text through the roles, so --hl-font reaches every label", () => {
+    const html = render(kind, { unitNote: NOTE });
+    expect(html).toMatch(/\bt-(?:axis|label|value)\b/u);
+    expect(html).not.toMatch(/\btext-tick\b|\bfont-(?:medium|semibold)\b/u);
+  });
+
   it("metrics for another face change the layout", () => {
     const wide = { advances: {}, fallback: 3 };
     expect(render(kind, { metrics: wide, unitNote: NOTE })).not.toBe(

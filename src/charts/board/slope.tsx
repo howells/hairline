@@ -9,7 +9,7 @@ import { Plot } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
-import { LABEL, VALUE } from "../roles";
+import { VALUE } from "../roles";
 import { VRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
@@ -129,7 +129,7 @@ const SlopeRow = (props: {
         y={props.labelYs[0]}
         dy="0.34em"
         textAnchor="end"
-        className={LABEL}
+        className="t-label"
       >
         <tspan fill="var(--hl-muted)">{name} </tspan>
         <tspan className={valueClass}>{props.format(row.from)}</tspan>
@@ -138,7 +138,7 @@ const SlopeRow = (props: {
         x={xb + LABEL_GAP}
         y={props.labelYs[1]}
         dy="0.34em"
-        className={LABEL}
+        className="t-label"
       >
         <tspan className={valueClass}>{props.format(row.to)}</tspan>
         <tspan fill="var(--hl-muted)"> {name}</tspan>

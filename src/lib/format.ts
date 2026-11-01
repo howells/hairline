@@ -2,6 +2,8 @@ import { format } from "d3-format";
 import { utcFormat } from "d3-time-format";
 
 export const fmtInt = format(",.0f");
+/** Thousands-grouped, to a fixed number of decimals. */
+export const fixedFormat = (decimals: number) => format(`,.${decimals}f`);
 export const fmtMs = (v: number) => `${fmtInt(v)} ms`;
 export const fmtK = (v: number) => `${format(".1f")(v / 1000)}k`;
 export const fmtKInt = (v: number) => `${fmtInt(v / 1000)}k`;

@@ -189,3 +189,13 @@ export const wrapWords = (
  * The one place the old name is read.
  */
 export const noteOf = (props: NoteNames) => props.unitNote ?? props.note;
+
+/** The most rungs one bar, or one gap, ever draws. */
+const MAX_RUNGS = 500;
+
+/**
+ * The size of one rung: `unit` as given, raised if a count of `largest` units
+ * would draw more rungs than a bar can show (a huge value, or a tiny unit).
+ */
+export const countingUnit = (unit: number, largest: number) =>
+  Math.max(unit, largest / MAX_RUNGS);

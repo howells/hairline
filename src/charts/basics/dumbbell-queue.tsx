@@ -20,7 +20,7 @@ import { HRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { stagger, noteOf } from "../util";
+import { stagger, noteOf, countingUnit } from "../util";
 import { inkWidth, maxIndex } from "./util-b";
 
 interface Layout {
@@ -84,8 +84,9 @@ const buildLayout = (
   const dotSize: DotSize = width < 420 ? "md" : "lg";
   const dotR = DOT[dotSize];
   const x0 = labelW + 12;
-  // Pull the track's right end in until every right-hand value label fits.
-  const x1 = Math.min(
+  // Pull the track's right end in until every right-hand value label fits,
+  // but never behind its left end: a narrow chart keeps a track of no length.
+  const reach = Math.min(
     width - EDGE,
     ...data.map((d) => {
       const t = (Math.max(d.before, d.after) - lo) / span;
@@ -94,6 +95,7 @@ const buildLayout = (
         : Infinity;
     })
   );
+  const x1 = Math.max(x0, reach);
   return {
     dotR,
     dotSize,
@@ -267,7 +269,10 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
   );
   const height = props.height ?? 380;
   const format = resolveFormat(props.format);
-  const unit = props.unit !== undefined && props.unit > 0 ? props.unit : 1;
+  const unit = countingUnit(
+    props.unit !== undefined && props.unit > 0 ? props.unit : 1,
+    Math.max(0, ...data.map((d) => Math.abs(d.before - d.after)))
+  );
   const alert = props.alert ?? "rise";
   const ends = props.ends ?? ["0", "Units"];
   const keys = reactKeys(data);

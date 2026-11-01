@@ -133,7 +133,7 @@ export const SHARED_NOTES = {
   scale:
     "Slides: draw at the logical width, then show the composition this many times larger, type and textures with it.",
   strokes:
-    '"proportional" (default) scales strokes with the composition; "device" keeps every stroke at one device pixel.',
+    '"proportional" (default) scales strokes with the composition; "device" keeps every stroke at one device pixel. It acts on stroked geometry only (rules, lines, rings, outlines): filled marks, such as the bars of RungBars, scale either way.',
   table:
     "Show the data table to sighted readers too. It is always there for screen readers.",
   title: "The chart's accessible name.",

@@ -16,6 +16,12 @@ export const scaleShape = {
   /**
    * "proportional" (default) lets strokes scale with the composition;
    * "device" keeps every stroke at one device pixel however large it is shown.
+   * The policy acts on stroked geometry only: rules, grid lines, lines and
+   * paths, rings and outlines. Filled marks (the bars of RungBars and the
+   * stems of HairlineArea are rects, the textures are fills) scale with the
+   * composition either way, so in RungBars "device" changes just its baseline
+   * rule; in the other five charts it also holds their lines and rings
+   * to one device pixel.
    */
   strokes: z.enum(["proportional", "device"]).optional(),
 };

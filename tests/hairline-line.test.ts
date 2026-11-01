@@ -285,6 +285,35 @@ describe("degenerate data", () => {
   });
 });
 
+const axisLabels = (html: string) =>
+  [
+    ...html.matchAll(
+      /<text class="t-axis" text-anchor="end" x="\d+" y="\d+">(?<text>[^<]*)<\/text>/gu
+    ),
+  ].map((m) => m.groups?.text ?? "");
+
+describe("value-axis labels", () => {
+  it("are distinct when a narrow range meets the default integer format", () => {
+    const narrow = week.map((d, i) => ({ ...d, value: 7.2 + i * 0.2 }));
+    const labels = axisLabels(render({ data: narrow, ...sized }));
+    expect(labels.length).toBeGreaterThan(2);
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it("stay whole numbers over a wide range, as before", () => {
+    const labels = axisLabels(render({ data: week, ...sized }));
+    expect(labels.every((label) => /^\d+$/u.test(label))).toBe(true);
+  });
+
+  it("follow an explicit format untouched", () => {
+    const narrow = week.map((d, i) => ({ ...d, value: 7.2 + i * 0.2 }));
+    const labels = axisLabels(
+      render({ data: narrow, format: "integer", ...sized })
+    );
+    expect(new Set(labels).size).toBeLessThan(labels.length);
+  });
+});
+
 describe("sizing", () => {
   it("a fixed-size chart keeps exactly the height it is given", () => {
     expect(render({ data: week, ...sized })).toContain('height="320"');
