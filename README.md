@@ -10,13 +10,14 @@ The temperament is an old-fashioned broadsheet chart desk with modern tools: aut
 
 ```sh
 pnpm install
-pnpm dev          # http://localhost:5173
+pnpm dev           # http://localhost:5173
 pnpm build
-pnpm lint         # @howells/lint (oxlint + oxfmt), kept at zero findings
+pnpm lint          # @howells/lint (oxlint + oxfmt), kept at zero findings
 pnpm lint:fix
-pnpm build:lib    # the package, into lib/
-pnpm test         # builds lib/, then tests it the way a consumer imports it
-pnpm llms         # rewrites public/llms.txt from the built registry
+pnpm build:lib     # the package, into lib/
+pnpm test          # builds lib/, then tests it the way a consumer imports it
+pnpm e2e           # the acceptance suite in the Playwright image (acceptance/README.md)
+pnpm generate:llms # rewrites public/llms.txt from the built registry
 ```
 
 | Route | What |
@@ -142,7 +143,7 @@ reports/ and research_notes/   research on broadsheet chart craft, with public-d
 1. Create `src/charts/<family>/<name>.tsx`. Render only the plot, inside `<Plot>`; the grid supplies the frame and the name.
 2. Take data through props, required; never default to demo data. Use the text roles, the rule ladder, the shared textures and theme colours only.
 3. Register it as a `GalleryEntry` with a plain, sentence-case name, and add its numbers to `src/gallery/sources.json` and `about.json`. Pick every fill from the Fills sheet; if a chart needs one that isn't there, add it to `fills.ts` so the sheet shows it.
-4. To package it, add `src/schema/<kind>.ts` following `rung-bars.ts`, an entry in `src/schema/registry.ts`, and an example in `src/docs/examples.ts`. The docs route, the JSON Schema and `llms.txt` (`pnpm llms`) follow from those.
+4. To package it, add `src/schema/<kind>.ts` following `rung-bars.ts`, an entry in `src/schema/registry.ts`, and an example in `src/docs/examples.ts`. The docs route, the JSON Schema and `llms.txt` (`pnpm generate:llms`) follow from those.
 5. `pnpm typecheck`, `pnpm lint` and `pnpm test` must be clean, and the chart must be looked at in the browser at 1440 and 390.
 
 ## Provenance

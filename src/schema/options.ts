@@ -17,13 +17,31 @@ export const sharedShape = {
   idPrefix: z
     .string()
     .regex(/^[A-Za-z][\w-]*$/u)
-    .optional(),
+    .optional()
+    .describe(
+      "Leads every SVG id, to separate charts rendered in separate React roots on one page."
+    ),
   /** Glyph widths of a face other than Inter, so notes wrap and reserve room for it. */
-  metrics: fontMetricsSchema.optional(),
+  metrics: fontMetricsSchema
+    .optional()
+    .describe(
+      "Glyph widths of a face other than Inter, so notes wrap and reserve room for it."
+    ),
   /** Show the data table to sighted readers too. It is always there for screen readers. */
-  table: z.boolean().optional(),
+  table: z
+    .boolean()
+    .optional()
+    .describe(
+      "Show the data table to sighted readers too. It is always there for screen readers."
+    ),
   /** The chart's accessible name. Each chart has a default that reads the data. */
-  title: z.string().min(1).optional(),
+  title: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "The chart's accessible name. Each chart has a default that reads the data."
+    ),
 };
 
 /**
@@ -33,9 +51,12 @@ export const sharedShape = {
  */
 export const noteShape = {
   /** The old name for `unitNote`; JSON Schema marks it deprecated. */
-  note: z.string().optional().meta({ deprecated: true }),
+  note: z.string().optional().meta({
+    deprecated: true,
+    description: "Deprecated: use `unitNote`.",
+  }),
   /** The in-plot key under the axis. */
-  unitNote: z.string().optional(),
+  unitNote: z.string().optional().describe("The in-plot key under the axis."),
 };
 
 /** The two names an in-plot note goes by, for code that reads them (a deprecation would flag the read). */

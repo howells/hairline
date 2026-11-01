@@ -1,6 +1,6 @@
 #!/bin/bash
-# Run the acceptance suite in the official Playwright image, the same image CI
-# compares in, so the screenshot baselines are what Linux draws. node_modules
+# Run the acceptance suite in the official Playwright image, the one the
+# baselines are made in, so the screenshot comparison is what Linux draws. node_modules
 # lives in a named volume so the macOS install is left alone.
 # usage: acceptance/docker.sh [playwright args]   e.g. --update-snapshots
 set -euo pipefail

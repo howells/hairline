@@ -35,23 +35,8 @@ export default {
     },
     {
       // The acceptance suite is Playwright's, not Vitest's: the lint preset
-      // swaps the Vitest rules for the Playwright ones, and a spec waits on one
-      // page after another by design.
+      // swaps the Vitest rules for the Playwright ones.
       ...playwrightOverride(["acceptance/*.spec.ts"]),
-      rules: {
-        ...playwrightOverride(["acceptance/*.spec.ts"]).rules,
-        "no-await-in-loop": "off",
-      },
-    },
-    {
-      // Playwright reads CI and the port from the environment, and the
-      // artefact spec reads its switch there; these files are the boundary.
-      files: [
-        "acceptance/playwright.config.ts",
-        "acceptance/serve.ts",
-        "acceptance/artefacts.spec.ts",
-      ],
-      rules: { "no-restricted-properties": "off" },
     },
   ],
   rules: {

@@ -1,10 +1,9 @@
-import { precisionFixed } from "d3-format";
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { plural, dayTickLabels, fixedFormat, fmtInt } from "../../lib/format";
+import { axisFormat, plural, dayTickLabels, fmtInt } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
 import type { FontMetrics } from "../../schema/metrics";
@@ -211,27 +210,8 @@ const nearestDay = (
   return nearest;
 };
 
-/**
- * The value-axis labels: the chart's format, or, when it is the default whole
- * number, one with just the decimals the tick step needs, so a narrow range
- * does not print 8, 8, 7, 7.
- */
 /** A range narrower than this is flat: below it d3 cannot count ticks (the step underflows). */
 const FLAT_SPAN = 1e-290;
-
-/** More decimals than this are noise, and a step near zero would ask for hundreds. */
-const MAX_AXIS_DECIMALS = 6;
-
-const axisFormat = (
-  format: (v: number) => string,
-  whole: boolean,
-  ticks: number[]
-) => {
-  const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : 1;
-  return whole && step < 1
-    ? fixedFormat(Math.min(precisionFixed(step), MAX_AXIS_DECIMALS))
-    : format;
-};
 
 const HairlineLineSvg = ({
   clear,

@@ -20,11 +20,13 @@ for (const animate of ["off", "mount"]) {
     await expect(page.locator('[data-hl-ready="true"]')).toHaveCount(
       SLIDE_COUNT
     );
-    for (const id of SLIDE_IDS) {
-      await expect(
-        page.locator(`[data-slide="${id}"] [data-hl-ready="true"]`)
-      ).toHaveCount(1);
-    }
+    await Promise.all(
+      SLIDE_IDS.map(async (id) => {
+        await expect(
+          page.locator(`[data-slide="${id}"] [data-hl-ready="true"]`)
+        ).toHaveCount(1);
+      })
+    );
     expect(problems).toStrictEqual([]);
   });
 }

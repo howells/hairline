@@ -11,9 +11,17 @@ export const motionShape = {
    * (`width` and `height` given) and "scroll" for a responsive one. Under
    * reduced motion the chart is drawn in the first paint whatever this says.
    */
-  animate: z.enum(["scroll", "mount", "off"]).optional(),
+  animate: z
+    .enum(["scroll", "mount", "off"])
+    .optional()
+    .describe(
+      'When the entry draws in: "scroll" as the chart scrolls into view, "mount" at once, "off" never (drawn, and ready, in the first HTML). The default is "off" for a fixed-size chart and "scroll" for a responsive one. Under reduced motion the chart is drawn in the first paint.'
+    ),
   /** Change it to replay the entry without remounting the chart. */
-  replayKey: z.union([z.string(), z.number()]).optional(),
+  replayKey: z
+    .union([z.string(), z.number()])
+    .optional()
+    .describe("Change it to replay the entry without remounting the chart."),
 };
 
 /** What a chart's props add to its payload for motion. */

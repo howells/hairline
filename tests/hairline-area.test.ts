@@ -327,3 +327,41 @@ describe("two charts on one page", () => {
     );
   });
 });
+
+const axisLabels = (html: string) =>
+  [
+    ...html.matchAll(
+      /<text class="t-axis" text-anchor="end" x="\d+" y="\d+">(?<text>[^<]*)<\/text>/gu
+    ),
+  ].map((m) => m.groups?.text ?? "");
+
+/** Values below one: the scale runs 0 to 1, a step of 0.2. */
+const small = fortnight.map((d) => ({ ...d, value: (d.value ?? 0) / 20 }));
+
+describe("value-axis labels", () => {
+  it("are distinct when a narrow range meets the default integer format", () => {
+    const labels = axisLabels(render({ data: small, ...sized }));
+    expect(labels.length).toBeGreaterThan(2);
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it("are distinct on consumer ticks finer than one", () => {
+    const labels = axisLabels(
+      render({ data: small, ticks: [0, 0.25, 0.5, 0.75, 1], ...sized })
+    );
+    expect(labels).toStrictEqual(["0.00", "0.25", "0.50", "0.75", "1.00"]);
+  });
+
+  it("stay whole numbers over a wide range, as before", () => {
+    const labels = axisLabels(render({ data: fortnight, ...sized }));
+    expect(labels.length).toBeGreaterThan(2);
+    expect(labels.every((label) => /^\d+$/u.test(label))).toBe(true);
+  });
+
+  it("follow an explicit format untouched", () => {
+    const labels = axisLabels(
+      render({ data: small, format: "integer", ...sized })
+    );
+    expect(new Set(labels).size).toBeLessThan(labels.length);
+  });
+});

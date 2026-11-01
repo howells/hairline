@@ -14,21 +14,58 @@ export const hairlineLineSchema = z
     ...noteShape,
     ...sharedShape,
     /** Readings by date, in any order. A null value is a gap. */
-    data: z.array(dailyDatumSchema).min(1).max(731),
+    data: z
+      .array(dailyDatumSchema)
+      .min(1)
+      .max(731)
+      .describe("Readings by date, in any order. A null value is a gap."),
     /** How dates print on the axis and in the tooltip. Defaults to day-month. */
-    dateFormat: dateFormatSchema.optional(),
+    dateFormat: dateFormatSchema
+      .optional()
+      .describe(
+        "How dates print on the axis and in the tooltip. Defaults to day-month."
+      ),
     /** The reading to draw in the hero colour, by key. Defaults to `extreme`. */
-    emphasis: z.string().optional(),
+    emphasis: z
+      .string()
+      .optional()
+      .describe(
+        "The reading to draw in the hero colour, by key. Defaults to `extreme`."
+      ),
     /** Which extreme the hero marks when `emphasis` is not given. */
-    extreme: z.enum(["peak", "trough"]).optional(),
+    extreme: z
+      .enum(["peak", "trough"])
+      .optional()
+      .describe("Which extreme the hero marks when `emphasis` is not given."),
     /** How values print: a preset name or Intl number-format options. */
-    format: formatSchema.optional(),
+    format: formatSchema
+      .optional()
+      .describe(
+        "How values print: a preset name or Intl number-format options."
+      ),
     /** Fixed height in px. Without it a line chart is 440 tall. */
-    height: z.number().int().positive().optional(),
+    height: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed height in px. Without it a line chart is 440 tall."),
     /** Responsive mode only: the width of the first render, before measuring. */
-    initialWidth: z.number().int().positive().optional(),
+    initialWidth: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        "Responsive mode only: the width of the first render, before measuring."
+      ),
     /** Fixed width in px. Giving it turns measuring off. */
-    width: z.number().int().positive().optional(),
+    width: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed width in px. Giving it turns measuring off."),
   })
   .refine(
     (props) =>

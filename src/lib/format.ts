@@ -1,9 +1,39 @@
-import { format } from "d3-format";
+import { format, precisionFixed } from "d3-format";
 import { utcFormat } from "d3-time-format";
 
 export const fmtInt = format(",.0f");
 /** Thousands-grouped, to a fixed number of decimals. */
 export const fixedFormat = (decimals: number) => format(`,.${decimals}f`);
+
+/** More decimals than this are noise, and a step near zero would ask for hundreds. */
+const MAX_AXIS_DECIMALS = 6;
+
+/** Whether every tick prints exactly at this many decimals. */
+const exactAt = (ticks: number[], decimals: number, step: number) =>
+  ticks.every(
+    (t) => Math.abs(Number(t.toFixed(decimals)) - t) <= step * 1e-9
+  );
+
+/**
+ * A value axis's labels: the chart's format, or, when it is the default whole
+ * number, one with just the decimals the ticks need, so a narrow range does
+ * not print 8, 8, 7, 7 and a tick at 0.25 does not round to 0.3.
+ */
+export const axisFormat = (
+  fmt: (v: number) => string,
+  whole: boolean,
+  ticks: number[]
+) => {
+  const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : 1;
+  if (!whole || step >= 1) {
+    return fmt;
+  }
+  let decimals = Math.min(precisionFixed(step), MAX_AXIS_DECIMALS);
+  while (decimals < MAX_AXIS_DECIMALS && !exactAt(ticks, decimals, step)) {
+    decimals += 1;
+  }
+  return fixedFormat(decimals);
+};
 export const fmtMs = (v: number) => `${fmtInt(v)} ms`;
 export const fmtK = (v: number) => `${format(".1f")(v / 1000)}k`;
 export const fmtKInt = (v: number) => `${fmtInt(v / 1000)}k`;

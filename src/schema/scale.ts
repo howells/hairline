@@ -6,13 +6,24 @@ export const scaleShape = {
    * Fit the container instead: the svg fills its width at the chart's aspect
    * ratio. Wins over `scale`.
    */
-  fit: z.boolean().optional(),
+  fit: z
+    .boolean()
+    .optional()
+    .describe(
+      "Fill the container's width at the chart's aspect ratio. Wins over `scale`."
+    ),
   /**
    * Slides: draw at the logical `width`, then show the whole composition
    * `scale` times larger through the viewBox, so type, spacing and marks grow
    * together (11 px labels at `scale` 2.5 read 27.5 px). Textures scale too.
    */
-  scale: z.number().positive().optional(),
+  scale: z
+    .number()
+    .positive()
+    .optional()
+    .describe(
+      "Slides: draw at the logical width, then show the composition this many times larger, type and textures with it."
+    ),
   /**
    * "proportional" (default) lets strokes scale with the composition;
    * "device" keeps every stroke at one device pixel however large it is shown.
@@ -23,7 +34,12 @@ export const scaleShape = {
    * rule; in the other five charts it also holds their lines and rings
    * to one device pixel.
    */
-  strokes: z.enum(["proportional", "device"]).optional(),
+  strokes: z
+    .enum(["proportional", "device"])
+    .optional()
+    .describe(
+      '"proportional" (default) scales strokes with the composition; "device" keeps every stroke at one device pixel. It acts on stroked geometry only (rules, lines, rings, outlines): filled marks, such as the bars of RungBars, scale either way.'
+    ),
 };
 
 /** How a scaled chart is shown. */

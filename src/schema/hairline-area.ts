@@ -14,23 +14,68 @@ export const hairlineAreaSchema = z
     ...noteShape,
     ...sharedShape,
     /** Readings by date, in any order. A null value is a gap. */
-    data: z.array(dailyDatumSchema).min(1).max(731),
+    data: z
+      .array(dailyDatumSchema)
+      .min(1)
+      .max(731)
+      .describe("Readings by date, in any order. A null value is a gap."),
     /** How dates print on the axis and in the tooltip. Defaults to day-month. */
-    dateFormat: dateFormatSchema.optional(),
+    dateFormat: dateFormatSchema
+      .optional()
+      .describe(
+        "How dates print on the axis and in the tooltip. Defaults to day-month."
+      ),
     /** The reading to draw in the hero colour, by key. Defaults to the peak. */
-    emphasis: z.string().optional(),
+    emphasis: z
+      .string()
+      .optional()
+      .describe(
+        "The reading to draw in the hero colour, by key. Defaults to the peak."
+      ),
     /** How values print: a preset name or Intl number-format options. */
-    format: formatSchema.optional(),
+    format: formatSchema
+      .optional()
+      .describe(
+        "How values print: a preset name or Intl number-format options."
+      ),
     /** Fixed height in px. Without it an area chart is 440 tall. */
-    height: z.number().int().positive().optional(),
+    height: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed height in px. Without it an area chart is 440 tall."),
     /** Responsive mode only: the width of the first render, before measuring. */
-    initialWidth: z.number().int().positive().optional(),
+    initialWidth: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        "Responsive mode only: the width of the first render, before measuring."
+      ),
     /** Widest the plot gets, in px. Defaults to 640. */
-    maxWidth: z.number().positive().optional(),
+    maxWidth: z
+      .number()
+      .positive()
+      .optional()
+      .describe("Widest the plot gets, in px. Defaults to 640."),
     /** Value-axis ticks, ascending; the scale runs from 0 to the last. */
-    ticks: z.array(z.number()).min(2).max(12).optional(),
+    ticks: z
+      .array(z.number())
+      .min(2)
+      .max(12)
+      .optional()
+      .describe(
+        "Value-axis ticks, ascending; the scale runs from 0 to the last."
+      ),
     /** Fixed width in px. Giving it turns measuring off. */
-    width: z.number().int().positive().optional(),
+    width: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed width in px. Giving it turns measuring off."),
   })
   .refine(
     (props) =>

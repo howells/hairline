@@ -41,7 +41,7 @@ const swapPalette = (id: PaletteId, setPalette: (p: PaletteId) => void) => {
 export const PaletteSwitcher = () => {
   const { palette, setPalette } = usePalette();
   return (
-    <fieldset className="m-0 flex gap-1 border-0 p-0">
+    <fieldset className="m-0 flex border-0 p-0 sm:gap-1">
       <legend className="sr-only">Palette</legend>
       {PALETTES.map((p) => (
         <label

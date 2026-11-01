@@ -12,11 +12,20 @@ import type { SharedCallbacks } from "./options";
 
 /** One line: a name and its values at the two points. */
 export const slopeRowSchema = z.strictObject({
-  from: z.number(),
+  /** The value at the left point. */
+  from: z.number().describe("The value at the left point."),
+  /** A unique key, for when two rows share a name. */
+  id: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("A unique key, for when two rows share a name."),
   /** Names the row, and is its key unless `id` is given. */
-  id: z.string().min(1).optional(),
-  name: z.string(),
-  to: z.number(),
+  name: z
+    .string()
+    .describe("Names the row, and is its key unless `id` is given."),
+  /** The value at the right point. */
+  to: z.number().describe("The value at the right point."),
 });
 
 export const slopeSchema = z
@@ -28,24 +37,65 @@ export const slopeSchema = z
       .refine(([low, high]) => low < high, {
         message: "domain must run from lower to higher",
       })
-      .optional(),
+      .optional()
+      .describe(
+        "The y range as [lowest, highest]. Defaults to the extent of the rows."
+      ),
     /** The row to draw in the hero colour, by key. Defaults to the biggest fall. */
-    emphasis: z.string().optional(),
+    emphasis: z
+      .string()
+      .optional()
+      .describe(
+        "The row to draw in the hero colour, by key. Defaults to the biggest fall."
+      ),
     /** How values print: a preset name or Intl number-format options. */
-    format: formatSchema.optional(),
+    format: formatSchema
+      .optional()
+      .describe(
+        "How values print: a preset name or Intl number-format options."
+      ),
     /** Fixed height in px. Without it a slope chart is 420 tall. */
-    height: z.number().int().positive().optional(),
+    height: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed height in px. Without it a slope chart is 420 tall."),
     /** Responsive mode only: the width of the first render, before measuring. */
-    initialWidth: z.number().int().positive().optional(),
+    initialWidth: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        "Responsive mode only: the width of the first render, before measuring."
+      ),
     /** The accessible name. Defaults to a reading of the rows. */
-    label: z.string().optional(),
+    label: z
+      .string()
+      .optional()
+      .describe("The accessible name. Defaults to a reading of the rows."),
     /** Names the two points, left then right, e.g. ["Jan 2023", "Dec 2024"]. */
-    labels: z.tuple([z.string(), z.string()]),
+    labels: z
+      .tuple([z.string(), z.string()])
+      .describe(
+        'Names the two points, left then right, e.g. ["Jan 2023", "Dec 2024"].'
+      ),
     /** The same on a phone (under 520px wide), where a unit would crowd the columns. */
-    narrowFormat: formatSchema.optional(),
-    rows: z.array(slopeRowSchema).min(1).max(12),
+    narrowFormat: formatSchema
+      .optional()
+      .describe(
+        "The same on a phone (under 520px wide), where a unit would crowd the columns."
+      ),
+    /** The rows, 1 to 12. */
+    rows: z.array(slopeRowSchema).min(1).max(12).describe("The rows, 1 to 12."),
     /** Fixed width in px. Giving it turns measuring off. */
-    width: z.number().int().positive().optional(),
+    width: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed width in px. Giving it turns measuring off."),
   })
   .refine(
     (props) =>

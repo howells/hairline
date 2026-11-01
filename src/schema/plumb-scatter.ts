@@ -13,11 +13,20 @@ import type { NoteProps, SharedCallbacks } from "./options";
 
 /** One point: a name, where it sits, and an optional key for when names repeat. */
 export const plumbDatumSchema = z.strictObject({
+  /** A unique key, for when two points share a label. */
+  id: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("A unique key, for when two points share a label."),
   /** Names the point, and is its key unless `id` is given. */
-  id: z.string().min(1).optional(),
-  label: z.string(),
-  x: z.number(),
-  y: z.number(),
+  label: z
+    .string()
+    .describe("Names the point, and is its key unless `id` is given."),
+  /** Position along the x axis. */
+  x: z.number().describe("Position along the x axis."),
+  /** Position up the y axis. */
+  y: z.number().describe("Position up the y axis."),
 });
 
 const domainSchema = z.tuple([z.number(), z.number()]);
@@ -26,29 +35,71 @@ export const plumbScatterSchema = z
   .strictObject({
     ...noteShape,
     ...sharedShape,
-    data: z.array(plumbDatumSchema).min(1).max(20),
+    /** The points, 1 to 20. */
+    data: z
+      .array(plumbDatumSchema)
+      .min(1)
+      .max(20)
+      .describe("The points, 1 to 20."),
     /** The point to draw in the hero colour, by key. Defaults to the highest. */
-    emphasis: z.string().optional(),
+    emphasis: z
+      .string()
+      .optional()
+      .describe(
+        "The point to draw in the hero colour, by key. Defaults to the highest."
+      ),
     /** How y prints: a preset name or Intl number-format options. */
-    format: formatSchema.optional(),
+    format: formatSchema
+      .optional()
+      .describe("How y prints: a preset name or Intl number-format options."),
     /** How x prints. Defaults to a rounded integer. */
-    formatX: formatSchema.optional(),
+    formatX: formatSchema
+      .optional()
+      .describe("How x prints. Defaults to a rounded integer."),
     /** Fixed height in px. Without it a scatter is 440 tall. */
-    height: z.number().int().positive().optional(),
+    height: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed height in px. Without it a scatter is 440 tall."),
     /** Responsive mode only: the width of the first render, before measuring. */
-    initialWidth: z.number().int().positive().optional(),
+    initialWidth: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        "Responsive mode only: the width of the first render, before measuring."
+      ),
     /** Points to name beside their dot, by key. Defaults to the highest and lowest. */
-    labelled: z.array(z.string()).optional(),
+    labelled: z
+      .array(z.string())
+      .optional()
+      .describe(
+        "Points to name beside their dot, by key. Defaults to the highest and lowest."
+      ),
     /** Fixed width in px. Giving it turns measuring off. */
-    width: z.number().int().positive().optional(),
+    width: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed width in px. Giving it turns measuring off."),
     /** The x axis range, [low, high]. */
-    xDomain: domainSchema.optional(),
+    xDomain: domainSchema.optional().describe("The x axis range, [low, high]."),
     /** Names for the low and high ends of the x axis. */
-    xLabels: z.tuple([z.string(), z.string()]).optional(),
+    xLabels: z
+      .tuple([z.string(), z.string()])
+      .optional()
+      .describe("Names for the low and high ends of the x axis."),
     /** The y axis range, [low, high]. */
-    yDomain: domainSchema.optional(),
+    yDomain: domainSchema.optional().describe("The y axis range, [low, high]."),
     /** Name for the y direction, drawn up the left side. */
-    yLabel: z.string().optional(),
+    yLabel: z
+      .string()
+      .optional()
+      .describe("Name for the y direction, drawn up the left side."),
   })
   .superRefine((props, ctx) => {
     const keys = new Set(props.data.map(keyOf));

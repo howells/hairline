@@ -3,7 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { plural, fmtInt, monthTickLabels } from "../../lib/format";
+import { axisFormat, plural, fmtInt, monthTickLabels } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
 import type { FontMetrics } from "../../schema/metrics";
@@ -244,6 +244,8 @@ interface SvgProps {
   show: (i: number, x: number, y: number) => void;
   title: string | undefined;
   ticks: number[] | undefined;
+  /** The format is the default whole number, which the axis may refine. */
+  wholeNumbers: boolean;
   width: number;
 }
 
@@ -262,6 +264,7 @@ const HairlineAreaSvg = ({
   show,
   title,
   ticks,
+  wholeNumbers,
   width,
 }: SvgProps) => {
   const series = seriesOf(readings);
@@ -287,6 +290,7 @@ const HairlineAreaSvg = ({
     y: valueScale({ hi: max, lo: Math.min(...values) }, floor, ticks),
   };
   const { fill, path } = shapesOf(readings, frame);
+  const axisTicks = ticks ?? frame.y.ticks(4);
   const [first] = live;
   const peakAt = fmtDate(readings[peak].date);
   const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
@@ -317,8 +321,8 @@ const HairlineAreaSvg = ({
         labelFloor
         side="right"
         floor={floor}
-        format={format}
-        ticks={ticks ?? frame.y.ticks(4)}
+        format={axisFormat(format, wholeNumbers, axisTicks)}
+        ticks={axisTicks}
         x0={x0}
         x1={x1}
         y={frame.y}
@@ -412,6 +416,7 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
           show={show}
           title={props.title}
           ticks={props.ticks}
+          wholeNumbers={props.format === undefined}
           width={width}
         />
       )}

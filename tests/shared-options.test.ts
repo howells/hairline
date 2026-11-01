@@ -280,7 +280,7 @@ describe.each(kinds)("%s shares the options", (kind) => {
 
   it("carries a hidden data table in the first HTML that table: true shows", () => {
     const hidden = render(kind);
-    expect(tag(hidden, "table")).toContain("sr-only");
+    expect(hidden).toContain('<div class="sr-only"><table>');
     expect(hidden).toContain(`>${named[kind]}<`);
     const shown = tag(render(kind, { table: true }), "table");
     expect(shown).toContain("<table");
@@ -289,7 +289,7 @@ describe.each(kinds)("%s shares the options", (kind) => {
 
   it("has the table before a width is known, in responsive mode", () => {
     const html = renderToString(element(kind, {}, false));
-    expect(tag(html, "table")).toContain("sr-only");
+    expect(html).toContain('<div class="sr-only"><table>');
     expect(html).toContain(`>${named[kind]}<`);
     expect(html).not.toContain("<svg");
   });

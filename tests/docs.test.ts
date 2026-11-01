@@ -64,6 +64,43 @@ describe("the props table is generated from the schema", () => {
     expect(byName("unit")).toMatchObject({ required: false, type: "number" });
   });
 
+  it("describes every prop, so no cell of the table is blank", () => {
+    const blank = registry.flatMap((chart) =>
+      propsOf(chart.schema)
+        .filter((row) => (row.description ?? "").length === 0)
+        .map((row) => `${chart.kind}.${row.name}`)
+    );
+    expect(blank).toStrictEqual([]);
+  });
+
+  it("describes every field of a datum in the JSON Schema", () => {
+    const Items = z.object({
+      properties: z.record(
+        z.string(),
+        z.object({ items: z.unknown().optional() })
+      ),
+    });
+    const Fields = z.object({
+      properties: z.record(
+        z.string(),
+        z.object({ description: z.string().optional() })
+      ),
+    });
+    const blank = registry.flatMap((chart) => {
+      const top = Items.parse(z.toJSONSchema(chart.schema, { io: "input" }));
+      return Object.entries(top.properties).flatMap(([name, node]) => {
+        const items = Fields.safeParse(node.items);
+        if (!items.success) {
+          return [];
+        }
+        return Object.entries(items.data.properties)
+          .filter(([, field]) => (field.description ?? "").length === 0)
+          .map(([field]) => `${chart.kind}.${name}[].${field}`);
+      });
+    });
+    expect(blank).toStrictEqual([]);
+  });
+
   it("flags a deprecated prop", () => {
     const note = propsOf(chartFor("rung-bars").schema).find(
       (row) => row.name === "note"

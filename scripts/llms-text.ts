@@ -1,6 +1,6 @@
 // The text of public/llms.txt, built from the registry (given, so
 // the script reads the built package and the test the same one) so it can
-// only list what the package has. `pnpm llms` writes it; a test fails if the
+// only list what the package has. `pnpm generate:llms` writes it; a test fails if the
 // committed file is not this.
 /** The parts of a registry entry the file reads. */
 export interface Entry {

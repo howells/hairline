@@ -13,17 +13,18 @@ import { SLIDE_IDS } from "./slides.ts";
 /** The share of a slide's pixels that may differ. */
 const TOLERANCE = 0.002;
 
-if (process.platform === "linux") {
-  test("the Tailwind gallery build draws every slide as hairline.css does", async ({
+// Off Linux there is nothing to compare against, so no test is defined.
+const IDS = process.platform === "linux" ? SLIDE_IDS : [];
+
+for (const id of IDS) {
+  test(`the Tailwind gallery build draws ${id} as hairline.css does`, async ({
     page,
   }) => {
     await page.goto("/tailwind.html");
     await page.evaluate(async () => await document.fonts.ready);
-    for (const id of SLIDE_IDS) {
-      await expect(page.locator(`[data-slide="${id}"]`)).toHaveScreenshot(
-        `${id}.png`,
-        { maxDiffPixelRatio: TOLERANCE }
-      );
-    }
+    await expect(page.locator(`[data-slide="${id}"]`)).toHaveScreenshot(
+      `${id}.png`,
+      { maxDiffPixelRatio: TOLERANCE }
+    );
   });
 }

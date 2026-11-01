@@ -4,6 +4,8 @@ import { createServer } from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { PORT } from "./port.ts";
+
 const dist = fileURLToPath(new URL("dist/", import.meta.url));
 const TYPES = new Map([
   [".css", "text/css"],
@@ -25,4 +27,4 @@ createServer((request, response) => {
   } catch {
     response.writeHead(404).end();
   }
-}).listen(Number(process.env.PORT ?? 4173));
+}).listen(PORT);

@@ -14,19 +14,18 @@ const ANIMATES =
 // so it keeps baselines of its own: still a fixed, checked picture.
 const BASELINE = { mount: "-mount", off: "" } as const;
 
+// One test per slide, so a slide that drifts is named in the report.
 for (const animate of ANIMATES) {
-  test(`animate ${animate}: every slide matches its baseline`, async ({
-    page,
-  }) => {
-    await page.goto(`/${animate}.html`);
-    await page.evaluate(async () => await document.fonts.ready);
-    await expect(page.locator('[data-hl-ready="true"]')).toHaveCount(
-      SLIDE_COUNT
-    );
-    for (const id of SLIDE_IDS) {
+  for (const id of SLIDE_IDS) {
+    test(`animate ${animate}: ${id} matches its baseline`, async ({ page }) => {
+      await page.goto(`/${animate}.html`);
+      await page.evaluate(async () => await document.fonts.ready);
+      await expect(page.locator('[data-hl-ready="true"]')).toHaveCount(
+        SLIDE_COUNT
+      );
       await expect(page.locator(`[data-slide="${id}"]`)).toHaveScreenshot(
         `${id}${BASELINE[animate]}.png`
       );
-    }
-  });
+    });
+  }
 }

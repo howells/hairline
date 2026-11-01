@@ -1,4 +1,4 @@
-// Writes public/llms.txt from the built registry. Run `pnpm llms` after
+// Writes public/llms.txt from the built registry. Run `pnpm generate:llms` after
 // `pnpm build:lib` when the registry changes; tests/docs.test.ts fails while
 // the committed file is stale.
 import { writeFileSync } from "node:fs";

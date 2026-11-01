@@ -86,15 +86,14 @@
     "lint": "howells-check .",
     "lint:fix": "howells-fix .",
     "build:lib": "node scripts/library-index.ts && howells-oxfmt package.json src/index.ts src/kit.ts src/maps.ts src/schema.ts src/entries && vite build -c vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/library-package.ts && node scripts/library-css.ts && node scripts/library-schema.ts",
-    "llms": "node scripts/llms.ts",
+    "generate:llms": "node scripts/llms.ts",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build:lib && changeset publish",
     "test": "pnpm build:lib && tsc -p tests && vitest run",
-    "acceptance": "playwright test -c acceptance/playwright.config.ts",
-    "acceptance:linux": "acceptance/docker.sh",
-    "acceptance:update": "acceptance/docker.sh --update-snapshots",
-    "acceptance:artefacts": "ARTEFACTS=1 playwright test -c acceptance/playwright.config.ts --project=dpr2 artefacts"
+    "e2e": "acceptance/docker.sh",
+    "generate:baselines": "acceptance/docker.sh visual.spec.ts --update-snapshots",
+    "generate:artefacts": "playwright test -c acceptance/artefacts.config.ts"
   },
   "dependencies": {
     "d3-array": "^3.2.4",

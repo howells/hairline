@@ -19,29 +19,70 @@ import type { NoteProps, SharedCallbacks } from "./options";
 
 /** The bars: a label, a value, and an optional key for when labels repeat. */
 export const rungDatumSchema = z.strictObject({
+  /** A unique key, for when two bars share a label. */
+  id: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("A unique key, for when two bars share a label."),
   /** Names the bar, and is its key unless `id` is given. */
-  id: z.string().min(1).optional(),
-  label: z.string(),
-  value: z.number(),
+  label: z
+    .string()
+    .describe("Names the bar, and is its key unless `id` is given."),
+  /** The bar's value, counted off in rungs of `unit`. */
+  value: z
+    .number()
+    .describe("The bar's value, counted off in rungs of `unit`."),
 });
 
 export const rungBarsSchema = z
   .strictObject({
     ...noteShape,
     ...sharedShape,
-    data: z.array(rungDatumSchema).min(1).max(24),
+    /** The bars, 1 to 24. */
+    data: z
+      .array(rungDatumSchema)
+      .min(1)
+      .max(24)
+      .describe("The bars, 1 to 24."),
     /** The bar to draw in the hero colour, by key. Defaults to the largest. */
-    emphasis: z.string().optional(),
+    emphasis: z
+      .string()
+      .optional()
+      .describe(
+        "The bar to draw in the hero colour, by key. Defaults to the largest."
+      ),
     /** How values print: a preset name or Intl number-format options. */
-    format: formatSchema.optional(),
+    format: formatSchema
+      .optional()
+      .describe(
+        "How values print: a preset name or Intl number-format options."
+      ),
     /** Fixed height in px. Without it a bar chart is 460 tall. */
-    height: z.number().int().positive().optional(),
+    height: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed height in px. Without it a bar chart is 460 tall."),
     /** Responsive mode only: the width of the first render, before measuring. */
-    initialWidth: z.number().int().positive().optional(),
+    initialWidth: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe(
+        "Responsive mode only: the width of the first render, before measuring."
+      ),
     /** Units per rung. */
-    unit: z.number().positive().optional(),
+    unit: z.number().positive().optional().describe("Units per rung."),
     /** Fixed width in px. Giving it turns measuring off. */
-    width: z.number().int().positive().optional(),
+    width: z
+      .number()
+      .int()
+      .positive()
+      .optional()
+      .describe("Fixed width in px. Giving it turns measuring off."),
   })
   .refine(
     (props) =>

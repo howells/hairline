@@ -24,18 +24,19 @@ const keyed = (texts: readonly string[]) => {
 /**
  * The chart's data as a table, made from the same validated payload as the
  * marks. Every chart that adopts the accessible-data mechanism renders one
- * through `Plot`'s `table` prop, so it is in the first server HTML. Hidden
- * with `sr-only` it still reads out; `visible` is the opt-in table view.
+ * through `Plot`'s `table` prop, so it is in the first server HTML. Hidden,
+ * it sits in an `sr-only` box and still reads out; `visible` is the opt-in
+ * table view.
  */
 export const DataTable = (props: DataTableProps) => {
   const columns = keyed(props.columns);
   const rows = keyed(props.rows.map((row) => row.join("\u001F")));
-  return (
+  const table = (
     <table
       className={
         props.visible === true
           ? "text-small mt-3 w-full border-collapse text-left tabular-nums"
-          : "sr-only"
+          : undefined
       }
     >
       <caption className={props.visible === true ? "sr-only" : undefined}>
@@ -61,4 +62,10 @@ export const DataTable = (props: DataTableProps) => {
       </tbody>
     </table>
   );
+  if (props.visible === true) {
+    return table;
+  }
+  // A table ignores the 1px box sr-only gives it and grows to its rows, which
+  // lengthens the page; a block holds that box and clips the table inside.
+  return <div className="sr-only">{table}</div>;
 };
