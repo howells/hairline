@@ -317,7 +317,7 @@ const PointMark = (props: {
             x2={crisp(px)}
             y1={Math.round(py - 9)}
             y2={Math.round(py - 17)}
-            stroke="var(--l4)"
+            stroke="var(--hl-l4)"
           />
           <ZoneText
             anchor={labelAnchor(p.name ?? "", px, props.frame)}

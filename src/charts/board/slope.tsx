@@ -57,19 +57,19 @@ const ROW_TONE: Record<
   lead: {
     dotClass: "fill-hero",
     ringClass: "stroke-hero",
-    stroke: "var(--hero)",
+    stroke: "var(--hl-hero)",
     value: "fill-ink",
   },
   rest: {
     dotClass: "fill-l3",
     ringClass: "stroke-l3",
-    stroke: "var(--l3)",
+    stroke: "var(--hl-l3)",
     value: "fill-muted",
   },
   worst: {
     dotClass: "fill-alert",
     ringClass: "stroke-alert",
-    stroke: "var(--alert)",
+    stroke: "var(--hl-alert)",
     value: "fill-ink",
   },
 };
@@ -132,7 +132,7 @@ const SlopeRow = (props: {
         textAnchor="end"
         className={LABEL}
       >
-        <tspan fill="var(--muted)">{name} </tspan>
+        <tspan fill="var(--hl-muted)">{name} </tspan>
         <tspan className={valueClass}>{props.format(row.from)}</tspan>
       </text>
       <text
@@ -142,7 +142,7 @@ const SlopeRow = (props: {
         className={LABEL}
       >
         <tspan className={valueClass}>{props.format(row.to)}</tspan>
-        <tspan fill="var(--muted)"> {name}</tspan>
+        <tspan fill="var(--hl-muted)"> {name}</tspan>
       </text>
     </DimGroup>
   );

@@ -20,6 +20,7 @@ export default defineConfig({
         index: "src/index.ts",
         kit: "src/kit.ts",
         schema: "src/schema.ts",
+        theme: "src/theme.ts",
       },
       formats: ["es"],
     },
@@ -31,7 +32,9 @@ export default defineConfig({
         // Charts are client components. The schema entry is React-free and
         // must stay importable from a server or an agent runtime.
         banner: (chunk) =>
-          /^schema(?:\/|\.js$)/u.test(chunk.fileName) ? "" : '"use client";',
+          /^(?:schema|theme)(?:\/|\.js$)/u.test(chunk.fileName)
+            ? ""
+            : '"use client";',
         preserveModules: true,
         preserveModulesRoot: "src",
       },
