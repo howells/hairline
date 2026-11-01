@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import type { ScaleOptions } from "../schema/scale";
@@ -102,8 +102,8 @@ export const Plot = (props: PlotProps) => {
     >
       <ScaleContext.Provider value={props.scaling ?? NO_SCALE}>
         {width > 0 && props.children(width)}
+        {props.overlay}
       </ScaleContext.Provider>
-      {props.overlay}
       {props.table}
     </div>
   );
@@ -119,8 +119,19 @@ interface TooltipProps {
 /** Gap kept between a tooltip and the edge of its chart. */
 const TIP_INSET = 4;
 
+/**
+ * How much larger than its drawing the svg is shown: `scale`, unless `fit`
+ * (which draws at the container's width, so nothing is magnified).
+ */
+const magnification = ({ fit, scale }: ScaleOptions) =>
+  fit === true ? 1 : (scale ?? 1);
+
 /** Dark pill tooltip, anchored at (x, y) inside the nearest Plot. */
 export const Tooltip = (props: TooltipProps) => {
+  // Anchors are given in the chart's drawing pixels; the svg may be shown larger.
+  const zoom = magnification(useContext(ScaleContext));
+  const x = props.x * zoom;
+  const y = props.y * zoom;
   const ref = useRef<HTMLOutputElement>(null);
   // Horizontal shift that keeps the tooltip inside its chart near the edges.
   const [shift, setShift] = useState(0);
@@ -131,18 +142,19 @@ export const Tooltip = (props: TooltipProps) => {
       return;
     }
     const half = el.offsetWidth / 2;
+    const shown = box.querySelector("svg")?.getBoundingClientRect().width ?? 0;
     const inside = Math.min(
-      Math.max(props.x, half + TIP_INSET),
-      box.clientWidth - half - TIP_INSET
+      Math.max(x, half + TIP_INSET),
+      Math.max(box.clientWidth, shown) - half - TIP_INSET
     );
-    setShift(inside - props.x);
+    setShift(inside - x);
     // Re-measure when the anchor moves; content changes travel with it.
-  }, [props.x]);
+  }, [x]);
   return (
     <output
       ref={ref}
       className={`rounded-tip bg-ink text-paper text-tick/normal pointer-events-none absolute z-10 px-2.5 py-1.75 whitespace-nowrap tabular-nums [&_b]:font-semibold ${props.below === true ? "-translate-x-1/2 translate-y-3" : "-mt-2.5 -translate-x-1/2 -translate-y-full"}`}
-      style={{ left: props.x + shift, top: props.y }}
+      style={{ left: x + shift, top: y }}
     >
       {props.children}
     </output>

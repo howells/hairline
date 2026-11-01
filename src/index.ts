@@ -85,8 +85,10 @@ export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
+export type { Keyed } from "./schema/key";
 export type { FontMetrics } from "./schema/metrics";
 export type { MotionCallbacks } from "./schema/motion";
+export type { SharedCallbacks } from "./schema/options";
 export type {
   PlumbDatum,
   PlumbScatterData,

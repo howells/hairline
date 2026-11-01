@@ -16,9 +16,5 @@ export const dailyDatumSchema = z.strictObject({
   value: z.number().nullable(),
 });
 
-/** The key a reading is addressed by: `id`, else `date`. */
-export const dayKeyOf = (datum: { date: string; id?: string }) =>
-  datum.id ?? datum.date;
-
 /** One reading. */
 export type DailyDatum = z.infer<typeof dailyDatumSchema>;

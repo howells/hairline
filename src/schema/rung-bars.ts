@@ -13,6 +13,7 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
+import { keyOf } from "./key";
 import { sharedShape } from "./options";
 import type { SharedCallbacks } from "./options";
 
@@ -23,8 +24,6 @@ export const rungDatumSchema = z.strictObject({
   label: z.string(),
   value: z.number(),
 });
-
-export { keyOf } from "./key";
 
 export const rungBarsSchema = z
   .strictObject({

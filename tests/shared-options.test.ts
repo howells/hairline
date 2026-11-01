@@ -72,12 +72,19 @@ const cases = {
 } satisfies Record<keyof typeof charts, Case>;
 
 const kinds = Object.keys(cases) as (keyof typeof cases)[];
-const components: Record<string, ComponentType<Record<string, unknown>>> =
-  Object.fromEntries(Object.entries(hairline));
+/**
+ * A chart by its component name, taking the loose payloads this test builds.
+ * The cast is the I/O boundary: payloads are checked by the registry's schema.
+ */
+const component = (
+  name: string
+): ComponentType<Record<string, unknown>> =>
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- payloads are validated by the schema, not the component's static props
+  Reflect.get(hairline, name) as ComponentType<Record<string, unknown>>;
 
 const render = (kind: keyof typeof cases, extra: Record<string, unknown>) =>
   renderToString(
-    createElement(components[charts[kind].component], {
+    createElement(component(charts[kind].component), {
       ...cases[kind].payload,
       ...sized,
       ...extra,
@@ -193,9 +200,7 @@ describe.each(kinds)("%s shares the options", (kind) => {
     const svg = tag(html, "svg");
     const target = /aria-describedby="(?<id>[^"]+)"/u.exec(svg)?.groups?.id;
     expect(target).toBeDefined();
-    expect(html).toMatch(
-      new RegExp(`<desc id="${target}">[^<]+</desc>`, "u")
-    );
+    expect(html).toMatch(new RegExp(`<desc id="${target}">[^<]+</desc>`, "u"));
   });
 
   it("carries a hidden data table, in the first HTML, that table: true shows", () => {
@@ -209,7 +214,7 @@ describe.each(kinds)("%s shares the options", (kind) => {
 
   it("has the table before a width is known, in responsive mode", () => {
     const html = renderToString(
-      createElement(components[charts[kind].component], {
+      createElement(component(charts[kind].component), {
         ...cases[kind].payload,
       })
     );
@@ -224,8 +229,8 @@ describe.each(kinds)("%s shares the options", (kind) => {
 
   it("metrics for another face change the layout", () => {
     const wide = { advances: {}, fallback: 3 };
-    const plain = render(kind, { note: NOTE });
-    const measured = render(kind, { metrics: wide, note: NOTE });
+    const plain = render(kind, { unitNote: NOTE });
+    const measured = render(kind, { metrics: wide, unitNote: NOTE });
     expect(measured).not.toBe(plain);
     if (kind !== "slope") {
       expect(plain).toContain(NOTE);
@@ -238,9 +243,9 @@ describe.each(kinds)("%s shares the options", (kind) => {
     const host = document.createElement("div");
     document.body.append(host);
     const root = createRoot(host);
-    await act(() => {
+    await act(async () => {
       root.render(
-        createElement(components[charts[kind].component], {
+        createElement(component(charts[kind].component), {
           ...cases[kind].payload,
           ...sized,
           animate: "off",
@@ -250,7 +255,7 @@ describe.each(kinds)("%s shares the options", (kind) => {
     });
     expect(onReady).toHaveBeenCalledTimes(1);
     expect(host.querySelector('[data-hl-ready="true"]')).not.toBeNull();
-    await act(() => {
+    await act(async () => {
       root.unmount();
     });
     host.remove();
@@ -266,7 +271,7 @@ describe("tooltips sit on their marks when scaled", () => {
     const html = renderToString(
       createElement(Plot, {
         children: () => null,
-        overlay: createElement(Tooltip, { x: 100, y: 40 }, "tip"),
+        overlay: createElement(Tooltip, { children: "tip", x: 100, y: 40 }),
         scaling,
         width: 480,
       })
@@ -291,9 +296,9 @@ describe("tooltips sit on their marks when scaled", () => {
     const host = document.createElement("div");
     document.body.append(host);
     const root = createRoot(host);
-    await act(() => {
+    await act(async () => {
       root.render(
-        createElement(components[charts[kind].component], {
+        createElement(component(charts[kind].component), {
           ...cases[kind].payload,
           ...sized,
           animate: "off",
@@ -307,13 +312,13 @@ describe("tooltips sit on their marks when scaled", () => {
     }
     svg.getBoundingClientRect = () =>
       new DOMRect(0, 0, 480 * (scale ?? 1), 320 * (scale ?? 1));
-    await act(() => {
+    await act(async () => {
       svg.dispatchEvent(
         new MouseEvent("pointermove", { bubbles: true, clientX })
       );
     });
     const style = host.querySelector("output")?.getAttribute("style") ?? "";
-    await act(() => {
+    await act(async () => {
       root.unmount();
     });
     return Number.parseFloat(/left:\s*([\d.]+)px/u.exec(style)?.[1] ?? "NaN");

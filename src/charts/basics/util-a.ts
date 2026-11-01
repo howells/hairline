@@ -1,5 +1,6 @@
 import { utcFormat } from "d3-time-format";
 
+import type { FontMetrics } from "../../schema/metrics";
 import { NOTE_LINE, noteLines } from "../util";
 
 /** Saturday or Sunday, in UTC. */
@@ -23,9 +24,10 @@ export const VALUE_AXIS_ROOM = 48;
 export const dailyFloor = (
   height: number,
   note: string | undefined,
-  width: number
+  width: number,
+  metrics?: FontMetrics
 ) => {
-  const notes = noteLines(note, width - 24);
+  const notes = noteLines(note, width - 24, metrics);
   return Math.round(
     height -
       (notes.length > 0 ? 56 : 34) -

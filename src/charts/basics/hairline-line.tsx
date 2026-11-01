@@ -6,6 +6,7 @@ import type { PointerEvent } from "react";
 import { dayTickLabels, fmtInt } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
+import type { FontMetrics } from "../../schema/metrics";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -14,6 +15,13 @@ import { Dot, Ring } from "../markers";
 import type { DotSize } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule, Stem, VRule } from "../rules";
+import {
+  Scoped,
+  chartTable,
+  plotOptions,
+  plural,
+  pointerX,
+} from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label, XLabels } from "../text";
 import { DottedLine } from "../texture";
@@ -25,6 +33,7 @@ import {
   isLive,
   liveOf,
   reactKeyOf,
+  readingRows,
   readingsOf,
   valueAt,
 } from "./daily-readings";
@@ -157,9 +166,11 @@ interface SvgProps {
   format: (v: number) => string;
   height: number;
   hover: number | null;
+  metrics: FontMetrics | undefined;
   note: string | undefined;
   readings: Reading[];
   show: (i: number, x: number, y: number) => void;
+  title: string | undefined;
   width: number;
 }
 
@@ -191,15 +202,19 @@ const HairlineLineSvg = ({
   format,
   height,
   hover,
+  metrics,
   note,
   readings,
   show,
+  title,
   width,
 }: SvgProps) => {
   const live = liveOf(readings);
-  const floor = dailyFloor(height, note, width);
+  const floor = dailyFloor(height, note, width, metrics);
   if (live.length === 0) {
-    return <DailyEmpty floor={floor} height={height} width={width} />;
+    return (
+      <DailyEmpty floor={floor} height={height} title={title} width={width} />
+    );
   }
   const values = live.map((i) => valueAt(readings, i));
   const lo = Math.min(...values);
@@ -242,8 +257,10 @@ const HairlineLineSvg = ({
       .y((r) => frame.y(r.value ?? 0))(readings) ?? "";
   const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[last].date)}: high ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}, latest ${format(valueAt(readings, last))}`;
 
+  const desc = `${plural(live.length, "reading")}. High ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}. The data table lists every reading.`;
+
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
-    const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
+    const px = pointerX(e, width);
     const day = xScale.invert(px);
     let nearest = first;
     for (const k of live) {
@@ -258,7 +275,8 @@ const HairlineLineSvg = ({
     <ChartSvg
       className="touch-pan-y"
       height={height}
-      label={label}
+      desc={desc}
+      label={title ?? label}
       leave={clear}
       onPointerMove={onMove}
       width={width}
@@ -303,28 +321,18 @@ const HairlineLineSvg = ({
         readings={readings}
       />
       <DayAxis frame={frame} readings={readings} />
-      <FootNote gutter={12} height={height} text={note} width={width} />
+      <FootNote
+        gutter={12}
+        height={height}
+        metrics={metrics}
+        text={note}
+        width={width}
+      />
     </ChartSvg>
   );
 };
 
-/**
- * F2 Daily line. One dot per reading on a grey line, placed by its date so a
- * missing day leaves a gap. Weekend days are hollow rings on an evenly dotted
- * stem to the floor; the peak (or, with `extreme="trough"`, the lowest) is in
- * ink on a solid ink stem, with its value. The latest day carries its value
- * quietly.
- *
- * Props are the `hairlineLineSchema` payload (src/schema/hairline-line.ts);
- * `data` is required and never defaults to demo data; dates are ISO strings.
- * Give `width` and `height` for a fixed-size chart that is complete on the
- * first (server) render. Bad input is tolerated: readings are drawn in date
- * order; a reading whose value is null, NaN or infinite is a gap, with no dot
- * and a break in the line; one reading draws a lone dot; no readings (or only
- * gaps) draw a quiet empty axis; `emphasis` is a reading's `id` or date, and
- * one that names no live reading emphasises none.
- */
-export const HairlineLine = (props: HairlineLineProps) => {
+const HairlineLinePlot = (props: HairlineLineProps) => {
   const readings = readingsOf(props.data ?? []);
   const format =
     props.format === undefined ? fmtInt : resolveFormat(props.format);
@@ -336,6 +344,13 @@ export const HairlineLine = (props: HairlineLineProps) => {
     <Plot
       initialWidth={props.initialWidth}
       width={props.width}
+      {...plotOptions(props)}
+      table={chartTable(
+        props,
+        props.title ?? "Daily values",
+        ["Date", "Value"],
+        readingRows(readings, fmtDate, format)
+      )}
       overlay={
         at === null || tip === undefined ? null : (
           <Tooltip x={at.x} y={at.y}>
@@ -359,12 +374,36 @@ export const HairlineLine = (props: HairlineLineProps) => {
           format={format}
           height={props.height ?? 440}
           hover={hover}
+          metrics={props.metrics}
           note={noteOf(props)}
           readings={readings}
           show={show}
+          title={props.title}
           width={width}
         />
       )}
     </Plot>
   );
 };
+
+/**
+ * F2 Daily line. One dot per reading on a grey line, placed by its date so a
+ * missing day leaves a gap. Weekend days are hollow rings on an evenly dotted
+ * stem to the floor; the peak (or, with `extreme="trough"`, the lowest) is in
+ * ink on a solid ink stem, with its value. The latest day carries its value
+ * quietly.
+ *
+ * Props are the `hairlineLineSchema` payload (src/schema/hairline-line.ts);
+ * `data` is required and never defaults to demo data; dates are ISO strings.
+ * Give `width` and `height` for a fixed-size chart that is complete on the
+ * first (server) render. Bad input is tolerated: readings are drawn in date
+ * order; a reading whose value is null, NaN or infinite is a gap, with no dot
+ * and a break in the line; one reading draws a lone dot; no readings (or only
+ * gaps) draw a quiet empty axis; `emphasis` is a reading's `id` or date, and
+ * one that names no live reading emphasises none.
+ */
+export const HairlineLine = (props: HairlineLineProps) => (
+  <Scoped idPrefix={props.idPrefix}>
+    <HairlineLinePlot {...props} />
+  </Scoped>
+);

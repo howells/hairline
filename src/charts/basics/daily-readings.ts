@@ -1,5 +1,5 @@
-import { dayKeyOf } from "../../schema/daily";
 import type { DailyDatum } from "../../schema/daily";
+import { keyOf } from "../../schema/key";
 
 /**
  * One reading as the daily charts draw it: the date parsed, the key it is
@@ -25,13 +25,24 @@ export const readingsOf = (data: DailyDatum[]): Reading[] =>
         : [
             {
               date,
-              key: dayKeyOf(d),
+              key: keyOf(d),
               value:
                 d.value !== null && Number.isFinite(d.value) ? d.value : null,
             },
           ];
     })
     .toSorted((a, b) => a.date.getTime() - b.date.getTime());
+
+/** Every reading as table rows: its date and value, a gap saying so. */
+export const readingRows = (
+  readings: Reading[],
+  fmtDate: (d: Date) => string,
+  format: (v: number) => string
+) =>
+  readings.map((r) => [
+    fmtDate(r.date),
+    r.value === null ? "No reading" : format(r.value),
+  ]);
 
 /** The indexes of the readings that have a value. */
 export const liveOf = (readings: Reading[]) =>
