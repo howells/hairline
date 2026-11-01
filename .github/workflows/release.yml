@@ -34,8 +34,8 @@ jobs:
       - run: pnpm test
       - uses: changesets/action@v2
         with:
-          version: pnpm version-packages
-          publish: pnpm release
+          version-script: pnpm version-packages
+          publish-script: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
