@@ -1,0 +1,32 @@
+# Philosophy
+
+Hairline has a look, and the look is the product. A chart here is drawn the way a broadsheet chart desk draws it: pixel-snapped hairlines, one ink hero, texture laid on exact pixels. The option surface is small on purpose, so a page of Hairline charts reads as one hand however many people made them.
+
+## Fixed
+
+- One hero per chart. Everything else sits on the grey ramp. A chart has no second accent, and no per-series palette.
+- No prose in a chart. A chart draws its plot and takes no title, subtitle or source; the host sets those, or sets `Frame`. The in-plot unit key is the one exception.
+- Three stroke widths: 1px hairlines on the pixel grid, 1.5px for data lines, 2px for emphasis.
+- Texture is engraved: regular pitches from one module, never random, never a gradient, shadow or glow.
+- Solid ramp tones, not opacity, for resting marks. Opacity is for interaction only.
+- Type is Inter's roles in sentence case, with tabular figures. Label widths are measured for Inter.
+- Motion comes from one set of tokens, runs once, and fades under reduced motion.
+- Every chart has an accessible name, a description and a data table.
+
+## Configurable
+
+- The colours: paper, ink, hero and alert, and the font stack, through `deriveTheme` from `@howells/hairline/theme`, or the `--hl-*` variables directly. Light and dark are both derived, never inverted.
+- The data, always supplied by the caller. The package carries no demo data.
+- Which datum is the hero (`emphasis`), the unit of a rung, the axis ends, the domain and the ticks, where a chart offers them.
+- How numbers and dates print, as a preset or Intl options, in any locale.
+- Size and mode: fixed `width` and `height` for the server, a measured width otherwise, and `scale`, `fit` and `strokes` for slides and exports.
+- Entry motion: `animate` and `replayKey`, and `onReady` for when a chart has settled.
+- The accessible name (`title`), whether the data table is visible (`table`), and `idPrefix` for several roots on one page.
+
+## What closes without discussion
+
+- Requests for another style option: rounded bars, gradients, a categorical palette, a second hero, a thicker stroke.
+- Requests to put prose back in a chart.
+- Requests that would make two Hairline charts look unrelated.
+
+Exceptions are technical. A bug, an accessibility failure, a data case the schema should accept, or a missing chart for a job the registry lists is a reason to change the library. A preference is not.

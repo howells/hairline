@@ -106,7 +106,7 @@ An art-director review found the set gorgeous in patches but not yet one system.
 
 ## Amendment 3: finish (overrides everything above where they conflict)
 
-- **Data.** Every chart's demo data comes from `docs/DATA.md` (Fieldnote). No label or number may match the chart's reference screenshot (`docs/BRIEF.md` maps ids to screenshots; open the screenshot and check). Keep each chart's story and hero.
+- **Data.** Gallery data is real and public, credited in `src/gallery/sources.json` (the demo-data rule was Fieldnote, retired; `docs/DATA.md` is now the payload contract). No label or number may match the chart's reference screenshot (`docs/BRIEF.md` maps ids to screenshots; open the screenshot and check). Keep each chart's story and hero.
 - **Time axes, broadsheet style.** Month ticks print the year only on the first tick and where it changes: `monthTickLabels(dates)` in `src/lib/format.ts`. Year ticks abbreviate after the first: `yearTickLabels(dates)`. Use them wherever a chart labels months or years.
 - **Right-hand value axis** for single-series time charts where it reads better (values sit next to the latest data, as on a financial page): ticks right-aligned to the plot's right edge, on the gridlines. Not for multi-series charts whose line-end labels need the right margin.
 - **Key swatches are now 12 × 12** (`KeySwatch`). Re-check every legend you own for spacing.

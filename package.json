@@ -82,6 +82,7 @@
     "lint": "howells-check .",
     "lint:fix": "howells-fix .",
     "build:lib": "node scripts/library-index.ts && howells-oxfmt package.json src/index.ts src/kit.ts src/maps.ts src/schema.ts src/entries && vite build -c vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/library-package.ts && node scripts/library-css.ts && node scripts/library-schema.ts",
+    "llms": "node scripts/llms.ts",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build:lib && changeset publish",
