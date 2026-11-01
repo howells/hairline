@@ -65,4 +65,4 @@ export type { ScaleOptions } from "./schema/scale";
 export { slopeRowSchema, slopeSchema } from "./schema/slope";
 export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";
 export { pointerOf, validate } from "./schema/validate";
-export type { Issue, Validated } from "./schema/validate";
+export type { Issue, Payload, Validated } from "./schema/validate";

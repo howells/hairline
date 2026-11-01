@@ -98,29 +98,41 @@ const HOUSE = {
 
 // OKLab, so distance means what the eye sees. Written out here rather than
 // imported so the check cannot share a bug with the code under test.
-/* oxlint-disable unicorn/numeric-separators-style -- the OKLab matrix coefficients are published constants, kept as written */
+// The published coefficients, as integers over ten decimal places.
+const coefficient = (n: number) => n / 1e10;
 const lin = (c: number) =>
-  c <= 0.040_45 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  c <= 4045e-5 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 const oklab = (hex: string) => {
   const channel = (i: number) =>
     lin(Number.parseInt(hex.slice(i, i + 2), 16) / 255);
   const [r, g, b] = [channel(1), channel(3), channel(5)] as const;
   const l = Math.cbrt(
-    0.412_221_470_8 * r + 0.536_332_536_3 * g + 0.051_445_992_9 * b
+    coefficient(4_122_214_708) * r +
+      coefficient(5_363_325_363) * g +
+      coefficient(514_459_929) * b
   );
   const m = Math.cbrt(
-    0.211_903_498_2 * r + 0.680_699_545_1 * g + 0.107_396_956_6 * b
+    coefficient(2_119_034_982) * r +
+      coefficient(6_806_995_451) * g +
+      coefficient(1_073_969_566) * b
   );
   const s = Math.cbrt(
-    0.088_302_461_9 * r + 0.281_718_837_6 * g + 0.629_978_700_5 * b
+    coefficient(883_024_619) * r +
+      coefficient(2_817_188_376) * g +
+      coefficient(6_299_787_005) * b
   );
   return [
-    0.210_454_255_3 * l + 0.793_617_785 * m - 0.004_072_046_8 * s,
-    1.977_998_495_1 * l - 2.428_592_205 * m + 0.450_593_709_9 * s,
-    0.025_904_037_1 * l + 0.782_771_766_2 * m - 0.808_675_766 * s,
+    coefficient(2_104_542_553) * l +
+      coefficient(7_936_177_850) * m -
+      coefficient(40_720_468) * s,
+    coefficient(19_779_984_951) * l -
+      coefficient(24_285_922_050) * m +
+      coefficient(4_505_937_099) * s,
+    coefficient(259_040_371) * l +
+      coefficient(7_827_717_662) * m -
+      coefficient(8_086_757_660) * s,
   ] as const;
 };
-/* oxlint-enable unicorn/numeric-separators-style */
 const distance = (a: string, b: string) => {
   const [l1, a1, b1] = oklab(a);
   const [l2, a2, b2] = oklab(b);

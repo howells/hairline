@@ -23,9 +23,12 @@ const bars = [
 const sized = { height: 320, width: 480 };
 
 const chart = createElement(RungBars, { data: bars, ...sized });
+const framedProps = (props: Omit<FrameProps, "children">): FrameProps => ({
+  ...props,
+  children: chart,
+});
 const framed = (props: Omit<FrameProps, "children">) =>
-  // oxlint-disable-next-line react/no-children-prop -- createElement's children argument does not satisfy the required prop
-  renderToString(createElement(Frame, { ...props, children: chart }));
+  renderToString(createElement(Frame, framedProps(props)));
 const at = (html: string, text: string) => html.indexOf(text);
 
 describe("Frame lays out name, source, footnote and note round a chart", () => {

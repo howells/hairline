@@ -45,7 +45,7 @@ vi.stubGlobal("matchMedia", (media: string) => ({
   removeEventListener: nothing,
 }));
 
-const base: RungBarsProps = {
+const base = {
   data: [
     { label: "2021", value: 19 },
     { label: "2022", value: 11 },

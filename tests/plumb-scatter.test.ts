@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 
-// Seam 1 for PlumbScatter: the built package, used the way a consumer uses it.
-// Same contract as RungBars (tests/rung-bars.test.ts). Run with `pnpm test`.
 import { PlumbScatter } from "@howells/hairline";
 import type { PlumbDatum, PlumbScatterProps } from "@howells/hairline";
+// Seam 1 for PlumbScatter: the built package, used the way a consumer uses it.
+// Same contract as RungBars (tests/rung-bars.test.ts). Run with `pnpm test`.
+import type { Payload } from "@howells/hairline/schema";
 import { getChart, registry } from "@howells/hairline/schema";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
@@ -28,8 +29,7 @@ const count = (html: string, pattern: RegExp) =>
 const dots = (html: string) => count(html, /class="pop /gu);
 const heroDots = (html: string) => count(html, /class="pop fill-hero"/gu);
 
-// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the payload is the raw input under test
-const pointers = (payload: unknown) => {
+const pointers = (payload: Payload) => {
   const checked = getChart("plumb-scatter").validate(payload);
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };

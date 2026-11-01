@@ -1,11 +1,12 @@
-// Seam 1: the built package, used the way a consumer uses it. Look a chart up
-// in the registry by kind, validate a JSON payload, render on the server.
-// Run with `pnpm test`, which builds lib/ first.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 import { RungBars } from "@howells/hairline";
 import type { RungBarsProps, RungDatum } from "@howells/hairline";
+// Seam 1: the built package, used the way a consumer uses it. Look a chart up
+// in the registry by kind, validate a JSON payload, render on the server.
+// Run with `pnpm test`, which builds lib/ first.
+import type { Payload } from "@howells/hairline/schema";
 import { getChart, registry } from "@howells/hairline/schema";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
@@ -32,8 +33,7 @@ const hero = (data: RungDatum[], emphasis?: string) =>
   heroRungs(render({ data, emphasis, ...sized }));
 
 /** The issue pointers of a failed validation; empty when it passed. */
-// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the payload is the raw input under test
-const pointers = (payload: unknown) => {
+const pointers = (payload: Payload) => {
   const checked = getChart("rung-bars").validate(payload);
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };

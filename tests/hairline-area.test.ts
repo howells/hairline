@@ -1,10 +1,11 @@
-// Seam 1: HairlineArea through the built package, the way a consumer uses it.
-// Look the chart up in the registry by kind, validate a JSON payload, render
-// on the server. Run with `pnpm test`, which builds lib/ first.
 import { readFileSync } from "node:fs";
 
 import { HairlineArea } from "@howells/hairline";
 import type { DailyDatum, HairlineAreaProps } from "@howells/hairline";
+// Seam 1: HairlineArea through the built package, the way a consumer uses it.
+// Look the chart up in the registry by kind, validate a JSON payload, render
+// on the server. Run with `pnpm test`, which builds lib/ first.
+import type { Payload } from "@howells/hairline/schema";
 import { getChart, registry } from "@howells/hairline/schema";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
@@ -44,8 +45,7 @@ const ids = (html: string) =>
   [...html.matchAll(/ id="(?<id>[^"]+)"/gu)].map((m) => m.groups?.id);
 
 /** The issue pointers of a failed validation; empty when it passed. */
-// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the payload is the raw input under test
-const pointers = (payload: unknown) => {
+const pointers = (payload: Payload) => {
   const checked = getChart("hairline-area").validate(payload);
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };

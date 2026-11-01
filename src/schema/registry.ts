@@ -10,7 +10,7 @@ import { plumbScatterSchema } from "./plumb-scatter";
 import { rungBarsSchema } from "./rung-bars";
 import { slopeSchema } from "./slope";
 import { validate } from "./validate";
-import type { Validated } from "./validate";
+import type { Payload, Validated } from "./validate";
 
 /** The nine jobs of the FT Visual Vocabulary. */
 export type Job =
@@ -40,8 +40,7 @@ export interface ChartEntry<T = unknown> {
   jobs: readonly [Job, ...Job[]];
   schema: ZodType<T>;
   /** Check a payload against `schema`. */
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the I/O boundary: an agent's raw payload, parsed by `schema` here
-  validate: (input: unknown) => Validated<T>;
+  validate: (input: Payload) => Validated<T>;
   whenNotToUse: string;
   whenToUse: string;
 }

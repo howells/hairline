@@ -13,7 +13,9 @@ import {
   Slope,
 } from "@howells/hairline";
 import { Frame } from "@howells/hairline/frame";
+import type { FrameProps } from "@howells/hairline/frame";
 import { createElement } from "react";
+import type { ReactElement } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -23,6 +25,14 @@ const sheet = lib("hairline.css");
 const bare = sheet.replaceAll(/\/\*[\s\S]*?\*\//gu, "");
 
 const sized = { height: 320, width: 480 };
+const framedProps = (child: ReactElement): FrameProps => ({
+  children: child,
+  footnote: "A footnote",
+  name: "Name",
+  note: "A note",
+  source: "A source",
+});
+
 const charts = {
   DumbbellQueue: renderToString(
     createElement(DumbbellQueue, {
@@ -34,20 +44,18 @@ const charts = {
     })
   ),
   Frame: renderToString(
-    createElement(Frame, {
-      // oxlint-disable-next-line react/no-children-prop -- createElement's children argument does not satisfy the required prop
-      children: createElement(RungBars, {
-        data: [
-          { label: "2021", value: 19 },
-          { label: "2022", value: 11 },
-        ],
-        ...sized,
-      }),
-      footnote: "A footnote",
-      name: "Name",
-      note: "A note",
-      source: "A source",
-    })
+    createElement(
+      Frame,
+      framedProps(
+        createElement(RungBars, {
+          data: [
+            { label: "2021", value: 19 },
+            { label: "2022", value: 11 },
+          ],
+          ...sized,
+        })
+      )
+    )
   ),
   HairlineArea: renderToString(
     createElement(HairlineArea, {

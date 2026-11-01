@@ -23,9 +23,9 @@ import type {
 } from "@howells/hairline";
 import { Plot, Tooltip } from "@howells/hairline/kit";
 import { charts } from "@howells/hairline/schema";
-import type { ChartKind, sharedShape } from "@howells/hairline/schema";
+import type { ChartKind, Payload, sharedShape } from "@howells/hairline/schema";
 import { act, createElement } from "react";
-import type { ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -148,8 +148,7 @@ const ids = (html: string) =>
   [...html.matchAll(/\sid="(?<id>[^"]*)"/gu)].map((m) => m.groups?.id ?? "");
 
 /** The issue pointers of a payload the registry rejects; empty when it passes. */
-// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the payload is the raw input under test
-const pointers = (kind: ChartKind, payload: unknown) => {
+const pointers = (kind: ChartKind, payload: Payload) => {
   const checked = charts[kind].validate(payload);
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
@@ -324,17 +323,23 @@ describe.each(noted)("%s reserves room for a note in another face", (kind) => {
   });
 });
 
+const tipProps = (): ComponentProps<typeof Tooltip> => ({
+  children: "tip",
+  x: 100,
+  y: 40,
+});
+const plotProps = (scaling: {
+  fit?: boolean;
+  scale?: number;
+}): ComponentProps<typeof Plot> => ({
+  children: () => null,
+  overlay: createElement(Tooltip, tipProps()),
+  scaling,
+  width: 480,
+});
+
 const tipStyle = (scaling: { fit?: boolean; scale?: number }) => {
-  const html = renderToString(
-    createElement(Plot, {
-      // oxlint-disable-next-line react/no-children-prop -- Plot's render prop, not JSX children
-      children: () => null,
-      // oxlint-disable-next-line react/no-children-prop -- Tooltip takes its content as children
-      overlay: createElement(Tooltip, { children: "tip", x: 100, y: 40 }),
-      scaling,
-      width: 480,
-    })
-  );
+  const html = renderToString(createElement(Plot, plotProps(scaling)));
   return /<output[^>]*style="(?<style>[^"]*)"/u.exec(html)?.groups?.style;
 };
 

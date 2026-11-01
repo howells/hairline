@@ -188,5 +188,4 @@ export const wrapWords = (
  * The one place the old name is read.
  */
 export const noteOf = (props: { note?: string; unitNote?: string }) =>
-  // oxlint-disable-next-line typescript/no-deprecated -- the alias is read here and nowhere else
   props.unitNote ?? props.note;

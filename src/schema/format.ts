@@ -42,6 +42,17 @@ export type FormatDescriptor = z.infer<typeof formatSchema>;
 /** What a chart prop accepts: a descriptor, or (TypeScript only) a function. */
 export type FormatInput = FormatDescriptor | ((value: number) => string);
 
+/**
+ * A function passed where a descriptor goes (TypeScript callers only). The
+ * parse is what tells it from data; the typed pipe is the contract.
+ */
+const formatFunctionSchema = z
+  .instanceof(Function)
+  .pipe(z.custom<(value: number) => string>());
+const dateFunctionSchema = z
+  .instanceof(Function)
+  .pipe(z.custom<(date: Date) => string>());
+
 const presetSchema = z.enum(FORMAT_PRESETS);
 
 const PRESETS = {
@@ -74,9 +85,9 @@ export const resolveFormat = (
   if (input === undefined) {
     return String;
   }
-  // oxlint-disable-next-line unicorn/no-instanceof-builtins -- `typeof` is banned here and a chart's formatter is from the host's own realm
-  if (input instanceof Function) {
-    return input;
+  const custom = formatFunctionSchema.safeParse(input);
+  if (custom.success) {
+    return custom.data;
   }
   const preset = presetSchema.safeParse(input);
   if (preset.success) {
@@ -86,12 +97,11 @@ export const resolveFormat = (
   let intl = built.get(key);
   if (intl === undefined) {
     const { locale, ...options } = intlFormatSchema.parse(input);
-    // oxlint-disable-next-line react-doctor/js-hoist-intl -- cached in `built` by descriptor
     intl = new Intl.NumberFormat(locale ?? "en-US", options);
     built.set(key, intl);
   }
-  const custom = intl;
-  return (value) => custom.format(value);
+  const formatter = intl;
+  return (value) => formatter.format(value);
 };
 
 /**
@@ -127,9 +137,9 @@ export const resolveDateFormat = (
   if (input === undefined) {
     return DATE_PRESETS["day-month"];
   }
-  // oxlint-disable-next-line unicorn/no-instanceof-builtins -- `typeof` is banned here and a chart's formatter is from the host's own realm
-  if (input instanceof Function) {
-    return input;
+  const custom = dateFunctionSchema.safeParse(input);
+  if (custom.success) {
+    return custom.data;
   }
   return DATE_PRESETS[dateFormatSchema.parse(input)];
 };

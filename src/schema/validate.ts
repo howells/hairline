@@ -14,6 +14,19 @@ export interface Issue {
   pointer: string;
 }
 
+/**
+ * A payload as it arrives, before `validate` has seen it: JSON as an agent
+ * writes it, plus the `undefined` of an omitted field.
+ */
+export type Payload =
+  | boolean
+  | number
+  | string
+  | null
+  | undefined
+  | readonly Payload[]
+  | { readonly [key: string]: Payload };
+
 export type Validated<T> =
   | { ok: true; value: T }
   | { issues: Issue[]; ok: false };
@@ -37,8 +50,7 @@ export const pointerOf = (path: readonly (string | number)[]) => {
 /** Check `input` against a schema: the parsed value, or path-specific issues. */
 export const validate = <T>(
   schema: ZodType<T>,
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the I/O boundary: this call is where the raw payload is parsed
-  input: unknown
+  input: Payload
 ): Validated<T> => {
   const result = schema.safeParse(input);
   if (result.success) {

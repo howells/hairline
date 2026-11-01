@@ -11,7 +11,7 @@ import {
   Slope,
 } from "@howells/hairline";
 import { charts } from "@howells/hairline/schema";
-import type { ChartEntry } from "@howells/hairline/schema";
+import type { ChartEntry, Payload } from "@howells/hairline/schema";
 import { deriveTheme } from "@howells/hairline/theme";
 import type { ThemeInput } from "@howells/hairline/theme";
 import { createElement } from "react";
@@ -48,8 +48,7 @@ const drawer = <T extends object>(
   entry: ChartEntry<T>,
   Component: ComponentType<T>
 ) =>
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- the I/O boundary: the raw JSON payload an agent sends, checked by the registry here
-  function draw(input: unknown): ReactElement {
+  function draw(input: Payload): ReactElement {
     const checked = entry.validate(input);
     if (!checked.ok) {
       throw new Error(
