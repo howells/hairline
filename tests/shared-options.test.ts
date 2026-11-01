@@ -76,9 +76,7 @@ const kinds = Object.keys(cases) as (keyof typeof cases)[];
  * A chart by its component name, taking the loose payloads this test builds.
  * The cast is the I/O boundary: payloads are checked by the registry's schema.
  */
-const component = (
-  name: string
-): ComponentType<Record<string, unknown>> =>
+const component = (name: string): ComponentType<Record<string, unknown>> =>
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- payloads are validated by the schema, not the component's static props
   Reflect.get(hairline, name) as ComponentType<Record<string, unknown>>;
 
