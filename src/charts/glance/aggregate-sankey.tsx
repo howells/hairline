@@ -10,7 +10,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, stagger, wrapWords } from "../util";
+import { noteSpace, ranks, stagger, noteOf, wrapWords } from "../util";
 import { aggregateSankeyDemo } from "./aggregate-sankey.data";
 import type { AggregateSankeyData, SankeyFlow } from "./aggregate-sankey.data";
 import { textWidth } from "./util-a";
@@ -21,7 +21,9 @@ interface AggregateSankeyProps {
   format?: (v: number) => string;
   /** Unit noun for the tooltip, e.g. "MPs". */
   unit?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Source label to keep in the hero colour. */
   highlight?: string;
 }
@@ -437,7 +439,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        const bottom = 8 + noteSpace(props.note, width - 16, 32);
+        const bottom = 8 + noteSpace(noteOf(props), width - 16, 32);
         const margins = labelMargins(data, width, narrow, (name) =>
           format(total(name))
         );
@@ -479,7 +481,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
                 valueText={format(n.value ?? 0)}
               />
             ))}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

@@ -4,6 +4,8 @@
 import type { ZodType } from "zod";
 
 import { dumbbellQueueSchema } from "./dumbbell-queue";
+import { hairlineAreaSchema } from "./hairline-area";
+import { hairlineLineSchema } from "./hairline-line";
 import { plumbScatterSchema } from "./plumb-scatter";
 import { rungBarsSchema } from "./rung-bars";
 import { slopeSchema } from "./slope";
@@ -64,6 +66,32 @@ export const charts = {
     whenToUse:
       "The same few things measured at two moments, or against a target: how far each moved, and which way.",
   }),
+  "hairline-area": entry({
+    component: "HairlineArea",
+    dataShape:
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date), format, dateFormat, ticks (value-axis ticks from 0), maxWidth, note. A null value is a gap.",
+    jobs: ["change-over-time", "magnitude"],
+    kind: "hairline-area",
+    limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },
+    schema: hairlineAreaSchema,
+    whenNotToUse:
+      "Values that go negative (the area is drawn from zero), several series, readings that are not daily, or a chart where the exact path matters more than the volume under it.",
+    whenToUse:
+      "One quantity measured every day over weeks to a year, where the volume under the line is the story: daylight, sales, traffic.",
+  }),
+  "hairline-line": entry({
+    component: "HairlineLine",
+    dataShape:
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date), extreme (peak or trough, when no emphasis), format, dateFormat, note. A null value is a gap.",
+    jobs: ["change-over-time", "ranking"],
+    kind: "hairline-line",
+    limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },
+    schema: hairlineLineSchema,
+    whenNotToUse:
+      "More than one series, readings that are not daily, or hundreds of points where individual dots stop being readable (use the area).",
+    whenToUse:
+      "One quantity read every day for a few weeks, where each day is worth a dot and the peak or trough is the point: a price, a temperature.",
+  }),
   "plumb-scatter": entry({
     component: "PlumbScatter",
     dataShape:
@@ -80,7 +108,7 @@ export const charts = {
   "rung-bars": entry({
     component: "RungBars",
     dataShape:
-      "data: { label: string; value: number; id?: string }[], one bar each; optional emphasis (a bar's id or label), unit (value per rung), format, note.",
+      "data: { label: string; value: number; id?: string }[], one bar each; optional emphasis (a bar's id or label), unit (value per rung), format, unitNote.",
     jobs: ["magnitude", "ranking"],
     kind: "rung-bars",
     limits: { categories: { max: 24, min: 1 }, series: { max: 1, min: 1 } },

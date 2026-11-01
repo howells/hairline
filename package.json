@@ -20,6 +20,10 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./frame": {
+      "types": "./lib/types/frame.d.ts",
+      "default": "./lib/frame.js"
+    },
     "./kit": {
       "types": "./lib/types/kit.d.ts",
       "default": "./lib/kit.js"

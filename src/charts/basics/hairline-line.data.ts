@@ -1,8 +1,4 @@
-/** One reading per day. */
-export interface DailyDatum {
-  date: Date;
-  value: number;
-}
+import type { DailyDatum } from "../../schema/daily";
 
 /**
  * F2 Sterling in September. US dollars to the pound, the Federal Reserve's
@@ -46,6 +42,6 @@ const readings: [string, number][] = [
 ];
 
 export const hairlineLineDemo: DailyDatum[] = readings.map(([day, value]) => ({
-  date: new Date(`${day}T00:00:00Z`),
+  date: day,
   value,
 }));

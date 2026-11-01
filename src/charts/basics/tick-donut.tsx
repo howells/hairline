@@ -14,6 +14,7 @@ import {
   ranks,
   sansWidth,
   stagger,
+  noteOf,
   wrapWords,
 } from "../util";
 import { tickDonutDemo } from "./tick-donut.data";
@@ -24,7 +25,9 @@ interface TickDonutProps {
   data?: ShareDatum[];
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Big centre number and the caption under it. Defaults to the total over "total". */
   center?: { caption: string; value: string };
   /** Index of the source to draw in the hero colour. */
@@ -460,7 +463,7 @@ export const TickDonut = (props: TickDonutProps) => {
           format={format}
           height={props.height ?? 420}
           highlight={props.highlight}
-          note={props.note}
+          note={noteOf(props)}
           show={hover.show}
           width={width}
         />

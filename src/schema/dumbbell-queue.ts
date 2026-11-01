@@ -34,10 +34,12 @@ export const dumbbellQueueSchema = z
     height: z.number().int().positive().optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
-    /** Footnote under the axis. */
-    note: z.string().optional(),
+    // The old name for `unitNote`; JSON Schema marks it deprecated.
+    note: z.string().optional().meta({ deprecated: true }),
     /** Size of one rung in data units: the gap counts off in these. */
     unit: z.number().positive().optional(),
+    /** The in-plot key under the axis. */
+    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -58,7 +60,9 @@ export type DumbbellQueueData = z.infer<typeof dumbbellQueueSchema>;
 /** What `<DumbbellQueue>` takes: the payload, with `format` also allowed as a function. */
 export type DumbbellQueueProps = Omit<
   z.input<typeof dumbbellQueueSchema>,
-  "format"
+  "format" | "note"
 > & {
   format?: FormatInput;
+  /** @deprecated Use `unitNote`. */
+  note?: string;
 };

@@ -6,7 +6,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { pictorialBarDemo } from "./pictorial-bar.data";
 import type { PictorialDatum } from "./pictorial-bar.data";
 import { labelRoom, rankTones } from "./util-a";
@@ -18,7 +18,9 @@ interface PictorialBarProps {
   height?: number;
   format?: (v: number) => string;
   /** Footnote. */
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the row to draw in the hero colour. */
   highlight?: number;
 }
@@ -293,7 +295,7 @@ export const PictorialBar = (props: PictorialBarProps) => {
         const pitch = Math.min(30, (width - names - right) / perLine);
         const x0 = rowOrigin(width, names, perLine * pitch, valueW);
         const scale = Math.min(1.1, (pitch * 0.82) / ICON_W);
-        const noteH = noteSpace(props.note, width - 16, 22);
+        const noteH = noteSpace(noteOf(props), width - 16, 22);
         // Small icons on a phone sit closer together, so the rows close up.
         const rowH = Math.min(
           (height - 16 - noteH) / data.length,
@@ -362,7 +364,7 @@ export const PictorialBar = (props: PictorialBarProps) => {
                 )}
               />
             ))}
-            <FootNote height={svgH} text={props.note} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

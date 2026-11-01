@@ -160,6 +160,7 @@ describe("the registry", () => {
       "table",
       "title",
       "unit",
+      "unitNote",
       "width",
     ]);
   });

@@ -2,6 +2,7 @@
 // plain data so a prop can cross the server-to-client boundary and an agent
 // can write it. Every chart that formats numbers takes `FormatInput` and
 // calls `resolveFormat` once; TypeScript callers may still pass a function.
+import { utcFormat } from "d3-time-format";
 import { z } from "zod";
 
 /**
@@ -91,4 +92,44 @@ export const resolveFormat = (
   }
   const custom = intl;
   return (value) => custom.format(value);
+};
+
+/**
+ * Named date presets, printed in UTC so a day is the same day everywhere.
+ *
+ * - `day-month`: 4 Mar
+ * - `day-month-year`: 4 Mar 2024
+ * - `month-year`: Mar 2024
+ */
+export const DATE_FORMAT_PRESETS = [
+  "day-month",
+  "day-month-year",
+  "month-year",
+] as const;
+
+/** A date formatter as data: a preset name. */
+export const dateFormatSchema = z.enum(DATE_FORMAT_PRESETS);
+
+export type DateFormatDescriptor = z.infer<typeof dateFormatSchema>;
+/** What a chart prop accepts: a preset, or (TypeScript only) a function. */
+export type DateFormatInput = DateFormatDescriptor | ((date: Date) => string);
+
+const DATE_PRESETS = {
+  "day-month": utcFormat("%-d %b"),
+  "day-month-year": utcFormat("%-d %b %Y"),
+  "month-year": utcFormat("%b %Y"),
+};
+
+/** Turn any `DateFormatInput` into a function; `undefined` is `day-month`. */
+export const resolveDateFormat = (
+  input: DateFormatInput | undefined
+): ((date: Date) => string) => {
+  if (input === undefined) {
+    return DATE_PRESETS["day-month"];
+  }
+  // oxlint-disable-next-line unicorn/no-instanceof-builtins -- `typeof` is banned here and a chart's formatter is from the host's own realm
+  if (input instanceof Function) {
+    return input;
+  }
+  return DATE_PRESETS[dateFormatSchema.parse(input)];
 };

@@ -9,7 +9,7 @@ import { Dot } from "../markers";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { dimClass, noteSpace, stagger } from "../util";
+import { dimClass, noteSpace, stagger, noteOf } from "../util";
 import { treeLRDemo } from "./tree-lr.data";
 import type { TreeDatum } from "./tree-lr.data";
 import { fillFor, labelRoom, strokeFor } from "./util-a";
@@ -17,7 +17,9 @@ import { fillFor, labelRoom, strokeFor } from "./util-a";
 interface TreeLRProps {
   data?: TreeDatum;
   height?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Name of a top-level branch to draw in the hero colour. */
   highlight?: string;
 }
@@ -163,7 +165,7 @@ export const TreeLR = (props: TreeLRProps) => {
     >
       {(width) => {
         const m = {
-          bottom: 10 + noteSpace(props.note, width - 16, 20),
+          bottom: 10 + noteSpace(noteOf(props), width - 16, 20),
           // The root's name hangs left of its dot, the leaf names right of theirs.
           left: labelRoom([data.name], "t-label") + 10,
           right: labelRoom(leafNames(data), "t-label") + 6,
@@ -234,7 +236,7 @@ export const TreeLR = (props: TreeLRProps) => {
                 }}
               />
             ))}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

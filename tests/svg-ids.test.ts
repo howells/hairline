@@ -25,6 +25,11 @@ const bars: RungDatum[] = [
   { label: "2022", value: 11 },
   { label: "2023", value: 7 },
 ];
+const days = [
+  { date: "2024-03-04", value: 3 },
+  { date: "2024-03-05", value: 5 },
+  { date: "2024-03-06", value: 4 },
+];
 const sized = { height: 320, width: 480 };
 
 const ids = (html: string) =>
@@ -43,8 +48,8 @@ const root = (idPrefix?: string): string => {
     createElement(RungBars, { data: bars, key: "a", ...sized }),
     createElement(RungBars, { data: bars, key: "b", ...sized }),
     createElement(RungBars, { data: bars, key: "c", ...sized }),
-    createElement(HairlineArea, { key: "d" }),
-    createElement(HairlineArea, { key: "e" }),
+    createElement(HairlineArea, { data: days, key: "d", ...sized }),
+    createElement(HairlineArea, { data: days, key: "e", ...sized }),
     createElement(AreaDifference, { key: "f" }),
     createElement(Candlestick, { key: "g" }),
     createElement(PairedRungs, { key: "h" }),
