@@ -4,7 +4,9 @@
 import type { ZodType } from "zod";
 
 import { dumbbellQueueSchema } from "./dumbbell-queue";
+import { plumbScatterSchema } from "./plumb-scatter";
 import { rungBarsSchema } from "./rung-bars";
+import { slopeSchema } from "./slope";
 import { validate } from "./validate";
 import type { Validated } from "./validate";
 
@@ -62,6 +64,19 @@ export const charts = {
     whenToUse:
       "The same few things measured at two moments, or against a target: how far each moved, and which way.",
   }),
+  "plumb-scatter": entry({
+    component: "PlumbScatter",
+    dataShape:
+      "data: { label: string; x: number; y: number; id?: string }[], one point each; optional emphasis and labelled (points' ids or labels), format and formatX, xDomain, yDomain, xLabels [low, high], yLabel, note.",
+    jobs: ["correlation", "ranking"],
+    kind: "plumb-scatter",
+    limits: { categories: { max: 20, min: 1 }, series: { max: 1, min: 1 } },
+    schema: plumbScatterSchema,
+    whenNotToUse:
+      "More than about twenty points, several series, or when the reader needs to read y off a scale rather than from a stem and a name: the stems carry x, the height carries y.",
+    whenToUse:
+      "A dozen or so named things measured on two quantities, to show whether they move together and which stand apart.",
+  }),
   "rung-bars": entry({
     component: "RungBars",
     dataShape:
@@ -74,6 +89,19 @@ export const charts = {
       "Values in the thousands (one rung per unit becomes a solid block; raise `unit`), negative values, many categories, or more than one series.",
     whenToUse:
       "A handful of counts the reader can tally by eye: years against events, one number per category.",
+  }),
+  slope: entry({
+    component: "Slope",
+    dataShape:
+      "rows: { name: string; from: number; to: number; id?: string }[], one line each; labels: [string, string] naming the two points; optional emphasis (a row's id or name), domain ([low, high]), format and narrowFormat, label (accessible name).",
+    jobs: ["change-over-time", "ranking"],
+    kind: "slope",
+    limits: { categories: { max: 12, min: 1 }, series: { max: 1, min: 1 } },
+    schema: slopeSchema,
+    whenNotToUse:
+      "More than two points in time (use a line), more than a dozen rows (the labels collide), or a single total with no rows to compare.",
+    whenToUse:
+      "The change between two points for a handful of rows: before and after, this year against last, where the reader should see which rose and which fell.",
   }),
 };
 

@@ -4,7 +4,7 @@
  * (race speed, morph hold, draw-in length) belongs to each chart, not here.
  */
 
-/** --ease-travel, cubic-bezier(0.77, 0, 0.175, 1): ease-in-out-quart. */
+/** --hl-ease-travel, cubic-bezier(0.77, 0, 0.175, 1): ease-in-out-quart. */
 export const easeTravel = (t: number) =>
   t < 0.5 ? 8 * t ** 4 : 1 - (-2 * t + 2) ** 4 / 2;
 

@@ -172,10 +172,10 @@ const barX = (frame: Frame, i: number) => ({
 });
 
 const LABEL_FILL = {
-  s1: "var(--text)",
-  s2: "var(--board-label-2)",
-  s3: "var(--muted)",
-  s4: "var(--muted)",
+  s1: "var(--hl-text)",
+  s2: "var(--hl-board-label-2)",
+  s3: "var(--hl-muted)",
+  s4: "var(--hl-muted)",
 };
 
 const hasLabel = (s: Stack) => s.label !== undefined && s.label !== "";

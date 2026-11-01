@@ -31,13 +31,15 @@ The charts ship as `@howells/hairline`, a private package for now: build it with
 ```css
 /* The host's stylesheet, in this order. */
 @import "tailwindcss";
-@import "@howells/hairline/tokens.css"; /* the palettes: --paper, --ink, --l0…--l6, --hero */
+@import "@howells/hairline/tokens.css"; /* the palettes: --hl-paper, --hl-ink, --hl-l0…--hl-l6, --hl-hero */
 @import "@howells/hairline/theme.css"; /* text roles, rules, textures and motion */
 
-/* Then draw the charts in the host's own paper and ink. */
-:root {
-  --paper: #faf9f6;
-  --hero: #1d1d1b;
+/* Charts draw under a Hairline root (`<div class="hl-root">`); theme it here, or set
+   the same properties from `deriveTheme({ paper, ink, hero, mode })`
+   (`@howells/hairline/theme`). The library sets nothing on :root. */
+.hl-root {
+  --hl-paper: #faf9f6;
+  --hl-hero: #1d1d1b;
 }
 ```
 
@@ -66,7 +68,7 @@ import { PairedRungs } from "@howells/hairline";
 - **Line.** Three stroke widths: 1px hairlines (snapped to the pixel grid with `crisp()` and `shape-crisp`), 1.5px for data lines and curves, 2px for emphasis. A ladder of rules: `grid-line` (faint), `rule` (quiet structure: leaders, tracks, connectors), `hairline` (baselines and zero lines, full ink).
 - **Texture.** One shared module, `src/charts/texture.tsx`: `Hatch`, `CrossHatch`, `Rules`, `Stipple`, `DotScreen`, `Beads`, `DottedLine`, `DotRing`, `DottedPath`, `PixelLine` and `KeySwatch`. Pitches are named in `TEXTURE_PITCH` (hatch 4, crosshatch 6, dot screen 4, dense 3); diagonals are drawn as 1px pixel staircases, so they stay crisp. Textures sit on paper inside a 1px rule, and density or angle encodes a value.
 - **Fills.** Every fill comes from one taxonomy, `src/charts/fills.ts`: a family (solid, hatch, crosshatch, rules, upright rules, stipple, dense stipple, broken rungs) in a tone (ink, strong, mid, quiet, faint, alert), or a step on one of two value ladders (halftone, hatch density) when the fill encodes a quantity. The Fills sheet on the Kit page (`#/kit`, beside Marks and Type) draws the whole taxonomy, so drift shows at a glance.
-- **Colour.** Each mode is a set of CSS variables (`src/system/tokens.css`): paper, ink, an even warm ramp `--l0`…`--l6` drawn in OKLCH between them, `--hero` for the one emphasised element, and `--alert` for a single exceptional mark. Charts never use hex. Paper is built on patternmode's paper and ink; Pink is a greyed broadsheet rose; Dark rebuilds contrast on a warm near-black rather than inverting.
+- **Colour.** Each mode is a set of CSS variables (`src/system/tokens.css`): paper, ink, an even warm ramp `--hl-l0`…`--hl-l6` drawn in OKLCH between them, `--hl-hero` for the one emphasised element, and `--hl-alert` for a single exceptional mark. Charts never use hex. Paper is built on patternmode's paper and ink; Pink is a greyed broadsheet rose; Dark rebuilds contrast on a warm near-black rather than inverting.
 - **Grain.** Every surface carries a very faint noise in its own ink's colour (`--grain`), behind the marks and never over them, so the page feels like paper while ink and hairlines stay crisp.
 - **Motion.** One set of tokens (`--ease-enter`, `--ease-travel`, five durations, four stagger tiers) shared by CSS and by the script-driven charts (`src/charts/motion.ts`). Charts reveal once as they scroll into view; under reduced motion nothing travels and each chart simply fades in.
 - **Frame.** Every cell carries a short ink bar and the chart's name above the chart. Nothing else: no prose inside charts.

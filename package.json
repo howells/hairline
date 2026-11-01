@@ -32,6 +32,10 @@
       "types": "./lib/types/schema.d.ts",
       "default": "./lib/schema.js"
     },
+    "./theme": {
+      "types": "./lib/types/theme.d.ts",
+      "default": "./lib/theme.js"
+    },
     "./json-schema/*": "./lib/json-schema/*",
     "./tokens.css": "./lib/tokens.css",
     "./theme.css": "./lib/theme.css"

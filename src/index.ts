@@ -19,6 +19,7 @@ export { TickRows } from "./charts/basics/tick-rows";
 export { CircularGraph as CircularBeadGraph } from "./charts/big/circular-graph";
 export { ForceGalaxy } from "./charts/big/force-galaxy";
 export { ThreadTriptych } from "./charts/big/thread-triptych";
+export { Slope } from "./charts/board/slope";
 export { AreaDifference } from "./charts/forms/area-difference";
 export { BrushedOverview } from "./charts/forms/brushed-overview";
 export { ChordRing } from "./charts/forms/chord-ring";
@@ -76,9 +77,16 @@ export type {
   DumbbellQueueProps,
 } from "./schema/dumbbell-queue";
 export type { FontMetrics } from "./schema/metrics";
+export type { MotionCallbacks } from "./schema/motion";
+export type {
+  PlumbDatum,
+  PlumbScatterData,
+  PlumbScatterProps,
+} from "./schema/plumb-scatter";
 export type {
   RungDatum,
   RungBarsData,
   RungBarsProps,
 } from "./schema/rung-bars";
 export type { ScaleOptions } from "./schema/scale";
+export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";

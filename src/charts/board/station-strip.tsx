@@ -166,7 +166,7 @@ const StripRow = (props: {
         y={cy}
         dy="0.34em"
         textAnchor="end"
-        fill="var(--muted)"
+        fill="var(--hl-muted)"
       >
         {row.name}
       </text>

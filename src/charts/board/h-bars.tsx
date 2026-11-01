@@ -155,7 +155,7 @@ export const HBars = (props: HBarsProps) => {
                     y={cy}
                     dy="0.34em"
                     textAnchor="end"
-                    fill="var(--muted)"
+                    fill="var(--hl-muted)"
                   >
                     {r.name}
                   </text>

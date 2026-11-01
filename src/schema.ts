@@ -21,6 +21,18 @@ export {
 export type { FormatDescriptor, FormatInput } from "./schema/format";
 export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";
 export type { FontMetrics } from "./schema/metrics";
+export { motionShape } from "./schema/motion";
+export type { MotionCallbacks } from "./schema/motion";
+export {
+  plumbDatumSchema,
+  plumbKeyOf,
+  plumbScatterSchema,
+} from "./schema/plumb-scatter";
+export type {
+  PlumbDatum,
+  PlumbScatterData,
+  PlumbScatterProps,
+} from "./schema/plumb-scatter";
 export { charts, registry, getChart } from "./schema/registry";
 export type { Job, ChartEntry, ChartKind } from "./schema/registry";
 export { rungDatumSchema, keyOf, rungBarsSchema } from "./schema/rung-bars";
@@ -31,5 +43,7 @@ export type {
 } from "./schema/rung-bars";
 export { scaleShape } from "./schema/scale";
 export type { ScaleOptions } from "./schema/scale";
+export { slopeRowSchema, slopeRowKey, slopeSchema } from "./schema/slope";
+export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";
 export { pointerOf, validate } from "./schema/validate";
 export type { Issue, Validated } from "./schema/validate";

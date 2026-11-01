@@ -14,6 +14,8 @@ import { z } from "zod";
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
 import { fontMetricsSchema } from "./metrics";
+import { motionShape } from "./motion";
+import type { MotionCallbacks } from "./motion";
 import { scaleShape } from "./scale";
 
 /** The bars: a label, a value, and an optional key for when labels repeat. */
@@ -30,6 +32,7 @@ export const keyOf = (datum: { id?: string; label: string }) =>
 
 export const rungBarsSchema = z
   .strictObject({
+    ...motionShape,
     data: z.array(rungDatumSchema).min(1).max(24),
     /** The bar to draw in the hero colour, by key. Defaults to the largest. */
     emphasis: z.string().optional(),
@@ -77,11 +80,9 @@ export type RungDatum = z.infer<typeof rungDatumSchema>;
 /** The validated payload. */
 export type RungBarsData = z.infer<typeof rungBarsSchema>;
 /** What `<RungBars>` takes: the payload, with `format` also allowed as a function. */
-export type RungBarsProps = Omit<
-  z.input<typeof rungBarsSchema>,
-  "format" | "note"
-> & {
-  format?: FormatInput;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-};
+export type RungBarsProps = MotionCallbacks &
+  Omit<z.input<typeof rungBarsSchema>, "format" | "note"> & {
+    format?: FormatInput;
+    /** @deprecated Use `unitNote`. */
+    note?: string;
+  };

@@ -44,7 +44,7 @@ import { MonthlyBars } from "./monthly-bars";
 import { Sankey } from "./sankey";
 import { Scatter } from "./scatter";
 import type { ScatterPoint } from "./scatter";
-import { Slope } from "./slope";
+import { SlopeCard } from "./slope-card";
 import { SparkGrid } from "./spark-grid";
 import { StackedArea } from "./stacked-area";
 import { StationStrip } from "./station-strip";
@@ -332,34 +332,34 @@ export const BOARD_PRESETS: BoardPresetMap = {
         }}
         layers={[
           {
-            fill: "var(--area1)",
+            fill: "var(--hl-area1)",
             label: "Nuclear",
-            stroke: "var(--l3)",
-            text: "var(--muted)",
+            stroke: "var(--hl-l3)",
+            text: "var(--hl-muted)",
             texture: "hatch",
             values: halfYearGeneration.nuclear,
           },
           {
-            fill: "var(--area2)",
+            fill: "var(--hl-area2)",
             label: "Gas",
-            stroke: "var(--l3)",
-            text: "var(--muted)",
+            stroke: "var(--hl-l3)",
+            text: "var(--hl-muted)",
             texture: "upright",
             values: halfYearGeneration.gas,
           },
           {
-            fill: "var(--area2)",
+            fill: "var(--hl-area2)",
             label: "Imports",
-            stroke: "var(--l3)",
-            text: "var(--muted)",
+            stroke: "var(--hl-l3)",
+            text: "var(--hl-muted)",
             texture: "stipple",
             values: halfYearGeneration.imports,
           },
           {
-            fill: "var(--area3)",
+            fill: "var(--hl-area3)",
             label: "Wind",
-            stroke: "var(--ink)",
-            text: "var(--text)",
+            stroke: "var(--hl-ink)",
+            text: "var(--hl-text)",
             texture: "rules",
             values: halfYearGeneration.wind,
           },
@@ -447,7 +447,7 @@ export const BOARD_PRESETS: BoardPresetMap = {
   D7: {
     name: "Cleaner regions",
     render: () => (
-      <Slope
+      <SlopeCard
         label="Carbon intensity, January 2023 against December 2024, the five regions that fell most"
         height={420}
         rows={cleanerRegions}

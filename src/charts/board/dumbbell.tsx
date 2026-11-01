@@ -88,7 +88,7 @@ const DumbbellRow = (props: {
         y={cy}
         dy="0.34em"
         textAnchor="end"
-        fill="var(--muted)"
+        fill="var(--hl-muted)"
       >
         {r.name}
       </text>
@@ -98,7 +98,7 @@ const DumbbellRow = (props: {
           x2={Math.round(x(r.after))}
           y1={cy}
           y2={cy}
-          stroke="var(--l5)"
+          stroke="var(--hl-l5)"
           strokeWidth={2}
         />
         <Dot
