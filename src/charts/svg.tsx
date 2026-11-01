@@ -1,6 +1,7 @@
-import { useContext, useId } from "react";
+import { useContext } from "react";
 import type { ReactNode, SVGProps } from "react";
 
+import { useSvgId } from "./hooks";
 import { ScaleContext } from "./scale-context";
 
 type ChartSvgProps = Omit<SVGProps<SVGSVGElement>, "aria-label" | "role"> & {
@@ -36,7 +37,7 @@ export const ChartSvg = ({
   width,
   ...rest
 }: ChartSvgProps) => {
-  const descId = useId();
+  const descId = useSvgId("desc");
   const { fit, scale, strokes } = useContext(ScaleContext);
   const scaled = fit === true || scale !== undefined;
   const size = scaled
