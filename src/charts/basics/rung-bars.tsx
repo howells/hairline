@@ -180,6 +180,17 @@ const reactKeys = (data: RungDatum[]) => {
   });
 };
 
+const rungTip = (
+  at: { key: number; x: number; y: number } | null,
+  data: RungDatum[],
+  format: (value: number) => string
+) =>
+  at === null ? null : (
+    <Tooltip x={at.x} y={at.y}>
+      <TipText facts={[format(data[at.key].value)]} lead={data[at.key].label} />
+    </Tooltip>
+  );
+
 const RungBarsPlot = (props: RungBarsProps) => {
   const data = (props.data ?? []).filter((d) => Number.isFinite(d.value));
   const unit = props.unit !== undefined && props.unit > 0 ? props.unit : 1;
@@ -199,16 +210,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
       scaling={{ fit: props.fit, scale: props.scale, strokes: props.strokes }}
       table={rungTable(data, format, name, props.table)}
       width={props.width}
-      overlay={
-        hover.at === null ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
-            <TipText
-              facts={[format(data[hover.at.key].value)]}
-              lead={data[hover.at.key].label}
-            />
-          </Tooltip>
-        )
-      }
+      overlay={rungTip(hover.at, data, format)}
     >
       {(width) => {
         const margin = {

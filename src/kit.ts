@@ -19,8 +19,8 @@ export {
   useMotionPreference,
   useReducedMotion,
   IdScope,
-  useEntry,
   useSvgId,
+  useEntry,
   useScrub,
   useHover,
 } from "./charts/hooks";
