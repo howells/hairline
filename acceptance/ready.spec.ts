@@ -3,7 +3,9 @@ import { expect, test } from "@playwright/test";
 import { SLIDE_COUNT, SLIDE_IDS } from "./slides.ts";
 
 for (const animate of ["off", "mount"]) {
-  test(`animate ${animate}: all twelve slides reach ready`, async ({ page }) => {
+  test(`animate ${animate}: all twelve slides reach ready`, async ({
+    page,
+  }) => {
     const problems: string[] = [];
     page.on("pageerror", (error) => problems.push(error.message));
     page.on("console", (message) => {
@@ -13,7 +15,7 @@ for (const animate of ["off", "mount"]) {
     });
 
     await page.goto(`/${animate}.html`);
-    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(async () => await document.fonts.ready);
 
     await expect(page.locator('[data-hl-ready="true"]')).toHaveCount(
       SLIDE_COUNT

@@ -3,26 +3,23 @@ import type { Page } from "@playwright/test";
 
 import { SLIDE_COUNT, SLIDE_IDS } from "./slides.ts";
 
-interface Shifting {
-  shift: number;
-}
-interface ShiftEntry extends PerformanceEntry {
-  hadRecentInput: boolean;
-  value: number;
+declare global {
+  interface Window {
+    /** Layout shift the page has suffered so far, summed by the init script. */
+    shift: number;
+  }
 }
 
-const boxes = async (page: Page) => {
-  const found: Record<string, unknown> = {};
-  for (const id of SLIDE_IDS) {
-    found[id] = {
+const boxes = async (page: Page) =>
+  await Promise.all(
+    SLIDE_IDS.map(async (id) => ({
       chart: await page
         .locator(`[data-slide="${id}"] svg[role="img"]`)
         .boundingBox(),
+      id,
       slide: await page.locator(`[data-slide="${id}"]`).boundingBox(),
-    };
-  }
-  return found;
-};
+    }))
+  );
 
 for (const animate of ["off", "mount"]) {
   test(`animate ${animate}: the settled page sits where the server HTML did`, async ({
@@ -41,26 +38,27 @@ for (const animate of ["off", "mount"]) {
     await bare.close();
 
     await page.addInitScript(() => {
-      const state = window as unknown as Shifting;
-      state.shift = 0;
+      window.shift = 0;
       new PerformanceObserver((list) => {
-        for (const entry of list.getEntries() as ShiftEntry[]) {
-          if (!entry.hadRecentInput) {
-            state.shift += entry.value;
+        for (const entry of list.getEntries()) {
+          if (
+            "value" in entry &&
+            "hadRecentInput" in entry &&
+            entry.hadRecentInput === false
+          ) {
+            window.shift += Number(entry.value);
           }
         }
       }).observe({ buffered: true, type: "layout-shift" });
     });
     await page.goto(`/${animate}.html`);
-    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(async () => await document.fonts.ready);
     await expect(page.locator('[data-hl-ready="true"]')).toHaveCount(
       SLIDE_COUNT
     );
     const after = await boxes(page);
 
     expect(after).toStrictEqual(before);
-    expect(await page.evaluate(() => (window as unknown as Shifting).shift)).toBe(
-      0
-    );
+    expect(await page.evaluate(() => window.shift)).toBe(0);
   });
 }

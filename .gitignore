@@ -8,3 +8,9 @@ tsconfig.tsbuildinfo
 # Third-party screenshots the first versions were rebuilt from: kept locally, never published.
 reference/
 lib
+
+# Acceptance suite output.
+acceptance/dist
+test-results
+playwright-report
+.pnpm-store

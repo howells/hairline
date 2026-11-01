@@ -14,10 +14,9 @@ const TEXT_OPS = new Set<number>([OPS.showText, OPS.showSpacedText]);
 for (const animate of ["off", "scroll"]) {
   test(`animate ${animate}: every PDF page has a drawn chart`, async ({
     page,
-  }, testInfo) => {
-    test.skip(testInfo.project.name !== "dpr1", "paper has no pixel ratio");
+  }) => {
     await page.goto(`/${animate}.html`);
-    await page.evaluate(() => document.fonts.ready);
+    await page.evaluate(async () => await document.fonts.ready);
     const bytes = await page.pdf({
       height: "1080px",
       preferCSSPageSize: true,
@@ -28,7 +27,8 @@ for (const animate of ["off", "scroll"]) {
     const pdf = await getDocument({ data: new Uint8Array(bytes) }).promise;
     expect(pdf.numPages).toBe(SLIDE_COUNT);
     for (let number = 1; number <= pdf.numPages; number += 1) {
-      const { fnArray } = await (await pdf.getPage(number)).getOperatorList();
+      const drawn = await pdf.getPage(number);
+      const { fnArray } = await drawn.getOperatorList();
       const paths = fnArray.filter((op) => PATH_OPS.has(op)).length;
       const text = fnArray.filter((op) => TEXT_OPS.has(op)).length;
       expect(paths, `page ${number} paths`).toBeGreaterThan(20);

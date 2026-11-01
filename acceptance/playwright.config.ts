@@ -8,6 +8,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 4173;
 const root = fileURLToPath(new URL("..", import.meta.url));
+const CI = process.env.CI !== undefined;
 
 export default defineConfig({
   expect: {
@@ -18,17 +19,22 @@ export default defineConfig({
       threshold: 0,
     },
   },
-  forbidOnly: Boolean(process.env.CI),
+  forbidOnly: CI,
   fullyParallel: true,
   projects: [1, 2, 3].map((ratio) => ({
     name: `dpr${ratio}`,
+    // Paper has no pixel ratio, and the stroke picture is made at 2x.
+    testIgnore: [
+      ...(ratio === 1 ? [] : ["**/pdf.spec.ts"]),
+      ...(ratio === 2 ? [] : ["**/artefacts.spec.ts"]),
+    ],
     use: {
       ...devices["Desktop Chrome"],
       deviceScaleFactor: ratio,
       viewport: { height: 1080, width: 1920 },
     },
   })),
-  reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
+  reporter: CI ? [["github"], ["html", { open: "never" }]] : "list",
   snapshotPathTemplate: "{testDir}/baselines/{projectName}/{arg}{ext}",
   testDir: ".",
   testMatch: "*.spec.ts",
@@ -37,8 +43,8 @@ export default defineConfig({
     command: "node acceptance/build.ts && node acceptance/serve.ts",
     cwd: root,
     env: { PORT: String(PORT) },
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !CI,
     url: `http://localhost:${PORT}/off.html`,
   },
-  workers: process.env.CI ? 2 : undefined,
+  workers: CI ? 2 : undefined,
 });
