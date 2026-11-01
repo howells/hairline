@@ -44,6 +44,11 @@ interface PlotProps {
   overlay?: ReactNode;
   style?: CSSProperties;
   /**
+   * The chart's data table (<DataTable>), rendered after the marks whether or
+   * not a width is known yet, so it is in the first server HTML.
+   */
+  table?: ReactNode;
+  /**
    * Fixed mode: draw at exactly this width, in px. Nothing is measured, so
    * the first render, on the server too, is the complete chart. Leave it out
    * for responsive mode, which measures the container.
@@ -76,6 +81,7 @@ export const Plot = (props: PlotProps) => {
     >
       {width > 0 && props.children(width)}
       {props.overlay}
+      {props.table}
     </div>
   );
 };

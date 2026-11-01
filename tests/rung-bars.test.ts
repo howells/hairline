@@ -149,6 +149,8 @@ describe("the registry", () => {
       "height",
       "initialWidth",
       "note",
+      "table",
+      "title",
       "unit",
       "width",
     ]);
