@@ -37,6 +37,7 @@
       "default": "./lib/theme.js"
     },
     "./json-schema/*": "./lib/json-schema/*",
+    "./hairline.css": "./lib/hairline.css",
     "./tokens.css": "./lib/tokens.css",
     "./theme.css": "./lib/theme.css"
   },

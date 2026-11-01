@@ -17,7 +17,8 @@ import { Scanner } from "@tailwindcss/oxide";
 import { transform } from "lightningcss";
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
-const source = (name: string) => readFileSync(here(`../src/system/${name}`), "utf-8");
+const source = (name: string) =>
+  readFileSync(here(`../src/system/${name}`), "utf-8");
 const out = (name: string, text: string) => {
   writeFileSync(here(`../lib/${name}`), text);
 };
@@ -52,7 +53,9 @@ const inlineTheme = (css: string) => {
   );
   const body = block?.groups?.body ?? "";
   let text = css.replace(block?.[0] ?? "", "");
-  for (const found of body.matchAll(/(?<name>--[\w-]+):\s*(?<value>[^;]+);/gu)) {
+  for (const found of body.matchAll(
+    /(?<name>--[\w-]+):\s*(?<value>[^;]+);/gu
+  )) {
     const { name = "", value = "" } = found.groups ?? {};
     text = text.replaceAll(`var(${name})`, value.replaceAll(/\s+/gu, " "));
   }
@@ -64,7 +67,8 @@ const topLevel = (css: string) => {
   const rules: string[] = [];
   let depth = 0;
   let start = 0;
-  for (const [i, char] of [...css].entries()) {
+  for (let i = 0; i < css.length; i += 1) {
+    const char = css[i];
     if (char === "{") {
       depth += 1;
     } else if (char === "}") {
@@ -94,7 +98,7 @@ const scoped = (css: string): string => {
     if (rule.startsWith("@layer")) {
       return [scoped(rule.slice(rule.indexOf("{") + 1, -1))];
     }
-    if (/^@(?:keyframes|property)\b/u.test(rule)) {
+    if (/^@(?:keyframes|property|position-try)\b/u.test(rule)) {
       return [rule];
     }
     return [`.hl-root {\n${rule}\n}`];

@@ -399,7 +399,7 @@
  * in the viewport. It settles 4px into place as it fades in; under reduced
  * motion it is simply there.
  */
-@position-try --note-scroll {
+@position-try --hl-note-scroll {
   position-area: bottom span-left;
   max-height: calc(100% - 1.5rem);
 }
@@ -410,7 +410,7 @@
     inset: auto;
     margin: 0.625rem 0 0;
     position-area: bottom span-left;
-    position-try-fallbacks: flip-block, --note-scroll;
+    position-try-fallbacks: flip-block, --hl-note-scroll;
   }
   @media (prefers-reduced-motion: no-preference) {
     transition:
