@@ -58,4 +58,23 @@ describe("hydration", () => {
     expect(problems).toStrictEqual([]);
     expect(root.innerHTML).toBe(html);
   });
+
+  it("a wrapped footnote under custom metrics hydrates unchanged", async () => {
+    const props = {
+      data: [{ label: "2021", value: 19 }],
+      height: 320,
+      metrics: { advances: { "1": 0.5 }, fallback: 1.2 },
+      note: "One rung = 100 rings · Source: the county survey · Rounded",
+      width: 480,
+    };
+    const html = renderToString(createElement(RungBars, props));
+    const root = document.createElement("div");
+    root.innerHTML = html;
+    document.body.append(root);
+    await act(async () => {
+      hydrateRoot(root, createElement(RungBars, props));
+      await Promise.resolve();
+    });
+    expect(root.innerHTML).toBe(html);
+  });
 });

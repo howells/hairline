@@ -4,6 +4,7 @@ import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/rung-bars";
 import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
 import { Plot, Tooltip } from "../core";
+import { DataTable } from "../data-table";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -138,6 +139,36 @@ const LadderBar = (props: Ladder) => {
   );
 };
 
+const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
+/** What the bars say, in words, from the data passed in. */
+const describe = (data: RungDatum[], format: (v: number) => string) => {
+  if (data.length === 0) {
+    return "No data.";
+  }
+  const at = (i: number) => `${data[i].label}, ${format(data[i].value)}`;
+  const hi = maxIndex(data.map((d) => d.value));
+  const lo = maxIndex(data.map((d) => -d.value));
+  return `${plural(data.length, "bar")}. Largest: ${at(hi)}.${
+    data.length > 1 ? ` Smallest: ${at(lo)}.` : ""
+  } The data table lists every bar.`;
+};
+
+/** Every bar's label and value as a table: hidden by default, or shown. */
+const rungTable = (
+  data: RungDatum[],
+  format: (v: number) => string,
+  caption: string,
+  visible: boolean | undefined
+) => (
+  <DataTable
+    caption={caption}
+    columns={["Label", "Value"]}
+    rows={data.map((d) => [d.label, format(d.value)])}
+    visible={visible}
+  />
+);
+
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: RungDatum[]) => {
   const seen = new Map<string, number>();
@@ -171,10 +202,13 @@ export const RungBars = (props: RungBarsProps) => {
   const format = resolveFormat(props.format);
   const hover = useHover<number>();
   const tex = useTextureIds("counted");
+  const name = props.title ?? `Bar chart of ${plural(data.length, "value")}`;
 
   return (
     <Plot
       initialWidth={props.initialWidth}
+      scaling={{ fit: props.fit, scale: props.scale, strokes: props.strokes }}
+      table={rungTable(data, format, name, props.table)}
       width={props.width}
       overlay={
         hover.at === null ? null : (
@@ -189,7 +223,7 @@ export const RungBars = (props: RungBarsProps) => {
     >
       {(width) => {
         const margin = {
-          bottom: 30 + noteSpace(props.note, width - 16, 20),
+          bottom: 30 + noteSpace(props.note, width - 16, 20, props.metrics),
           left: 16,
           right: 16,
           top: 28,
@@ -232,15 +266,12 @@ export const RungBars = (props: RungBarsProps) => {
           props.emphasis === undefined
             ? maxIndex(data.map((d) => d.value))
             : data.findIndex((d) => keyOf(d) === props.emphasis);
-        const label =
-          data.length === 0
-            ? "No data"
-            : data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
 
         return (
           <ChartSvg
+            desc={describe(data, format)}
             height={fitted}
-            label={label}
+            label={name}
             leave={hover.clear}
             width={width}
           >
@@ -279,7 +310,12 @@ export const RungBars = (props: RungBarsProps) => {
                 />
               );
             })}
-            <FootNote height={fitted} text={props.note} width={width} />
+            <FootNote
+              height={fitted}
+              metrics={props.metrics}
+              text={props.note}
+              width={width}
+            />
           </ChartSvg>
         );
       }}

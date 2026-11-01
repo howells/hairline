@@ -1,8 +1,4 @@
-export interface DumbbellDatum {
-  after: number;
-  before: number;
-  label: string;
-}
+import type { DumbbellDatum } from "../../schema/dumbbell-queue";
 
 /**
  * F12 Museum visits. Visits in millions to five of the national museums
