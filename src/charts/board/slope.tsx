@@ -2,7 +2,7 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
 import { resolveFormat } from "../../schema/format";
-import { slopeRowKey } from "../../schema/slope";
+import { keyOf } from "../../schema/key";
 import type { SlopeProps, SlopeRow as RowData } from "../../schema/slope";
 import { Plot } from "../core";
 import { useHover } from "../hooks";
@@ -10,6 +10,7 @@ import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
 import { LABEL, VALUE } from "../roles";
 import { VRule } from "../rules";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger } from "../util";
@@ -167,19 +168,25 @@ const extentOf = (rows: Row[]): [number, number] => {
   return low === high ? [low - 1, high + 1] : [low, high];
 };
 
-/**
- * Before/after slope chart, the bare plot: the biggest fall inked, the biggest
- * rise red, or the `emphasis` row inked alone. Name, source and notes belong
- * to the host.
- *
- * Props are the `slopeSchema` payload (src/schema/slope.ts); `rows` is
- * required and never defaults to demo data. Give `width` and `height` for a
- * fixed-size chart that is complete on the first (server) render. Bad input
- * is tolerated: a row with a value that is not a finite number is skipped,
- * duplicate names each get a line (give them `id`s to tell them apart), and
- * no rows draws the two headed columns alone.
- */
-export const Slope = (props: SlopeProps) => {
+/** What the lines say, in words, from the data passed in. */
+const summary = (
+  rows: RowData[],
+  labels: [string, string],
+  format: (v: number) => string
+) => {
+  if (rows.length === 0) {
+    return "No data.";
+  }
+  let [up] = rows;
+  let [down] = rows;
+  for (const r of rows) {
+    up = r.to - r.from > up.to - up.from ? r : up;
+    down = r.to - r.from < down.to - down.from ? r : down;
+  }
+  return `${plural(rows.length, "line")} from ${labels[0]} to ${labels[1]}. Biggest rise: ${up.name}, ${format(up.from)} to ${format(up.to)}. Biggest fall: ${down.name}, ${format(down.from)} to ${format(down.to)}. The data table lists every line.`;
+};
+
+const SlopePlot = (props: SlopeProps) => {
   const rows = (props.rows ?? []).filter(
     (r) => Number.isFinite(r.from) && Number.isFinite(r.to)
   );
@@ -191,7 +198,17 @@ export const Slope = (props: SlopeProps) => {
   const hover = useHover<number>();
 
   return (
-    <Plot initialWidth={props.initialWidth} width={props.width}>
+    <Plot
+      {...plotOptions(props)}
+      initialWidth={props.initialWidth}
+      table={chartTable(
+        props,
+        props.title ?? props.label ?? "Change between two points",
+        ["Name", props.labels[0], props.labels[1]],
+        rows.map((r) => [r.name, wide(r.from), wide(r.to)])
+      )}
+      width={props.width}
+    >
       {(width) => {
         const format = width < NARROW ? narrow : wide;
         const top = 40;
@@ -201,14 +218,16 @@ export const Slope = (props: SlopeProps) => {
           LABEL_GAP +
             nameWidth(
               rows.map((r) => `${r.name} ${format(r.from)}`),
-              LABEL_SHAVE
+              LABEL_SHAVE,
+              props.metrics
             ),
           width -
             LABEL_GAP -
             3 -
             nameWidth(
               rows.map((r) => `${format(r.to)} ${r.name}`),
-              LABEL_SHAVE
+              LABEL_SHAVE,
+              props.metrics
             ),
         ];
         const y = scaleLinear()
@@ -221,7 +240,7 @@ export const Slope = (props: SlopeProps) => {
         const rys = spread(rows.map((r) => y(r.to)));
         const seen = new Map<string, number>();
         const keys = rows.map((r) => {
-          const key = slopeRowKey(r);
+          const key = keyOf(r);
           const nth = seen.get(key) ?? 0;
           seen.set(key, nth + 1);
           return `${key}#${nth}`;
@@ -234,6 +253,7 @@ export const Slope = (props: SlopeProps) => {
           return keys[i] === `${props.emphasis}#0` ? "lead" : "rest";
         };
         const label =
+          props.title ??
           props.label ??
           (rows.length === 0
             ? "No data"
@@ -245,7 +265,13 @@ export const Slope = (props: SlopeProps) => {
                 .join("; "));
 
         return (
-          <ChartSvg height={h} label={label} leave={hover.clear} width={width}>
+          <ChartSvg
+            desc={summary(rows, props.labels, format)}
+            height={h}
+            label={label}
+            leave={hover.clear}
+            width={width}
+          >
             <Columns xs={xs} labels={props.labels} top={top} height={h} />
             {rows.map((r, i) => (
               <SlopeRow
@@ -269,3 +295,18 @@ export const Slope = (props: SlopeProps) => {
     </Plot>
   );
 };
+
+/**
+ * Before/after slope chart, the bare plot: the biggest fall inked, the biggest
+ * rise red, or the `emphasis` row inked alone. Name, source and notes belong
+ * to the host.
+ *
+ * Props are the `slopeSchema` payload (src/schema/slope.ts); `rows` is
+ * required and never defaults to demo data. Give `width` and `height` for a
+ * fixed-size chart that is complete on the first (server) render. Bad input
+ * is tolerated: a row with a value that is not a finite number is skipped,
+ * duplicate names each get a line (give them `id`s to tell them apart), and
+ * no rows draws the two headed columns alone.
+ */
+export const Slope = (props: SlopeProps) =>
+  scoped(props.idPrefix, <SlopePlot {...props} />);

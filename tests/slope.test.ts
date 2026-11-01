@@ -19,6 +19,9 @@ const rows: SlopeRow[] = [
 const labels: [string, string] = ["2023", "2024"];
 const sized = { height: 320, width: 560 };
 
+/** The drawing alone: the data table after it always carries the full format. */
+const drawn = (html: string) => html.slice(0, html.indexOf("<table"));
+
 const render = (props: SlopeProps) =>
   renderToString(createElement(Slope, props));
 
@@ -129,15 +132,24 @@ describe("the registry", () => {
       );
     expect(json.required.toSorted()).toStrictEqual(["labels", "rows"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
+      "animate",
       "domain",
       "emphasis",
+      "fit",
       "format",
       "height",
+      "idPrefix",
       "initialWidth",
       "label",
       "labels",
+      "metrics",
       "narrowFormat",
+      "replayKey",
       "rows",
+      "scale",
+      "strokes",
+      "table",
+      "title",
       "width",
     ]);
   });
@@ -168,8 +180,9 @@ describe("formatters are data", () => {
       narrowFormat: "integer" as const,
       rows,
     };
-    expect(render({ ...props, width: 400 })).not.toContain(">280 g<");
-    expect(render({ ...props, width: 600 })).toContain(">280 g<");
+    // The data table always carries the full format; the drawing narrows.
+    expect(drawn(render({ ...props, width: 400 }))).not.toContain(">280 g<");
+    expect(drawn(render({ ...props, width: 600 }))).toContain(">280 g<");
   });
 });
 

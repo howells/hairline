@@ -1,14 +1,14 @@
 import { scaleBand } from "d3-scale";
 
 import { resolveFormat } from "../../schema/format";
-import { keyOf } from "../../schema/rung-bars";
+import { keyOf } from "../../schema/key";
 import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
 import { Plot, Tooltip } from "../core";
-import { DataTable } from "../data-table";
-import { IdScope, useHover } from "../hooks";
+import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
@@ -139,8 +139,6 @@ const LadderBar = (props: Ladder) => {
   );
 };
 
-const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
-
 /** What the bars say, in words, from the data passed in. */
 const describe = (data: RungDatum[], format: (v: number) => string) => {
   if (data.length === 0) {
@@ -153,21 +151,6 @@ const describe = (data: RungDatum[], format: (v: number) => string) => {
     data.length > 1 ? ` Smallest: ${at(lo)}.` : ""
   } The data table lists every bar.`;
 };
-
-/** Every bar's label and value as a table: hidden by default, or shown. */
-const rungTable = (
-  data: RungDatum[],
-  format: (v: number) => string,
-  caption: string,
-  visible: boolean | undefined
-) => (
-  <DataTable
-    caption={caption}
-    columns={["Label", "Value"]}
-    rows={data.map((d) => [d.label, format(d.value)])}
-    visible={visible}
-  />
-);
 
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: RungDatum[]) => {
@@ -203,12 +186,14 @@ const RungBarsPlot = (props: RungBarsProps) => {
 
   return (
     <Plot
-      animate={props.animate}
+      {...plotOptions(props)}
       initialWidth={props.initialWidth}
-      onReady={props.onReady}
-      replayKey={props.replayKey}
-      scaling={{ fit: props.fit, scale: props.scale, strokes: props.strokes }}
-      table={rungTable(data, format, name, props.table)}
+      table={chartTable(
+        props,
+        name,
+        ["Label", "Value"],
+        data.map((d) => [d.label, format(d.value)])
+      )}
       width={props.width}
       overlay={rungTip(hover.at, data, format)}
     >
@@ -329,10 +314,4 @@ const RungBarsPlot = (props: RungBarsProps) => {
  * draws a quiet empty axis.
  */
 export const RungBars = (props: RungBarsProps) =>
-  props.idPrefix === undefined ? (
-    <RungBarsPlot {...props} />
-  ) : (
-    <IdScope prefix={props.idPrefix}>
-      <RungBarsPlot {...props} />
-    </IdScope>
-  );
+  scoped(props.idPrefix, <RungBarsPlot {...props} />);

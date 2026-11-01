@@ -6,6 +6,7 @@ import type { PointerEvent } from "react";
 import { fmtInt, monthTickLabels } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
+import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
@@ -13,6 +14,13 @@ import { Dot } from "../markers";
 import { MARK_WEIGHT } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
+import {
+  scoped,
+  chartTable,
+  plotOptions,
+  plural,
+  pointerX,
+} from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
@@ -22,7 +30,9 @@ import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
 import {
   isLive,
+  heroOf,
   liveOf,
+  readingRows,
   reactKeyOf,
   readingsOf,
   valueAt,
@@ -210,6 +220,26 @@ const shapesOf = (readings: Reading[], frame: Frame) => ({
       .y((r) => frame.y(r.value ?? 0))(readings) ?? "",
 });
 
+/** The plot's left and right edges, centred in `width`. */
+const edgesOf = (width: number, maxWidth: number) => {
+  const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
+  const x0 = Math.round((width - frameW) / 2);
+  return [x0, x0 + frameW] as const;
+};
+
+/** Where the first day sits: clear of the hero's label when it is the first. */
+const startOf = (
+  readings: Reading[],
+  hero: number,
+  format: (v: number) => string
+) => {
+  const half =
+    hero < 0
+      ? 0
+      : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
+  return hero === 0 ? Math.max(8, half) : 8;
+};
+
 interface SvgProps {
   clear: () => void;
   /** Pattern id of the stipple under the line. */
@@ -220,9 +250,11 @@ interface SvgProps {
   height: number;
   hover: number | null;
   maxWidth: number;
+  metrics: FontMetrics | undefined;
   note: string | undefined;
   readings: Reading[];
   show: (i: number, x: number, y: number) => void;
+  title: string | undefined;
   ticks: number[] | undefined;
   width: number;
 }
@@ -236,35 +268,28 @@ const HairlineAreaSvg = ({
   height,
   hover,
   maxWidth,
+  metrics,
   note,
   readings,
   show,
+  title,
   ticks,
   width,
 }: SvgProps) => {
   const live = liveOf(readings);
-  const floor = dailyFloor(height, note, width);
+  const floor = dailyFloor(height, note, width, metrics);
   if (live.length === 0) {
-    return <DailyEmpty floor={floor} height={height} width={width} />;
+    return (
+      <DailyEmpty floor={floor} height={height} name={title} width={width} />
+    );
   }
   const values = live.map((i) => valueAt(readings, i));
   const max = Math.max(...values);
   const peak = live[values.indexOf(max)];
-  // Emphasis is by key (id, else date) so reordering never moves it; a key
-  // that names a gap or no reading emphasises none.
-  const hero =
-    emphasis === undefined
-      ? peak
-      : (live.find((i) => readings[i].key === emphasis) ?? -1);
+  const hero = heroOf(readings, live, emphasis, peak);
   const last = readings.length - 1;
-  const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
-  const half =
-    hero < 0
-      ? 0
-      : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
-  const start = hero === 0 ? Math.max(8, half) : 8;
-  const x0 = Math.round((width - frameW) / 2);
-  const x1 = x0 + frameW;
+  const [x0, x1] = edgesOf(width, maxWidth);
+  const start = startOf(readings, hero, format);
   const frame: Frame = {
     floor,
     x: scaleLinear()
@@ -274,24 +299,24 @@ const HairlineAreaSvg = ({
   };
   const { fill, path } = shapesOf(readings, frame);
   const [first] = live;
-  const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${fmtDate(readings[peak].date)}`;
+  const peakAt = fmtDate(readings[peak].date);
+  const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
+  const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${peakAt}. The data table lists every reading.`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
-    const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
+    const px = pointerX(e, width);
     const at = frame.x.invert(px);
-    const nearest = nearestOf(live, at);
-    show(
-      nearest,
-      frame.x(nearest),
-      frame.y(valueAt(readings, nearest)) - (nearest === hero ? 16 : 10)
-    );
+    const near = nearestOf(live, at);
+    const lift = near === hero ? 16 : 10;
+    show(near, frame.x(near), frame.y(valueAt(readings, near)) - lift);
   };
 
   return (
     <ChartSvg
       className="touch-pan-y"
       height={height}
-      label={label}
+      desc={desc}
+      label={title ?? label}
       leave={clear}
       onPointerMove={onMove}
       width={width}
@@ -346,28 +371,18 @@ const HairlineAreaSvg = ({
         />
       )}
       <MonthAxis frame={frame} readings={readings} />
-      <FootNote gutter={12} height={height} text={note} width={width} />
+      <FootNote
+        gutter={12}
+        height={height}
+        metrics={metrics}
+        text={note}
+        width={width}
+      />
     </ChartSvg>
   );
 };
 
-/**
- * F3 Daily area. The area under the line is an engraved stipple, one 1px dot
- * per 4px cell, with a 2px stem every seventh day (every month over a year). The peak stands in ink,
- * labelled, with its label kept inside the frame when it is the first day;
- * hovering a day raises its stem.
- *
- * Props are the `hairlineAreaSchema` payload (src/schema/hairline-area.ts);
- * `data` is required and never defaults to demo data; dates are ISO strings.
- * Give `width` and `height` for a fixed-size chart that is complete on the
- * first (server) render. Bad input is tolerated: readings are drawn in date
- * order, spaced evenly; a reading whose value is null, NaN or infinite is a
- * gap, with the area and line broken there; one reading draws a lone dot;
- * negatives are drawn below the zero line; no readings (or only gaps) draw a
- * quiet empty axis; `emphasis` is a reading's `id` or date, and one that names
- * no live reading emphasises none.
- */
-export const HairlineArea = (props: HairlineAreaProps) => {
+const HairlineAreaPlot = (props: HairlineAreaProps) => {
   const readings = readingsOf(props.data ?? []);
   const format =
     props.format === undefined ? fmtInt : resolveFormat(props.format);
@@ -380,6 +395,13 @@ export const HairlineArea = (props: HairlineAreaProps) => {
     <Plot
       initialWidth={props.initialWidth}
       width={props.width}
+      {...plotOptions(props)}
+      table={chartTable(
+        props,
+        props.title ?? "Daily values",
+        ["Date", "Value"],
+        readingRows(readings, fmtDate, format)
+      )}
       overlay={
         at === null || tip === undefined ? null : (
           <Tooltip x={at.x} y={at.y}>
@@ -401,9 +423,11 @@ export const HairlineArea = (props: HairlineAreaProps) => {
           height={props.height ?? 440}
           hover={hover}
           maxWidth={props.maxWidth ?? 640}
+          metrics={props.metrics}
           note={noteOf(props)}
           readings={readings}
           show={show}
+          title={props.title}
           ticks={props.ticks}
           width={width}
         />
@@ -411,3 +435,22 @@ export const HairlineArea = (props: HairlineAreaProps) => {
     </Plot>
   );
 };
+
+/**
+ * F3 Daily area. The area under the line is an engraved stipple, one 1px dot
+ * per 4px cell, with a 2px stem every seventh day (every month over a year). The peak stands in ink,
+ * labelled, with its label kept inside the frame when it is the first day;
+ * hovering a day raises its stem.
+ *
+ * Props are the `hairlineAreaSchema` payload (src/schema/hairline-area.ts);
+ * `data` is required and never defaults to demo data; dates are ISO strings.
+ * Give `width` and `height` for a fixed-size chart that is complete on the
+ * first (server) render. Bad input is tolerated: readings are drawn in date
+ * order, spaced evenly; a reading whose value is null, NaN or infinite is a
+ * gap, with the area and line broken there; one reading draws a lone dot;
+ * negatives are drawn below the zero line; no readings (or only gaps) draw a
+ * quiet empty axis; `emphasis` is a reading's `id` or date, and one that names
+ * no live reading emphasises none.
+ */
+export const HairlineArea = (props: HairlineAreaProps) =>
+  scoped(props.idPrefix, <HairlineAreaPlot {...props} />);

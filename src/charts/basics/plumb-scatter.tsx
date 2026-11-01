@@ -2,7 +2,7 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
 import { resolveFormat } from "../../schema/format";
-import { plumbKeyOf } from "../../schema/plumb-scatter";
+import { keyOf } from "../../schema/key";
 import type { PlumbDatum, PlumbScatterProps } from "../../schema/plumb-scatter";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
@@ -11,6 +11,7 @@ import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
 import { FootNote } from "../plot-note";
 import { HRule, Stem } from "../rules";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
@@ -208,7 +209,7 @@ const Point = ({
 const reactKeys = (data: PlumbDatum[]) => {
   const seen = new Map<string, number>();
   return data.map((d) => {
-    const key = plumbKeyOf(d);
+    const key = keyOf(d);
     const nth = seen.get(key) ?? 0;
     seen.set(key, nth + 1);
     return `${key}#${nth}`;
@@ -248,9 +249,18 @@ const labelledIndices = (
     return new Set(fallback);
   }
   const wanted = new Set(keys);
-  return new Set(
-    data.flatMap((d, i) => (wanted.has(plumbKeyOf(d)) ? [i] : []))
-  );
+  return new Set(data.flatMap((d, i) => (wanted.has(keyOf(d)) ? [i] : [])));
+};
+
+/** What the points say, in words, from the data passed in. */
+const summary = (data: PlumbDatum[], format: (v: number) => string) => {
+  if (data.length === 0) {
+    return "No data.";
+  }
+  const ys = data.map((d) => d.y);
+  const high = data[ys.indexOf(Math.max(...ys))];
+  const low = data[ys.indexOf(Math.min(...ys))];
+  return `${plural(data.length, "point")}. Highest: ${high.label}, ${format(high.y)}. Lowest: ${low.label}, ${format(low.y)}. The data table lists every point.`;
 };
 
 /** The svg's accessible name: every point read out, or "No data". */
@@ -263,19 +273,22 @@ const describe = (
     ? "No data"
     : data.map((d) => `${d.label}: ${formatX(d.x)}, ${format(d.y)}`).join("; ");
 
-/**
- * F8 Stem scatter. Up to twenty points, each on a stem to the floor so x can
- * be read where the stem lands: dotted at pitch 3, solid ink for the hero.
- * The highest point is the hero; the highest and lowest are named.
- *
- * Props are the `plumbScatterSchema` payload (src/schema/plumb-scatter.ts);
- * `data` is required and never defaults to demo data. Give `width` and
- * `height` for a fixed-size chart that is complete on the first (server)
- * render. Bad input is tolerated: a point with a coordinate that is not a
- * finite number is skipped, coincident points each get a dot, negatives are
- * drawn on the axes, and no data draws a quiet empty axis.
- */
-export const PlumbScatter = (props: PlumbScatterProps) => {
+const scatterTip = (
+  at: { key: number; x: number; y: number } | null,
+  data: PlumbDatum[],
+  formatX: (v: number) => string,
+  format: (v: number) => string
+) =>
+  at === null ? null : (
+    <Tooltip x={at.x} y={at.y}>
+      <TipText
+        facts={[formatX(data[at.key].x), format(data[at.key].y)]}
+        lead={data[at.key].label}
+      />
+    </Tooltip>
+  );
+
+const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const data = (props.data ?? []).filter(
     (d) => Number.isFinite(d.x) && Number.isFinite(d.y)
   );
@@ -299,36 +312,31 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
   const hero =
     props.emphasis === undefined
       ? highest
-      : data.findIndex((d) => plumbKeyOf(d) === props.emphasis);
+      : data.findIndex((d) => keyOf(d) === props.emphasis);
   const labelled = labelledIndices(data, props.labelled, [highest, lowest]);
   const xDomain = props.xDomain ?? defaultXDomain(xs);
   const yDomain = props.yDomain ?? defaultYDomain(ys);
   const byX = data.map((d, i) => ({ i, x: d.x })).toSorted((a, b) => a.x - b.x);
   const order = new Map(byX.map((entry, r) => [entry.i, r]));
-  const label = describe(data, formatX, format);
+  const label = props.title ?? describe(data, formatX, format);
 
   return (
     <Plot
+      {...plotOptions(props)}
       initialWidth={props.initialWidth}
+      table={chartTable(
+        props,
+        props.title ?? "Points",
+        ["Label", "X", "Y"],
+        data.map((d) => [d.label, formatX(d.x), format(d.y)])
+      )}
       width={props.width}
-      overlay={
-        hover.at === null ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
-            <TipText
-              facts={[
-                formatX(data[hover.at.key].x),
-                format(data[hover.at.key].y),
-              ]}
-              lead={data[hover.at.key].label}
-            />
-          </Tooltip>
-        )
-      }
+      overlay={scatterTip(hover.at, data, formatX, format)}
     >
       {(width) => {
         const plotW = Math.min(width - EDGE * 2, 600);
         const x0 = (width - plotW) / 2;
-        const notes = noteLines(noteOf(props), width - 24);
+        const notes = noteLines(noteOf(props), width - 24, props.metrics);
         const floor =
           Math.round(height) -
           (hasNote ? 58 : 36) -
@@ -341,6 +349,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
           .range([floor - 14, 46]);
         return (
           <ChartSvg
+            desc={summary(data, format)}
             height={height}
             label={label}
             leave={hover.clear}
@@ -364,7 +373,8 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
                           py: y(d.y),
                           w: sansWidth(
                             `${d.label} · ${format(d.y)}`,
-                            hero === i ? 12 : 11
+                            hero === i ? 12 : 11,
+                            props.metrics
                           ),
                         },
                         data.map((o) => ({ px: x(o.x), py: y(o.y) })),
@@ -388,6 +398,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
             <FootNote
               gutter={12}
               height={height}
+              metrics={props.metrics}
               text={noteOf(props)}
               width={width}
             />
@@ -397,3 +408,18 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
     </Plot>
   );
 };
+
+/**
+ * F8 Stem scatter. Up to twenty points, each on a stem to the floor so x can
+ * be read where the stem lands: dotted at pitch 3, solid ink for the hero.
+ * The highest point is the hero; the highest and lowest are named.
+ *
+ * Props are the `plumbScatterSchema` payload (src/schema/plumb-scatter.ts);
+ * `data` is required and never defaults to demo data. Give `width` and
+ * `height` for a fixed-size chart that is complete on the first (server)
+ * render. Bad input is tolerated: a point with a coordinate that is not a
+ * finite number is skipped, coincident points each get a dot, negatives are
+ * drawn on the axes, and no data draws a quiet empty axis.
+ */
+export const PlumbScatter = (props: PlumbScatterProps) =>
+  scoped(props.idPrefix, <PlumbScatterPlot {...props} />);

@@ -5,6 +5,9 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
+import { keyOf } from "./key";
+import { sharedShape } from "./options";
+import type { SharedCallbacks } from "./options";
 
 /** One row: a label, the value before and the value after. */
 export const dumbbellDatumSchema = z.strictObject({
@@ -15,12 +18,9 @@ export const dumbbellDatumSchema = z.strictObject({
   label: z.string(),
 });
 
-/** The key a datum is addressed by: `id`, else `label`. */
-export const dumbbellKeyOf = (datum: { id?: string; label: string }) =>
-  datum.id ?? datum.label;
-
 export const dumbbellQueueSchema = z
   .strictObject({
+    ...sharedShape,
     /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
     alert: z.enum(["fall", "rise"]).optional(),
     data: z.array(dumbbellDatumSchema).min(1).max(12),
@@ -46,7 +46,7 @@ export const dumbbellQueueSchema = z
   .refine(
     (props) =>
       props.emphasis === undefined ||
-      props.data.some((d) => dumbbellKeyOf(d) === props.emphasis),
+      props.data.some((d) => keyOf(d) === props.emphasis),
     {
       message: "emphasis names no row: it must equal a datum's id or label",
       path: ["emphasis"],
@@ -58,11 +58,9 @@ export type DumbbellDatum = z.infer<typeof dumbbellDatumSchema>;
 /** The validated payload. */
 export type DumbbellQueueData = z.infer<typeof dumbbellQueueSchema>;
 /** What `<DumbbellQueue>` takes: the payload, with `format` also allowed as a function. */
-export type DumbbellQueueProps = Omit<
-  z.input<typeof dumbbellQueueSchema>,
-  "format" | "note"
-> & {
-  format?: FormatInput;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-};
+export type DumbbellQueueProps = SharedCallbacks &
+  Omit<z.input<typeof dumbbellQueueSchema>, "format" | "note"> & {
+    format?: FormatInput;
+    /** @deprecated Use `unitNote`. */
+    note?: string;
+  };

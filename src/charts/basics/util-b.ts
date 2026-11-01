@@ -1,3 +1,4 @@
+import type { FontMetrics } from "../../schema/metrics";
 import { sansWidth } from "../util";
 
 /** Point on a circle, angle in radians measured clockwise from 12 o'clock. */
@@ -21,7 +22,10 @@ export const maxIndex = (values: readonly number[]): number => {
  * Ink width of a string in the 11px sans roles, for centring a composition:
  * digits are tabular (0.65em), the rest is `sansWidth` less its safety margin.
  */
-export const inkWidth = (text: string) => {
+export const inkWidth = (text: string, metrics?: FontMetrics) => {
   const digits = (text.match(/\d/gu) ?? []).length;
-  return digits * 0.65 * 11 + sansWidth(text.replaceAll(/\d/gu, ""), 11) * 0.93;
+  return (
+    digits * 0.65 * 11 +
+    sansWidth(text.replaceAll(/\d/gu, ""), 11, metrics) * 0.93
+  );
 };

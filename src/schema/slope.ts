@@ -6,6 +6,9 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
+import { keyOf } from "./key";
+import { sharedShape } from "./options";
+import type { SharedCallbacks } from "./options";
 
 /** One line: a name and its values at the two points. */
 export const slopeRowSchema = z.strictObject({
@@ -16,12 +19,9 @@ export const slopeRowSchema = z.strictObject({
   to: z.number(),
 });
 
-/** The key a row is addressed by: `id`, else `name`. */
-export const slopeRowKey = (row: { id?: string; name: string }) =>
-  row.id ?? row.name;
-
 export const slopeSchema = z
   .strictObject({
+    ...sharedShape,
     /** The y range as [lowest, highest]. Defaults to the extent of the rows. */
     domain: z
       .tuple([z.number(), z.number()])
@@ -50,7 +50,7 @@ export const slopeSchema = z
   .refine(
     (props) =>
       props.emphasis === undefined ||
-      props.rows.some((r) => slopeRowKey(r) === props.emphasis),
+      props.rows.some((r) => keyOf(r) === props.emphasis),
     {
       message: "emphasis names no row: it must equal a row's id or name",
       path: ["emphasis"],
@@ -62,10 +62,8 @@ export type SlopeRow = z.infer<typeof slopeRowSchema>;
 /** The validated payload. */
 export type SlopeData = z.infer<typeof slopeSchema>;
 /** What `<Slope>` takes: the payload, with formats also allowed as functions. */
-export type SlopeProps = Omit<
-  z.input<typeof slopeSchema>,
-  "format" | "narrowFormat"
-> & {
-  format?: FormatInput;
-  narrowFormat?: FormatInput;
-};
+export type SlopeProps = SharedCallbacks &
+  Omit<z.input<typeof slopeSchema>, "format" | "narrowFormat"> & {
+    format?: FormatInput;
+    narrowFormat?: FormatInput;
+  };

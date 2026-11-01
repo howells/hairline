@@ -2,12 +2,16 @@
 // ./rung-bars; the shared daily series is in ./daily.
 import { z } from "zod";
 
-import { dailyDatumSchema, dayKeyOf } from "./daily";
+import { dailyDatumSchema } from "./daily";
 import { dateFormatSchema, formatSchema } from "./format";
 import type { DateFormatInput, FormatInput } from "./format";
+import { keyOf } from "./key";
+import { sharedShape } from "./options";
+import type { SharedCallbacks } from "./options";
 
 export const hairlineLineSchema = z
   .strictObject({
+    ...sharedShape,
     /** Readings by date, in any order. A null value is a gap. */
     data: z.array(dailyDatumSchema).min(1).max(731),
     /** How dates print on the axis and in the tooltip. Defaults to day-month. */
@@ -32,7 +36,7 @@ export const hairlineLineSchema = z
   .refine(
     (props) =>
       props.emphasis === undefined ||
-      props.data.some((d) => dayKeyOf(d) === props.emphasis),
+      props.data.some((d) => keyOf(d) === props.emphasis),
     {
       message: "emphasis names no reading: it must equal a datum's id or date",
       path: ["emphasis"],
@@ -42,12 +46,10 @@ export const hairlineLineSchema = z
 /** The validated payload. */
 export type HairlineLineData = z.infer<typeof hairlineLineSchema>;
 /** What `<HairlineLine>` takes: the payload, with both formats also allowed as functions. */
-export type HairlineLineProps = Omit<
-  z.input<typeof hairlineLineSchema>,
-  "dateFormat" | "format" | "note"
-> & {
-  dateFormat?: DateFormatInput;
-  format?: FormatInput;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-};
+export type HairlineLineProps = SharedCallbacks &
+  Omit<z.input<typeof hairlineLineSchema>, "dateFormat" | "format" | "note"> & {
+    dateFormat?: DateFormatInput;
+    format?: FormatInput;
+    /** @deprecated Use `unitNote`. */
+    note?: string;
+  };

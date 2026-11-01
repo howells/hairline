@@ -7,6 +7,9 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
+import { keyOf } from "./key";
+import { sharedShape } from "./options";
+import type { SharedCallbacks } from "./options";
 
 /** One point: a name, where it sits, and an optional key for when names repeat. */
 export const plumbDatumSchema = z.strictObject({
@@ -17,14 +20,11 @@ export const plumbDatumSchema = z.strictObject({
   y: z.number(),
 });
 
-/** The key a point is addressed by: `id`, else `label`. */
-export const plumbKeyOf = (datum: { id?: string; label: string }) =>
-  datum.id ?? datum.label;
-
 const domainSchema = z.tuple([z.number(), z.number()]);
 
 export const plumbScatterSchema = z
   .strictObject({
+    ...sharedShape,
     data: z.array(plumbDatumSchema).min(1).max(20),
     /** The point to draw in the hero colour, by key. Defaults to the highest. */
     emphasis: z.string().optional(),
@@ -54,7 +54,7 @@ export const plumbScatterSchema = z
     yLabel: z.string().optional(),
   })
   .superRefine((props, ctx) => {
-    const keys = new Set(props.data.map(plumbKeyOf));
+    const keys = new Set(props.data.map(keyOf));
     if (props.emphasis !== undefined && !keys.has(props.emphasis)) {
       ctx.addIssue({
         code: "custom",
@@ -89,12 +89,10 @@ export type PlumbDatum = z.infer<typeof plumbDatumSchema>;
 /** The validated payload. */
 export type PlumbScatterData = z.infer<typeof plumbScatterSchema>;
 /** What `<PlumbScatter>` takes: the payload, with formats also allowed as functions. */
-export type PlumbScatterProps = Omit<
-  z.input<typeof plumbScatterSchema>,
-  "format" | "formatX" | "note"
-> & {
-  format?: FormatInput;
-  formatX?: FormatInput;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-};
+export type PlumbScatterProps = SharedCallbacks &
+  Omit<z.input<typeof plumbScatterSchema>, "format" | "formatX" | "note"> & {
+    format?: FormatInput;
+    formatX?: FormatInput;
+    /** @deprecated Use `unitNote`. */
+    note?: string;
+  };
