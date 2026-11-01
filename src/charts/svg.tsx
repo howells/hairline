@@ -65,6 +65,7 @@ export const ChartSvg = ({
               leave();
             }
       }
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a chart is one image to a screen reader, and no tag means that
       role="img"
       {...rest}
     >
