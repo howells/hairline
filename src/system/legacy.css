@@ -1,0 +1,108 @@
+/*
+ * Legacy names. The tokens used to be unprefixed globals (--paper, --ink,
+ * --l0 …); these aliases keep the old names resolving on every Hairline root
+ * and surface while hosts and the gallery migrate to --hl-. Not shipped in the
+ * package. Remove with the contract step.
+ */
+
+.hl-root,
+.hl-root .surface-dark,
+.hl-root.surface-dark,
+.hl-root .surface-board,
+.hl-root.surface-board {
+  --paper: var(--hl-paper);
+  --ink: var(--hl-ink);
+  --text: var(--hl-text);
+  --muted: var(--hl-muted);
+  --faint: var(--hl-faint);
+  --grid: var(--hl-grid);
+  --rule: var(--hl-rule);
+  --l0: var(--hl-l0);
+  --l1: var(--hl-l1);
+  --l2: var(--hl-l2);
+  --l3: var(--hl-l3);
+  --l4: var(--hl-l4);
+  --l5: var(--hl-l5);
+  --l6: var(--hl-l6);
+  --hero: var(--hl-hero);
+  --alert: var(--hl-alert);
+  --cat-1: var(--hl-cat-1);
+  --cat-2: var(--hl-cat-2);
+  --cat-3: var(--hl-cat-3);
+  --cat-4: var(--hl-cat-4);
+  --heat-1: var(--hl-heat-1);
+  --heat-2: var(--hl-heat-2);
+  --heat-3: var(--hl-heat-3);
+  --heat-4: var(--hl-heat-4);
+  --heat-5: var(--hl-heat-5);
+  --grain: var(--hl-grain);
+  --dk-paper: var(--hl-dk-paper);
+  --dk-ink: var(--hl-dk-ink);
+  --dk-muted: var(--hl-dk-muted);
+  --dk-faint: var(--hl-dk-faint);
+  --dk-grid: var(--hl-dk-grid);
+  --dk-rule: var(--hl-dk-rule);
+  --dk-l0: var(--hl-dk-l0);
+  --dk-l1: var(--hl-dk-l1);
+  --dk-l2: var(--hl-dk-l2);
+  --dk-l3: var(--hl-dk-l3);
+  --dk-l4: var(--hl-dk-l4);
+  --dk-l5: var(--hl-dk-l5);
+  --dk-l6: var(--hl-dk-l6);
+  --dk-hero: var(--hl-dk-hero);
+  --dk-grain: var(--hl-dk-grain);
+  --alert-soft: var(--hl-alert-soft);
+  --alert-faded: var(--hl-alert-faded);
+  --alert-rule: var(--hl-alert-rule);
+  --hero-soft: var(--hl-hero-soft);
+  --panel: var(--hl-panel);
+  --bg: var(--hl-bg);
+  --board-panel: var(--hl-board-panel);
+  --s1: var(--hl-s1);
+  --s1-active: var(--hl-s1-active);
+  --s1-future: var(--hl-s1-future);
+  --s2: var(--hl-s2);
+  --s2-active: var(--hl-s2-active);
+  --s2-future: var(--hl-s2-future);
+  --s3: var(--hl-s3);
+  --s3-active: var(--hl-s3-active);
+  --s3-future: var(--hl-s3-future);
+  --line1: var(--hl-line1);
+  --line1-future: var(--hl-line1-future);
+  --line2: var(--hl-line2);
+  --line2-future: var(--hl-line2-future);
+  --area1: var(--hl-area1);
+  --area2: var(--hl-area2);
+  --area3: var(--hl-area3);
+  --band-past: var(--hl-band-past);
+  --band-future: var(--hl-band-future);
+  --red: var(--hl-red);
+  --red-past: var(--hl-red-past);
+  --red-future: var(--hl-red-future);
+  --red-soft: var(--hl-red-soft);
+  --red-rule: var(--hl-red-rule);
+  --board-bar: var(--hl-board-bar);
+  --board-label-2: var(--hl-board-label-2);
+  --board-swatch-3: var(--hl-board-swatch-3);
+  --board-link: var(--hl-board-link);
+  --board-link-hot: var(--hl-board-link-hot);
+  --board-hot: var(--hl-board-hot);
+  --board-heat-1: var(--hl-board-heat-1);
+  --board-heat-2: var(--hl-board-heat-2);
+  --board-heat-3: var(--hl-board-heat-3);
+  --board-heat-4: var(--hl-board-heat-4);
+  --board-heat-5: var(--hl-board-heat-5);
+  --ease-enter: var(--hl-ease-enter);
+  --ease-travel: var(--hl-ease-travel);
+  --ease-tone: var(--hl-ease-tone);
+  --duration-hover: var(--hl-duration-hover);
+  --duration-change: var(--hl-duration-change);
+  --duration-enter: var(--hl-duration-enter);
+  --duration-grow: var(--hl-duration-grow);
+  --duration-long: var(--hl-duration-long);
+  --fade-lag: var(--hl-fade-lag);
+  --stagger-dense: var(--hl-stagger-dense);
+  --stagger-fine: var(--hl-stagger-fine);
+  --stagger-mark: var(--hl-stagger-mark);
+  --stagger-series: var(--hl-stagger-series);
+}

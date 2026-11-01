@@ -17,9 +17,9 @@ import { nameWidth } from "./room";
  * Each key has its hatch tone and the solid used when a link is too thin.
  */
 const LINK_INK = {
-  link: { solid: "var(--l4)", tone: "fill-l4" },
-  "link-alert": { solid: "var(--alert)", tone: "fill-alert" },
-  "link-hot": { solid: "var(--l3)", tone: "fill-l3" },
+  link: { solid: "var(--hl-l4)", tone: "fill-l4" },
+  "link-alert": { solid: "var(--hl-alert)", tone: "fill-alert" },
+  "link-hot": { solid: "var(--hl-l3)", tone: "fill-l3" },
 } as const;
 type LinkKey = keyof typeof LINK_INK;
 const LINK_KEYS: LinkKey[] = ["link", "link-alert", "link-hot"];
@@ -357,7 +357,7 @@ const NodeLabel = (props: {
           y={(y0 + y1) / 2}
           dy="0.34em"
         >
-          <tspan fill="var(--muted)">{name} </tspan>
+          <tspan fill="var(--hl-muted)">{name} </tspan>
           <tspan className={valueClass}>{valueText(node)}</tspan>
         </text>
       </>
@@ -367,7 +367,7 @@ const NodeLabel = (props: {
     (placement === "below" ? Math.max(y0 + 2, y1) : y0) + NAME_DY[placement];
   return (
     <text className={`${LABEL} t-halo fade fill-text`} x={x0}>
-      <tspan fill="var(--muted)" y={nameY}>
+      <tspan fill="var(--hl-muted)" y={nameY}>
         {name}
       </tspan>
       <tspan className={valueClass} x={x0} y={nameY + VALUE_DY}>
@@ -380,9 +380,9 @@ const NodeLabel = (props: {
 /** Node fill: red for an alert, ink for the hero, grey for the rest. */
 const nodeFill = (n: FunnelNode, heroId: string | undefined) => {
   if (n.alert === true) {
-    return "var(--alert)";
+    return "var(--hl-alert)";
   }
-  return n.id === heroId ? "var(--hero)" : "var(--l3)";
+  return n.id === heroId ? "var(--hl-hero)" : "var(--hl-l3)";
 };
 
 /** The hero: the largest final-stage node that is not an alert. */

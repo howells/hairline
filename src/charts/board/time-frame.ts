@@ -116,8 +116,8 @@ export interface Frame {
 }
 
 export const LINE_TONE = {
-  1: { past: "var(--line1)" },
-  2: { past: "var(--line2)" },
+  1: { past: "var(--hl-line1)" },
+  2: { past: "var(--hl-line2)" },
 } as const;
 export const DOT_TONE = { 1: "fill-hero", 2: "fill-l3" } as const;
 
