@@ -140,9 +140,11 @@ const packed = () => {
     ["pack", "--dry-run", "--json", "--ignore-scripts"],
     { cwd: root, encoding: "utf-8" }
   );
-  const [info] = z
-    .array(z.object({ files: z.array(z.object({ path: z.string() })) }))
-    .parse(JSON.parse(out));
+  // npm 11 and earlier print an array of packs; npm 12 keys them by name.
+  const pack = z.object({ files: z.array(z.object({ path: z.string() })) });
+  const packs = z.union([z.array(pack), z.record(z.string(), pack)]);
+  const parsed = packs.parse(JSON.parse(out));
+  const [info] = Array.isArray(parsed) ? parsed : Object.values(parsed);
   return (info?.files ?? []).map((file) => file.path);
 };
 
