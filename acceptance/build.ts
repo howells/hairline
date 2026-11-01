@@ -1,9 +1,12 @@
 // Builds the acceptance pages into acceptance/dist: the client bundle, the
 // package's own hairline.css (copied, as a host without Tailwind would), and
-// one HTML file per page, each with the deck's server render in it.
+// one HTML file per page, each with the deck's server render in it. The
+// tailwind page is the same markup under the stylesheet Tailwind compiles from
+// the gallery's own app.css, for the spec that holds the two to one picture.
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+import tailwindcss from "@tailwindcss/vite";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { build } from "vite";
@@ -57,12 +60,43 @@ await build({
   publicDir: false,
 });
 
+// The gallery's stylesheet: Tailwind compiling src/system/app.css, which
+// imports the same hairline.css source the package precompiles.
+await build({
+  build: {
+    emptyOutDir: false,
+    lib: {
+      cssFileName: "tailwind",
+      entry: here("fixture/tailwind.ts"),
+      fileName: () => "tailwind.js",
+      formats: ["es"],
+    },
+    outDir: dist,
+  },
+  configFile: false,
+  logLevel: "warn",
+  plugins: [tailwindcss()],
+  publicDir: false,
+});
+
 mkdirSync(dist, { recursive: true });
 copyFileSync(
   here("../lib/hairline.css"),
   fileURLToPath(new URL("hairline.css", `file://${dist}`))
 );
-for (const [name, config] of Object.entries(PAGES)) {
+/** The browser half, where the page hydrates; the static Tailwind page has none. */
+const script = (config: DeckConfig, hydrates: boolean) =>
+  hydrates
+    ? `<script type="application/json" id="config">${JSON.stringify(config)}</script>
+<script src="/client.js"></script>`
+    : "";
+
+const page = (
+  name: string,
+  config: DeckConfig,
+  sheet: string,
+  hydrates: boolean
+) => {
   const html = renderToString(createElement(Deck, config));
   writeFileSync(
     `${dist}${name}.html`,
@@ -71,15 +105,20 @@ for (const [name, config] of Object.entries(PAGES)) {
 <head>
 <meta charset="utf-8">
 <title>Hairline acceptance: ${name}</title>
-<link rel="stylesheet" href="/hairline.css">
+<link rel="stylesheet" href="/${sheet}">
 <style>${css}</style>
 </head>
 <body>
 <div id="root">${html}</div>
-<script type="application/json" id="config">${JSON.stringify(config)}</script>
-<script src="/client.js"></script>
+${script(config, hydrates)}
 </body>
 </html>
 `
   );
+};
+
+for (const [name, config] of Object.entries(PAGES)) {
+  page(name, config, "hairline.css", true);
 }
+// The slides as "off" draws them, under Tailwind's stylesheet instead.
+page("tailwind", PAGES.off, "tailwind.css", false);

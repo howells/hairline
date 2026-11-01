@@ -8,3 +8,5 @@ Wiredeck's acceptance test, automated: a host page of twelve 1920x1080 slides (s
 - `pnpm acceptance:artefacts` writes `artefacts/strokes-2x.png`: the six charts at 2x with `strokes="proportional"` beside `strokes="device"`.
 
 Baselines for `animate="mount"` are separate from `"off"`: the settled pages are not pixel-identical.
+
+`tailwind.spec.ts` (Linux only) draws the "off" slides under the stylesheet Tailwind compiles from `src/system/app.css`, the gallery's own, and compares each to the baseline made from the `hairline.css` page, within 0.2% of the pixels. It shares the baselines, so `pnpm acceptance:update` must be run for `visual.spec.ts` alone (`acceptance/docker.sh visual.spec.ts --update-snapshots`); an update that includes the Tailwind spec would overwrite the baselines with the Tailwind picture.
