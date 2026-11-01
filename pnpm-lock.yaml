@@ -69,6 +69,12 @@ importers:
       '@howells/lint':
         specifier: 3.9.1
         version: 3.9.1(typescript@7.0.2)
+      '@tailwindcss/node':
+        specifier: 4.3.3
+        version: 4.3.3
+      '@tailwindcss/oxide':
+        specifier: 4.3.3
+        version: 4.3.3
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.4(@types/node@24.19.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -144,6 +150,9 @@ importers:
       jsdom:
         specifier: ^30.1.3
         version: 30.1.3
+      lightningcss:
+        specifier: ^1.33.0
+        version: 1.33.0
       react:
         specifier: ^19.3.0
         version: 19.3.0
