@@ -203,7 +203,6 @@ export const RungBars = (props: RungBarsProps) => {
   const hover = useHover<number>();
   const tex = useTextureIds("counted");
   const name = props.title ?? `Bar chart of ${plural(data.length, "value")}`;
-  const summary = describe(data, format);
 
   return (
     <Plot
@@ -270,7 +269,7 @@ export const RungBars = (props: RungBarsProps) => {
 
         return (
           <ChartSvg
-            desc={summary}
+            desc={describe(data, format)}
             height={fitted}
             label={name}
             leave={hover.clear}
