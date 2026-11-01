@@ -29,22 +29,32 @@ const contentWidth = (el: HTMLElement) => {
  * Width of an element, kept current with a ResizeObserver. The first width is
  * read during layout, so a chart is drawn at its final size in the first
  * painted frame rather than one frame later, which would shift the page.
+ *
+ * `initial` is the width before the first measure (0: draw nothing yet). It
+ * is also what the server renders, so a responsive chart given an
+ * `initialWidth` has real marks in its first HTML. `enabled: false` is fixed
+ * mode: the width stays `initial` and nothing is observed.
  */
-export const useMeasure = <T extends HTMLElement>() => {
+export const useMeasure = <T extends HTMLElement>(
+  initial = 0,
+  enabled = true
+) => {
   const ref = useRef<T>(null);
-  const [width, setWidth] = useState(0);
+  const [width, setWidth] = useState(initial);
   useLayoutEffect(() => {
-    const ro = new ResizeObserver(([entry]) => {
-      setWidth(Math.floor(entry.contentRect.width));
-    });
-    if (ref.current !== null) {
+    const ro = enabled
+      ? new ResizeObserver(([entry]) => {
+          setWidth(Math.floor(entry.contentRect.width));
+        })
+      : null;
+    if (ro !== null && ref.current !== null) {
       setWidth(contentWidth(ref.current));
       ro.observe(ref.current);
     }
     return () => {
-      ro.disconnect();
+      ro?.disconnect();
     };
-  }, []);
+  }, [enabled]);
   return [ref, width] as const;
 };
 

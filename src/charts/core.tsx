@@ -36,18 +36,37 @@ export const Chart = (props: ChartProps) => {
 interface PlotProps {
   children: (width: number) => ReactNode;
   className?: string;
+  /**
+   * Initial width for responsive mode: the first render (the server's too)
+   * draws at this width until the real one is measured. Ignored if `width` is set.
+   */
+  initialWidth?: number;
   overlay?: ReactNode;
   style?: CSSProperties;
+  /**
+   * Fixed mode: draw at exactly this width, in px. Nothing is measured, so
+   * the first render, on the server too, is the complete chart. Leave it out
+   * for responsive mode, which measures the container.
+   */
+  width?: number;
 }
 
 /**
- * The bare plotting surface for editorial charts: measures its width and
- * plays the entry animation (.is-hidden → .is-shown) when scrolled into view.
- * No chrome; titles and sources belong to <Card>. Tooltips and other HTML
- * overlays go in `overlay`, positioned against this box.
+ * The bare plotting surface for editorial charts, in one of two modes. Fixed
+ * (`width` given): draws at that width at once and never measures. Responsive
+ * (the default): measures its width, drawing at `initialWidth` (else nothing)
+ * until it knows. Either way it plays the entry animation (.is-hidden →
+ * .is-shown) when scrolled into view. No chrome; titles and sources belong to
+ * <Card>. Tooltips and other HTML overlays go in `overlay`, positioned against
+ * this box.
  */
 export const Plot = (props: PlotProps) => {
-  const [ref, width] = useMeasure<HTMLDivElement>();
+  const fixed = props.width !== undefined;
+  const [ref, measured] = useMeasure<HTMLDivElement>(
+    props.width ?? props.initialWidth ?? 0,
+    !fixed
+  );
+  const width = props.width ?? measured;
   const shown = useReveal(ref);
   return (
     <div

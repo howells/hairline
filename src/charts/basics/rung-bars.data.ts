@@ -1,7 +1,4 @@
-export interface RungDatum {
-  label: string;
-  value: number;
-}
+import type { RungDatum } from "../../schema/rung-bars";
 
 /**
  * F1 Major earthquakes. Earthquakes of magnitude 7.0 or more recorded

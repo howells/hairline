@@ -1,5 +1,8 @@
 import { scaleBand } from "d3-scale";
 
+import { resolveFormat } from "../../schema/format";
+import { keyOf } from "../../schema/rung-bars";
+import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -10,23 +13,9 @@ import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { noteSpace, stagger } from "../util";
-import { rungBarsDemo } from "./rung-bars.data";
-import type { RungDatum } from "./rung-bars.data";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { maxIndex } from "./util-b";
-
-interface RungBarsProps {
-  data?: RungDatum[];
-  format?: (v: number) => string;
-  height?: number;
-  /** Index of the bar to emphasise in the hero colour. Defaults to the largest. */
-  highlight?: number;
-  /** Footnote under the axis, e.g. "One rung = 100 rings". */
-  note?: string;
-  /** Units per rung. */
-  unit?: number;
-}
 
 /**
  * How far each column's engraved shadow falls, right and down, in px: 10,
@@ -149,22 +138,44 @@ const LadderBar = (props: Ladder) => {
   );
 };
 
+/** React keys: each datum's key, numbered when the key repeats. */
+const reactKeys = (data: RungDatum[]) => {
+  const seen = new Map<string, number>();
+  return data.map((d) => {
+    const key = keyOf(d);
+    const nth = seen.get(key) ?? 0;
+    seen.set(key, nth + 1);
+    return `${key}#${nth}`;
+  });
+};
+
 /**
  * F1 Counted bars. Each bar is a carved column of solid 2px rungs at one
  * pitch, one per unit, every tenth long and dark like the marks on a rule,
  * casting an engraved hatch shadow behind and to its right. The largest bar
  * is in ink and its shadow is crosshatched.
+ *
+ * Props are the `rungBarsSchema` payload (src/schema/rung-bars.ts); `data` is
+ * required and never defaults to demo data. Give `width` and `height` for a
+ * fixed-size chart that is complete on the first (server) render. Bad input
+ * is tolerated: a datum whose value is not a finite number is skipped,
+ * a negative value stands as an empty column with its figure, duplicate
+ * labels each get a bar (give them `id`s to tell them apart), and no data
+ * draws a quiet empty axis.
  */
 export const RungBars = (props: RungBarsProps) => {
-  const data = props.data ?? rungBarsDemo;
-  const unit = props.unit ?? 1;
+  const data = (props.data ?? []).filter((d) => Number.isFinite(d.value));
+  const unit = props.unit !== undefined && props.unit > 0 ? props.unit : 1;
+  const fixedHeight = props.width !== undefined && props.height !== undefined;
   const height = props.height ?? 460;
-  const format = props.format ?? String;
+  const format = resolveFormat(props.format);
   const hover = useHover<number>();
   const tex = useTextureIds("counted");
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
         hover.at === null ? null : (
           <Tooltip x={hover.at.x} y={hover.at.y}>
@@ -193,28 +204,38 @@ export const RungBars = (props: RungBarsProps) => {
           .range([x0, x0 + plotWidth])
           .paddingInner(0.42)
           .paddingOuter(0.3);
-        const max = Math.max(...data.map((d) => d.value / unit));
+        const max = Math.max(0, ...data.map((d) => d.value / unit));
         const pitch = rungPitch(height - margin.bottom - margin.top, max);
         // When the pitch reaches its cap the columns stop short of the
         // room, so the plot closes up round them instead of leaving air;
         // at its floor the tallest column needs more, so the plot grows.
-        const tallest = Math.max(0, Math.round(max)) * pitch;
-        const fitted = Math.max(
-          Math.min(
-            height,
-            margin.top + Math.ceil(Math.max(0, max)) * pitch + margin.bottom
-          ),
-          margin.top + tallest + margin.bottom
-        );
+        // A fixed-size chart keeps exactly the height it was given.
+        const tallest = Math.round(max) * pitch;
+        const fitted = fixedHeight
+          ? height
+          : Math.max(
+              Math.min(
+                height,
+                margin.top + Math.ceil(max) * pitch + margin.bottom
+              ),
+              margin.top + tallest + margin.bottom
+            );
         const floor = Math.round(fitted - margin.bottom);
         const shadow = Math.min(
           SHADOW,
           Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
         );
-        const hero = props.highlight ?? maxIndex(data.map((d) => d.value));
-        const label = data
-          .map((d) => `${d.label} ${format(d.value)}`)
-          .join(", ");
+        const keys = reactKeys(data);
+        // Emphasis is by key (id, else label) so sorting never moves it;
+        // none given, the largest. A key that names no bar emphasises none.
+        const hero =
+          props.emphasis === undefined
+            ? maxIndex(data.map((d) => d.value))
+            : data.findIndex((d) => keyOf(d) === props.emphasis);
+        const label =
+          data.length === 0
+            ? "No data"
+            : data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
 
         return (
           <ChartSvg
@@ -234,10 +255,10 @@ export const RungBars = (props: RungBarsProps) => {
             />
             {data.map((datum, index) => {
               const left = x(index) ?? 0;
-              const rungs = Math.round(datum.value / unit);
+              const rungs = Math.max(0, Math.round(datum.value / unit));
               return (
                 <LadderBar
-                  key={datum.label}
+                  key={keys[index]}
                   bandwidth={x.bandwidth()}
                   datum={datum}
                   dim={hover.dim(index)}

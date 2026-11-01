@@ -8,14 +8,19 @@ import { defineConfig } from "vite";
  * chunk is marked "use client": charts measure, hover and animate, so in a
  * React Server Components host they render on the client.
  */
-const external = /^(?:react|react-dom|d3-[\w-]+|topojson-client)(?:\/.*)?$/u;
+const external =
+  /^(?:react|react-dom|d3-[\w-]+|topojson-client|zod)(?:\/.*)?$/u;
 
 export default defineConfig({
   build: {
     copyPublicDir: false,
     emptyOutDir: true,
     lib: {
-      entry: { index: "src/index.ts", kit: "src/kit.ts" },
+      entry: {
+        index: "src/index.ts",
+        kit: "src/kit.ts",
+        schema: "src/schema.ts",
+      },
       formats: ["es"],
     },
     outDir: "lib",
@@ -23,7 +28,10 @@ export default defineConfig({
       external: (id) => external.test(id),
       // One module per source file, so a host bundles only the charts it imports.
       output: {
-        banner: '"use client";',
+        // Charts are client components. The schema entry is React-free and
+        // must stay importable from a server or an agent runtime.
+        banner: (chunk) =>
+          /^schema(?:\/|\.js$)/u.test(chunk.fileName) ? "" : '"use client";',
         preserveModules: true,
         preserveModulesRoot: "src",
       },

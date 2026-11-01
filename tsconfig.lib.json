@@ -11,6 +11,7 @@
   "include": [
     "src/index.ts",
     "src/kit.ts",
+    "src/schema.ts",
     "src/system/css-custom-properties.d.ts"
   ]
 }
