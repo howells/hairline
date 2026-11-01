@@ -15,6 +15,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Type-aware lint resolves the tests' self-import of the package, so
+      # lib/ has to exist first.
+      - run: pnpm build:lib
       - run: pnpm typecheck
       - run: pnpm lint
       # Builds lib/, type-checks the tests against it, then runs them as a
