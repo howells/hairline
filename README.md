@@ -41,7 +41,7 @@ How to use the package lives on the docs site in [`site/`](site): getting starte
 
 ## Using it in an app
 
-`@howells/hairline` is not yet published to npm: the package is private until the owner makes the first release. Once it is, the install will be `npm install @howells/hairline`. Until then, build it locally. Clone the repository, then:
+`@howells/hairline` is MIT licensed and not yet published to npm. Once it is, the install will be `npm install @howells/hairline`. Until then, build it locally. Clone the repository, then:
 
 ```sh
 pnpm install

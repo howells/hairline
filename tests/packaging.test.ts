@@ -24,7 +24,8 @@ const Target = z.object({ default: z.string(), types: z.string() });
 const Manifest = z.object({
   dependencies: z.record(z.string(), z.string()),
   exports: z.record(z.string(), z.union([z.string(), Target])),
-  private: z.boolean(),
+  license: z.string(),
+  private: z.boolean().optional(),
 });
 const manifest = Manifest.parse(
   JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"))
@@ -252,7 +253,11 @@ describe("release tooling", () => {
     expect(text).toContain("vars.HAIRLINE_FIRST_PUBLISH_DONE == 'true'");
   });
 
-  it("stays private until the licence is settled", () => {
-    expect(manifest.private).toBe(true);
+  it("is MIT licensed and publishable", () => {
+    expect(manifest.license).toBe("MIT");
+    expect(manifest.private).toBeUndefined();
+    expect(readFileSync(path.join(root, "LICENSE"), "utf-8")).toContain(
+      "MIT License"
+    );
   });
 });
