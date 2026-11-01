@@ -126,15 +126,24 @@ describe("the registry", () => {
       );
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
+      "animate",
       "data",
       "dateFormat",
       "emphasis",
+      "fit",
       "format",
       "height",
+      "idPrefix",
       "initialWidth",
       "maxWidth",
+      "metrics",
       "note",
+      "replayKey",
+      "scale",
+      "strokes",
+      "table",
       "ticks",
+      "title",
       "unitNote",
       "width",
     ]);
@@ -310,8 +319,11 @@ describe("two charts on one page", () => {
         createElement(HairlineArea, { data: fortnight, key: "b", ...sized }),
       ])
     );
+    // Every id is unique, and the two charts each define one texture.
     const all = ids(page);
-    expect(all).toHaveLength(2);
-    expect(new Set(all).size).toBe(2);
+    expect(new Set(all).size).toBe(all.length);
+    expect(all.filter((id) => id?.startsWith("desc-") !== true)).toHaveLength(
+      2
+    );
   });
 });

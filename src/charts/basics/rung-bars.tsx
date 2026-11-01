@@ -8,7 +8,7 @@ import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
-import { Scoped, chartTable, plotOptions, plural } from "../shared-options";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
@@ -313,8 +313,5 @@ const RungBarsPlot = (props: RungBarsProps) => {
  * labels each get a bar (give them `id`s to tell them apart), and no data
  * draws a quiet empty axis.
  */
-export const RungBars = (props: RungBarsProps) => (
-  <Scoped idPrefix={props.idPrefix}>
-    <RungBarsPlot {...props} />
-  </Scoped>
-);
+export const RungBars = (props: RungBarsProps) =>
+  scoped(props.idPrefix, <RungBarsPlot {...props} />);

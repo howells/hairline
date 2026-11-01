@@ -15,7 +15,7 @@ import { MARK_WEIGHT } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import {
-  Scoped,
+  scoped,
   chartTable,
   plotOptions,
   plural,
@@ -30,6 +30,7 @@ import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
 import {
   isLive,
+  heroOf,
   liveOf,
   readingRows,
   reactKeyOf,
@@ -219,6 +220,26 @@ const shapesOf = (readings: Reading[], frame: Frame) => ({
       .y((r) => frame.y(r.value ?? 0))(readings) ?? "",
 });
 
+/** The plot's left and right edges, centred in `width`. */
+const edgesOf = (width: number, maxWidth: number) => {
+  const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
+  const x0 = Math.round((width - frameW) / 2);
+  return [x0, x0 + frameW] as const;
+};
+
+/** Where the first day sits: clear of the hero's label when it is the first. */
+const startOf = (
+  readings: Reading[],
+  hero: number,
+  format: (v: number) => string
+) => {
+  const half =
+    hero < 0
+      ? 0
+      : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
+  return hero === 0 ? Math.max(8, half) : 8;
+};
+
 interface SvgProps {
   clear: () => void;
   /** Pattern id of the stipple under the line. */
@@ -259,27 +280,16 @@ const HairlineAreaSvg = ({
   const floor = dailyFloor(height, note, width, metrics);
   if (live.length === 0) {
     return (
-      <DailyEmpty floor={floor} height={height} title={title} width={width} />
+      <DailyEmpty floor={floor} height={height} name={title} width={width} />
     );
   }
   const values = live.map((i) => valueAt(readings, i));
   const max = Math.max(...values);
   const peak = live[values.indexOf(max)];
-  // Emphasis is by key (id, else date) so reordering never moves it; a key
-  // that names a gap or no reading emphasises none.
-  const hero =
-    emphasis === undefined
-      ? peak
-      : (live.find((i) => readings[i].key === emphasis) ?? -1);
+  const hero = heroOf(readings, live, emphasis, peak);
   const last = readings.length - 1;
-  const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
-  const half =
-    hero < 0
-      ? 0
-      : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
-  const start = hero === 0 ? Math.max(8, half) : 8;
-  const x0 = Math.round((width - frameW) / 2);
-  const x1 = x0 + frameW;
+  const [x0, x1] = edgesOf(width, maxWidth);
+  const start = startOf(readings, hero, format);
   const frame: Frame = {
     floor,
     x: scaleLinear()
@@ -289,19 +299,16 @@ const HairlineAreaSvg = ({
   };
   const { fill, path } = shapesOf(readings, frame);
   const [first] = live;
-  const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${fmtDate(readings[peak].date)}`;
-
-  const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${fmtDate(readings[peak].date)}. The data table lists every reading.`;
+  const peakAt = fmtDate(readings[peak].date);
+  const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
+  const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${peakAt}. The data table lists every reading.`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = pointerX(e, width);
     const at = frame.x.invert(px);
-    const nearest = nearestOf(live, at);
-    show(
-      nearest,
-      frame.x(nearest),
-      frame.y(valueAt(readings, nearest)) - (nearest === hero ? 16 : 10)
-    );
+    const near = nearestOf(live, at);
+    const lift = near === hero ? 16 : 10;
+    show(near, frame.x(near), frame.y(valueAt(readings, near)) - lift);
   };
 
   return (
@@ -445,8 +452,5 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
  * quiet empty axis; `emphasis` is a reading's `id` or date, and one that names
  * no live reading emphasises none.
  */
-export const HairlineArea = (props: HairlineAreaProps) => (
-  <Scoped idPrefix={props.idPrefix}>
-    <HairlineAreaPlot {...props} />
-  </Scoped>
-);
+export const HairlineArea = (props: HairlineAreaProps) =>
+  scoped(props.idPrefix, <HairlineAreaPlot {...props} />);

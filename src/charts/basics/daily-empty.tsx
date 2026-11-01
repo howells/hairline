@@ -6,15 +6,15 @@ import { Label } from "../text";
 export const DailyEmpty = ({
   floor,
   height,
-  title,
+  name,
   width,
 }: {
   floor: number;
   height: number;
-  title?: string;
+  name?: string;
   width: number;
 }) => (
-  <ChartSvg height={height} label={title ?? "No data"} width={width}>
+  <ChartSvg height={height} label={name ?? "No data"} width={width}>
     <HRule x0={8} x1={width - 8} y={floor} />
     <Label anchor="middle" voice="axis" x={width / 2} y={floor - 12}>
       No data

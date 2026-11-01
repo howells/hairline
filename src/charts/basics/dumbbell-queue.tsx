@@ -16,7 +16,7 @@ import { DOT, MARK_WEIGHT } from "../marks";
 import type { DotSize } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
-import { Scoped, chartTable, plotOptions, plural } from "../shared-options";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger, noteOf } from "../util";
@@ -375,8 +375,5 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
  * between them holds one 2px rung per unit of change, so it can be counted.
  * The biggest change is in ink; a row that changed the alert way (a rise by default) rungs in the alert colour.
  */
-export const DumbbellQueue = (props: DumbbellQueueProps) => (
-  <Scoped idPrefix={props.idPrefix}>
-    <DumbbellQueuePlot {...props} />
-  </Scoped>
-);
+export const DumbbellQueue = (props: DumbbellQueueProps) =>
+  scoped(props.idPrefix, <DumbbellQueuePlot {...props} />);

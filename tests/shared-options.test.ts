@@ -1,18 +1,52 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 // @vitest-environment jsdom
 // Seam 1: the options every chart shares, run against all six through the
 // registry the way a consumer meets them. Each option is one test over every
 // chart, so a chart that misses one fails by name. Run with `pnpm test`.
-import * as hairline from "@howells/hairline";
+import {
+  DumbbellQueue,
+  HairlineArea,
+  HairlineLine,
+  PlumbScatter,
+  RungBars,
+  Slope,
+} from "@howells/hairline";
+import type {
+  DumbbellQueueProps,
+  HairlineAreaProps,
+  HairlineLineProps,
+  PlumbScatterProps,
+  RungBarsProps,
+  SlopeProps,
+} from "@howells/hairline";
 import { Plot, Tooltip } from "@howells/hairline/kit";
 import { charts } from "@howells/hairline/schema";
+import type { ChartKind, sharedShape } from "@howells/hairline/schema";
 import { act, createElement } from "react";
-import type { ComponentType } from "react";
+import type { ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+vi.stubGlobal("matchMedia", (media: string) => ({
+  addEventListener: vi.fn<() => void>(),
+  matches: false,
+  media,
+  removeEventListener: vi.fn<() => void>(),
+}));
+
+/** The shared options, as a consumer passes them. */
+type Extra = Partial<z.input<z.ZodObject<typeof sharedShape>>> & {
+  onReady?: () => void;
+  unitNote?: string;
+};
+
+/** What a builder takes: the shared options, and the size. */
+type Own = Extra & { height?: number; width?: number };
 
 const sized = { height: 320, width: 480 };
 const days = [
@@ -22,88 +56,130 @@ const days = [
   { date: "2024-03-07", value: 6 },
 ];
 
-interface Case {
-  /** A name that must appear in the data table. */
-  name: string;
-  payload: Record<string, unknown>;
-}
-
-const cases = {
+const payloads = {
   "dumbbell-queue": {
-    name: "Oak",
-    payload: {
-      data: [
-        { after: 9, before: 4, label: "Oak" },
-        { after: 3, before: 7, label: "Ash" },
-      ],
-    },
+    data: [
+      { after: 9, before: 4, label: "Oak" },
+      { after: 3, before: 7, label: "Ash" },
+    ],
   },
-  "hairline-area": { name: "2024-03-05", payload: { data: days } },
-  "hairline-line": { name: "2024-03-05", payload: { data: days } },
+  "hairline-area": { data: days },
+  "hairline-line": { data: days },
   "plumb-scatter": {
-    name: "Oak",
-    payload: {
-      data: [
-        { label: "Oak", x: 1, y: 4 },
-        { label: "Ash", x: 3, y: 2 },
-        { label: "Elm", x: 5, y: 6 },
-      ],
-    },
+    data: [
+      { label: "Oak", x: 1, y: 4 },
+      { label: "Ash", x: 3, y: 2 },
+      { label: "Elm", x: 5, y: 6 },
+    ],
   },
   "rung-bars": {
-    name: "Oak",
-    payload: {
-      data: [
-        { label: "Oak", value: 19 },
-        { label: "Ash", value: 11 },
-      ],
-    },
+    data: [
+      { label: "Oak", value: 19 },
+      { label: "Ash", value: 11 },
+    ],
   },
   slope: {
-    name: "Oak",
-    payload: {
-      labels: ["2023", "2024"],
-      rows: [
-        { from: 280, name: "Oak", to: 120 },
-        { from: 200, name: "Ash", to: 240 },
-      ],
-    },
+    labels: ["2023", "2024"],
+    rows: [
+      { from: 280, name: "Oak", to: 120 },
+      { from: 200, name: "Ash", to: 240 },
+    ],
   },
-} satisfies Record<keyof typeof charts, Case>;
+} satisfies {
+  "dumbbell-queue": DumbbellQueueProps;
+  "hairline-area": HairlineAreaProps;
+  "hairline-line": HairlineLineProps;
+  "plumb-scatter": PlumbScatterProps;
+  "rung-bars": RungBarsProps;
+  slope: SlopeProps;
+};
 
-const kinds = Object.keys(cases) as (keyof typeof cases)[];
-/**
- * A chart by its component name, taking the loose payloads this test builds.
- * The cast is the I/O boundary: payloads are checked by the registry's schema.
- */
-const component = (name: string): ComponentType<Record<string, unknown>> =>
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- payloads are validated by the schema, not the component's static props
-  Reflect.get(hairline, name) as ComponentType<Record<string, unknown>>;
+/** What each chart's data table must list: a name from its data, as printed. */
+const named = {
+  "dumbbell-queue": "Oak",
+  "hairline-area": "5 Mar",
+  "hairline-line": "5 Mar",
+  "plumb-scatter": "Oak",
+  "rung-bars": "Oak",
+  slope: "Oak",
+} satisfies Record<ChartKind, string>;
 
-const render = (kind: keyof typeof cases, extra: Record<string, unknown>) =>
-  renderToString(
-    createElement(component(charts[kind].component), {
-      ...cases[kind].payload,
-      ...sized,
-      ...extra,
-    })
-  );
+const kinds = [
+  "dumbbell-queue",
+  "hairline-area",
+  "hairline-line",
+  "plumb-scatter",
+  "rung-bars",
+  "slope",
+] as const satisfies readonly ChartKind[];
+/** The five with an in-plot footnote; Slope has none. */
+const noted = kinds.filter((kind) => kind !== "slope");
+const NOTE = "One mark = one reading";
+
+/** Every chart's element for the payload and options, by kind. */
+const builders = {
+  "dumbbell-queue": (own: Own) =>
+    createElement(DumbbellQueue, { ...payloads["dumbbell-queue"], ...own }),
+  "hairline-area": (own: Own) =>
+    createElement(HairlineArea, { ...payloads["hairline-area"], ...own }),
+  "hairline-line": (own: Own) =>
+    createElement(HairlineLine, { ...payloads["hairline-line"], ...own }),
+  "plumb-scatter": (own: Own) =>
+    createElement(PlumbScatter, { ...payloads["plumb-scatter"], ...own }),
+  "rung-bars": (own: Own) =>
+    createElement(RungBars, { ...payloads["rung-bars"], ...own }),
+  slope: ({ unitNote: _note, ...own }: Own) =>
+    createElement(Slope, { ...payloads.slope, ...own }),
+} satisfies Record<ChartKind, (own: Own) => ReactElement>;
+
+/** A chart by kind, in fixed size unless `fixed` is false. */
+const element = (kind: ChartKind, extra: Extra, fixed = true): ReactElement =>
+  builders[kind]({
+    ...extra,
+    height: fixed ? sized.height : undefined,
+    width: fixed ? sized.width : undefined,
+  });
+
+const render = (kind: ChartKind, extra: Extra = {}) =>
+  renderToString(element(kind, extra));
 const tag = (html: string, name: string) =>
   new RegExp(`<${name}[^>]*>`, "u").exec(html)?.[0] ?? "";
 const ids = (html: string) =>
   [...html.matchAll(/\sid="(?<id>[^"]*)"/gu)].map((m) => m.groups?.id ?? "");
-/** The fixed note every chart with a footnote is given for the metrics test. */
-const NOTE = "One mark = one reading";
 
-const issues = (kind: keyof typeof cases, payload: Record<string, unknown>) => {
-  const checked = charts[kind].validate({ ...cases[kind].payload, ...payload });
+/** The issue pointers of a payload the registry rejects; empty when it passes. */
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- the payload is the raw input under test
+const pointers = (kind: ChartKind, payload: unknown) => {
+  const checked = charts[kind].validate(payload);
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
+};
+
+/** A chart mounted in a real root, torn down by `done`. */
+const mount = async (kind: ChartKind, extra: Extra) => {
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => {
+    root.render(element(kind, extra));
+    await Promise.resolve();
+  });
+  return {
+    done: async () => {
+      await act(async () => {
+        root.unmount();
+        await Promise.resolve();
+      });
+      host.remove();
+    },
+    host,
+  };
 };
 
 describe.each(kinds)("%s shares the options", (kind) => {
   it("takes every shared option through the registry, and refuses bad ones", () => {
     expect(
-      issues(kind, {
+      pointers(kind, {
+        ...payloads[kind],
         animate: "mount",
         fit: false,
         idPrefix: "deck1",
@@ -116,7 +192,8 @@ describe.each(kinds)("%s shares the options", (kind) => {
       })
     ).toStrictEqual([]);
     expect(
-      issues(kind, {
+      pointers(kind, {
+        ...payloads[kind],
         animate: "sometimes",
         idPrefix: "1 bad",
         scale: -1,
@@ -126,31 +203,36 @@ describe.each(kinds)("%s shares the options", (kind) => {
     ).toStrictEqual(["animate", "idPrefix", "scale", "strokes", "title"]);
   });
 
-  it("lists them in its emitted JSON Schema", async () => {
-    const { readFileSync } = await import("node:fs");
+  it("lists them in its emitted JSON Schema", () => {
     const json = z
-      .object({ properties: z.record(z.string(), z.unknown()) })
+      .object({ properties: z.record(z.string(), z.object({})) })
       .parse(
         JSON.parse(
           readFileSync(
-            new URL(`../lib/json-schema/${kind}.json`, import.meta.url),
+            path.join(process.cwd(), "lib", "json-schema", `${kind}.json`),
             "utf-8"
           )
         )
       );
-    for (const option of [
-      "animate",
-      "fit",
-      "idPrefix",
-      "metrics",
-      "replayKey",
-      "scale",
-      "strokes",
-      "table",
-      "title",
-    ]) {
-      expect(Object.keys(json.properties)).toContain(option);
-    }
+    expect(Object.keys(json.properties)).toStrictEqual(
+      expect.arrayContaining([
+        "animate",
+        "fit",
+        "idPrefix",
+        "metrics",
+        "replayKey",
+        "scale",
+        "strokes",
+        "table",
+        "title",
+      ])
+    );
+  });
+
+  it("draws its plot in fixed size on the server", () => {
+    const html = render(kind);
+    expect(html).toContain("<svg");
+    expect(html).toContain("</svg>");
   });
 
   it("scale draws at the logical width and shows it larger through the viewBox", () => {
@@ -178,155 +260,128 @@ describe.each(kinds)("%s shares the options", (kind) => {
   it("idPrefix leads every id", () => {
     const own = ids(render(kind, { idPrefix: "deck1" }));
     expect(own.length).toBeGreaterThan(0);
-    for (const id of own) {
-      expect(id.startsWith("deck1")).toBe(true);
-    }
-    expect(ids(render(kind, {})).some((id) => id.startsWith("deck1"))).toBe(
-      false
-    );
+    expect(own.every((id) => id.startsWith("deck1"))).toBe(true);
+    expect(ids(render(kind)).some((id) => id.startsWith("deck1"))).toBe(false);
   });
 
   it("title is the accessible name; without one the chart still has one", () => {
     expect(tag(render(kind, { title: "Trees by count" }), "svg")).toContain(
       'aria-label="Trees by count"'
     );
-    expect(tag(render(kind, {}), "svg")).toMatch(/aria-label="[^"]+"/u);
+    expect(tag(render(kind), "svg")).toMatch(/aria-label="[^"]+"/u);
   });
 
   it("describes the payload in a desc the svg points at", () => {
-    const html = render(kind, {});
-    const svg = tag(html, "svg");
-    const target = /aria-describedby="(?<id>[^"]+)"/u.exec(svg)?.groups?.id;
+    const html = render(kind);
+    const target = /aria-describedby="(?<id>[^"]+)"/u.exec(tag(html, "svg"))
+      ?.groups?.id;
     expect(target).toBeDefined();
     expect(html).toMatch(new RegExp(`<desc id="${target}">[^<]+</desc>`, "u"));
   });
 
-  it("carries a hidden data table, in the first HTML, that table: true shows", () => {
-    const hidden = render(kind, {});
+  it("carries a hidden data table in the first HTML that table: true shows", () => {
+    const hidden = render(kind);
     expect(tag(hidden, "table")).toContain("sr-only");
-    expect(hidden).toContain(cases[kind].name);
+    expect(hidden).toContain(`>${named[kind]}<`);
     const shown = tag(render(kind, { table: true }), "table");
     expect(shown).toContain("<table");
     expect(shown).not.toContain("sr-only");
   });
 
   it("has the table before a width is known, in responsive mode", () => {
-    const html = renderToString(
-      createElement(component(charts[kind].component), {
-        ...cases[kind].payload,
-      })
-    );
+    const html = renderToString(element(kind, {}, false));
     expect(tag(html, "table")).toContain("sr-only");
+    expect(html).toContain(`>${named[kind]}<`);
     expect(html).not.toContain("<svg");
   });
 
   it('animate="off" is drawn and ready in the first HTML; the default is not', () => {
     expect(render(kind, { animate: "off" })).toContain('data-hl-ready="true"');
-    expect(render(kind, {})).not.toContain('data-hl-ready="true"');
+    expect(render(kind)).not.toContain('data-hl-ready="true"');
   });
 
   it("metrics for another face change the layout", () => {
     const wide = { advances: {}, fallback: 3 };
-    const plain = render(kind, { unitNote: NOTE });
-    const measured = render(kind, { metrics: wide, unitNote: NOTE });
-    expect(measured).not.toBe(plain);
-    if (kind !== "slope") {
-      expect(plain).toContain(NOTE);
-      expect(measured).not.toContain(NOTE);
-    }
+    expect(render(kind, { metrics: wide, unitNote: NOTE })).not.toBe(
+      render(kind, { unitNote: NOTE })
+    );
   });
 
-  it("onReady is called when an off chart mounts", async () => {
-    const onReady = vi.fn();
-    const host = document.createElement("div");
-    document.body.append(host);
-    const root = createRoot(host);
-    await act(async () => {
-      root.render(
-        createElement(component(charts[kind].component), {
-          ...cases[kind].payload,
-          ...sized,
-          animate: "off",
-          onReady,
-        })
-      );
-    });
-    expect(onReady).toHaveBeenCalledTimes(1);
+  it("onReady is called once when an off chart mounts", async () => {
+    const onReady = vi.fn<() => void>();
+    const { done, host } = await mount(kind, { animate: "off", onReady });
+    expect(onReady).toHaveBeenCalledOnce();
     expect(host.querySelector('[data-hl-ready="true"]')).not.toBeNull();
-    await act(async () => {
-      root.unmount();
-    });
-    host.remove();
+    await done();
   });
 });
+
+describe.each(noted)("%s reserves room for a note in another face", (kind) => {
+  it("shows the note, which a very wide face has no room for", () => {
+    const wide = { advances: {}, fallback: 3 };
+    expect(render(kind, { unitNote: NOTE })).toContain(NOTE);
+    expect(render(kind, { metrics: wide, unitNote: NOTE })).not.toContain(NOTE);
+  });
+});
+
+const tipStyle = (scaling: { fit?: boolean; scale?: number }) => {
+  const html = renderToString(
+    createElement(Plot, {
+      // oxlint-disable-next-line react/no-children-prop -- Plot's render prop, not JSX children
+      children: () => null,
+      // oxlint-disable-next-line react/no-children-prop -- Tooltip takes its content as children
+      overlay: createElement(Tooltip, { children: "tip", x: 100, y: 40 }),
+      scaling,
+      width: 480,
+    })
+  );
+  return /<output[^>]*style="(?<style>[^"]*)"/u.exec(html)?.groups?.style;
+};
+
+/** Where a daily chart anchors its tooltip after the pointer moves to `clientX`. */
+const tipLeft = async (
+  kind: "hairline-area" | "hairline-line",
+  scale: number,
+  clientX: number
+) => {
+  const { done, host } = await mount(kind, { animate: "off", scale });
+  const svg = host.querySelector("svg");
+  if (svg === null) {
+    throw new Error("the chart drew no svg");
+  }
+  svg.getBoundingClientRect = () => new DOMRect(0, 0, 480 * scale, 320 * scale);
+  await act(async () => {
+    svg.dispatchEvent(
+      new MouseEvent("pointermove", { bubbles: true, clientX })
+    );
+    await Promise.resolve();
+  });
+  const style = host.querySelector("output")?.getAttribute("style") ?? "";
+  await done();
+  return Number(/left:\s*(?<px>[\d.]+)px/u.exec(style)?.groups?.px);
+};
 
 describe("tooltips sit on their marks when scaled", () => {
   afterEach(() => {
     document.body.innerHTML = "";
   });
 
-  const tipAt = (scaling: Record<string, unknown>) => {
-    const html = renderToString(
-      createElement(Plot, {
-        children: () => null,
-        overlay: createElement(Tooltip, { children: "tip", x: 100, y: 40 }),
-        scaling,
-        width: 480,
-      })
-    );
-    return /<output[^>]*style="(?<style>[^"]*)"/u.exec(html)?.groups?.style;
-  };
-
   it("an overlay anchor given in chart pixels is placed scale times further", () => {
-    expect(tipAt({})).toContain("left:100px;top:40px");
-    expect(tipAt({ scale: 2.5 })).toContain("left:250px;top:100px");
+    expect(tipStyle({})).toContain("left:100px;top:40px");
+    expect(tipStyle({ scale: 2.5 })).toContain("left:250px;top:100px");
   });
 
   it("fit already draws at the container's size, so nothing moves", () => {
-    expect(tipAt({ fit: true, scale: 2.5 })).toContain("left:100px;top:40px");
+    expect(tipStyle({ fit: true, scale: 2.5 })).toContain(
+      "left:100px;top:40px"
+    );
   });
-
-  const leftAfterMove = async (
-    kind: "hairline-area" | "hairline-line",
-    scale: number | undefined,
-    clientX: number
-  ) => {
-    const host = document.createElement("div");
-    document.body.append(host);
-    const root = createRoot(host);
-    await act(async () => {
-      root.render(
-        createElement(component(charts[kind].component), {
-          ...cases[kind].payload,
-          ...sized,
-          animate: "off",
-          scale,
-        })
-      );
-    });
-    const svg = host.querySelector("svg");
-    if (svg === null) {
-      throw new Error("no svg");
-    }
-    svg.getBoundingClientRect = () =>
-      new DOMRect(0, 0, 480 * (scale ?? 1), 320 * (scale ?? 1));
-    await act(async () => {
-      svg.dispatchEvent(
-        new MouseEvent("pointermove", { bubbles: true, clientX })
-      );
-    });
-    const style = host.querySelector("output")?.getAttribute("style") ?? "";
-    await act(async () => {
-      root.unmount();
-    });
-    return Number.parseFloat(/left:\s*([\d.]+)px/u.exec(style)?.[1] ?? "NaN");
-  };
 
   it.each(["hairline-line", "hairline-area"] as const)(
     "%s finds the nearest reading from a scaled pointer and anchors on it",
     async (kind) => {
-      const unscaled = await leftAfterMove(kind, undefined, 240);
-      const scaled = await leftAfterMove(kind, 2, 480);
+      const unscaled = await tipLeft(kind, 1, 240);
+      const scaled = await tipLeft(kind, 2, 480);
       expect(unscaled).toBeGreaterThan(0);
       expect(scaled).toBeCloseTo(unscaled * 2, 5);
     }

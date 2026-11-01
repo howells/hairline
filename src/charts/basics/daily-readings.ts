@@ -56,5 +56,19 @@ export const reactKeyOf = (reading: Reading, index: number) =>
 export const valueAt = (readings: Reading[], index: number) =>
   readings[index].value ?? 0;
 
+/**
+ * The reading to draw in ink: the live one whose key is `emphasis`, else
+ * `fallback`. A key that names a gap or no reading emphasises none (-1).
+ */
+export const heroOf = (
+  readings: Reading[],
+  live: number[],
+  emphasis: string | undefined,
+  fallback: number
+) =>
+  emphasis === undefined
+    ? fallback
+    : (live.find((i) => readings[i].key === emphasis) ?? -1);
+
 /** A reading that has a value: the line and area break where it is false. */
 export const isLive = (reading: Reading) => reading.value !== null;

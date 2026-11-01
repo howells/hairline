@@ -11,7 +11,7 @@ import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
 import { FootNote } from "../plot-note";
 import { HRule, Stem } from "../rules";
-import { Scoped, chartTable, plotOptions, plural } from "../shared-options";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
@@ -273,6 +273,21 @@ const describe = (
     ? "No data"
     : data.map((d) => `${d.label}: ${formatX(d.x)}, ${format(d.y)}`).join("; ");
 
+const scatterTip = (
+  at: { key: number; x: number; y: number } | null,
+  data: PlumbDatum[],
+  formatX: (v: number) => string,
+  format: (v: number) => string
+) =>
+  at === null ? null : (
+    <Tooltip x={at.x} y={at.y}>
+      <TipText
+        facts={[formatX(data[at.key].x), format(data[at.key].y)]}
+        lead={data[at.key].label}
+      />
+    </Tooltip>
+  );
+
 const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const data = (props.data ?? []).filter(
     (d) => Number.isFinite(d.x) && Number.isFinite(d.y)
@@ -316,19 +331,7 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
         data.map((d) => [d.label, formatX(d.x), format(d.y)])
       )}
       width={props.width}
-      overlay={
-        hover.at === null ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
-            <TipText
-              facts={[
-                formatX(data[hover.at.key].x),
-                format(data[hover.at.key].y),
-              ]}
-              lead={data[hover.at.key].label}
-            />
-          </Tooltip>
-        )
-      }
+      overlay={scatterTip(hover.at, data, formatX, format)}
     >
       {(width) => {
         const plotW = Math.min(width - EDGE * 2, 600);
@@ -418,8 +421,5 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
  * finite number is skipped, coincident points each get a dot, negatives are
  * drawn on the axes, and no data draws a quiet empty axis.
  */
-export const PlumbScatter = (props: PlumbScatterProps) => (
-  <Scoped idPrefix={props.idPrefix}>
-    <PlumbScatterPlot {...props} />
-  </Scoped>
-);
+export const PlumbScatter = (props: PlumbScatterProps) =>
+  scoped(props.idPrefix, <PlumbScatterPlot {...props} />);

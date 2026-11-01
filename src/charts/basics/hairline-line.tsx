@@ -16,7 +16,7 @@ import type { DotSize } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule, Stem, VRule } from "../rules";
 import {
-  Scoped,
+  scoped,
   chartTable,
   plotOptions,
   plural,
@@ -30,6 +30,7 @@ import { stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
 import {
+  heroOf,
   isLive,
   liveOf,
   reactKeyOf,
@@ -194,6 +195,29 @@ const DayAxis = ({
   );
 };
 
+/** The line through the live readings, broken at each gap. */
+const linePath = (readings: Reading[], frame: Frame) =>
+  d3line<Reading>()
+    .defined(isLive)
+    .x((_, i) => crisp(frame.x(i)))
+    .y((r) => frame.y(r.value ?? 0))(readings) ?? "";
+
+/** The live reading whose day is nearest `day`, searching from `first`. */
+const nearestDay = (
+  live: number[],
+  first: number,
+  dayAt: (i: number) => number,
+  day: number
+) => {
+  let nearest = first;
+  for (const k of live) {
+    if (Math.abs(dayAt(k) - day) < Math.abs(dayAt(nearest) - day)) {
+      nearest = k;
+    }
+  }
+  return nearest;
+};
+
 const HairlineLineSvg = ({
   clear,
   emphasis,
@@ -213,7 +237,7 @@ const HairlineLineSvg = ({
   const floor = dailyFloor(height, note, width, metrics);
   if (live.length === 0) {
     return (
-      <DailyEmpty floor={floor} height={height} title={title} width={width} />
+      <DailyEmpty floor={floor} height={height} name={title} width={width} />
     );
   }
   const values = live.map((i) => valueAt(readings, i));
@@ -223,12 +247,7 @@ const HairlineLineSvg = ({
   const trough = live[values.indexOf(lo)];
   const last = live.at(-1) ?? 0;
   const [first] = live;
-  // Emphasis is by key (id, else date) so reordering never moves it; a key
-  // that names a gap or no reading emphasises none.
-  const hero =
-    emphasis === undefined
-      ? { peak, trough }[extreme]
-      : (live.find((i) => readings[i].key === emphasis) ?? -1);
+  const hero = heroOf(readings, live, emphasis, { peak, trough }[extreme]);
   const frameW = Math.min(width - 16, 680);
   const x0 = Math.round((width - frameW) / 2);
   const x1 = x0 + frameW;
@@ -250,24 +269,14 @@ const HairlineLineSvg = ({
     x1,
     y,
   };
-  const path =
-    d3line<Reading>()
-      .defined(isLive)
-      .x((_, i) => crisp(frame.x(i)))
-      .y((r) => frame.y(r.value ?? 0))(readings) ?? "";
+  const path = linePath(readings, frame);
   const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[last].date)}: high ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}, latest ${format(valueAt(readings, last))}`;
 
   const desc = `${plural(live.length, "reading")}. High ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}. The data table lists every reading.`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = pointerX(e, width);
-    const day = xScale.invert(px);
-    let nearest = first;
-    for (const k of live) {
-      if (Math.abs(dayAt(k) - day) < Math.abs(dayAt(nearest) - day)) {
-        nearest = k;
-      }
-    }
+    const nearest = nearestDay(live, first, dayAt, xScale.invert(px));
     show(nearest, frame.x(nearest), frame.y(valueAt(readings, nearest)) - 16);
   };
 
@@ -402,8 +411,5 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
  * gaps) draw a quiet empty axis; `emphasis` is a reading's `id` or date, and
  * one that names no live reading emphasises none.
  */
-export const HairlineLine = (props: HairlineLineProps) => (
-  <Scoped idPrefix={props.idPrefix}>
-    <HairlineLinePlot {...props} />
-  </Scoped>
-);
+export const HairlineLine = (props: HairlineLineProps) =>
+  scoped(props.idPrefix, <HairlineLinePlot {...props} />);

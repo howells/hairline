@@ -1,4 +1,5 @@
-import type { PointerEvent, ReactNode } from "react";
+import { Fragment, createElement } from "react";
+import type { PointerEvent, ReactElement, ReactNode } from "react";
 import type { z } from "zod";
 
 import type { SharedCallbacks, sharedShape } from "../schema/options";
@@ -18,12 +19,13 @@ export const plotOptions = (props: SharedProps) => ({
 });
 
 /** A chart's ids under its `idPrefix`, when it has one. */
-export const Scoped = (props: { children: ReactNode; idPrefix?: string }) =>
-  props.idPrefix === undefined ? (
-    props.children
-  ) : (
-    <IdScope prefix={props.idPrefix}>{props.children}</IdScope>
-  );
+export const scoped = (
+  idPrefix: string | undefined,
+  children: ReactNode
+): ReactElement =>
+  idPrefix === undefined
+    ? createElement(Fragment, null, children)
+    : createElement(IdScope, { prefix: idPrefix }, children);
 
 /** The chart's data table: hidden for sighted readers unless `table` is set. */
 export const chartTable = (
@@ -31,14 +33,13 @@ export const chartTable = (
   caption: string,
   columns: string[],
   rows: string[][]
-) => (
-  <DataTable
-    caption={caption}
-    columns={columns}
-    rows={rows}
-    visible={props.table}
-  />
-);
+): ReactElement =>
+  createElement(DataTable, {
+    caption,
+    columns,
+    rows,
+    visible: props.table,
+  });
 
 export const plural = (n: number, noun: string) =>
   `${n} ${noun}${n === 1 ? "" : "s"}`;

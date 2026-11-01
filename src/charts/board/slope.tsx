@@ -10,7 +10,7 @@ import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
 import { LABEL, VALUE } from "../roles";
 import { VRule } from "../rules";
-import { Scoped, chartTable, plotOptions, plural } from "../shared-options";
+import { chartTable, plotOptions, plural, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger } from "../util";
@@ -177,9 +177,12 @@ const summary = (
   if (rows.length === 0) {
     return "No data.";
   }
-  const change = (r: RowData) => r.to - r.from;
-  const up = rows.reduce((a, r) => (change(r) > change(a) ? r : a));
-  const down = rows.reduce((a, r) => (change(r) < change(a) ? r : a));
+  let [up] = rows;
+  let [down] = rows;
+  for (const r of rows) {
+    up = r.to - r.from > up.to - up.from ? r : up;
+    down = r.to - r.from < down.to - down.from ? r : down;
+  }
   return `${plural(rows.length, "line")} from ${labels[0]} to ${labels[1]}. Biggest rise: ${up.name}, ${format(up.from)} to ${format(up.to)}. Biggest fall: ${down.name}, ${format(down.from)} to ${format(down.to)}. The data table lists every line.`;
 };
 
@@ -305,8 +308,5 @@ const SlopePlot = (props: SlopeProps) => {
  * duplicate names each get a line (give them `id`s to tell them apart), and
  * no rows draws the two headed columns alone.
  */
-export const Slope = (props: SlopeProps) => (
-  <Scoped idPrefix={props.idPrefix}>
-    <SlopePlot {...props} />
-  </Scoped>
-);
+export const Slope = (props: SlopeProps) =>
+  scoped(props.idPrefix, <SlopePlot {...props} />);
