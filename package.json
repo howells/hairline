@@ -57,7 +57,7 @@
     "world-atlas": "^2.0.2"
   },
   "devDependencies": {
-    "@howells/lint": "3.5.3",
+    "@howells/lint": "3.9.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/d3-array": "^3.2.2",
     "@types/d3-chord": "^3.0.6",
