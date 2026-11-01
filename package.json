@@ -1,20 +1,4 @@
 {
-  "name": "@howells/hairline",
-  "version": "0.1.0",
-  "private": true,
-  "description": "An engraved chart library for React: pixel-snapped hairlines, one ink hero per chart, and banknote textures.",
-  "homepage": "https://hairline.danielhowells.com",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/howells/hairline.git"
-  },
-  "files": [
-    "lib"
-  ],
-  "type": "module",
-  "sideEffects": [
-    "*.css"
-  ],
   "exports": {
     ".": {
       "types": "./lib/types/index.d.ts",
@@ -38,7 +22,56 @@
     },
     "./json-schema/*": "./lib/json-schema/*",
     "./tokens.css": "./lib/tokens.css",
-    "./theme.css": "./lib/theme.css"
+    "./theme.css": "./lib/theme.css",
+    "./maps": {
+      "default": "./lib/maps.js",
+      "types": "./lib/types/maps.d.ts"
+    },
+    "./dumbbell-queue": {
+      "default": "./lib/entries/dumbbell-queue.js",
+      "types": "./lib/types/entries/dumbbell-queue.d.ts"
+    },
+    "./hairline-area": {
+      "default": "./lib/entries/hairline-area.js",
+      "types": "./lib/types/entries/hairline-area.d.ts"
+    },
+    "./hairline-line": {
+      "default": "./lib/entries/hairline-line.js",
+      "types": "./lib/types/entries/hairline-line.d.ts"
+    },
+    "./plumb-scatter": {
+      "default": "./lib/entries/plumb-scatter.js",
+      "types": "./lib/types/entries/plumb-scatter.d.ts"
+    },
+    "./rung-bars": {
+      "default": "./lib/entries/rung-bars.js",
+      "types": "./lib/types/entries/rung-bars.d.ts"
+    },
+    "./slope": {
+      "default": "./lib/entries/slope.js",
+      "types": "./lib/types/entries/slope.d.ts"
+    }
+  },
+  "name": "@howells/hairline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An engraved chart library for React: pixel-snapped hairlines, one ink hero per chart, and banknote textures.",
+  "homepage": "https://hairline.danielhowells.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/howells/hairline.git"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "dev": "vite",
@@ -47,7 +80,10 @@
     "typecheck": "tsc -b && tsc -p scripts",
     "lint": "howells-check .",
     "lint:fix": "howells-fix .",
-    "build:lib": "node scripts/library-index.ts && howells-oxfmt src/index.ts src/kit.ts src/schema.ts && vite build -c vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/library-css.ts && node scripts/library-schema.ts",
+    "build:lib": "node scripts/library-index.ts && howells-oxfmt package.json src/index.ts src/kit.ts src/maps.ts src/schema.ts src/entries && vite build -c vite.lib.config.ts && tsc -p tsconfig.lib.json && node scripts/library-package.ts && node scripts/library-css.ts && node scripts/library-schema.ts",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build:lib && changeset publish",
     "test": "pnpm build:lib && tsc -p tests && vitest run"
   },
   "dependencies": {
@@ -67,8 +103,6 @@
     "d3-time": "^3.1.0",
     "d3-time-format": "^4.1.0",
     "topojson-client": "^3.1.0",
-    "us-atlas": "^3.0.1",
-    "world-atlas": "^2.0.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -103,8 +137,10 @@
     "react-dom": "^19.3.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
+    "us-atlas": "^3.0.1",
     "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "world-atlas": "^2.0.2"
   },
   "peerDependencies": {
     "react": "^19.0.0",

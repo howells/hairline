@@ -70,12 +70,30 @@ export { FeatureRank } from "./charts/originals/feature-rank";
 export { ResponseTime } from "./charts/originals/response-time";
 export { RevenueByPlan } from "./charts/originals/revenue-by-plan";
 export type { DailyDatum } from "./schema/daily";
-export type { DumbbellDatum, DumbbellQueueData, DumbbellQueueProps } from "./schema/dumbbell-queue";
-export type { HairlineAreaData, HairlineAreaProps } from "./schema/hairline-area";
-export type { HairlineLineData, HairlineLineProps } from "./schema/hairline-line";
+export type {
+  DumbbellDatum,
+  DumbbellQueueData,
+  DumbbellQueueProps,
+} from "./schema/dumbbell-queue";
+export type {
+  HairlineAreaData,
+  HairlineAreaProps,
+} from "./schema/hairline-area";
+export type {
+  HairlineLineData,
+  HairlineLineProps,
+} from "./schema/hairline-line";
 export type { FontMetrics } from "./schema/metrics";
 export type { MotionCallbacks } from "./schema/motion";
-export type { PlumbDatum, PlumbScatterData, PlumbScatterProps } from "./schema/plumb-scatter";
-export type { RungDatum, RungBarsData, RungBarsProps } from "./schema/rung-bars";
+export type {
+  PlumbDatum,
+  PlumbScatterData,
+  PlumbScatterProps,
+} from "./schema/plumb-scatter";
+export type {
+  RungDatum,
+  RungBarsData,
+  RungBarsProps,
+} from "./schema/rung-bars";
 export type { ScaleOptions } from "./schema/scale";
 export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";

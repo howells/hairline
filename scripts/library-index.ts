@@ -11,6 +11,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { z } from "zod";
+
 const src = new URL("../src/", import.meta.url).pathname;
 const charts = path.join(src, "charts");
 // Two families each have a CircularGraph; the beaded one is renamed.
@@ -216,6 +218,36 @@ for (const { component, line, slug } of subpaths) {
 if (subpaths.length !== SUBPATH_CHARTS.size) {
   throw new Error("A subpath chart was not found");
 }
+
+// The exports map: each subpath chart and ./maps are generated here; the
+// other entries (".", kit, schema, theme, frame, stylesheets) stay as written.
+const manifestUrl = new URL("../package.json", import.meta.url);
+const Entry = z.object({ default: z.string(), types: z.string() });
+const Manifest = z.looseObject({
+  exports: z.record(z.string(), z.union([z.string(), Entry])),
+});
+type Exported = z.infer<typeof Manifest>["exports"][string];
+const manifest = Manifest.parse(JSON.parse(readFileSync(manifestUrl, "utf-8")));
+const entry = (js: string, dts: string) => ({
+  default: `./lib/${js}.js`,
+  types: `./lib/types/${dts}.d.ts`,
+});
+const generatedKeys = new Set([
+  "./maps",
+  ...subpaths.map(({ slug }) => `./${slug}`),
+]);
+const exportsMap: Record<string, Exported> = {};
+for (const [key, value] of Object.entries(manifest.exports)) {
+  if (!generatedKeys.has(key)) {
+    exportsMap[key] = value;
+  }
+}
+exportsMap["./maps"] = entry("maps", "maps");
+for (const { slug } of subpaths) {
+  exportsMap[`./${slug}`] = entry(`entries/${slug}`, `entries/${slug}`);
+}
+manifest.exports = exportsMap;
+writeFileSync(manifestUrl, `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(
   `${chartLines.length} charts, ${mapLines.length} maps, ${subpaths.length} subpaths, ${KIT.length} kit modules`
 );

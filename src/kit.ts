@@ -6,13 +6,37 @@ export { phase, crisp } from "./charts/axes";
 export type { Margin, TickMark } from "./charts/axes";
 export { Chart, Plot, Tooltip, SplitClips } from "./charts/core";
 export type { LegendItem } from "./charts/core";
-export { FILL_TONES, FILL_FAMILIES, FILL_LADDERS, toneClass } from "./charts/fills";
+export {
+  FILL_TONES,
+  FILL_FAMILIES,
+  FILL_LADDERS,
+  toneClass,
+} from "./charts/fills";
 export type { FillTone, FillFamily } from "./charts/fills";
-export { useMeasure, useReveal, useMotionPreference, useReducedMotion, IdScope, useSvgId, useEntry, useScrub, useHover } from "./charts/hooks";
+export {
+  useMeasure,
+  useReveal,
+  useMotionPreference,
+  useReducedMotion,
+  IdScope,
+  useSvgId,
+  useEntry,
+  useScrub,
+  useHover,
+} from "./charts/hooks";
 export type { Animate, Sync, HoverAt, Hover } from "./charts/hooks";
 export { DimGroup, HitRect, HitCircle, HitPath, TipText } from "./charts/hover";
 export { Dot, Ring, Bar } from "./charts/markers";
-export { DOT, RING_WEIGHT, TICK, MARK_WEIGHT, STEM, LABEL_TICK, RING_STEP, KEY } from "./charts/marks";
+export {
+  DOT,
+  RING_WEIGHT,
+  TICK,
+  MARK_WEIGHT,
+  STEM,
+  LABEL_TICK,
+  RING_STEP,
+  KEY,
+} from "./charts/marks";
 export type { DotSize, RingWeight, TickSize } from "./charts/marks";
 export { easeTravel, DURATION } from "./charts/motion";
 export type { StaggerTier } from "./charts/motion";
@@ -22,5 +46,24 @@ export type { RuleKind } from "./charts/rules";
 export { ChartSvg } from "./charts/svg";
 export { Label, XLabels } from "./charts/text";
 export type { Voice } from "./charts/text";
-export { Hatch, CrossHatch, Rules, Stipple, DotScreen, Beads, DottedLine, DotRing, DottedPath, PixelLine, KeySwatch, EngravedRect, PlateLabel } from "./charts/texture";
-export { TEXTURE_PITCH, HALFTONE_R, paint, useTextureIds } from "./charts/texture-ids";
+export {
+  Hatch,
+  CrossHatch,
+  Rules,
+  Stipple,
+  DotScreen,
+  Beads,
+  DottedLine,
+  DotRing,
+  DottedPath,
+  PixelLine,
+  KeySwatch,
+  EngravedRect,
+  PlateLabel,
+} from "./charts/texture";
+export {
+  TEXTURE_PITCH,
+  HALFTONE_R,
+  paint,
+  useTextureIds,
+} from "./charts/texture-ids";

@@ -14,25 +14,25 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { RungBars } from "@howells/hairline/rung-bars";
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 
-interface Manifest {
-  dependencies: Record<string, string>;
-  exports: Record<string, string | { default: string; types: string }>;
-  private: boolean;
-}
-const manifest = JSON.parse(
-  readFileSync(path.join(root, "package.json"), "utf-8")
-) as Manifest;
+const Target = z.object({ default: z.string(), types: z.string() });
+const Manifest = z.object({
+  dependencies: z.record(z.string(), z.string()),
+  exports: z.record(z.string(), z.union([z.string(), Target])),
+  private: z.boolean(),
+});
+const manifest = Manifest.parse(
+  JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"))
+);
 
 /** The built file a subpath resolves to. */
 const entryOf = (subpath: string) => {
-  const target = manifest.exports[subpath];
-  if (target === undefined || typeof target === "string") {
-    throw new Error(`No code export named ${subpath}`);
-  }
+  const target = Target.parse(manifest.exports[subpath]);
   return path.join(root, target.default);
 };
 
@@ -77,30 +77,35 @@ const CHARTS = [
 ];
 const heavy = (graph: Graph) =>
   [...graph.files].filter((file) =>
-    /(?:atlas|node_modules|\.data\.js|\.tenors|\/maps\/)/u.test(file)
+    /(?:atlas|node_modules|vendor|\.data\.js|\.tenors|\/maps\/)/u.test(file)
   );
 
 describe("per-chart subpaths", () => {
   it.each(CHARTS)("%s bundles no atlas, force layout or demo data", (name) => {
     const graph = reach(entryOf(`./${name}`));
-    expect(heavy(graph)).toEqual([]);
+    expect(heavy(graph)).toStrictEqual([]);
     const bare = [...graph.bare];
-    expect(bare.filter((spec) => /force|topojson|atlas/u.test(spec))).toEqual(
-      []
-    );
+    expect(
+      bare.filter((spec) => /force|topojson|atlas/u.test(spec))
+    ).toStrictEqual([]);
     // A single chart is a small slice of the package.
     expect(graph.bytes).toBeLessThan(250_000);
   });
 
-  it("each subpath exports its chart", async () => {
-    const mod: Record<string, unknown> = await import(
-      `@howells/hairline/${CHARTS[0]}`
-    );
-    expect(typeof mod.RungBars).toBe("function");
+  it("a subpath exports its chart", () => {
+    expect(RungBars).toBeTypeOf("function");
   });
 
   it("the main entry no longer reaches the map atlases", () => {
-    expect(heavy(reach(entryOf(".")))).toEqual([]);
+    const graph = reach(entryOf("."));
+    expect(
+      [...graph.files].filter((file) =>
+        /(?:atlas|node_modules|vendor)/u.test(file)
+      )
+    ).toStrictEqual([]);
+    expect(
+      [...graph.bare].filter((spec) => /topojson|atlas/u.test(spec))
+    ).toStrictEqual([]);
   });
 });
 
@@ -113,7 +118,7 @@ describe("maps subpath", () => {
   });
 
   it("keeps atlases out of runtime dependencies", () => {
-    expect(Object.keys(manifest.dependencies)).not.toEqual(
+    expect(Object.keys(manifest.dependencies)).not.toStrictEqual(
       expect.arrayContaining(["world-atlas"])
     );
     expect(manifest.dependencies["us-atlas"]).toBeUndefined();
@@ -124,39 +129,46 @@ describe("maps subpath", () => {
 describe("React-free entries", () => {
   it.each(["./schema", "./theme"])("%s imports without React", (subpath) => {
     const bare = [...reach(entryOf(subpath)).bare];
-    expect(bare.filter((spec) => /^react(?:-dom)?(?:\/|$)/u.test(spec))).toEqual(
-      []
-    );
+    expect(
+      bare.filter((spec) => /^react(?:-dom)?(?:\/|$)/u.test(spec))
+    ).toStrictEqual([]);
   });
 });
 
-describe("tarball", () => {
-  const packed = () => {
-    const out = execFileSync(
-      "npm",
-      ["pack", "--dry-run", "--json", "--ignore-scripts"],
-      { cwd: root, encoding: "utf-8" }
-    );
-    const [info] = JSON.parse(out) as { files: { path: string }[] }[];
-    return (info?.files ?? []).map((file) => file.path);
-  };
+const packed = () => {
+  const out = execFileSync(
+    "npm",
+    ["pack", "--dry-run", "--json", "--ignore-scripts"],
+    { cwd: root, encoding: "utf-8" }
+  );
+  const [info] = z
+    .array(z.object({ files: z.array(z.object({ path: z.string() })) }))
+    .parse(JSON.parse(out));
+  return (info?.files ?? []).map((file) => file.path);
+};
 
+describe("tarball", () => {
   it("has no source maps and no node_modules paths", () => {
     const files = packed();
     expect(files.length).toBeGreaterThan(50);
-    expect(files.filter((file) => file.endsWith(".map"))).toEqual([]);
-    expect(files.filter((file) => file.includes("node_modules"))).toEqual([]);
+    expect(files.filter((file) => file.endsWith(".map"))).toStrictEqual([]);
+    expect(files.filter((file) => file.includes("node_modules"))).toStrictEqual(
+      []
+    );
   });
 
   it("every exports target is in it", () => {
     const files = new Set(packed());
     const targets = Object.values(manifest.exports)
-      .flatMap((target) =>
-        typeof target === "string" ? [target] : [target.default, target.types]
-      )
+      .flatMap((target) => {
+        const parsed = Target.safeParse(target);
+        return parsed.success
+          ? [parsed.data.default, parsed.data.types]
+          : [z.string().parse(target)];
+      })
       .filter((target) => !target.includes("*"))
       .map((target) => target.replace(/^\.\//u, ""));
-    expect(targets.filter((target) => !files.has(target))).toEqual([]);
+    expect(targets.filter((target) => !files.has(target))).toStrictEqual([]);
   });
 });
 
@@ -176,9 +188,13 @@ describe("types under NodeNext", () => {
 
 describe("release tooling", () => {
   it("configures Changesets with a changelog", () => {
-    const config = JSON.parse(
-      readFileSync(path.join(root, ".changeset/config.json"), "utf-8")
-    ) as { access: string; changelog: unknown };
+    const config = z
+      .object({ access: z.string(), changelog: z.string() })
+      .parse(
+        JSON.parse(
+          readFileSync(path.join(root, ".changeset/config.json"), "utf-8")
+        )
+      );
     expect(config.changelog).toBeTruthy();
     expect(config.access).toBe("public");
   });
@@ -190,17 +206,21 @@ describe("release tooling", () => {
     });
     writeFileSync(
       path.join(dir, "package.json"),
-      JSON.stringify({ name: "@howells/hairline", private: true, version: "0.1.0" })
+      JSON.stringify({
+        name: "@howells/hairline",
+        private: true,
+        version: "0.1.0",
+      })
     );
+    writeFileSync(path.join(dir, "pnpm-workspace.yaml"), "packages:\n  - .\n");
     writeFileSync(
       path.join(dir, ".changeset/example.md"),
       '---\n"@howells/hairline": minor\n---\n\nAn example change.\n'
     );
-    execFileSync(
-      path.join(root, "node_modules/.bin/changeset"),
-      ["version"],
-      { cwd: dir, stdio: "pipe" }
-    );
+    execFileSync(path.join(root, "node_modules/.bin/changeset"), ["version"], {
+      cwd: dir,
+      stdio: "pipe",
+    });
     expect(readFileSync(path.join(dir, "CHANGELOG.md"), "utf-8")).toContain(
       "An example change."
     );

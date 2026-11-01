@@ -1,0 +1,41 @@
+name: Release
+
+# Ready but dormant. It does nothing until the owner has published the first
+# version by hand (a short-lived npm token, from a public repository, once the
+# licence is settled and `private` is removed), configured the trusted
+# publisher for this workflow on npmjs.com, and set the repository variable
+# HAIRLINE_FIRST_PUBLISH_DONE to "true". After that, merging the "Version
+# packages" pull request publishes with provenance and no stored token.
+
+on:
+  push:
+    branches: [main]
+
+concurrency: release-${{ github.ref }}
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  release:
+    if: vars.HAIRLINE_FIRST_PUBLISH_DONE == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - uses: changesets/action@v2
+        with:
+          version: pnpm version-packages
+          publish: pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
