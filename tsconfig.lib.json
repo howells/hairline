@@ -11,6 +11,8 @@
   "include": [
     "src/frame.ts",
     "src/index.ts",
+    "src/entries/*.ts",
+    "src/maps.ts",
     "src/kit.ts",
     "src/schema.ts",
     "src/theme.ts",

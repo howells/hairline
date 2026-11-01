@@ -2,14 +2,34 @@
 // the gallery shows, by its component name; src/kit.ts exports the parts the
 // charts are drawn from, name by name. Run after adding a chart or a part:
 // node scripts/library-index.ts
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
+
+import { z } from "zod";
 
 const src = new URL("../src/", import.meta.url).pathname;
 const charts = path.join(src, "charts");
 // Two families each have a CircularGraph; the beaded one is renamed.
 const RENAME = new Map([["big/circular-graph", "CircularBeadGraph"]]);
 const SKIP = new Set(["palette"]);
+// Map charts bundle their atlases, so they leave the main entry for ./maps.
+const MAPS = "maps";
+// The charts that ship with a subpath of their own (`@howells/hairline/rung-bars`),
+// each importable without the rest of the package.
+const SUBPATH_CHARTS = new Set([
+  "DumbbellQueue",
+  "HairlineArea",
+  "HairlineLine",
+  "PlumbScatter",
+  "RungBars",
+  "Slope",
+]);
 // The frame, hover, text roles, rules, marks and textures every chart uses.
 const KIT = [
   "axes",
@@ -57,7 +77,9 @@ for (const family of readdirSync(charts, { withFileTypes: true })) {
 }
 
 const chartLines: string[] = [];
+const mapLines: string[] = [];
 const chartNames: string[] = [];
+const subpaths: { component: string; line: string; slug: string }[] = [];
 for (const { family, name, text } of files.toSorted((a, b) =>
   `${a.family}/${a.name}`.localeCompare(`${b.family}/${b.name}`)
 )) {
@@ -71,7 +93,14 @@ for (const { family, name, text } of files.toSorted((a, b) =>
     }
     const alias = RENAME.get(at);
     chartNames.push(alias ?? component);
-    chartLines.push(
+    if (SUBPATH_CHARTS.has(component)) {
+      subpaths.push({
+        component,
+        line: `export { ${component} } from "../charts/${at}";`,
+        slug: name.replace(/\.tsx$/u, ""),
+      });
+    }
+    (family === MAPS ? mapLines : chartLines).push(
       alias === undefined
         ? `export { ${component} } from "./charts/${at}";`
         : `export { ${component} as ${alias} } from "./charts/${at}";`
@@ -166,4 +195,59 @@ writeFileSync(
   path.join(src, "kit.ts"),
   `/*\n * The parts every Hairline chart is built from, for drawing a new chart in\n * the same hand. ${GENERATED}\n */\n${kitLines.join("\n")}\n`
 );
-console.log(`${chartLines.length} charts, ${KIT.length} kit modules`);
+writeFileSync(
+  path.join(src, "maps.ts"),
+  `/*\n * The map charts. They carry their atlases, so they sit apart from the main\n * entry. ${GENERATED}\n */\n${mapLines.join("\n")}\n`
+);
+
+// One entry per subpath chart: the component and its schema types, nothing else.
+const entriesDir = path.join(src, "entries");
+rmSync(entriesDir, { force: true, recursive: true });
+mkdirSync(entriesDir);
+for (const { component, line, slug } of subpaths) {
+  const { types } = exportsOf(read(path.join(schemaDir, `${slug}.ts`)));
+  const typeLine =
+    types.length > 0
+      ? `\nexport type { ${types.join(", ")} } from "../schema/${slug}";`
+      : "";
+  writeFileSync(
+    path.join(entriesDir, `${slug}.ts`),
+    `/* ${component} on its own. ${GENERATED} */\n${line}${typeLine}\n`
+  );
+}
+if (subpaths.length !== SUBPATH_CHARTS.size) {
+  throw new Error("A subpath chart was not found");
+}
+
+// The exports map: each subpath chart and ./maps are generated here; the
+// other entries (".", kit, schema, theme, frame, stylesheets) stay as written.
+const manifestUrl = new URL("../package.json", import.meta.url);
+const Entry = z.object({ default: z.string(), types: z.string() });
+const Manifest = z.looseObject({
+  exports: z.record(z.string(), z.union([z.string(), Entry])),
+});
+type Exported = z.infer<typeof Manifest>["exports"][string];
+const manifest = Manifest.parse(JSON.parse(readFileSync(manifestUrl, "utf-8")));
+const entry = (js: string, dts: string) => ({
+  default: `./lib/${js}.js`,
+  types: `./lib/types/${dts}.d.ts`,
+});
+const generatedKeys = new Set([
+  "./maps",
+  ...subpaths.map(({ slug }) => `./${slug}`),
+]);
+const exportsMap: Record<string, Exported> = {};
+for (const [key, value] of Object.entries(manifest.exports)) {
+  if (!generatedKeys.has(key)) {
+    exportsMap[key] = value;
+  }
+}
+exportsMap["./maps"] = entry("maps", "maps");
+for (const { slug } of subpaths) {
+  exportsMap[`./${slug}`] = entry(`entries/${slug}`, `entries/${slug}`);
+}
+manifest.exports = exportsMap;
+writeFileSync(manifestUrl, `${JSON.stringify(manifest, null, 2)}\n`);
+console.log(
+  `${chartLines.length} charts, ${mapLines.length} maps, ${subpaths.length} subpaths, ${KIT.length} kit modules`
+);

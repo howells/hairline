@@ -65,8 +65,6 @@ export { RadialPatchwork } from "./charts/lupi/radial-patchwork";
 export { Ridgeline } from "./charts/lupi/ridgeline";
 export { TrendLineage } from "./charts/lupi/trend-lineage";
 export { TypeColonnade } from "./charts/lupi/type-colonnade";
-export { USChoropleth } from "./charts/maps/us-choropleth";
-export { WorldChoropleth } from "./charts/maps/world-choropleth";
 export { DailyUsers } from "./charts/originals/daily-users";
 export { FeatureRank } from "./charts/originals/feature-rank";
 export { ResponseTime } from "./charts/originals/response-time";
