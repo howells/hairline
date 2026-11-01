@@ -17,5 +17,7 @@ export type {
   RungBarsData,
   RungBarsProps,
 } from "./schema/rung-bars";
+export { scaleShape } from "./schema/scale";
+export type { ScaleOptions } from "./schema/scale";
 export { pointerOf, validate } from "./schema/validate";
 export type { Issue, Validated } from "./schema/validate";

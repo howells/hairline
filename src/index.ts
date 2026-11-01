@@ -75,3 +75,4 @@ export type {
   RungBarsData,
   RungBarsProps,
 } from "./schema/rung-bars";
+export type { ScaleOptions } from "./schema/scale";
