@@ -19,6 +19,7 @@ export { TickRows } from "./charts/basics/tick-rows";
 export { CircularGraph as CircularBeadGraph } from "./charts/big/circular-graph";
 export { ForceGalaxy } from "./charts/big/force-galaxy";
 export { ThreadTriptych } from "./charts/big/thread-triptych";
+export { Slope } from "./charts/board/slope";
 export { AreaDifference } from "./charts/forms/area-difference";
 export { BrushedOverview } from "./charts/forms/brushed-overview";
 export { ChordRing } from "./charts/forms/chord-ring";
@@ -75,3 +76,4 @@ export type {
   RungBarsData,
   RungBarsProps,
 } from "./schema/rung-bars";
+export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";

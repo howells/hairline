@@ -44,7 +44,7 @@ import { MonthlyBars } from "./monthly-bars";
 import { Sankey } from "./sankey";
 import { Scatter } from "./scatter";
 import type { ScatterPoint } from "./scatter";
-import { Slope } from "./slope";
+import { SlopeCard } from "./slope-card";
 import { SparkGrid } from "./spark-grid";
 import { StackedArea } from "./stacked-area";
 import { StationStrip } from "./station-strip";
@@ -447,7 +447,7 @@ export const BOARD_PRESETS: BoardPresetMap = {
   D7: {
     name: "Cleaner regions",
     render: () => (
-      <Slope
+      <SlopeCard
         label="Carbon intensity, January 2023 against December 2024, the five regions that fell most"
         height={420}
         rows={cleanerRegions}

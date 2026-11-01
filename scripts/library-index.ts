@@ -36,7 +36,9 @@ interface ChartFile {
 
 const read = (file: string) => readFileSync(file, "utf-8");
 
-const used = new Set<string>();
+// Public charts with no gallery entry of their own: the board draws Slope
+// inside its own frame, so no entries file names the bare plot.
+const used = new Set<string>(["Slope"]);
 const files: ChartFile[] = [];
 for (const family of readdirSync(charts, { withFileTypes: true })) {
   if (!family.isDirectory() || SKIP.has(family.name)) {

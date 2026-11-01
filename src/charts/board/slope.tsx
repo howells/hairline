@@ -1,7 +1,10 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
-import { Chart } from "../core";
+import { resolveFormat } from "../../schema/format";
+import { slopeRowKey } from "../../schema/slope";
+import type { SlopeProps, SlopeRow as RowData } from "../../schema/slope";
+import { Plot } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
@@ -13,11 +16,7 @@ import { stagger } from "../util";
 import { nameWidth } from "./room";
 import { relax } from "./spread";
 
-interface Row {
-  name: string;
-  from: number;
-  to: number;
-}
+type Row = RowData;
 
 /** The two year columns: a rule and a heading each. */
 const Columns = (props: {
@@ -85,7 +84,7 @@ const SlopeRow = (props: {
   /** The biggest fall, the biggest rise, or neither. */
   role: Role;
   format: (v: number) => string;
-  onHover: (name: string) => void;
+  onHover: () => void;
 }) => {
   const { i, row, y } = props;
   const [xa, xb] = props.xs;
@@ -97,9 +96,7 @@ const SlopeRow = (props: {
       className="fade"
       dim={props.dim}
       style={stagger(i)}
-      onPointerEnter={() => {
-        props.onHover(row.name);
-      }}
+      onPointerEnter={props.onHover}
     >
       <line
         x1={xa}
@@ -159,88 +156,116 @@ const roleOf = (row: Row, rows: Row[]): Role => {
   return worst > 0 && change(row) === worst ? "worst" : "rest";
 };
 
-/** Before/after slope chart; the biggest fall inked, the biggest rise red. */
-export const Slope = (props: {
-  rows: Row[];
-  /** Values at the two ends of each row. */
-  format: (v: number) => string;
-  /** The same on a phone, where a unit would crowd the columns together. */
-  narrowFormat?: (v: number) => string;
-  height: number;
-  labels: [string, string];
-  domain: [number, number];
-  label: string;
-}) => {
-  const hover = useHover<string>();
+/** The lowest and highest value of any row; a flat set is given some room. */
+const extentOf = (rows: Row[]): [number, number] => {
+  const values = rows.flatMap((r) => [r.from, r.to]);
+  const low = Math.min(...values);
+  const high = Math.max(...values);
+  if (values.length === 0) {
+    return [0, 1];
+  }
+  return low === high ? [low - 1, high + 1] : [low, high];
+};
+
+/**
+ * Before/after slope chart, the bare plot: the biggest fall inked, the biggest
+ * rise red, or the `emphasis` row inked alone. Name, source and notes belong
+ * to the host.
+ *
+ * Props are the `slopeSchema` payload (src/schema/slope.ts); `rows` is
+ * required and never defaults to demo data. Give `width` and `height` for a
+ * fixed-size chart that is complete on the first (server) render. Bad input
+ * is tolerated: a row with a value that is not a finite number is skipped,
+ * duplicate names each get a line (give them `id`s to tell them apart), and
+ * no rows draws the two headed columns alone.
+ */
+export const Slope = (props: SlopeProps) => {
+  const rows = (props.rows ?? []).filter(
+    (r) => Number.isFinite(r.from) && Number.isFinite(r.to)
+  );
+  const h = props.height ?? 420;
+  const wide = resolveFormat(props.format);
+  const narrow =
+    props.narrowFormat === undefined ? wide : resolveFormat(props.narrowFormat);
+  const domain = props.domain ?? extentOf(rows);
+  const hover = useHover<number>();
 
   return (
-    <Chart>
+    <Plot initialWidth={props.initialWidth} width={props.width}>
       {(width) => {
-        const format =
-          width < NARROW && props.narrowFormat !== undefined
-            ? props.narrowFormat
-            : props.format;
+        const format = width < NARROW ? narrow : wide;
         const top = 40;
         const bottom = 24;
-        const h = props.height;
         // Each side's labels run out to the edge: the columns sit just inside.
         const xs: [number, number] = [
           LABEL_GAP +
             nameWidth(
-              props.rows.map((r) => `${r.name} ${format(r.from)}`),
+              rows.map((r) => `${r.name} ${format(r.from)}`),
               LABEL_SHAVE
             ),
           width -
             LABEL_GAP -
             3 -
             nameWidth(
-              props.rows.map((r) => `${format(r.to)} ${r.name}`),
+              rows.map((r) => `${format(r.to)} ${r.name}`),
               LABEL_SHAVE
             ),
         ];
         const y = scaleLinear()
-          .domain(props.domain)
+          .domain(domain)
           .range([h - bottom, top + 16]);
-        const lys = relax(
-          props.rows.map((r) => y(r.from)),
-          15,
-          top + 8,
-          h - 8
-        );
-        const rys = relax(
-          props.rows.map((r) => y(r.to)),
-          15,
-          top + 8,
-          h - 8
-        );
+        // relax reads its first item, so no rows is spared the call.
+        const spread = (ys: number[]) =>
+          ys.length === 0 ? ys : relax(ys, 15, top + 8, h - 8);
+        const lys = spread(rows.map((r) => y(r.from)));
+        const rys = spread(rows.map((r) => y(r.to)));
+        const seen = new Map<string, number>();
+        const keys = rows.map((r) => {
+          const key = slopeRowKey(r);
+          const nth = seen.get(key) ?? 0;
+          seen.set(key, nth + 1);
+          return `${key}#${nth}`;
+        });
+        const roleAt = (r: Row, i: number): Role => {
+          if (props.emphasis === undefined) {
+            return roleOf(r, rows);
+          }
+          // The first row of that key leads, should the key repeat.
+          return keys[i] === `${props.emphasis}#0` ? "lead" : "rest";
+        };
+        const label =
+          props.label ??
+          (rows.length === 0
+            ? "No data"
+            : rows
+                .map(
+                  (r) =>
+                    `${r.name} ${format(r.from)} ${props.labels[0]}, ${format(r.to)} ${props.labels[1]}`
+                )
+                .join("; "));
 
         return (
-          <ChartSvg
-            height={h}
-            label={props.label}
-            leave={hover.clear}
-            width={width}
-          >
+          <ChartSvg height={h} label={label} leave={hover.clear} width={width}>
             <Columns xs={xs} labels={props.labels} top={top} height={h} />
-            {props.rows.map((r, i) => (
+            {rows.map((r, i) => (
               <SlopeRow
-                key={r.name}
+                key={keys[i]}
                 row={r}
                 i={i}
                 xs={xs}
                 labelYs={[lys[i], rys[i]]}
                 y={y}
-                dim={hover.dim(r.name)}
-                role={roleOf(r, props.rows)}
+                dim={hover.dim(i)}
+                role={roleAt(r, i)}
                 format={format}
-                onHover={(name) => {
-                  hover.show(name);
+                onHover={() => {
+                  hover.show(i);
                 }}
               />
             ))}
           </ChartSvg>
         );
       }}
-    </Chart>
+    </Plot>
   );
 };
