@@ -77,6 +77,11 @@ export type {
 } from "./schema/dumbbell-queue";
 export type { FontMetrics } from "./schema/metrics";
 export type {
+  PlumbDatum,
+  PlumbScatterData,
+  PlumbScatterProps,
+} from "./schema/plumb-scatter";
+export type {
   RungDatum,
   RungBarsData,
   RungBarsProps,

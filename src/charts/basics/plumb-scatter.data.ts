@@ -1,9 +1,4 @@
-/** A named point. */
-export interface PlumbDatum {
-  label: string;
-  x: number;
-  y: number;
-}
+import type { PlumbDatum } from "../../schema/plumb-scatter";
 
 /**
  * F8 Apple orchards. The twelve countries that grew the most apples in 2024

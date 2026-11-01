@@ -4,6 +4,7 @@
 import type { ZodType } from "zod";
 
 import { dumbbellQueueSchema } from "./dumbbell-queue";
+import { plumbScatterSchema } from "./plumb-scatter";
 import { rungBarsSchema } from "./rung-bars";
 import { validate } from "./validate";
 import type { Validated } from "./validate";
@@ -61,6 +62,19 @@ export const charts = {
       "More than a dozen rows, more than two states per row, or changes so large that counting rungs is hopeless (raise `unit`).",
     whenToUse:
       "The same few things measured at two moments, or against a target: how far each moved, and which way.",
+  }),
+  "plumb-scatter": entry({
+    component: "PlumbScatter",
+    dataShape:
+      "data: { label: string; x: number; y: number; id?: string }[], one point each; optional emphasis and labelled (points' ids or labels), format and formatX, xDomain, yDomain, xLabels [low, high], yLabel, note.",
+    jobs: ["correlation", "ranking"],
+    kind: "plumb-scatter",
+    limits: { categories: { max: 20, min: 1 }, series: { max: 1, min: 1 } },
+    schema: plumbScatterSchema,
+    whenNotToUse:
+      "More than about twenty points, several series, or when the reader needs to read y off a scale rather than from a stem and a name: the stems carry x, the height carries y.",
+    whenToUse:
+      "A dozen or so named things measured on two quantities, to show whether they move together and which stand apart.",
   }),
   "rung-bars": entry({
     component: "RungBars",
