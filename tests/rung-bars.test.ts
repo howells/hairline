@@ -9,7 +9,7 @@ import type { RungBarsProps, RungDatum } from "@howells/hairline";
 import { getChart, registry } from "@howells/hairline/schema";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 const bars: RungDatum[] = [
@@ -27,6 +27,7 @@ const count = (html: string, pattern: RegExp) =>
 /** Every rung is one rect of class grow-x; the hero column's are fill-hero. */
 const rungs = (html: string) => count(html, /class="grow-x/gu);
 const heroRungs = (html: string) => count(html, /class="grow-x fill-hero"/gu);
+const noteLineCount = (html: string) => count(html, /class="t-axis"/gu);
 const hero = (data: RungDatum[], emphasis?: string) =>
   heroRungs(render({ data, emphasis, ...sized }));
 
@@ -148,6 +149,7 @@ describe("the registry", () => {
       "format",
       "height",
       "initialWidth",
+      "metrics",
       "note",
       "unit",
       "width",
@@ -269,5 +271,76 @@ describe("sizing", () => {
 
   it("a responsive chart with no width at all draws nothing yet", () => {
     expect(render({ data: bars })).not.toContain("<svg");
+  });
+});
+
+describe("text measurement is deterministic in fixed-size mode", () => {
+  const note = "One rung = 100 rings · Source: the county survey · Rounded";
+  const noted = { data: bars, note, ...sized };
+
+  it("never touches the document, so loaded fonts cannot change the output", () => {
+    const plain = render(noted);
+    const touched: string[] = [];
+    const trap = new Proxy(
+      {},
+      {
+        get: (_target, key) => {
+          touched.push(String(key));
+          throw new Error("the DOM was measured");
+        },
+      }
+    );
+    vi.stubGlobal("document", trap);
+    vi.stubGlobal("OffscreenCanvas", trap);
+    try {
+      expect(render(noted)).toBe(plain);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(touched).toStrictEqual([]);
+  });
+
+  it("a metrics table changes how much room the note reserves", () => {
+    const normal = render(noted);
+    const crowded = render({
+      ...noted,
+      metrics: { advances: {}, fallback: 1.5 },
+    });
+    expect(noteLineCount(normal)).toBe(1);
+    expect(noteLineCount(crowded)).toBeGreaterThan(1);
+    expect(crowded).not.toBe(normal);
+  });
+
+  it("a face with a narrower alphabet fits the note on fewer lines", () => {
+    const tight = { ...noted, width: 300 };
+    const narrow = render({
+      ...tight,
+      metrics: { advances: {}, fallback: 0.3 },
+    });
+    expect(noteLineCount(narrow)).toBeLessThan(noteLineCount(render(tight)));
+  });
+
+  it("metrics are validated like the rest of the payload", () => {
+    expect(
+      pointers({
+        data: bars,
+        metrics: { advances: { a: -1 }, fallback: 0 },
+      }).toSorted()
+    ).toStrictEqual(["metrics.advances.a", "metrics.fallback"]);
+    expect(
+      pointers({
+        data: bars,
+        metrics: { advances: { a: 0.5 }, fallback: 0.6 },
+      })
+    ).toStrictEqual([]);
+  });
+
+  it("the chart face is the --hl-font variable", () => {
+    const css = readFileSync(
+      new URL("../lib/theme.css", import.meta.url),
+      "utf-8"
+    );
+    expect(css).toContain("font-family: var(--hl-font, var(--font-sans))");
+    expect(css).not.toMatch(/font-family: var\(--font-sans\);/u);
   });
 });

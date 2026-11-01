@@ -189,7 +189,7 @@ export const RungBars = (props: RungBarsProps) => {
     >
       {(width) => {
         const margin = {
-          bottom: 30 + noteSpace(props.note, width - 16, 20),
+          bottom: 30 + noteSpace(props.note, width - 16, 20, props.metrics),
           left: 16,
           right: 16,
           top: 28,
@@ -279,7 +279,12 @@ export const RungBars = (props: RungBarsProps) => {
                 />
               );
             })}
-            <FootNote height={fitted} text={props.note} width={width} />
+            <FootNote
+              height={fitted}
+              metrics={props.metrics}
+              text={props.note}
+              width={width}
+            />
           </ChartSvg>
         );
       }}

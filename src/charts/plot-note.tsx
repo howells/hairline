@@ -1,8 +1,11 @@
+import type { FontMetrics } from "../schema/metrics";
 import { NOTE_LINE, noteLines, stagger } from "./util";
 
 interface PlotNoteProps {
   /** Text alignment at `x`. Defaults to "middle". */
   anchor?: "end" | "middle" | "start";
+  /** The face's metrics for wrapping; Inter's when omitted. */
+  metrics?: FontMetrics;
   /** Entry-stagger slot for the fade-in. Defaults to 6, after most marks. */
   order?: number;
   /** The footnote; " · " separates the segments it may wrap at. */
@@ -21,7 +24,7 @@ interface PlotNoteProps {
  * using the same width.
  */
 export const PlotNote = (props: PlotNoteProps) => {
-  const lines = noteLines(props.text, props.width);
+  const lines = noteLines(props.text, props.width, props.metrics);
   if (lines.length === 0) {
     return null;
   }
@@ -50,11 +53,13 @@ export const PlotNote = (props: PlotNoteProps) => {
 export const FootNote = (props: {
   gutter?: number;
   height: number;
+  metrics?: FontMetrics;
   order?: number;
   text?: string;
   width: number;
 }) => (
   <PlotNote
+    metrics={props.metrics}
     order={props.order}
     text={props.text}
     width={props.width - 2 * (props.gutter ?? 8)}
