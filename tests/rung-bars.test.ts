@@ -143,12 +143,14 @@ describe("the registry", () => {
       );
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
+      "animate",
       "data",
       "emphasis",
       "format",
       "height",
       "initialWidth",
       "note",
+      "replayKey",
       "unit",
       "width",
     ]);

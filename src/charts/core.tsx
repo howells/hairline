@@ -1,10 +1,14 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
-import { useMeasure, useReveal } from "./hooks";
+import { useEntry, useMeasure, useReveal } from "./hooks";
+import type { Animate } from "./hooks";
 import { PANEL } from "./roles";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
+/** A plot with nothing to animate carries neither class: it is simply drawn. */
+const phaseClass = (phase: "hidden" | "shown" | "still") =>
+  phase === "still" ? "is-still" : revealClass(phase === "shown");
 
 interface ChartProps {
   bottom?: ReactNode;
@@ -34,6 +38,12 @@ export const Chart = (props: ChartProps) => {
 };
 
 interface PlotProps {
+  /**
+   * When the entry draws in: "scroll" (default) when scrolled into view,
+   * "mount" at once, "off" never. Off, and reduced motion, draw the chart
+   * and mark it ready (`data-hl-ready="true"`) in the first HTML or at once.
+   */
+  animate?: Animate;
   children: (width: number) => ReactNode;
   className?: string;
   /**
@@ -41,7 +51,11 @@ interface PlotProps {
    * draws at this width until the real one is measured. Ignored if `width` is set.
    */
   initialWidth?: number;
+  /** Called when the chart has settled, as `data-hl-ready` turns "true". */
+  onReady?: () => void;
   overlay?: ReactNode;
+  /** Change it to replay the entry without remounting. */
+  replayKey?: number | string;
   style?: CSSProperties;
   /**
    * Fixed mode: draw at exactly this width, in px. Nothing is measured, so
@@ -67,11 +81,12 @@ export const Plot = (props: PlotProps) => {
     !fixed
   );
   const width = props.width ?? measured;
-  const shown = useReveal(ref);
+  const entry = useEntry(ref, props);
   return (
     <div
       ref={ref}
-      className={`[&_svg:focus-visible]:outline-muted relative min-w-0 [&_svg]:block [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-solid ${revealClass(shown)} ${props.className ?? ""}`}
+      data-hl-ready={entry.ready ? "true" : "false"}
+      className={`[&_svg:focus-visible]:outline-muted relative min-w-0 [&_svg]:block [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-solid ${phaseClass(entry.phase)} ${props.className ?? ""}`}
       style={props.style}
     >
       {width > 0 && props.children(width)}

@@ -102,6 +102,149 @@ export const useMotionPreference = () =>
 /** Assume reduced motion until hydration supplies the reader's preference. */
 export const useReducedMotion = () => useMotionPreference() ?? true;
 
+export type Animate = "mount" | "off" | "scroll";
+
+interface EntryOptions {
+  animate?: Animate;
+  onReady?: () => void;
+  replayKey?: number | string;
+}
+
+/**
+ * Resolves once every CSS animation running under `el` has finished. Where
+ * the browser cannot list animations (jsdom) there is nothing to wait for.
+ */
+const settled = async (el: HTMLElement) => {
+  const running = (el.getAnimations?.({ subtree: true }) ?? []).filter(
+    (a) => "animationName" in a
+  );
+  await Promise.all(
+    running.map(async (a) => {
+      try {
+        await a.finished;
+      } catch {
+        // cancelled (replayed or removed): nothing left to wait for
+      }
+    })
+  );
+};
+
+/** The cleanup of an effect that subscribed to nothing. */
+const unsubscribe = () => {
+  /* nothing to undo */
+};
+
+type Phase = "hidden" | "shown" | "still";
+
+const phaseOf = (still: boolean, revealed: boolean): Phase => {
+  if (still) {
+    return "still";
+  }
+  return revealed ? "shown" : "hidden";
+};
+
+/**
+ * The entry animation and the ready signal for a Plot.
+ *
+ * `phase` is the class state: "hidden" until revealed (on scroll, or at once
+ * for animate="mount"), then "shown"; "still" when nothing animates (animate
+ * "off", or the reader prefers reduced motion), so the chart is simply drawn.
+ * The server and the first client render always agree: hidden, or still for
+ * "off"; the reader's motion preference is only known after hydration.
+ *
+ * `ready` turns true once the entry has finished (at once when still);
+ * `onReady` is called at that moment. A new `replayKey` starts a new cycle:
+ * the plot is hidden again and the entry replays in place.
+ */
+export const useEntry = (
+  ref: RefObject<HTMLElement | null>,
+  options: EntryOptions
+) => {
+  const animate = options.animate ?? "scroll";
+  const reduced = useMotionPreference() === true;
+  const still = animate === "off" || reduced;
+  // A cycle is one play of the entry; reveal and settle are recorded against
+  // the cycle they belong to, so a replay needs no resetting.
+  const [cycle, setCycle] = useState(0);
+  const [seenKey, setSeenKey] = useState(options.replayKey);
+  const [revealedIn, setRevealedIn] = useState(-1);
+  const [settledIn, setSettledIn] = useState(-1);
+  if (seenKey !== options.replayKey) {
+    setSeenKey(options.replayKey);
+    setCycle(cycle + 1);
+  }
+  const revealed = revealedIn === cycle;
+  const ready = still || settledIn === cycle;
+
+  // Reveal: on scroll (the observer reports at once if already in view), or on mount.
+  useEffect(() => {
+    if (still) {
+      return unsubscribe;
+    }
+    if (animate === "mount") {
+      const frame = requestAnimationFrame(() => {
+        // Make the hidden state real before the shown one, so a replay restarts.
+        void ref.current?.getBoundingClientRect();
+        setRevealedIn(cycle);
+      });
+      return () => {
+        cancelAnimationFrame(frame);
+      };
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setRevealedIn(cycle);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+    if (ref.current !== null) {
+      io.observe(ref.current);
+    }
+    return () => {
+      io.disconnect();
+    };
+  }, [animate, cycle, ref, still]);
+
+  // Settle: ready once the entry's animations have finished.
+  useEffect(() => {
+    if (!revealed || still) {
+      return unsubscribe;
+    }
+    let live = true;
+    const finish = async () => {
+      if (ref.current !== null) {
+        await settled(ref.current);
+      }
+      if (live) {
+        setSettledIn(cycle);
+      }
+    };
+    const frame = requestAnimationFrame(() => {
+      void finish();
+    });
+    return () => {
+      live = false;
+      cancelAnimationFrame(frame);
+    };
+  }, [cycle, ref, revealed, still]);
+
+  const callback = useRef(options.onReady);
+  useLayoutEffect(() => {
+    callback.current = options.onReady;
+  });
+  // One call each time the chart becomes ready: first draw, and each replay.
+  useEffect(() => {
+    if (ready) {
+      callback.current?.();
+    }
+  }, [ready]);
+
+  return { phase: phaseOf(still, revealed), ready } as const;
+};
+
 /** React's useId, made safe for url(#id) references. */
 export const useSvgId = (prefix: string) =>
   `${prefix}-${useId().replaceAll(/[^\w-]/gu, "")}`;

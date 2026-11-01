@@ -9,6 +9,8 @@ export {
   resolveFormat,
 } from "./schema/format";
 export type { FormatDescriptor, FormatInput } from "./schema/format";
+export { motionShape } from "./schema/motion";
+export type { MotionCallbacks } from "./schema/motion";
 export { charts, registry, getChart } from "./schema/registry";
 export type { Job, ChartEntry, ChartKind } from "./schema/registry";
 export { rungDatumSchema, keyOf, rungBarsSchema } from "./schema/rung-bars";

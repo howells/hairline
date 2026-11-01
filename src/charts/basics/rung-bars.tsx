@@ -174,7 +174,10 @@ export const RungBars = (props: RungBarsProps) => {
 
   return (
     <Plot
+      animate={props.animate}
       initialWidth={props.initialWidth}
+      onReady={props.onReady}
+      replayKey={props.replayKey}
       width={props.width}
       overlay={
         hover.at === null ? null : (

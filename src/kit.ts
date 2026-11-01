@@ -18,11 +18,12 @@ export {
   useReveal,
   useMotionPreference,
   useReducedMotion,
+  useEntry,
   useSvgId,
   useScrub,
   useHover,
 } from "./charts/hooks";
-export type { Sync, HoverAt, Hover } from "./charts/hooks";
+export type { Animate, Sync, HoverAt, Hover } from "./charts/hooks";
 export { DimGroup, HitRect, HitCircle, HitPath, TipText } from "./charts/hover";
 export { Dot, Ring, Bar } from "./charts/markers";
 export {
