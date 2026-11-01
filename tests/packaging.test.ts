@@ -229,7 +229,6 @@ describe("release tooling", () => {
       path.join(dir, "package.json"),
       JSON.stringify({
         name: "@howells/hairline",
-        private: true,
         version: "0.1.0",
       })
     );
