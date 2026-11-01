@@ -71,6 +71,11 @@ export { FeatureRank } from "./charts/originals/feature-rank";
 export { ResponseTime } from "./charts/originals/response-time";
 export { RevenueByPlan } from "./charts/originals/revenue-by-plan";
 export type {
+  PlumbDatum,
+  PlumbScatterData,
+  PlumbScatterProps,
+} from "./schema/plumb-scatter";
+export type {
   RungDatum,
   RungBarsData,
   RungBarsProps,

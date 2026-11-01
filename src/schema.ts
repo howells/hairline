@@ -9,6 +9,16 @@ export {
   resolveFormat,
 } from "./schema/format";
 export type { FormatDescriptor, FormatInput } from "./schema/format";
+export {
+  plumbDatumSchema,
+  plumbKeyOf,
+  plumbScatterSchema,
+} from "./schema/plumb-scatter";
+export type {
+  PlumbDatum,
+  PlumbScatterData,
+  PlumbScatterProps,
+} from "./schema/plumb-scatter";
 export { charts, registry, getChart } from "./schema/registry";
 export type { Job, ChartEntry, ChartKind } from "./schema/registry";
 export { rungDatumSchema, keyOf, rungBarsSchema } from "./schema/rung-bars";

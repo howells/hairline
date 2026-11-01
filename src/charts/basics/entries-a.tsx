@@ -4,6 +4,7 @@ import { HairlineArea } from "./hairline-area";
 import { HairlineLine } from "./hairline-line";
 import { PairedRungs } from "./paired-rungs";
 import { PlumbScatter } from "./plumb-scatter";
+import { plumbScatterDemo } from "./plumb-scatter.data";
 import { RungWaterfall } from "./rung-waterfall";
 import { StackedRungs } from "./stacked-rungs";
 import { TickDonut } from "./tick-donut";
@@ -72,6 +73,7 @@ export const entries: GalleryEntry[] = [
     name: "Apple orchards",
     render: () => (
       <PlumbScatter
+        data={plumbScatterDemo}
         format={(v) => `${v} t/ha`}
         formatX={(v) => `${v}k ha`}
         xDomain={[0, 340]}
