@@ -18,10 +18,10 @@ export default defineConfig({
     llmsTxt: { details: agentDetails(registry) },
     markdownComponents,
   },
-  deployment: { base: "/docs", site: "https://hairline.danielhowells.com" },
   content: {
     sources: [filesystem({ root: "docs" }), custom(chartPages)],
   },
+  deployment: { base: "/docs", site: "https://hairline.danielhowells.com" },
   description:
     "An engraved chart library for React: pixel-snapped hairlines, one ink hero per chart, and data an agent can check before it draws.",
   feedback: false,
