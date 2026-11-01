@@ -1,24 +1,41 @@
 {
+  "name": "@howells/hairline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An engraved chart library for React: pixel-snapped hairlines, one ink hero per chart, and banknote textures.",
+  "homepage": "https://hairline.danielhowells.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/howells/hairline.git"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
     ".": {
-      "types": "./lib/types/index.d.ts",
-      "default": "./lib/index.js"
+      "default": "./lib/index.js",
+      "types": "./lib/types/index.d.ts"
     },
     "./frame": {
-      "types": "./lib/types/frame.d.ts",
-      "default": "./lib/frame.js"
+      "default": "./lib/frame.js",
+      "types": "./lib/types/frame.d.ts"
     },
     "./kit": {
-      "types": "./lib/types/kit.d.ts",
-      "default": "./lib/kit.js"
+      "default": "./lib/kit.js",
+      "types": "./lib/types/kit.d.ts"
     },
     "./schema": {
-      "types": "./lib/types/schema.d.ts",
-      "default": "./lib/schema.js"
+      "default": "./lib/schema.js",
+      "types": "./lib/types/schema.d.ts"
     },
     "./theme": {
-      "types": "./lib/types/theme.d.ts",
-      "default": "./lib/theme.js"
+      "default": "./lib/theme.js",
+      "types": "./lib/types/theme.d.ts"
     },
     "./json-schema/*": "./lib/json-schema/*",
     "./hairline.css": "./lib/hairline.css",
@@ -53,23 +70,6 @@
       "types": "./lib/types/entries/slope.d.ts"
     }
   },
-  "name": "@howells/hairline",
-  "version": "0.1.0",
-  "private": true,
-  "description": "An engraved chart library for React: pixel-snapped hairlines, one ink hero per chart, and banknote textures.",
-  "homepage": "https://hairline.danielhowells.com",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/howells/hairline.git"
-  },
-  "files": [
-    "lib",
-    "CHANGELOG.md"
-  ],
-  "type": "module",
-  "sideEffects": [
-    "*.css"
-  ],
   "publishConfig": {
     "access": "public",
     "provenance": true
