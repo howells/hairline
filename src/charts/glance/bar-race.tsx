@@ -15,7 +15,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth } from "../util";
+import { noteSpace, sansWidth, unitNoteOf } from "../util";
 import { barRaceDemo } from "./bar-race.data";
 import type { RaceData, RaceSeries } from "./bar-race.data";
 import { ControlSlot } from "./control-slot";
@@ -28,7 +28,9 @@ interface BarRaceProps {
   format?: (v: number) => string;
   /** Milliseconds per period. */
   speed?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Label of a series to keep in the hero colour whatever its rank. */
   highlight?: string;
 }
@@ -386,7 +388,7 @@ export const BarRace = (props: BarRaceProps) => {
           const x = scaleLinear()
             .domain([0, Math.max(1, order[0]?.v ?? 1)])
             .range([0, width - m.left - m.right]);
-          const svgH = height + noteSpace(props.note, width - 16, 22);
+          const svgH = height + noteSpace(unitNoteOf(props), width - 16, 22);
           return (
             <ChartSvg
               height={svgH}
@@ -430,7 +432,7 @@ export const BarRace = (props: BarRaceProps) => {
                 width={width}
                 y={height - 14}
               />
-              <FootNote height={svgH} text={props.note} width={width} />
+              <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
             </ChartSvg>
           );
         }}

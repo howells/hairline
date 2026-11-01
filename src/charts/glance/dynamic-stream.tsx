@@ -16,7 +16,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint } from "../texture-ids";
-import { noteSpace } from "../util";
+import { noteSpace, unitNoteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { ControlSlot } from "./control-slot";
 import { dynamicStreamDemo } from "./dynamic-stream.data";
@@ -34,7 +34,9 @@ interface DynamicStreamProps {
   domain?: [number, number];
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 const whole = (v: number) => `${Math.round(v)}`;
@@ -197,7 +199,7 @@ export const DynamicStream = (props: DynamicStreamProps) => {
       >
         {(width) => {
           const m = {
-            bottom: 12 + noteSpace(props.note, width - 16, 18),
+            bottom: 12 + noteSpace(unitNoteOf(props), width - 16, 18),
             left: 4,
             // The gutter holds the head value, then the scale flush right.
             right: 64,
@@ -255,7 +257,11 @@ export const DynamicStream = (props: DynamicStreamProps) => {
                   />
                 </g>
               )}
-              <FootNote height={height} text={props.note} width={width} />
+              <FootNote
+                height={height}
+                text={unitNoteOf(props)}
+                width={width}
+              />
             </ChartSvg>
           );
         }}

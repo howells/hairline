@@ -11,7 +11,7 @@ import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { stagger } from "../util";
+import { stagger, unitNoteOf } from "../util";
 import { dumbbellQueueDemo } from "./dumbbell-queue.data";
 import type { DumbbellDatum } from "./dumbbell-queue.data";
 import { inkWidth, maxIndex } from "./util-b";
@@ -26,7 +26,9 @@ interface DumbbellQueueProps {
   height?: number;
   /** Label of the row to draw in the hero colour. Defaults to the biggest change. */
   highlight?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Size of one bead in data units. */
   unit?: number;
 }
@@ -284,10 +286,10 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
           width,
           height,
           data,
-          props.note !== undefined,
+          unitNoteOf(props) !== undefined,
           format
         );
-        const endsY = height - (props.note === undefined ? 10 : 40);
+        const endsY = height - (unitNoteOf(props) === undefined ? 10 : 40);
         return (
           <ChartSvg
             height={height}
@@ -316,7 +318,7 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
             <Label anchor="end" voice="axis" x={layout.x.range()[1]} y={endsY}>
               {ends[1]}
             </Label>
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={unitNoteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

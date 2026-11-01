@@ -8,7 +8,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, PlateLabel } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger } from "../util";
+import { noteSpace, stagger, unitNoteOf } from "../util";
 import { rankStripDemo } from "./rank-strip.data";
 import type { RankSeries, RankStripData } from "./rank-strip.data";
 import { textWidth } from "./util-a";
@@ -20,7 +20,9 @@ interface RankStripProps {
   height?: number;
   /** Label of the hero entity; defaults to the biggest climber. */
   highlight?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface Hit {
@@ -273,7 +275,7 @@ export const RankStrip = (props: RankStripProps) => {
             nS * cell +
             rowGap * (nS - 1) +
             10 +
-            noteSpace(props.note, width - 16, 34);
+            noteSpace(unitNoteOf(props), width - 16, 34);
 
         return (
           <ChartSvg
@@ -322,7 +324,7 @@ export const RankStrip = (props: RankStripProps) => {
                 y={top + i * (cell + rowGap)}
               />
             ))}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={unitNoteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

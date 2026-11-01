@@ -197,3 +197,11 @@ export const wrapWords = (
   }
   return lines;
 };
+
+/**
+ * A chart's in-plot note: `unitNote`, else the deprecated `note` it replaces.
+ * The one place the old name is read.
+ */
+export const unitNoteOf = (props: { note?: string; unitNote?: string }) =>
+  // oxlint-disable-next-line typescript/no-deprecated -- the alias is read here and nowhere else
+  props.unitNote ?? props.note;

@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace, sansWidth, stagger } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
 import { dottyMatrixDemo, dottyPeriodLabel } from "./dotty-matrix.data";
 import type { DottyGroup } from "./dotty-matrix.data";
 
@@ -21,7 +21,9 @@ interface DottyMatrixProps {
   cellLabel?: (k: number) => string;
   /** Unit after the value, e.g. "years gained". */
   noun?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface DotHover {
@@ -180,7 +182,7 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
           height,
           data.length,
           n,
-          noteSpace(props.note, width - 16, 20),
+          noteSpace(unitNoteOf(props), width - 16, 20),
           Math.max(0, ...data.map((d) => sansWidth(d.label, 10.7)))
         );
         const scale = scaleSqrt()
@@ -214,7 +216,11 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
                 screen={screen}
               />
             ))}
-            <FootNote height={geo.height} text={props.note} width={width} />
+            <FootNote
+              height={geo.height}
+              text={unitNoteOf(props)}
+              width={width}
+            />
           </ChartSvg>
         );
       }}

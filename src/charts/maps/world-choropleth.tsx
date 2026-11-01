@@ -2,6 +2,7 @@ import { geoEqualEarth } from "d3-geo";
 import type { FeatureCollection } from "geojson";
 import { useMemo } from "react";
 
+import { unitNoteOf } from "../util";
 import { Choropleth } from "./choropleth";
 import { withoutRemoteIslets, withoutWrappedParts } from "./geo";
 import { worldChoroplethDemo, worldCountries } from "./world-choropleth.data";
@@ -16,7 +17,9 @@ interface WorldChoroplethProps {
   height?: number;
   /** Countries (by name) printed on the map, with their code; defaults to five leaders. */
   highlight?: string | string[];
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   short?: (v: number) => string;
   thresholds?: [number, number, number, number];
   unit?: string;
@@ -72,7 +75,7 @@ export const WorldChoropleth = (props: WorldChoroplethProps) => {
       format={format}
       labels={labels}
       maxHeight={props.height ?? 480}
-      note={props.note}
+      note={unitNoteOf(props)}
       project={project}
       regions={regions}
       short={props.short ?? litres}

@@ -16,7 +16,7 @@ import { ChartSvg } from "../svg";
 import { Label, XLabels } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { stagger } from "../util";
+import { stagger, unitNoteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { hairlineLineDemo } from "./hairline-line.data";
 import type { DailyDatum } from "./hairline-line.data";
@@ -27,7 +27,9 @@ interface HairlineLineProps {
   height?: number;
   format?: (v: number) => string;
   /** Footnote under the axis, e.g. "one dot = one day · hollow = weekend". */
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index drawn in the hero colour. Defaults to the emphasised extreme. */
   highlight?: number;
   /** Which extreme the hero marks when `highlight` is not given. Defaults to the peak. */
@@ -323,7 +325,7 @@ export const HairlineLine = (props: HairlineLineProps) => {
           height={props.height ?? 440}
           highlight={props.highlight}
           hover={hover}
-          note={props.note}
+          note={unitNoteOf(props)}
           show={show}
           width={width}
         />

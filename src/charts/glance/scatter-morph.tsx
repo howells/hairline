@@ -14,7 +14,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
 import { ControlSlot } from "./control-slot";
 import { placeNames } from "./scatter-labels";
 import { scatterMorphDemo } from "./scatter-morph.data";
@@ -40,7 +40,9 @@ interface ScatterMorphProps {
   yLabel?: string;
   formatX?: (v: number) => string;
   formatY?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 type View = "bars" | "ring" | "scatter";
@@ -538,7 +540,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
       </ControlSlot>
       <Plot>
         {(width) => {
-          const noteH = noteSpace(props.note, width - 16, 16);
+          const noteH = noteSpace(unitNoteOf(props), width - 16, 16);
           const h = height - CONTROL_SLOT_H - noteH;
           const ctx: Ctx = {
             data,
@@ -597,7 +599,11 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                     halo={view === "scatter"}
                   />
                 ) : null}
-                <FootNote height={h + noteH} text={props.note} width={width} />
+                <FootNote
+                  height={h + noteH}
+                  text={unitNoteOf(props)}
+                  width={width}
+                />
               </ChartSvg>
               {tip === undefined || hover.key === null ? null : (
                 <Tooltip x={tip[0]} y={tip[1]}>

@@ -16,7 +16,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Rules } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger } from "../util";
+import { noteSpace, stagger, unitNoteOf } from "../util";
 import { rainfallDemo } from "./rainfall-dual-area.data";
 import type { RainfallDatum } from "./rainfall-dual-area.data";
 import { labelRoom } from "./util-a";
@@ -29,7 +29,9 @@ interface RainfallDualAreaProps {
   /** Names for the two series, used in the tooltip. */
   inputName?: string;
   outputName?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface Frame {
@@ -227,7 +229,7 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
           .domain();
         const inTop = inputTicks(Math.max(...data.map((d) => d.input))).at(-1);
         const m = {
-          bottom: 24 + noteSpace(props.note, width - 16, 20),
+          bottom: 24 + noteSpace(unitNoteOf(props), width - 16, 20),
           left: labelRoom([fIn(inTop ?? 0), fOut(outTop)], "t-axis") + 12,
           right: 0,
           top: 6,
@@ -295,7 +297,11 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
               {hover.key !== null && h !== undefined ? (
                 <Cursor datum={h} f={f} i={hover.key} />
               ) : null}
-              <FootNote height={height} text={props.note} width={width} />
+              <FootNote
+                height={height}
+                text={unitNoteOf(props)}
+                width={width}
+              />
             </ChartSvg>
             {hover.key !== null && h !== undefined ? (
               <Tooltip x={cx(hover.key)} y={f.yOut(h.output) - 8}>

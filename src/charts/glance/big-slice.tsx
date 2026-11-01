@@ -12,7 +12,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, sansWidth, stagger } from "../util";
+import { noteSpace, ranks, sansWidth, stagger, unitNoteOf } from "../util";
 import { bigSliceDemo } from "./big-slice.data";
 import type { SliceDatum } from "./big-slice.data";
 
@@ -29,7 +29,9 @@ interface BigSliceProps {
   format?: (v: number) => string;
   /** Words after the intensity in the tooltip, e.g. "a day". */
   intensityLabel?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the slice to draw in the hero colour. */
   highlight?: number;
 }
@@ -426,7 +428,7 @@ export const BigSlice = (props: BigSliceProps) => {
             : `${shareOf(d)} · ${format(d.intensity)}`,
           name: d.label,
         });
-        const bottom = 8 + noteSpace(props.note, width - 16, 18);
+        const bottom = 8 + noteSpace(unitNoteOf(props), width - 16, 18);
         const slices = pie<SliceDatum>()
           .value((d) => d.share)
           .sortValues(null)
@@ -497,7 +499,7 @@ export const BigSlice = (props: BigSliceProps) => {
                 />
               ))}
             </g>
-            <FootNote height={svgH} text={props.note} width={width} />
+            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

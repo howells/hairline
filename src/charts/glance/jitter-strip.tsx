@@ -12,7 +12,7 @@ import { FootNote } from "../plot-note";
 import { VRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { noteSpace, stagger } from "../util";
+import { noteSpace, stagger, unitNoteOf } from "../util";
 import { jitterStripDemo } from "./jitter-strip.data";
 import type { JitterGroup } from "./jitter-strip.data";
 import { labelRoom, textWidth } from "./util-a";
@@ -27,7 +27,9 @@ interface JitterStripProps {
   tickFormat?: (v: number) => string;
   /** Unit for the tooltip noun when a record has no name, e.g. "year". */
   unit?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the hero group (default the first: median and name in ink); a given one also inks its rings. */
   highlight?: number;
 }
@@ -205,7 +207,7 @@ export const JitterStrip = (props: JitterStripProps) => {
         const narrow = width < 480;
         const ticks = gridTicks(max);
         const m = {
-          bottom: 40 + noteSpace(props.note, width - 16, 16),
+          bottom: 40 + noteSpace(unitNoteOf(props), width - 16, 16),
           // Room for the longest group name.
           left: labelRoom(data.map((d) => d.label)) + 10,
           // Half the last tick label hangs past its gridline.
@@ -264,7 +266,7 @@ export const JitterStrip = (props: JitterStripProps) => {
                 x={x}
               />
             ))}
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={unitNoteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

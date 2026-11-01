@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Beads } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { NOTE_LINE, hasText, noteLines, stagger } from "../util";
+import { NOTE_LINE, hasText, noteLines, stagger, unitNoteOf } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { rungWaterfallDemo } from "./rung-waterfall.data";
 import type { WaterfallDatum } from "./rung-waterfall.data";
@@ -21,7 +21,9 @@ interface RungWaterfallProps {
   unit?: number;
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index drawn in the hero colour. */
   highlight?: number;
 }
@@ -173,7 +175,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
   const unit = props.unit ?? 1;
   const height = props.height ?? 440;
   const format = props.format ?? String;
-  const hasNote = hasText(props.note);
+  const hasNote = hasText(unitNoteOf(props));
   const hover = useHover<number>();
   const ids = useTextureIds("waterfall");
   const label = cols
@@ -204,7 +206,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
           .paddingInner(0.42)
           .paddingOuter(0.22);
         const bw = x.bandwidth();
-        const notes = noteLines(props.note, width - 24);
+        const notes = noteLines(unitNoteOf(props), width - 24);
         const floor = Math.round(
           height -
             (hasNote ? 50 : 30) -
@@ -265,7 +267,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={props.note}
+              text={unitNoteOf(props)}
               width={width}
             />
           </ChartSvg>

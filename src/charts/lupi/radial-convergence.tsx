@@ -7,7 +7,14 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { clamp, dimClass, noteSpace, sansWidth, stagger } from "../util";
+import {
+  clamp,
+  dimClass,
+  noteSpace,
+  sansWidth,
+  stagger,
+  unitNoteOf,
+} from "../util";
 import { radialConvergenceDemo } from "./radial-convergence.data";
 import type { ConvergenceItem } from "./radial-convergence.data";
 import { clock } from "./util-a";
@@ -18,7 +25,9 @@ interface RadialConvergenceProps {
   height?: number;
   /** Noun for the tooltip, e.g. "storm". */
   noun?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface Hub {
@@ -282,7 +291,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
       }
     >
       {(width) => {
-        const noteH = noteSpace(props.note, width - 16, 20);
+        const noteH = noteSpace(unitNoteOf(props), width - 16, 20);
         const { plotH, rim } = rimFor(width, height, data, noteH);
         const hubs = buildHubs(data, rim);
         const hubOf = new Map(hubs.map((h) => [h.theme, h]));
@@ -342,7 +351,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
               );
             })}
             <HubDots R={rim.R} hero={hero} hubs={hubs} />
-            <FootNote height={plotH} text={props.note} width={width} />
+            <FootNote height={plotH} text={unitNoteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

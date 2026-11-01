@@ -15,7 +15,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { sansWidth, stagger } from "../util";
+import { sansWidth, stagger, unitNoteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { hairlineAreaDemo } from "./hairline-area.data";
 import type { DailyDatum } from "./hairline-line.data";
@@ -25,7 +25,9 @@ interface HairlineAreaProps {
   data?: DailyDatum[];
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index drawn in the hero colour. Defaults to the peak. */
   highlight?: number;
   formatDate?: (d: Date) => string;
@@ -313,7 +315,7 @@ export const HairlineArea = (props: HairlineAreaProps) => {
           highlight={props.highlight}
           hover={hover}
           maxWidth={props.maxWidth ?? 640}
-          note={props.note}
+          note={unitNoteOf(props)}
           show={show}
           ticks={props.ticks}
           width={width}

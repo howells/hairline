@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Rules } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { NOTE_LINE, hasText, noteLines, stagger } from "../util";
+import { NOTE_LINE, hasText, noteLines, stagger, unitNoteOf } from "../util";
 import { pairedRungsDemo } from "./paired-rungs.data";
 import type { PairDatum } from "./paired-rungs.data";
 import { rungPitch, rungY } from "./rung-geometry";
@@ -23,7 +23,9 @@ interface PairedRungsProps {
   unit?: number;
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Period names for the tooltip, earlier first. */
   periods?: [string, string];
   /** Index of the category whose current ladder is drawn in the hero colour. */
@@ -142,7 +144,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
   const height = props.height ?? 440;
   const format = props.format ?? String;
   const [prevName, curName] = props.periods ?? ["2011", "2021"];
-  const hasNote = hasText(props.note);
+  const hasNote = hasText(unitNoteOf(props));
   const hover = useHover<number>();
   const ids = useTextureIds("paired");
   const label = data
@@ -181,7 +183,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
         const max = Math.max(
           ...data.flatMap((d) => [d.current / unit, d.previous / unit])
         );
-        const notes = noteLines(props.note, width - 24);
+        const notes = noteLines(unitNoteOf(props), width - 24);
         const floor = Math.round(
           height -
             (hasNote ? 50 : 30) -
@@ -231,7 +233,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={props.note}
+              text={unitNoteOf(props)}
               width={width}
             />
           </ChartSvg>

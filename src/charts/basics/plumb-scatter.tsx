@@ -12,7 +12,14 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { NOTE_LINE, hasText, noteLines, sansWidth, stagger } from "../util";
+import {
+  NOTE_LINE,
+  hasText,
+  noteLines,
+  sansWidth,
+  stagger,
+  unitNoteOf,
+} from "../util";
 import { plumbScatterDemo } from "./plumb-scatter.data";
 import type { PlumbDatum } from "./plumb-scatter.data";
 
@@ -22,7 +29,9 @@ interface PlumbScatterProps {
   /** Formats y (the height). */
   format?: (v: number) => string;
   formatX?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Names for the low and high ends of the x axis. */
   xLabels?: [string, string];
   /** Name for the y direction, drawn up the left side. */
@@ -229,7 +238,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
   const format = props.format ?? String;
   const formatX = props.formatX ?? ((v: number) => `${Math.round(v)}`);
   const [lowName, highName] = props.xLabels ?? ["Low", "High"];
-  const hasNote = hasText(props.note);
+  const hasNote = hasText(unitNoteOf(props));
   const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
@@ -271,7 +280,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
       {(width) => {
         const plotW = Math.min(width - EDGE * 2, 600);
         const x0 = (width - plotW) / 2;
-        const notes = noteLines(props.note, width - 24);
+        const notes = noteLines(unitNoteOf(props), width - 24);
         const floor =
           Math.round(height) -
           (hasNote ? 58 : 36) -
@@ -331,7 +340,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={props.note}
+              text={unitNoteOf(props)}
               width={width}
             />
           </ChartSvg>

@@ -3,6 +3,7 @@ import type { FeatureCollection } from "geojson";
 import { useMemo } from "react";
 
 import { fmtInt } from "../../lib/format";
+import { unitNoteOf } from "../util";
 import { Choropleth } from "./choropleth";
 import { usChoroplethDemo, usStates } from "./us-choropleth.data";
 import type { StateDatum } from "./us-choropleth.data";
@@ -16,7 +17,9 @@ interface USChoroplethProps {
   height?: number;
   /** Postal code(s) printed on the map; defaults to the three states that cut most. */
   highlight?: string | string[];
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Short value for legend and labels, e.g. 96k. */
   short?: (v: number) => string;
   /** Four ascending breaks between the five shades. */
@@ -66,7 +69,7 @@ export const USChoropleth = (props: USChoroplethProps) => {
       format={format}
       labels={labels}
       maxHeight={props.height ?? 420}
-      note={props.note}
+      note={unitNoteOf(props)}
       project={project}
       regions={usStates}
       short={props.short ?? treesShort}

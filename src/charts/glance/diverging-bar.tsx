@@ -12,7 +12,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger } from "../util";
+import { noteSpace, stagger, unitNoteOf } from "../util";
 import { divergingBarDemo } from "./diverging-bar.data";
 import type { DivergingDatum } from "./diverging-bar.data";
 import { labelRoom } from "./util-a";
@@ -23,7 +23,9 @@ interface DivergingBarProps {
   format?: (v: number) => string;
   /** Draw losses in the alert colour instead of a light ladder tone. */
   alertLosses?: boolean;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
 }
@@ -219,7 +221,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
           "t-value"
         );
         const m = {
-          bottom: 4 + noteSpace(props.note, width - 16, 24),
+          bottom: 4 + noteSpace(unitNoteOf(props), width - 16, 24),
           left: labelW + 16,
           right: 40,
           top: 4,
@@ -278,7 +280,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
               );
             })}
             <VRule x={x(0)} y0={m.top} y1={height - m.bottom} />
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={unitNoteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

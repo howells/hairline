@@ -5,7 +5,14 @@ import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { NOTE_LINE, hasText, noteLines, stagger, wrapWords } from "../util";
+import {
+  NOTE_LINE,
+  hasText,
+  noteLines,
+  stagger,
+  unitNoteOf,
+  wrapWords,
+} from "../util";
 import { RUNG } from "./rung-geometry";
 import { tickRowsDemo } from "./tick-rows.data";
 import type { CountDatum } from "./tick-rows.data";
@@ -17,7 +24,9 @@ interface TickRowsProps {
   unit?: number;
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the row drawn in the hero colour. */
   highlight?: number;
 }
@@ -170,7 +179,7 @@ export const TickRows = (props: TickRowsProps) => {
   const data = props.data ?? tickRowsDemo;
   const unit = props.unit ?? 1;
   const format = props.format ?? String;
-  const hasNote = hasText(props.note);
+  const hasNote = hasText(unitNoteOf(props));
   const baseHeight = props.height ?? data.length * 66 + (hasNote ? 56 : 24);
   const hover = useHover<number>();
   const label = data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
@@ -215,7 +224,7 @@ export const TickRows = (props: TickRowsProps) => {
         );
         const span = (slots - 1) * pitch + 2;
         const track = slots * pitch;
-        const notes = noteLines(props.note, width - 24);
+        const notes = noteLines(unitNoteOf(props), width - 24);
         const height = baseHeight + Math.max(0, notes.length - 1) * NOTE_LINE;
         const pitchY = (baseHeight - (hasNote ? 56 : 24)) / data.length;
         const frame: RowFrame = {
@@ -254,7 +263,7 @@ export const TickRows = (props: TickRowsProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={props.note}
+              text={unitNoteOf(props)}
               width={width}
             />
           </ChartSvg>

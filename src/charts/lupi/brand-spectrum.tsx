@@ -11,7 +11,15 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { EngravedRect, Hatch, KeySwatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, dimClass, noteSpace, sansWidth, stagger, sum } from "../util";
+import {
+  clamp,
+  dimClass,
+  noteSpace,
+  sansWidth,
+  stagger,
+  sum,
+  unitNoteOf,
+} from "../util";
 import {
   brandSpectrumCompetitors,
   brandSpectrumDemo,
@@ -27,15 +35,15 @@ interface BrandSpectrumProps {
   /** The gap bar's name in the key. Defaults to "Gap to their mean". */
   gapLabel?: string;
   height?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /**
    * A position in words, for the tooltip and the accessible label. Defaults
    * to how far it leans toward a pole ("74% toward Authority"); pass this
    * when the poles are measured values and the reading is a value too.
    */
   describe?: (row: SpectrumRow, position: number) => string;
-  /** The drawing's accessible title. */
-  title?: string;
 }
 
 interface SpectrumHover {
@@ -368,7 +376,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
           54 +
           10 +
           (key.at(-1)?.line ?? 0) * KEY_LINE +
-          noteSpace(props.note, width - 16, 18);
+          noteSpace(unitNoteOf(props), width - 16, 18);
         const layout = spectrumLayout(axis, height, data.length, footH);
         const legendY = layout.rowY(data.length - 1) + 54;
         return (
@@ -378,10 +386,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
             leave={() => {
               setHover(null);
             }}
-            title={
-              props.title ??
-              "Where one hill sits between opposing poles, against others"
-            }
+            title="Where one hill sits between opposing poles, against others"
             width={width}
           >
             <defs>
@@ -399,7 +404,11 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
               />
             ))}
             <SpectrumKey entries={key} x={axis.x0} y={legendY} />
-            <FootNote height={layout.height} text={props.note} width={width} />
+            <FootNote
+              height={layout.height}
+              text={unitNoteOf(props)}
+              width={width}
+            />
           </ChartSvg>
         );
       }}

@@ -8,7 +8,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { noteSpace, sansWidth, stagger } from "../util";
+import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { RingData } from "./circular-graph.data";
 
@@ -20,7 +20,9 @@ interface CircularGraphProps {
   highlight?: string | string[];
   /** Word after the neighbour count in the tooltip, e.g. "borders shown". */
   linkUnit?: string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Unit after a node's size in the tooltip. */
   sizeUnit?: string;
 }
@@ -532,7 +534,7 @@ export const CircularGraph = (props: CircularGraphProps) => {
           focus={focus}
           height={props.height ?? 560}
           highlight={props.highlight}
-          note={props.note}
+          note={unitNoteOf(props)}
           onFocus={(id, t) => {
             setFocus(id);
             setTip(t);

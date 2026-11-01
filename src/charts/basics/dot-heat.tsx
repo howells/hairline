@@ -6,7 +6,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { stagger } from "../util";
+import { stagger, unitNoteOf } from "../util";
 import { dotHeatDemo } from "./dot-heat.data";
 import type { DotHeatData } from "./dot-heat.data";
 import { inkWidth } from "./util-b";
@@ -19,7 +19,9 @@ interface DotHeatProps {
   highlight?: readonly [number, number];
   /** Label every nth column on the axis. */
   labelEvery?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 interface Cell {
@@ -325,7 +327,7 @@ export const DotHeat = (props: DotHeatProps) => {
           height,
           data,
           span,
-          props.note !== undefined,
+          unitNoteOf(props) !== undefined,
           props.labelEvery ?? 2
         );
         return (
@@ -354,7 +356,11 @@ export const DotHeat = (props: DotHeatProps) => {
               r={ringRadius(grid, data.values, peakR, peakC)}
               step={RING_STEP.mark}
             />
-            <FootNote height={grid.height} text={props.note} width={width} />
+            <FootNote
+              height={grid.height}
+              text={unitNoteOf(props)}
+              width={width}
+            />
           </ChartSvg>
         );
       }}
