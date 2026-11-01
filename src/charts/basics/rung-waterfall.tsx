@@ -1,5 +1,6 @@
 import { scaleBand } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -15,15 +16,12 @@ import { rungWaterfallDemo } from "./rung-waterfall.data";
 import type { WaterfallDatum } from "./rung-waterfall.data";
 import { Rungs } from "./rungs";
 
-interface RungWaterfallProps {
+interface RungWaterfallProps extends NoteProps {
   data?: WaterfallDatum[];
   /** Units per rung. */
   unit?: number;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index drawn in the hero colour. */
   highlight?: number;
 }

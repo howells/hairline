@@ -106,3 +106,7 @@ export const fmtGWh = (v: number) => `${fmtInt(v)} GWh`;
 
 /** Energy in terawatt hours (the input is TWh), to one decimal place ("87.4 TWh"). */
 export const fmtTWh = (v: number) => `${v.toFixed(1)} TWh`;
+
+/** A count with its noun: "1 bar", "3 bars". */
+export const plural = (n: number, noun: string) =>
+  `${n} ${noun}${n === 1 ? "" : "s"}`;

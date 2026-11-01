@@ -14,6 +14,7 @@ import type {
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal } from "../hooks";
 import { DimGroup, HitCircle, TipText } from "../hover";
@@ -27,14 +28,11 @@ import { LinkBundle } from "./link-bundle";
 import { textWidth } from "./util-a";
 import { bundleLines } from "./util-b";
 
-interface ForceGraphProps {
+interface ForceGraphProps extends NoteProps {
   nodes?: ForceNode[];
   links?: ForceLink[];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface SimNode extends SimulationNodeDatum {

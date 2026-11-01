@@ -1,5 +1,6 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -15,14 +16,11 @@ import { chunkyBarsDemo } from "./chunky-bars.data";
 import type { ChunkyDatum } from "./chunky-bars.data";
 import { rankTones } from "./util-a";
 
-interface ChunkyBarsProps {
+interface ChunkyBarsProps extends NoteProps {
   data?: ChunkyDatum[];
   height?: number;
   format?: (v: number) => string;
   /** Footnote under the labels. */
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
 }

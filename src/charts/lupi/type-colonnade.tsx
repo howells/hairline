@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { HitRect, TipText } from "../hover";
@@ -21,16 +22,13 @@ import {
 import { typeColonnadeDemo } from "./type-colonnade.data";
 import type { OwnershipDatum } from "./type-colonnade.data";
 
-interface TypeColonnadeProps {
+interface TypeColonnadeProps extends NoteProps {
   data?: OwnershipDatum[];
   height?: number;
   /** How many of the largest owners to draw in the hero colour. Default 1. */
   strong?: number;
   /** Noun for the tooltip count, e.g. "lights". */
   unit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Owner to draw in the hero colour. */
   highlight?: string;
 }

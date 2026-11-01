@@ -2,6 +2,7 @@ import { format as d3Format } from "d3-format";
 import { scaleSqrt } from "d3-scale";
 
 import { yearTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -24,7 +25,7 @@ import type {
   AlmanacNote,
 } from "./bubble-almanac.data";
 
-interface BubbleAlmanacProps {
+interface BubbleAlmanacProps extends NoteProps {
   data?: AlmanacCell[];
   /** Ignored: margin notes are no longer drawn. */
   notes?: AlmanacNote[];
@@ -35,9 +36,6 @@ interface BubbleAlmanacProps {
   height?: number;
   format?: (v: number) => string;
   noun?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface AlmanacLayout {

@@ -2,6 +2,7 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
 import { yearTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -20,14 +21,11 @@ import { trendLineageDemo } from "./trend-lineage.data";
 import type { LineageDatum } from "./trend-lineage.data";
 import { byStep } from "./util-b";
 
-interface TrendLineageProps {
+interface TrendLineageProps extends NoteProps {
   data?: LineageDatum[];
   /** First and last year on the axis; defaults to the data's span. */
   years?: [number, number];
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Area drawn in the hero colour. Defaults to the oldest still in use. */
   highlight?: string;
 }

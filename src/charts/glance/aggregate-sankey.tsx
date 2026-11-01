@@ -2,6 +2,7 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import type { SankeyGraph, SankeyNode } from "d3-sankey";
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
@@ -15,15 +16,12 @@ import { aggregateSankeyDemo } from "./aggregate-sankey.data";
 import type { AggregateSankeyData, SankeyFlow } from "./aggregate-sankey.data";
 import { textWidth } from "./util-a";
 
-interface AggregateSankeyProps {
+interface AggregateSankeyProps extends NoteProps {
   data?: AggregateSankeyData;
   height?: number;
   format?: (v: number) => string;
   /** Unit noun for the tooltip, e.g. "MPs". */
   unit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Source label to keep in the hero colour. */
   highlight?: string;
 }

@@ -3,6 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { utcFormat } from "d3-time-format";
 
 import { fmtDegC } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -18,13 +19,10 @@ import { staggerWaveDemo } from "./stagger-wave.data";
 import type { WaveDatum } from "./stagger-wave.data";
 import { labelRoom } from "./util-a";
 
-interface StaggerWaveProps {
+interface StaggerWaveProps extends NoteProps {
   data?: WaveDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
 }

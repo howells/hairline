@@ -3,6 +3,7 @@ import { scaleLinear } from "d3-scale";
 import type { PointerEvent } from "react";
 
 import { monthTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -19,13 +20,10 @@ import { barcodeLollipopDemo } from "./barcode-lollipop.data";
 import type { BarcodeDatum } from "./barcode-lollipop.data";
 import { argMax } from "./util-b";
 
-interface BarcodeLollipopProps {
+interface BarcodeLollipopProps extends NoteProps {
   data?: BarcodeDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Ignored: the margin paragraph is no longer drawn. */
   aside?: string;
   /** How many top days to label. Default 3. */

@@ -41,9 +41,6 @@ export const chartTable = (
     visible: props.table,
   });
 
-export const plural = (n: number, noun: string) =>
-  `${n} ${noun}${n === 1 ? "" : "s"}`;
-
 /**
  * A pointer's x in the chart's own pixels. The svg may be shown larger or
  * smaller than it is drawn (`scale`, `fit`), so the box is read back.

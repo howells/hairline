@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect } from "../hover";
@@ -11,7 +12,7 @@ import { dotHeatDemo } from "./dot-heat.data";
 import type { DotHeatData } from "./dot-heat.data";
 import { inkWidth } from "./util-b";
 
-interface DotHeatProps {
+interface DotHeatProps extends NoteProps {
   data?: DotHeatData;
   format?: (v: number) => string;
   height?: number;
@@ -19,9 +20,6 @@ interface DotHeatProps {
   highlight?: readonly [number, number];
   /** Label every nth column on the axis. */
   labelEvery?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface Cell {

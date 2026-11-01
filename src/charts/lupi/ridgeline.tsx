@@ -3,6 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area, curveBasis, line } from "d3-shape";
 
 import { fmtDegC } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -17,7 +18,7 @@ import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { ridgelineDemo } from "./ridgeline.data";
 import type { RidgeSeries } from "./ridgeline.data";
 
-interface RidgelineProps {
+interface RidgelineProps extends NoteProps {
   data?: RidgeSeries[];
   /** Value range of the shared x axis. */
   domain?: [number, number];
@@ -27,9 +28,6 @@ interface RidgelineProps {
   ticks?: number;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Ridge drawn in the hero colour. Defaults to the first. */
   highlight?: string;
 }

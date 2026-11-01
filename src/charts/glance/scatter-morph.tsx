@@ -2,6 +2,7 @@ import { scaleLinear } from "d3-scale";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useHover, useReducedMotion, useReveal } from "../hooks";
@@ -31,7 +32,7 @@ import {
 import type { Pt } from "./util-a";
 import { CONTROL_SLOT_H } from "./util-b";
 
-interface ScatterMorphProps {
+interface ScatterMorphProps extends NoteProps {
   data?: MorphDatum[];
   height?: number;
   format?: (v: number) => string;
@@ -40,9 +41,6 @@ interface ScatterMorphProps {
   yLabel?: string;
   formatX?: (v: number) => string;
   formatY?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 type View = "bars" | "ring" | "scatter";

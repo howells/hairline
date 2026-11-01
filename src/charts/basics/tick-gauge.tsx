@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
@@ -11,16 +12,13 @@ import { tickGaugeDemo } from "./tick-gauge.data";
 import type { TickGaugeDatum } from "./tick-gauge.data";
 import { polar } from "./util-b";
 
-interface TickGaugeProps {
+interface TickGaugeProps extends NoteProps {
   /** Line under the big number; receives the ticks still to come. Defaults to the amount to come. */
   caption?: (remaining: number) => string;
   data?: TickGaugeDatum;
   /** Formats the raw value and target for the tooltip. */
   format?: (v: number) => string;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Total sweep of the dial in degrees, centred on 12 o'clock. */
   sweep?: number;
   /** How many ticks make the full dial. */

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -11,14 +12,11 @@ import type { CircleLink, CircleNode } from "./circular-graph.data";
 import { LinkBundle } from "./link-bundle";
 import { bundleLines } from "./util-b";
 
-interface CircularGraphProps {
+interface CircularGraphProps extends NoteProps {
   nodes?: CircleNode[];
   links?: CircleLink[];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Node id to draw in the hero colour. */
   highlight?: string;
 }

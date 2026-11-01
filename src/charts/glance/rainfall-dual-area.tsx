@@ -4,6 +4,7 @@ import { area, curveMonotoneX, line } from "d3-shape";
 import type { PointerEvent } from "react";
 
 import { dayTickLabels, fmtDay } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -21,7 +22,7 @@ import { rainfallDemo } from "./rainfall-dual-area.data";
 import type { RainfallDatum } from "./rainfall-dual-area.data";
 import { labelRoom } from "./util-a";
 
-interface RainfallDualAreaProps {
+interface RainfallDualAreaProps extends NoteProps {
   data?: RainfallDatum[];
   height?: number;
   formatInput?: (v: number) => string;
@@ -29,9 +30,6 @@ interface RainfallDualAreaProps {
   /** Names for the two series, used in the tooltip. */
   inputName?: string;
   outputName?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface Frame {

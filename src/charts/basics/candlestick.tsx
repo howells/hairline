@@ -7,6 +7,7 @@ import {
   fmtMoney,
   fmtPrice as fmtPrice2,
 } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect } from "../hover";
@@ -24,7 +25,7 @@ import type { CandleDatum } from "./candlestick.data";
 import { VALUE_AXIS_ROOM } from "./util-a";
 import { inkWidth } from "./util-b";
 
-interface CandlestickProps {
+interface CandlestickProps extends NoteProps {
   data?: CandleDatum[];
   /** Formats prices on the value axis. Defaults to the house money format. */
   format?: (v: number) => string;
@@ -35,9 +36,6 @@ interface CandlestickProps {
    */
   formatPrice?: (v: number) => string;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface Layout {

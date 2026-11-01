@@ -3,6 +3,7 @@ import type { HierarchyPointNode } from "d3-hierarchy";
 import { linkHorizontal } from "d3-shape";
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
@@ -14,12 +15,9 @@ import { treeLRDemo } from "./tree-lr.data";
 import type { TreeDatum } from "./tree-lr.data";
 import { fillFor, labelRoom, strokeFor } from "./util-a";
 
-interface TreeLRProps {
+interface TreeLRProps extends NoteProps {
   data?: TreeDatum;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Name of a top-level branch to draw in the hero colour. */
   highlight?: string;
 }

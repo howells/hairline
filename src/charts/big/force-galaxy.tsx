@@ -2,6 +2,7 @@ import type { Simulation } from "d3-force";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent, RefObject } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal } from "../hooks";
 import { HitRect, TipText } from "../hover";
@@ -36,13 +37,10 @@ import type { GalaxyData } from "./force-galaxy.data";
 /** Millions a year to one decimal ("84.6m"). */
 const fmtMillions = (v: number) => `${v.toFixed(1)}m`;
 
-interface ForceGalaxyProps {
+interface ForceGalaxyProps extends NoteProps {
   data?: GalaxyData;
   format?: (v: number) => string;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Unit after the volume in the tooltip. */
   unit?: string;
 }

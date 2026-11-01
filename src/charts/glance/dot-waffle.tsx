@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -12,14 +13,11 @@ import { dotWaffleDemo } from "./dot-waffle.data";
 import type { WaffleDatum } from "./dot-waffle.data";
 import { labelRoom } from "./util-a";
 
-interface DotWaffleProps {
+interface DotWaffleProps extends NoteProps {
   data?: WaffleDatum[];
   height?: number;
   format?: (v: number) => string;
   /** Footnote under the grid. */
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the category to draw in the hero colour. */
   highlight?: number;
 }

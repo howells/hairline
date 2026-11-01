@@ -1,5 +1,6 @@
 import { scaleBand } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -17,7 +18,7 @@ import { stackedRungsDemo, stackedRungsSeries } from "./stacked-rungs.data";
 import type { StackDatum } from "./stacked-rungs.data";
 import { maxIndex } from "./util-b";
 
-interface StackedRungsProps {
+interface StackedRungsProps extends NoteProps {
   data?: StackDatum[];
   /** Series names, bottom (darkest) first. At most three. */
   series?: string[];
@@ -25,9 +26,6 @@ interface StackedRungsProps {
   unit?: number;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the category whose bottom segment is drawn in the hero colour. */
   highlight?: number;
 }

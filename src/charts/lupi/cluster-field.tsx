@@ -1,4 +1,5 @@
 import { fmtInt } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitCircle, TipText } from "../hover";
@@ -13,7 +14,7 @@ import type {
   ClusterField as ClusterFieldData,
 } from "./cluster-field.data";
 
-interface ClusterFieldProps {
+interface ClusterFieldProps extends NoteProps {
   data?: ClusterFieldData;
   /** Noun for one member, e.g. "variety". */
   noun?: string;
@@ -23,9 +24,6 @@ interface ClusterFieldProps {
   sizeNoun?: string;
   /** Defaults to a height that fits the poster at the measured width. */
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface PlacedCluster {

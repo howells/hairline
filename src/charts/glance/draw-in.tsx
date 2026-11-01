@@ -8,6 +8,7 @@ import { useRef } from "react";
 import type { PointerEvent, RefObject } from "react";
 
 import { monthTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useHover, useSvgId } from "../hooks";
@@ -29,7 +30,7 @@ import { drawInDemo } from "./draw-in.data";
 import type { DrawInDatum } from "./draw-in.data";
 import { CONTROL_SLOT_H } from "./util-b";
 
-interface DrawInProps {
+interface DrawInProps extends NoteProps {
   data?: DrawInDatum[];
   height?: number;
   format?: (v: number) => string;
@@ -37,9 +38,6 @@ interface DrawInProps {
   caption?: string;
   /** Draw duration in ms. */
   duration?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 const fmtDate = utcFormat("%-d %b");

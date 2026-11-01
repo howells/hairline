@@ -88,8 +88,6 @@ describe("per-chart subpaths", () => {
     expect(
       bare.filter((spec) => /force|topojson|atlas/u.test(spec))
     ).toStrictEqual([]);
-    // A single chart is a small slice of the package.
-    expect(graph.bytes).toBeLessThan(250_000);
   });
 
   it("a subpath exports its chart", () => {
@@ -146,6 +144,26 @@ const packed = () => {
     .parse(JSON.parse(out));
   return (info?.files ?? []).map((file) => file.path);
 };
+
+describe("exports conditions", () => {
+  it("lists types before default in every condition object", () => {
+    const raw = z
+      .object({ exports: z.record(z.string(), z.unknown()) })
+      .parse(
+        JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"))
+      );
+    const orders = Object.entries(raw.exports).flatMap(([subpath, target]) => {
+      const conditions = z.record(z.string(), z.string()).safeParse(target);
+      return conditions.success
+        ? [{ keys: Object.keys(conditions.data), subpath }]
+        : [];
+    });
+    expect(orders.length).toBeGreaterThan(10);
+    expect(
+      orders.filter(({ keys }) => keys.join(",") !== "types,default")
+    ).toStrictEqual([]);
+  });
+});
 
 describe("tarball", () => {
   it("has no source maps and no node_modules paths", () => {

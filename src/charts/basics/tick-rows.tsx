@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -18,15 +19,12 @@ import { tickRowsDemo } from "./tick-rows.data";
 import type { CountDatum } from "./tick-rows.data";
 import { inkWidth, maxIndex } from "./util-b";
 
-interface TickRowsProps {
+interface TickRowsProps extends NoteProps {
   data?: CountDatum[];
   /** Units per tick. */
   unit?: number;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the row drawn in the hero colour. */
   highlight?: number;
 }

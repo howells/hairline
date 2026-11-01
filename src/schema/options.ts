@@ -26,5 +26,29 @@ export const sharedShape = {
   title: z.string().min(1).optional(),
 };
 
+/**
+ * The in-plot note, as one shape: spread `noteShape` into the chart's
+ * strictObject and add `NoteProps` to its props type. `note` is the old name
+ * for `unitNote`, kept so existing callers still work.
+ */
+export const noteShape = {
+  /** The old name for `unitNote`; JSON Schema marks it deprecated. */
+  note: z.string().optional().meta({ deprecated: true }),
+  /** The in-plot key under the axis. */
+  unitNote: z.string().optional(),
+};
+
+/** The two names an in-plot note goes by, for code that reads them (a deprecation would flag the read). */
+export interface NoteNames {
+  note?: string;
+  unitNote?: string;
+}
+
+/** A chart's props for the in-plot note: `unitNote`, and the `note` it replaces. */
+export interface NoteProps extends Omit<NoteNames, "note"> {
+  /** @deprecated Use `unitNote`. */
+  note?: string;
+}
+
 /** What a chart's props add to its payload: functions cannot be JSON. */
 export type SharedCallbacks = MotionCallbacks;

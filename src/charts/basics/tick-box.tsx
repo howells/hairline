@@ -1,6 +1,7 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 import type { ScaleBand, ScaleLinear } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -18,15 +19,12 @@ import { tickBoxDemo } from "./tick-box.data";
 import type { BoxDatum } from "./tick-box.data";
 import { inkWidth } from "./util-b";
 
-interface TickBoxProps {
+interface TickBoxProps extends NoteProps {
   data?: BoxDatum[];
   /** "low" (default) puts the lowest median in ink; "high" the highest. */
   darkest?: "high" | "low";
   format?: (v: number) => string;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Axis ticks; defaults to five even steps. */
   ticks?: number[];
 }

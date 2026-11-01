@@ -232,6 +232,17 @@ const entry = (js: string, dts: string) => ({
   default: `./lib/${js}.js`,
   types: `./lib/types/${dts}.d.ts`,
 });
+// `types` comes before `default`: a resolver takes the first condition that
+// matches. The pairs are written as entries so the key sorter leaves the order.
+const typesFirst = (value: Exported) => {
+  const conditions = Entry.safeParse(value);
+  return conditions.success
+    ? Object.fromEntries([
+        ["types", conditions.data.types],
+        ["default", conditions.data.default],
+      ])
+    : value;
+};
 const generatedKeys = new Set([
   "./maps",
   ...subpaths.map(({ slug }) => `./${slug}`),
@@ -246,8 +257,13 @@ exportsMap["./maps"] = entry("maps", "maps");
 for (const { slug } of subpaths) {
   exportsMap[`./${slug}`] = entry(`entries/${slug}`, `entries/${slug}`);
 }
-manifest.exports = exportsMap;
-writeFileSync(manifestUrl, `${JSON.stringify(manifest, null, 2)}\n`);
+const ordered = Object.fromEntries(
+  Object.entries(exportsMap).map(([key, value]) => [key, typesFirst(value)])
+);
+writeFileSync(
+  manifestUrl,
+  `${JSON.stringify({ ...manifest, exports: ordered }, null, 2)}\n`
+);
 console.log(
   `${chartLines.length} charts, ${mapLines.length} maps, ${subpaths.length} subpaths, ${KIT.length} kit modules`
 );

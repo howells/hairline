@@ -2,6 +2,7 @@ import { utcFormat } from "d3-time-format";
 import type { PointerEvent } from "react";
 
 import { monthTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
@@ -19,15 +20,12 @@ import { noteSpace, stagger, noteOf } from "../util";
 import { calendarHeatDemo } from "./calendar-heat.data";
 import type { DayDatum } from "./calendar-heat.data";
 
-interface CalendarHeatProps {
+interface CalendarHeatProps extends NoteProps {
   data?: DayDatum[];
   /** Plural noun for the count, e.g. "births". */
   unit?: string;
   /** Ignored: the busiest-day callout text is no longer drawn. */
   annotation?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Upper bound on the overall height; the cells shrink to fit. */
   height?: number;
 }

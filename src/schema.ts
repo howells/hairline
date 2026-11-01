@@ -44,8 +44,8 @@ export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";
 export type { FontMetrics } from "./schema/metrics";
 export { motionShape } from "./schema/motion";
 export type { MotionCallbacks } from "./schema/motion";
-export { sharedShape } from "./schema/options";
-export type { SharedCallbacks } from "./schema/options";
+export { sharedShape, noteShape } from "./schema/options";
+export type { NoteNames, NoteProps, SharedCallbacks } from "./schema/options";
 export { plumbDatumSchema, plumbScatterSchema } from "./schema/plumb-scatter";
 export type {
   PlumbDatum,

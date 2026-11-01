@@ -3,7 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { dayTickLabels, fmtInt } from "../../lib/format";
+import { plural, dayTickLabels, fmtInt } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
 import type { FontMetrics } from "../../schema/metrics";
@@ -15,13 +15,7 @@ import { Dot, Ring } from "../markers";
 import type { DotSize } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule, Stem, VRule } from "../rules";
-import {
-  scoped,
-  chartTable,
-  plotOptions,
-  plural,
-  pointerX,
-} from "../shared-options";
+import { scoped, chartTable, plotOptions, pointerX } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label, XLabels } from "../text";
 import { DottedLine } from "../texture";
@@ -32,13 +26,13 @@ import { DailyEmpty } from "./daily-empty";
 import {
   heroOf,
   isLive,
-  liveOf,
+  seriesOf,
   reactKeyOf,
   readingRows,
   readingsOf,
   valueAt,
 } from "./daily-readings";
-import type { Reading } from "./daily-readings";
+import type { Reading, Series } from "./daily-readings";
 import { VALUE_AXIS_ROOM, dailyFloor, isWeekend } from "./util-a";
 
 interface Frame {
@@ -60,13 +54,11 @@ const dotClass = (hollow: boolean, hero: boolean) => {
   return hollow ? "stroke-l3" : "fill-l3";
 };
 
-interface DotsProps {
+interface DotsProps extends Series {
   format: (v: number) => string;
   frame: Frame;
   hero: number;
   hover: number | null;
-  live: number[];
-  readings: Reading[];
 }
 
 /**
@@ -113,12 +105,10 @@ const Dots = ({ format, frame, hero, hover, live, readings }: DotsProps) => {
   );
 };
 
-interface StemsProps {
+interface StemsProps extends Series {
   floor: number;
   frame: Frame;
   hero: number;
-  live: number[];
-  readings: Reading[];
 }
 
 /** Weekend days drop an evenly dotted stem to the floor; the hero a solid ink one. */
@@ -233,7 +223,8 @@ const HairlineLineSvg = ({
   title,
   width,
 }: SvgProps) => {
-  const live = liveOf(readings);
+  const series = seriesOf(readings);
+  const { live } = series;
   const floor = dailyFloor(height, note, width, metrics);
   if (live.length === 0) {
     return (
@@ -301,13 +292,7 @@ const HairlineLineSvg = ({
         y={y}
       />
       <HRule x0={x0} x1={x1} y={floor} />
-      <Stems
-        floor={floor}
-        frame={frame}
-        hero={hero}
-        live={live}
-        readings={readings}
-      />
+      <Stems floor={floor} frame={frame} hero={hero} {...series} />
       {hover === null || hover === hero ? null : (
         <VRule
           kind="rule"
@@ -326,8 +311,7 @@ const HairlineLineSvg = ({
         frame={frame}
         hero={hero}
         hover={hover}
-        live={live}
-        readings={readings}
+        {...series}
       />
       <DayAxis frame={frame} readings={readings} />
       <FootNote

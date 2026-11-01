@@ -2,6 +2,7 @@ import { format as d3Format } from "d3-format";
 import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -13,7 +14,7 @@ import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { dottyMatrixDemo, dottyPeriodLabel } from "./dotty-matrix.data";
 import type { DottyGroup } from "./dotty-matrix.data";
 
-interface DottyMatrixProps {
+interface DottyMatrixProps extends NoteProps {
   data?: DottyGroup[];
   height?: number;
   format?: (v: number) => string;
@@ -21,9 +22,6 @@ interface DottyMatrixProps {
   cellLabel?: (k: number) => string;
   /** Unit after the value, e.g. "years gained". */
   noun?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface DotHover {

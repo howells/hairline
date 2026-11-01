@@ -1,4 +1,5 @@
 import { fmtInt } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -13,13 +14,10 @@ import { hourglassDemo } from "./hourglass-stream.data";
 import type { StageDatum } from "./hourglass-stream.data";
 import { vCurve } from "./util-b";
 
-interface HourglassStreamProps {
+interface HourglassStreamProps extends NoteProps {
   data?: StageDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the stage drawn in the hero colour. Defaults to the last. */
   highlight?: number;
 }

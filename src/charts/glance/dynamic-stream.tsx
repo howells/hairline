@@ -4,6 +4,7 @@ import { area, curveMonotoneX, line } from "d3-shape";
 import { useMemo, useRef } from "react";
 import type { PointerEvent, RefObject } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useHover, useSvgId } from "../hooks";
@@ -23,7 +24,7 @@ import { dynamicStreamDemo } from "./dynamic-stream.data";
 import type { StreamFeed } from "./dynamic-stream.data";
 import { CONTROL_SLOT_H } from "./util-b";
 
-interface DynamicStreamProps {
+interface DynamicStreamProps extends NoteProps {
   /** Value for step n (n ≥ 0). Must be deterministic. */
   feed?: StreamFeed;
   /** Values visible at once. */
@@ -34,9 +35,6 @@ interface DynamicStreamProps {
   domain?: [number, number];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 const whole = (v: number) => `${Math.round(v)}`;

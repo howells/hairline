@@ -13,6 +13,7 @@ import { useState } from "react";
 import type { PointerEvent } from "react";
 
 import { fmtDay, fmtInt, monthTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useSvgId } from "../hooks";
@@ -28,13 +29,10 @@ import { streamRibbonDemo } from "./stream-ribbon.data";
 import type { StreamData } from "./stream-ribbon.data";
 import { inkWidth, maxIndex } from "./util-b";
 
-interface StreamRibbonProps {
+interface StreamRibbonProps extends NoteProps {
   data?: StreamData;
   format?: (v: number) => string;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Each date stands for a whole year (dated 1 January): ticks, tooltips and the description say years, not periods. */
   yearly?: boolean;
 }

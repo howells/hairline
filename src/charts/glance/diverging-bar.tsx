@@ -1,6 +1,7 @@
 import { scaleBand, scaleLinear } from "d3-scale";
 
 import { fmtInt } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -17,15 +18,12 @@ import { divergingBarDemo } from "./diverging-bar.data";
 import type { DivergingDatum } from "./diverging-bar.data";
 import { labelRoom } from "./util-a";
 
-interface DivergingBarProps {
+interface DivergingBarProps extends NoteProps {
   data?: DivergingDatum[];
   height?: number;
   format?: (v: number) => string;
   /** Draw losses in the alert colour instead of a light ladder tone. */
   alertLosses?: boolean;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the bar to draw in the hero colour. */
   highlight?: number;
 }

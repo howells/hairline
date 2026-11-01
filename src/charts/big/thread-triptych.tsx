@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { rndSigned } from "../../lib/random";
+import type { NoteProps } from "../../schema/options";
 import { Plot } from "../core";
 import { HitRect } from "../hover";
 import { Dot, Ring } from "../markers";
@@ -14,14 +15,11 @@ import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { threadTriptychDemo } from "./thread-triptych.data";
 import type { ThreadPath, TriptychData } from "./thread-triptych.data";
 
-interface ThreadTriptychProps {
+interface ThreadTriptychProps extends NoteProps {
   data?: TriptychData;
   height?: number;
   /** Column titles, left to right, one per column. */
   headings?: string[];
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 type Focus =

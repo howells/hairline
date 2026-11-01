@@ -2,13 +2,14 @@ import { geoEqualEarth } from "d3-geo";
 import type { FeatureCollection } from "geojson";
 import { useMemo } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { noteOf } from "../util";
 import { Choropleth } from "./choropleth";
 import { withoutRemoteIslets, withoutWrappedParts } from "./geo";
 import { worldChoroplethDemo, worldCountries } from "./world-choropleth.data";
 import type { CountryDatum } from "./world-choropleth.data";
 
-interface WorldChoroplethProps {
+interface WorldChoroplethProps extends NoteProps {
   data?: CountryDatum[];
   /** Legend and tooltip text for countries with no value. */
   emptyLabel?: string;
@@ -17,9 +18,6 @@ interface WorldChoroplethProps {
   height?: number;
   /** Countries (by name) printed on the map, with their code; defaults to five leaders. */
   highlight?: string | string[];
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   short?: (v: number) => string;
   thresholds?: [number, number, number, number];
   unit?: string;

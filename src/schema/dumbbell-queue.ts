@@ -6,8 +6,8 @@ import { z } from "zod";
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
 import { keyOf } from "./key";
-import { sharedShape } from "./options";
-import type { SharedCallbacks } from "./options";
+import { noteShape, sharedShape } from "./options";
+import type { NoteProps, SharedCallbacks } from "./options";
 
 /** One row: a label, the value before and the value after. */
 export const dumbbellDatumSchema = z.strictObject({
@@ -20,6 +20,7 @@ export const dumbbellDatumSchema = z.strictObject({
 
 export const dumbbellQueueSchema = z
   .strictObject({
+    ...noteShape,
     ...sharedShape,
     /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
     alert: z.enum(["fall", "rise"]).optional(),
@@ -34,12 +35,8 @@ export const dumbbellQueueSchema = z
     height: z.number().int().positive().optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
-    // The old name for `unitNote`; JSON Schema marks it deprecated.
-    note: z.string().optional().meta({ deprecated: true }),
     /** Size of one rung in data units: the gap counts off in these. */
     unit: z.number().positive().optional(),
-    /** The in-plot key under the axis. */
-    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -61,6 +58,4 @@ export type DumbbellQueueData = z.infer<typeof dumbbellQueueSchema>;
 export type DumbbellQueueProps = SharedCallbacks &
   Omit<z.input<typeof dumbbellQueueSchema>, "format" | "note"> & {
     format?: FormatInput;
-    /** @deprecated Use `unitNote`. */
-    note?: string;
-  };
+  } & NoteProps;

@@ -2,6 +2,7 @@ import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
 import { fmtDay, fmtMonth, monthTickLabels } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -21,7 +22,7 @@ import { argMax } from "./util-b";
 /** The time unit of a fan: launches, readings and rings count these. */
 export type FanUnit = "month" | "week";
 
-interface LaunchFanProps {
+interface LaunchFanProps extends NoteProps {
   data?: LaunchFanDatum[];
   /** The last week: where every spoke ends. Same as `periods`. */
   weeks?: number;
@@ -43,9 +44,6 @@ interface LaunchFanProps {
   periodDate?: (period: number) => Date;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Name of the spoke drawn in ink. Defaults to the largest. */
   highlight?: string;
 }

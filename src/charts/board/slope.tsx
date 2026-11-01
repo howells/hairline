@@ -1,6 +1,7 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
+import { plural } from "../../lib/format";
 import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
 import type { SlopeProps, SlopeRow as RowData } from "../../schema/slope";
@@ -10,7 +11,7 @@ import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
 import { LABEL, VALUE } from "../roles";
 import { VRule } from "../rules";
-import { chartTable, plotOptions, plural, scoped } from "../shared-options";
+import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger } from "../util";

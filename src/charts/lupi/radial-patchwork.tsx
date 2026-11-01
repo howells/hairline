@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { HitPath, TipText } from "../hover";
@@ -12,14 +13,11 @@ import { radialPatchworkDemo } from "./radial-patchwork.data";
 import type { PatchworkEvent } from "./radial-patchwork.data";
 import { clock, sectorPath } from "./util-a";
 
-interface RadialPatchworkProps {
+interface RadialPatchworkProps extends NoteProps {
   data?: PatchworkEvent[];
   height?: number;
   /** What a flagged (crosshatched) wedge means, e.g. "class M or stronger". */
   outlined?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface Dial {

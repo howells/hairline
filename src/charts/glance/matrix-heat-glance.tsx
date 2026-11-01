@@ -1,6 +1,7 @@
 import { scaleQuantize } from "d3-scale";
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
 import { KEY } from "../marks";
@@ -14,7 +15,7 @@ import { matrixHeatGlanceDemo } from "./matrix-heat-glance.data";
 import type { MatrixGlanceData } from "./matrix-heat-glance.data";
 import { labelRoom, textWidth } from "./util-a";
 
-interface MatrixHeatGlanceProps {
+interface MatrixHeatGlanceProps extends NoteProps {
   data?: MatrixGlanceData;
   /** Overrides the natural height (which follows the cell size). */
   height?: number;
@@ -23,9 +24,6 @@ interface MatrixHeatGlanceProps {
   format?: (v: number) => string;
   /** Suffix for the tooltip value, e.g. "% of households". */
   unit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** [row, column] of the hero cell; defaults to the highest value. */
   highlight?: [number, number];
 }

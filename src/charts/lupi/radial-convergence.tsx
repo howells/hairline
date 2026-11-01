@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, HitCircle, TipText } from "../hover";
 import { RING_STEP } from "../marks";
@@ -20,14 +21,11 @@ import type { ConvergenceItem } from "./radial-convergence.data";
 import { clock } from "./util-a";
 import { argMax } from "./util-b";
 
-interface RadialConvergenceProps {
+interface RadialConvergenceProps extends NoteProps {
   data?: ConvergenceItem[];
   height?: number;
   /** Noun for the tooltip, e.g. "storm". */
   noun?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface Hub {

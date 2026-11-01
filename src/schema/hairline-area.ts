@@ -6,11 +6,12 @@ import { dailyDatumSchema } from "./daily";
 import { dateFormatSchema, formatSchema } from "./format";
 import type { DateFormatInput, FormatInput } from "./format";
 import { keyOf } from "./key";
-import { sharedShape } from "./options";
-import type { SharedCallbacks } from "./options";
+import { noteShape, sharedShape } from "./options";
+import type { NoteProps, SharedCallbacks } from "./options";
 
 export const hairlineAreaSchema = z
   .strictObject({
+    ...noteShape,
     ...sharedShape,
     /** Readings by date, in any order. A null value is a gap. */
     data: z.array(dailyDatumSchema).min(1).max(731),
@@ -26,12 +27,8 @@ export const hairlineAreaSchema = z
     initialWidth: z.number().int().positive().optional(),
     /** Widest the plot gets, in px. Defaults to 640. */
     maxWidth: z.number().positive().optional(),
-    // The old name for `unitNote`; JSON Schema marks it deprecated.
-    note: z.string().optional().meta({ deprecated: true }),
     /** Value-axis ticks, ascending; the scale runs from 0 to the last. */
     ticks: z.array(z.number()).min(2).max(12).optional(),
-    /** The in-plot key under the axis. */
-    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -52,6 +49,4 @@ export type HairlineAreaProps = SharedCallbacks &
   Omit<z.input<typeof hairlineAreaSchema>, "dateFormat" | "format" | "note"> & {
     dateFormat?: DateFormatInput;
     format?: FormatInput;
-    /** @deprecated Use `unitNote`. */
-    note?: string;
-  };
+  } & NoteProps;

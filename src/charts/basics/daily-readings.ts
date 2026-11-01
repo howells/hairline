@@ -48,6 +48,18 @@ export const readingRows = (
 export const liveOf = (readings: Reading[]) =>
   readings.flatMap((r, i) => (r.value === null ? [] : [i]));
 
+/** The readings, with the indexes of those that have a value: they travel together. */
+export interface Series {
+  live: number[];
+  readings: Reading[];
+}
+
+/** The readings as a `Series`. */
+export const seriesOf = (readings: Reading[]): Series => ({
+  live: liveOf(readings),
+  readings,
+});
+
 /** React keys: each reading's key, numbered by position so repeats stay unique. */
 export const reactKeyOf = (reading: Reading, index: number) =>
   `${reading.key}#${index}`;

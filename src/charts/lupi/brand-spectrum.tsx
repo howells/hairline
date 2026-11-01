@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, HitCircle, TipText } from "../hover";
@@ -26,7 +27,7 @@ import {
 } from "./brand-spectrum.data";
 import type { SpectrumRow } from "./brand-spectrum.data";
 
-interface BrandSpectrumProps {
+interface BrandSpectrumProps extends NoteProps {
   data?: SpectrumRow[];
   /** Names for the `others` positions, in order. */
   competitors?: string[];
@@ -35,9 +36,6 @@ interface BrandSpectrumProps {
   /** The gap bar's name in the key. Defaults to "Gap to their mean". */
   gapLabel?: string;
   height?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /**
    * A position in words, for the tooltip and the accessible label. Defaults
    * to how far it leans toward a pole ("74% toward Authority"); pass this

@@ -28,6 +28,7 @@ export default defineConfig({
     emptyOutDir: true,
     lib: {
       entry: {
+        draw: "src/draw.ts",
         frame: "src/frame.ts",
         index: "src/index.ts",
         kit: "src/kit.ts",

@@ -1,5 +1,6 @@
 import { scaleBand } from "d3-scale";
 
+import { plural } from "../../lib/format";
 import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
 import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
@@ -8,7 +9,7 @@ import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
-import { chartTable, plotOptions, plural, scoped } from "../shared-options";
+import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";

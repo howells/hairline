@@ -3,7 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { fmtInt, monthTickLabels } from "../../lib/format";
+import { plural, fmtInt, monthTickLabels } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
 import type { FontMetrics } from "../../schema/metrics";
@@ -14,13 +14,7 @@ import { Dot } from "../markers";
 import { MARK_WEIGHT } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
-import {
-  scoped,
-  chartTable,
-  plotOptions,
-  plural,
-  pointerX,
-} from "../shared-options";
+import { scoped, chartTable, plotOptions, pointerX } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
@@ -31,13 +25,13 @@ import { DailyEmpty } from "./daily-empty";
 import {
   isLive,
   heroOf,
-  liveOf,
+  seriesOf,
   readingRows,
   reactKeyOf,
   readingsOf,
   valueAt,
 } from "./daily-readings";
-import type { Reading } from "./daily-readings";
+import type { Reading, Series } from "./daily-readings";
 import { VALUE_AXIS_ROOM, dailyFloor } from "./util-a";
 
 interface Frame {
@@ -73,19 +67,13 @@ const hasStem = (
   i === marks.hover;
 
 /** Weekly (or monthly) 2px stems, floor to value, on whole pixels. */
-const DayStems = ({
-  frame,
-  hero,
-  hover,
-  live,
-  readings,
-}: {
+interface DayStemsProps extends Series {
   frame: Frame;
   hero: number;
   hover: number | null;
-  live: number[];
-  readings: Reading[];
-}) => (
+}
+
+const DayStems = ({ frame, hero, hover, live, readings }: DayStemsProps) => (
   <g>
     {live.map((i) => {
       const monthly = readings.length > WEEKLY_SPAN;
@@ -276,7 +264,8 @@ const HairlineAreaSvg = ({
   ticks,
   width,
 }: SvgProps) => {
-  const live = liveOf(readings);
+  const series = seriesOf(readings);
+  const { live } = series;
   const floor = dailyFloor(height, note, width, metrics);
   if (live.length === 0) {
     return (
@@ -340,13 +329,7 @@ const HairlineAreaSvg = ({
         fill={paint(stipple)}
         style={stagger(2, "series")}
       />
-      <DayStems
-        frame={frame}
-        hero={hero}
-        hover={hover}
-        live={live}
-        readings={readings}
-      />
+      <DayStems frame={frame} hero={hero} hover={hover} {...series} />
       <HRule x0={x0} x1={x1} y={floor} />
       <path
         className="draw stroke-l3 stroke-medium cap-round fill-none"

@@ -1,6 +1,7 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
+import { plural } from "../../lib/format";
 import type {
   DumbbellDatum,
   DumbbellQueueProps,
@@ -16,7 +17,7 @@ import { DOT, MARK_WEIGHT } from "../marks";
 import type { DotSize } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
-import { chartTable, plotOptions, plural, scoped } from "../shared-options";
+import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger, noteOf } from "../util";

@@ -2,6 +2,7 @@ import { scaleSqrt } from "d3-scale";
 import { useState } from "react";
 
 import { fmtInt } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -11,15 +12,12 @@ import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { arcMatrixDemo } from "./arc-matrix.data";
 import type { ArcMatrixData } from "./arc-matrix.data";
 
-interface ArcMatrixProps {
+interface ArcMatrixProps extends NoteProps {
   data?: ArcMatrixData;
   height?: number;
   format?: (v: number) => string;
   /** Words after the value in the tooltip, e.g. "of new woodland". */
   noun?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** How many top cells to label; the largest is inked. Default 3. */
   top?: number;
 }

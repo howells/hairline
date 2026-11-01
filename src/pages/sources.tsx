@@ -9,7 +9,7 @@ const credited = ALL_ENTRIES.flatMap((entry) => {
 
 /** The credits page: `#/sources`. */
 export const Credits = () => (
-  <main className="bg-paper grain mx-auto max-w-[760px] px-6 py-10 md:px-10">
+  <main className="bg-paper grain max-w-column mx-auto px-6 py-10 md:px-10">
     <h1 className="text-small text-text m-0 font-semibold">Sources</h1>
     <dl className="m-0 mt-8">
       {credited.map(({ entry, sources }) => (

@@ -1,5 +1,6 @@
 import { arc as d3arc } from "d3-shape";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitPath, TipText } from "../hover";
@@ -21,13 +22,10 @@ import { tickDonutDemo } from "./tick-donut.data";
 import type { ShareDatum } from "./tick-donut.data";
 import { inkWidth } from "./util-b";
 
-interface TickDonutProps {
+interface TickDonutProps extends NoteProps {
   data?: ShareDatum[];
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Big centre number and the caption under it. Defaults to the total over "total". */
   center?: { caption: string; value: string };
   /** Index of the source to draw in the hero colour. */

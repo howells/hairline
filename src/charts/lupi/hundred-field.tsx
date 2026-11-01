@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitPath, TipText } from "../hover";
@@ -11,14 +12,11 @@ import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { hundredFieldDemo } from "./hundred-field.data";
 import type { ShareDatum } from "./hundred-field.data";
 
-interface HundredFieldProps {
+interface HundredFieldProps extends NoteProps {
   data?: ShareDatum[];
   height?: number;
   /** What one seed stands for, used in the tooltip ("donors"). */
   unit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Group drawn in the hero colour. Defaults to the largest. */
   highlight?: string;
 }

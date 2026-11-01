@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { TipText } from "../hover";
 import { RING_STEP } from "../marks";
@@ -12,7 +13,7 @@ import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { RingData } from "./circular-graph.data";
 
-interface CircularGraphProps {
+interface CircularGraphProps extends NoteProps {
   data?: RingData;
   format?: (v: number) => string;
   height?: number;
@@ -20,9 +21,6 @@ interface CircularGraphProps {
   highlight?: string | string[];
   /** Word after the neighbour count in the tooltip, e.g. "borders shown". */
   linkUnit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Unit after a node's size in the tooltip. */
   sizeUnit?: string;
 }

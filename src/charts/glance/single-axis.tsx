@@ -3,6 +3,7 @@ import { scaleSqrt } from "d3-scale";
 import type { ScalePower } from "d3-scale";
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
@@ -16,7 +17,7 @@ import { noteSpace, ranks, sansWidth, stagger, noteOf } from "../util";
 import { singleAxisDemo } from "./single-axis.data";
 import type { SingleAxisRow } from "./single-axis.data";
 
-interface SingleAxisProps {
+interface SingleAxisProps extends NoteProps {
   data?: SingleAxisRow[];
   height?: number;
   /** Labels for the columns; defaults to hours 00:00–23:00. */
@@ -26,9 +27,6 @@ interface SingleAxisProps {
   format?: (v: number) => string;
   /** Unit shown in the tooltip, e.g. "m". */
   unit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Clock the hours are read on, shown after the axis and in the tooltip. */
   zone?: string;
   /** Index of the row to draw in the hero colour. */

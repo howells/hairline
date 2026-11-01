@@ -3,6 +3,7 @@ import type { ScaleRadial } from "d3-scale";
 import { arc, pie } from "d3-shape";
 import type { PieArcDatum } from "d3-shape";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
@@ -16,7 +17,7 @@ import { noteSpace, ranks, sansWidth, stagger, noteOf } from "../util";
 import { bigSliceDemo } from "./big-slice.data";
 import type { SliceDatum } from "./big-slice.data";
 
-interface BigSliceProps {
+interface BigSliceProps extends NoteProps {
   data?: SliceDatum[];
   height?: number;
   /** Intensity values for the reference rings. */
@@ -29,9 +30,6 @@ interface BigSliceProps {
   format?: (v: number) => string;
   /** Words after the intensity in the tooltip, e.g. "a day". */
   intensityLabel?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the slice to draw in the hero colour. */
   highlight?: number;
 }

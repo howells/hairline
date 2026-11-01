@@ -10,6 +10,9 @@
  */
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* The reading column, and the width a full-span chart may take. */
+  --container-column: 760px;
+  --container-wide: 1400px;
   /* Clears Tailwind's stock curves, then restores hairline.css's three. */
   --ease-*: initial;
   --ease-enter: var(--hl-ease-enter);

@@ -1,6 +1,7 @@
 import { quantile } from "d3-array";
 import { scaleLinear } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
@@ -20,13 +21,10 @@ import type {
   ParallelRow,
 } from "./parallel-coordinates.data";
 
-interface ParallelCoordinatesProps {
+interface ParallelCoordinatesProps extends NoteProps {
   data?: ParallelData;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Name of the entity to draw in ink and label at the end. */
   highlight?: string;
   /**

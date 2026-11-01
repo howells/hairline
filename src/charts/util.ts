@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { mulberry32 } from "../lib/random";
 import { INTER_METRICS, textWidth } from "../schema/metrics";
 import type { FontMetrics } from "../schema/metrics";
+import type { NoteNames } from "../schema/options";
 import type { StaggerTier } from "./motion";
 
 /*
@@ -187,5 +188,4 @@ export const wrapWords = (
  * A chart's in-plot note: `unitNote`, else the deprecated `note` it replaces.
  * The one place the old name is read.
  */
-export const noteOf = (props: { note?: string; unitNote?: string }) =>
-  props.unitNote ?? props.note;
+export const noteOf = (props: NoteNames) => props.unitNote ?? props.note;

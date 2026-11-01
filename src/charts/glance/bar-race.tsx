@@ -2,6 +2,7 @@ import { scaleLinear } from "d3-scale";
 import { useRef } from "react";
 import type { RefObject } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Control } from "../control";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -22,15 +23,12 @@ import { ControlSlot } from "./control-slot";
 import { labelRoom, textWidth } from "./util-a";
 import { CONTROL_SLOT_H } from "./util-b";
 
-interface BarRaceProps {
+interface BarRaceProps extends NoteProps {
   data?: RaceData;
   height?: number;
   format?: (v: number) => string;
   /** Milliseconds per period. */
   speed?: number;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Label of a series to keep in the hero colour whatever its rank. */
   highlight?: string;
 }

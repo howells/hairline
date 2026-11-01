@@ -48,7 +48,7 @@ Never run them on `.` or on another agent's folder, and never disable rules (no 
 - Don't annotate constants with anonymous object types (`const x: { a: number }[] = …`). Use a named interface or `satisfies`.
 - Event handlers with braces: `onPointerLeave={() => { setHover(null); }}`. Don't return a void call from an arrow.
 - Name symbols for their domain role (`petal`, `wedge`, `rung`), not their structure (`shape`, `obj`, `item`).
-- **SVG accessibility:** no `role="img"` (the linter wants a real element). Give the `<svg>` an `aria-label` and a `<title>` first child.
+- **SVG accessibility:** give the `<svg>` an `aria-label` and a `<title>` first child. `role="img"` is set once, on the chart root in `src/charts/svg.tsx` (HAI-1 decided a chart is one image to a screen reader, and the linter rule is off for that file only). Do not add `role="img"` anywhere else.
 - **No inline `fontSize`** in `style`. For chart text use the `t-*` utilities, plus theme size classes such as `text-tick` or `text-small`, in `className`.
 - Keep functions under 120 lines: split a chart into small subcomponents (axis, layer, labels) in the same file.
 
@@ -156,7 +156,7 @@ Dots stagger 8–15ms each, bars 80–130ms each. Fast in, soft landing, no boun
 - Interaction only where marks are real records. Never put hover on decorative texture.
 - Default hover: hovered item stays, others dim to ~0.25–0.35 opacity (`transition: opacity 160ms`), plus a `<Tooltip>` with the record's values (`<b>Label</b> · value`).
 - Interactive networks/flows (B family): hover a node or thread to trace its connections; click to pin; Escape or click empty space to release.
-- Give the `<svg>` a meaningful `aria-label` and a `<title>` first child (no `role="img"`).
+- Give the `<svg>` a meaningful `aria-label` and a `<title>` first child (the one `role="img"` is the chart root's, in `svg.tsx`; do not add another).
 
 ## Checking your work
 

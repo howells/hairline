@@ -18,56 +18,60 @@
   ],
   "exports": {
     ".": {
-      "default": "./lib/index.js",
-      "types": "./lib/types/index.d.ts"
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./draw": {
+      "types": "./lib/types/draw.d.ts",
+      "default": "./lib/draw.js"
     },
     "./frame": {
-      "default": "./lib/frame.js",
-      "types": "./lib/types/frame.d.ts"
+      "types": "./lib/types/frame.d.ts",
+      "default": "./lib/frame.js"
     },
     "./kit": {
-      "default": "./lib/kit.js",
-      "types": "./lib/types/kit.d.ts"
+      "types": "./lib/types/kit.d.ts",
+      "default": "./lib/kit.js"
     },
     "./schema": {
-      "default": "./lib/schema.js",
-      "types": "./lib/types/schema.d.ts"
+      "types": "./lib/types/schema.d.ts",
+      "default": "./lib/schema.js"
     },
     "./theme": {
-      "default": "./lib/theme.js",
-      "types": "./lib/types/theme.d.ts"
+      "types": "./lib/types/theme.d.ts",
+      "default": "./lib/theme.js"
     },
     "./json-schema/*": "./lib/json-schema/*",
     "./hairline.css": "./lib/hairline.css",
     "./tokens.css": "./lib/tokens.css",
     "./theme.css": "./lib/theme.css",
     "./maps": {
-      "default": "./lib/maps.js",
-      "types": "./lib/types/maps.d.ts"
+      "types": "./lib/types/maps.d.ts",
+      "default": "./lib/maps.js"
     },
     "./dumbbell-queue": {
-      "default": "./lib/entries/dumbbell-queue.js",
-      "types": "./lib/types/entries/dumbbell-queue.d.ts"
+      "types": "./lib/types/entries/dumbbell-queue.d.ts",
+      "default": "./lib/entries/dumbbell-queue.js"
     },
     "./hairline-area": {
-      "default": "./lib/entries/hairline-area.js",
-      "types": "./lib/types/entries/hairline-area.d.ts"
+      "types": "./lib/types/entries/hairline-area.d.ts",
+      "default": "./lib/entries/hairline-area.js"
     },
     "./hairline-line": {
-      "default": "./lib/entries/hairline-line.js",
-      "types": "./lib/types/entries/hairline-line.d.ts"
+      "types": "./lib/types/entries/hairline-line.d.ts",
+      "default": "./lib/entries/hairline-line.js"
     },
     "./plumb-scatter": {
-      "default": "./lib/entries/plumb-scatter.js",
-      "types": "./lib/types/entries/plumb-scatter.d.ts"
+      "types": "./lib/types/entries/plumb-scatter.d.ts",
+      "default": "./lib/entries/plumb-scatter.js"
     },
     "./rung-bars": {
-      "default": "./lib/entries/rung-bars.js",
-      "types": "./lib/types/entries/rung-bars.d.ts"
+      "types": "./lib/types/entries/rung-bars.d.ts",
+      "default": "./lib/entries/rung-bars.js"
     },
     "./slope": {
-      "default": "./lib/entries/slope.js",
-      "types": "./lib/types/entries/slope.d.ts"
+      "types": "./lib/types/entries/slope.d.ts",
+      "default": "./lib/entries/slope.js"
     }
   },
   "publishConfig": {

@@ -1,4 +1,5 @@
 import { fmtKInt } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -10,7 +11,7 @@ import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { dotCascadeDemo } from "./dot-cascade.data";
 import type { DotCascadeDatum } from "./dot-cascade.data";
 
-interface DotCascadeProps {
+interface DotCascadeProps extends NoteProps {
   data?: DotCascadeDatum[];
   /** Puzzles per tick. */
   unit?: number;
@@ -20,9 +21,6 @@ interface DotCascadeProps {
   format?: (v: number) => string;
   /** Words after the value in the tooltip, e.g. "puzzles". */
   noun?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Label of the column drawn in ink. Defaults to the last (largest). */
   highlight?: string;
 }

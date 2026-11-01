@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
@@ -14,15 +15,12 @@ import type { RankSeries, RankStripData } from "./rank-strip.data";
 import { textWidth } from "./util-a";
 import { ladderStep } from "./util-b";
 
-interface RankStripProps {
+interface RankStripProps extends NoteProps {
   data?: RankStripData;
   /** Overrides the natural height (which follows the cell size). */
   height?: number;
   /** Label of the hero entity; defaults to the biggest climber. */
   highlight?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
 }
 
 interface Hit {

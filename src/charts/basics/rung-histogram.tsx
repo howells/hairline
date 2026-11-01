@@ -1,6 +1,7 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -16,7 +17,7 @@ import type { HistBin } from "./rung-histogram.data";
 import { Rungs } from "./rungs";
 import { maxIndex } from "./util-b";
 
-interface RungHistogramProps {
+interface RungHistogramProps extends NoteProps {
   data?: HistBin[];
   format?: (v: number) => string;
   /** Formats bin edges on the axis, e.g. 210 → "3:30". */
@@ -27,9 +28,6 @@ interface RungHistogramProps {
   /** The marker's position; defaults to the median. Pass null to hide it. */
   marker?: number | null;
   markerLabel?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Records per rung. */
   unit?: number;
 }

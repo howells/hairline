@@ -5,20 +5,9 @@ import philosophy from "../../docs/PHILOSOPHY.md?raw";
 import { Control } from "../charts/control";
 import { EXAMPLES, exampleCode } from "../docs/examples";
 import { propsOf } from "../docs/props";
-import { DumbbellQueue } from "../entries/dumbbell-queue";
-import { HairlineArea } from "../entries/hairline-area";
-import { HairlineLine } from "../entries/hairline-line";
-import { PlumbScatter } from "../entries/plumb-scatter";
-import { RungBars } from "../entries/rung-bars";
-import { Slope } from "../entries/slope";
-import { dumbbellQueueSchema } from "../schema/dumbbell-queue";
-import { hairlineAreaSchema } from "../schema/hairline-area";
-import { hairlineLineSchema } from "../schema/hairline-line";
-import { plumbScatterSchema } from "../schema/plumb-scatter";
+import { drawers } from "../draw";
 import { getChart, registry } from "../schema/registry";
 import type { ChartKind } from "../schema/registry";
-import { rungBarsSchema } from "../schema/rung-bars";
-import { slopeSchema } from "../schema/slope";
 
 // The docs live on their own routes (`#/docs`), never in the gallery grid.
 
@@ -26,51 +15,14 @@ import { slopeSchema } from "../schema/slope";
 const WIDTH = 680;
 
 /** The live example for a kind: the chart, drawn from its example payload. */
-const Live = (props: { kind: ChartKind }) => {
-  const example = EXAMPLES[props.kind];
-  if (props.kind === "dumbbell-queue") {
-    return (
-      <DumbbellQueue
-        {...dumbbellQueueSchema.parse(example)}
-        initialWidth={WIDTH}
-      />
-    );
-  }
-  if (props.kind === "hairline-area") {
-    return (
-      <HairlineArea
-        {...hairlineAreaSchema.parse(example)}
-        initialWidth={WIDTH}
-      />
-    );
-  }
-  if (props.kind === "hairline-line") {
-    return (
-      <HairlineLine
-        {...hairlineLineSchema.parse(example)}
-        initialWidth={WIDTH}
-      />
-    );
-  }
-  if (props.kind === "plumb-scatter") {
-    return (
-      <PlumbScatter
-        {...plumbScatterSchema.parse(example)}
-        initialWidth={WIDTH}
-      />
-    );
-  }
-  if (props.kind === "rung-bars") {
-    return <RungBars {...rungBarsSchema.parse(example)} initialWidth={WIDTH} />;
-  }
-  return <Slope {...slopeSchema.parse(example)} initialWidth={WIDTH} />;
-};
+const Live = (props: { kind: ChartKind }) =>
+  drawers[props.kind](EXAMPLES[props.kind], { initialWidth: WIDTH });
 
 const isKind = (kind: string): kind is ChartKind =>
   Object.hasOwn(EXAMPLES, kind);
 
 const DocColumn = (props: { children: ReactNode }) => (
-  <main className="bg-paper grain mx-auto flex max-w-[760px] flex-col gap-10 px-6 py-10 md:px-10">
+  <main className="bg-paper max-w-column mx-auto flex flex-col gap-10 px-6 py-10 md:px-10">
     {props.children}
   </main>
 );

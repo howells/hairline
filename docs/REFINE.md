@@ -133,8 +133,8 @@ For each chart you own:
 ## Code rules
 
 - `@howells/lint` with zero findings in your folder: `pnpm exec howells-fix src/charts/<folder>` then `pnpm exec howells-check src/charts/<folder>`. Never run them on `.` or another folder. Never disable a rule.
-- Kebab-case files, arrow functions, `interface` for object types, `import type` on its own line, data in `.data.ts`, sorted keys, strict booleans, braces always, no nested ternaries, no `++`, no `as` (without a `// SAFETY:` line), keys from data, no `role="img"` (aria-label + `<title>`), no inline `fontSize`, no arbitrary Tailwind values (theme tokens only), functions under 120 lines.
-- **Only edit files inside your folder.** Do not touch `src/charts/core.tsx`, `axes.ts`, `util.ts`, `motion.ts`, `hooks.ts`, `src/system/*`, `src/gallery/*`, other folders or pages. If you need a shared change, write it in your report.
+- Kebab-case files, arrow functions, `interface` for object types, `import type` on its own line, data in `.data.ts`, sorted keys, strict booleans, braces always, no nested ternaries, no `++`, no `as` (without a `// SAFETY:` line), keys from data, no `role="img"` of your own (the chart root in `svg.tsx` carries it; you add aria-label + `<title>`), no inline `fontSize`, no arbitrary Tailwind values (theme tokens only), functions under 120 lines.
+- **Only edit files inside your folder.** This is a rule for per-folder refinement passes; package work (HAI-1 and its sub-tickets) edits the shared files its tickets name. In a refinement pass, do not touch `src/charts/core.tsx`, `axes.ts`, `util.ts`, `motion.ts`, `hooks.ts`, `src/system/*`, `src/gallery/*`, other folders or pages. If you need a shared change, write it in your report.
 - TypeScript: `npx tsc -b 2>&1 | grep 'src/charts/<folder>'` must print nothing. Errors in other folders are other agents' work in progress; ignore them.
 - The dev server runs at `http://localhost:5199` (do not start or stop it). If it is down, say so in your report.
 

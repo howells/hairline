@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover, useSvgId } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -11,16 +12,13 @@ import { pictorialBarDemo } from "./pictorial-bar.data";
 import type { PictorialDatum } from "./pictorial-bar.data";
 import { labelRoom, rankTones } from "./util-a";
 
-interface PictorialBarProps {
+interface PictorialBarProps extends NoteProps {
   data?: PictorialDatum[];
   /** Amount one icon stands for (same units as `value`). */
   unit?: number;
   height?: number;
   format?: (v: number) => string;
   /** Footnote. */
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the row to draw in the hero colour. */
   highlight?: number;
 }

@@ -1,3 +1,4 @@
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -10,15 +11,12 @@ import { ballotTallyDemo } from "./ballot-tally.data";
 import type { TallyDatum } from "./ballot-tally.data";
 import { argMax } from "./util-b";
 
-interface BallotTallyProps {
+interface BallotTallyProps extends NoteProps {
   data?: TallyDatum[];
   /** The whole sample, for the tooltip: "44 of 100 went". */
   total?: number;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the row drawn in the hero colour. Defaults to the largest. */
   highlight?: number;
 }

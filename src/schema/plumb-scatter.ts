@@ -8,8 +8,8 @@ import { z } from "zod";
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
 import { keyOf } from "./key";
-import { sharedShape } from "./options";
-import type { SharedCallbacks } from "./options";
+import { noteShape, sharedShape } from "./options";
+import type { NoteProps, SharedCallbacks } from "./options";
 
 /** One point: a name, where it sits, and an optional key for when names repeat. */
 export const plumbDatumSchema = z.strictObject({
@@ -24,6 +24,7 @@ const domainSchema = z.tuple([z.number(), z.number()]);
 
 export const plumbScatterSchema = z
   .strictObject({
+    ...noteShape,
     ...sharedShape,
     data: z.array(plumbDatumSchema).min(1).max(20),
     /** The point to draw in the hero colour, by key. Defaults to the highest. */
@@ -38,10 +39,6 @@ export const plumbScatterSchema = z
     initialWidth: z.number().int().positive().optional(),
     /** Points to name beside their dot, by key. Defaults to the highest and lowest. */
     labelled: z.array(z.string()).optional(),
-    // The old name for `unitNote`; JSON Schema marks it deprecated.
-    note: z.string().optional().meta({ deprecated: true }),
-    /** The in-plot key under the axis. */
-    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
     /** The x axis range, [low, high]. */
@@ -93,6 +90,4 @@ export type PlumbScatterProps = SharedCallbacks &
   Omit<z.input<typeof plumbScatterSchema>, "format" | "formatX" | "note"> & {
     format?: FormatInput;
     formatX?: FormatInput;
-    /** @deprecated Use `unitNote`. */
-    note?: string;
-  };
+  } & NoteProps;

@@ -4,6 +4,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area, curveBasis } from "d3-shape";
 import { useMemo } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -20,7 +21,7 @@ import { density, silverman } from "./util-b";
 import { violinDemo } from "./violin.data";
 import type { ViolinGroup } from "./violin.data";
 
-interface ViolinProps {
+interface ViolinProps extends NoteProps {
   data?: ViolinGroup[];
   height?: number;
   format?: (v: number) => string;
@@ -28,9 +29,6 @@ interface ViolinProps {
   unit?: string;
   /** Darkest = lowest median (true) or highest (false, e.g. the heaviest bells). */
   lowIsBest?: boolean;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the group to draw in the hero colour. */
   highlight?: number;
 }

@@ -3,12 +3,13 @@ import type { FeatureCollection } from "geojson";
 import { useMemo } from "react";
 
 import { fmtInt } from "../../lib/format";
+import type { NoteProps } from "../../schema/options";
 import { noteOf } from "../util";
 import { Choropleth } from "./choropleth";
 import { usChoroplethDemo, usStates } from "./us-choropleth.data";
 import type { StateDatum } from "./us-choropleth.data";
 
-interface USChoroplethProps {
+interface USChoroplethProps extends NoteProps {
   data?: StateDatum[];
   /** Legend and tooltip text for states with no value. */
   emptyLabel?: string;
@@ -17,9 +18,6 @@ interface USChoroplethProps {
   height?: number;
   /** Postal code(s) printed on the map; defaults to the three states that cut most. */
   highlight?: string | string[];
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Short value for legend and labels, e.g. 96k. */
   short?: (v: number) => string;
   /** Four ascending breaks between the five shades. */

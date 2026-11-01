@@ -14,8 +14,8 @@ import { z } from "zod";
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
 import { keyOf } from "./key";
-import { sharedShape } from "./options";
-import type { SharedCallbacks } from "./options";
+import { noteShape, sharedShape } from "./options";
+import type { NoteProps, SharedCallbacks } from "./options";
 
 /** The bars: a label, a value, and an optional key for when labels repeat. */
 export const rungDatumSchema = z.strictObject({
@@ -27,6 +27,7 @@ export const rungDatumSchema = z.strictObject({
 
 export const rungBarsSchema = z
   .strictObject({
+    ...noteShape,
     ...sharedShape,
     data: z.array(rungDatumSchema).min(1).max(24),
     /** The bar to draw in the hero colour, by key. Defaults to the largest. */
@@ -37,12 +38,8 @@ export const rungBarsSchema = z
     height: z.number().int().positive().optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
-    // The old name for `unitNote`; JSON Schema marks it deprecated.
-    note: z.string().optional().meta({ deprecated: true }),
     /** Units per rung. */
     unit: z.number().positive().optional(),
-    /** The in-plot key under the axis, e.g. "One rung = 100 rings". */
-    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -64,6 +61,4 @@ export type RungBarsData = z.infer<typeof rungBarsSchema>;
 export type RungBarsProps = SharedCallbacks &
   Omit<z.input<typeof rungBarsSchema>, "format" | "note"> & {
     format?: FormatInput;
-    /** @deprecated Use `unitNote`. */
-    note?: string;
-  };
+  } & NoteProps;

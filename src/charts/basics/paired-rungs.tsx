@@ -1,5 +1,6 @@
 import { scaleBand } from "d3-scale";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -17,15 +18,12 @@ import { Rungs } from "./rungs";
 import { SeriesKey } from "./series-key";
 import { maxIndex } from "./util-b";
 
-interface PairedRungsProps {
+interface PairedRungsProps extends NoteProps {
   data?: PairDatum[];
   /** Units per rung. */
   unit?: number;
   height?: number;
   format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Period names for the tooltip, earlier first. */
   periods?: [string, string];
   /** Index of the category whose current ladder is drawn in the hero colour. */

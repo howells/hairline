@@ -3,6 +3,7 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
+import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
 import { Ring } from "../markers";
@@ -17,7 +18,7 @@ import { jitterStripDemo } from "./jitter-strip.data";
 import type { JitterGroup } from "./jitter-strip.data";
 import { labelRoom, textWidth } from "./util-a";
 
-interface JitterStripProps {
+interface JitterStripProps extends NoteProps {
   data?: JitterGroup[];
   height?: number;
   format?: (v: number) => string;
@@ -27,9 +28,6 @@ interface JitterStripProps {
   tickFormat?: (v: number) => string;
   /** Unit for the tooltip noun when a record has no name, e.g. "year". */
   unit?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
   /** Index of the hero group (default the first: median and name in ink); a given one also inks its rings. */
   highlight?: number;
 }

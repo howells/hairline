@@ -101,7 +101,7 @@ export const SingleChart = (props: { id: string }) => {
   }
   return (
     <main
-      className={`mx-auto ${entry.span === "full" ? "max-w-[1400px]" : "max-w-[760px]"}`}
+      className={`mx-auto ${entry.span === "full" ? "max-w-wide" : "max-w-column"}`}
     >
       <Cell entry={entry} />
     </main>

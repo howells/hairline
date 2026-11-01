@@ -120,29 +120,38 @@ describe("the in-plot note is unitNote", () => {
     expect(json.properties.note.deprecated).toBe(true);
   });
 
-  it("every chart's props take unitNote, with note marked deprecated", () => {
+  it("the shared NoteProps declares unitNote, with note marked deprecated", () => {
+    const options = read(
+      new URL("../lib/types/schema/", import.meta.url).pathname,
+      "options.d.ts"
+    );
+    expect(options).toMatch(/@deprecated[^/]*\*\/\s*note\?: string;/u);
+    expect(options).toMatch(/\bunitNote\?: string;/u);
+  });
+
+  it("every chart's props take unitNote and the deprecated note by extending NoteProps", () => {
     // Props live beside the chart, or in its schema module once it has one.
     const roots = ["charts", "schema"].map(
       (dir) => new URL(`../lib/types/${dir}/`, import.meta.url).pathname
     );
-    const withNote = roots.flatMap((root) =>
+    const files = roots.flatMap((root) =>
       readdirSync(root, { encoding: "utf-8", recursive: true })
         .filter((f) => f.endsWith(".d.ts"))
         // The map base is internal (its two wrappers are the charts); util
-        // holds the helper that reads the alias.
+        // holds the helper that reads the alias; options declares it.
         .filter(
-          (f) => !["choropleth.d.ts", "util.d.ts"].includes(path.basename(f))
+          (f) =>
+            !["choropleth.d.ts", "options.d.ts", "util.d.ts"].includes(
+              path.basename(f)
+            )
         )
         .map((f) => read(root, f))
-        .filter((text) => /^\s*note\?: string;/mu.test(text))
     );
+    const withNote = files.filter((text) => /\bNoteProps\b/u.test(text));
     expect(withNote.length).toBeGreaterThan(40);
-    const lacking = withNote.filter(
-      (text) =>
-        !/@deprecated[^/]*\*\/\s*note\?: string;/u.test(text) ||
-        !/\bunitNote\??:/u.test(text)
-    );
-    expect(lacking).toStrictEqual([]);
+    // No chart restates the declaration by hand.
+    const restated = files.filter((text) => /^\s*note\?: string;/mu.test(text));
+    expect(restated).toStrictEqual([]);
   });
 });
 
