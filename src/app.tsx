@@ -1,3 +1,4 @@
+import { Docs } from "./pages/docs";
 import { ChartGrid, KitGrid, SingleChart } from "./pages/gallery";
 import { Credits } from "./pages/sources";
 import { PaletteSwitcher } from "./system/palette";
@@ -21,6 +22,12 @@ const TopBar = () => (
         </a>
         <a
           className="text-muted text-small inline-flex min-h-11 min-w-11 items-center justify-center no-underline"
+          href="#/docs"
+        >
+          Docs
+        </a>
+        <a
+          className="text-muted text-small inline-flex min-h-11 min-w-11 items-center justify-center no-underline"
           href="#/sources"
         >
           Sources
@@ -40,6 +47,9 @@ const RouteContent = (props: {
   }
   if (props.section === "kit") {
     return <KitGrid />;
+  }
+  if (props.section === "docs") {
+    return <Docs arg={props.arg} />;
   }
   if (props.section === "sources") {
     return <Credits />;
