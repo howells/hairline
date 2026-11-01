@@ -1,4 +1,7 @@
+import { useContext } from "react";
 import type { ReactNode, SVGProps } from "react";
+
+import { ScaleContext } from "./scale-context";
 
 type ChartSvgProps = Omit<SVGProps<SVGSVGElement>, "aria-label"> & {
   children: ReactNode;
@@ -18,23 +21,43 @@ type ChartSvgProps = Omit<SVGProps<SVGSVGElement>, "aria-label"> & {
  */
 export const ChartSvg = ({
   children,
+  height,
   label,
   leave,
+  style,
   title,
+  width,
   ...rest
-}: ChartSvgProps) => (
-  <svg
-    aria-label={label}
-    onPointerLeave={
-      leave === undefined
-        ? undefined
-        : () => {
-            leave();
-          }
-    }
-    {...rest}
-  >
-    <title>{title ?? label}</title>
-    {children}
-  </svg>
-);
+}: ChartSvgProps) => {
+  const { fit, scale, strokes } = useContext(ScaleContext);
+  const scaled = fit === true || scale !== undefined;
+  const size = scaled
+    ? {
+        height: fit === true ? undefined : height * (scale ?? 1),
+        style:
+          fit === true
+            ? { ...style, aspectRatio: `${width} / ${height}` }
+            : style,
+        viewBox: `0 0 ${width} ${height}`,
+        width: fit === true ? "100%" : width * (scale ?? 1),
+      }
+    : { height, style, viewBox: undefined, width };
+  return (
+    <svg
+      data-hl-strokes={strokes === "device" ? "device" : undefined}
+      {...size}
+      aria-label={label}
+      onPointerLeave={
+        leave === undefined
+          ? undefined
+          : () => {
+              leave();
+            }
+      }
+      {...rest}
+    >
+      <title>{title ?? label}</title>
+      {children}
+    </svg>
+  );
+};

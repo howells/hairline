@@ -379,3 +379,9 @@
     animation: fade-in var(--duration-change) var(--ease-enter) both;
   }
 }
+
+/* Slide scale, one-device-pixel policy: the viewBox scales the composition but
+   every stroke stays one device pixel wide. */
+svg[data-hl-strokes="device"] * {
+  vector-effect: non-scaling-stroke;
+}
