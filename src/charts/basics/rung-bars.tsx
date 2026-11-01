@@ -192,7 +192,10 @@ const RungBarsPlot = (props: RungBarsProps) => {
 
   return (
     <Plot
+      animate={props.animate}
       initialWidth={props.initialWidth}
+      onReady={props.onReady}
+      replayKey={props.replayKey}
       scaling={{ fit: props.fit, scale: props.scale, strokes: props.strokes }}
       table={rungTable(data, format, name, props.table)}
       width={props.width}

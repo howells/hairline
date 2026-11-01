@@ -71,6 +71,7 @@ export { DailyUsers } from "./charts/originals/daily-users";
 export { FeatureRank } from "./charts/originals/feature-rank";
 export { ResponseTime } from "./charts/originals/response-time";
 export { RevenueByPlan } from "./charts/originals/revenue-by-plan";
+export type { MotionCallbacks } from "./schema/motion";
 export type {
   DumbbellDatum,
   DumbbellQueueData,
