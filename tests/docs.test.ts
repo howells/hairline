@@ -28,27 +28,33 @@ const escaped = (text: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#x27;");
+const chartFor = (kind: string) => {
+  const chart = registry.find((c) => c.kind === kind);
+  if (chart === undefined) {
+    throw new Error(`No chart ${kind}`);
+  }
+  return chart;
+};
 const docsFor = (kind: string) =>
   renderToString(createElement(DocsChart, { kind }));
 /** The property names the schema itself declares, from its JSON Schema. */
 const declared = (schema: z.ZodType) =>
   Object.keys(
-    z.object({ properties: z.record(z.string(), z.unknown()) }).parse(
-      z.toJSONSchema(schema, { io: "input" })
-    ).properties
+    z
+      .object({ properties: z.record(z.string(), z.unknown()) })
+      .parse(z.toJSONSchema(schema, { io: "input" })).properties
   );
 
 describe("the props table is generated from the schema", () => {
   it("has a row for every property the schema declares", () => {
     for (const chart of registry) {
       const names = propsOf(chart.schema).map((row) => row.name);
-      expect(names.toSorted()).toEqual(declared(chart.schema).toSorted());
+      expect(names.toSorted()).toStrictEqual(declared(chart.schema).toSorted());
     }
   });
 
   it("writes types from the schema, nested data included", () => {
-    const rung = registry.find((c) => c.kind === "rung-bars");
-    const rows = propsOf(rung?.schema as z.ZodType);
+    const rows = propsOf(chartFor("rung-bars").schema);
     const byName = (name: string) => rows.find((row) => row.name === name);
     expect(byName("data")).toMatchObject({
       required: true,
@@ -59,8 +65,7 @@ describe("the props table is generated from the schema", () => {
   });
 
   it("flags a deprecated prop", () => {
-    const rung = registry.find((c) => c.kind === "rung-bars");
-    const note = propsOf(rung?.schema as z.ZodType).find(
+    const note = propsOf(chartFor("rung-bars").schema).find(
       (row) => row.name === "note"
     );
     expect(note?.deprecated).toBe(true);
@@ -68,33 +73,41 @@ describe("the props table is generated from the schema", () => {
 });
 
 describe("every example is a valid payload", () => {
-  it.each(registry.map((chart) => chart.kind))("%s", (kind) => {
-    const chart = registry.find((c) => c.kind === kind);
-    expect(chart?.validate(EXAMPLES[kind as keyof typeof EXAMPLES]).ok).toBe(
-      true
+  it("there is one for every kind in the registry", () => {
+    expect(Object.keys(EXAMPLES).toSorted()).toStrictEqual(
+      registry.map((chart) => chart.kind).toSorted()
     );
+  });
+
+  it.each(Object.entries(EXAMPLES))("%s", (kind, payload) => {
+    expect(chartFor(kind).validate(payload).ok).toBe(true);
   });
 });
 
 describe("each chart has a docs route", () => {
   it.each(registry.map((chart) => chart.kind))("%s", (kind) => {
-    const chart = registry.find((c) => c.kind === kind);
-    if (chart === undefined) {
-      throw new Error(kind);
-    }
+    const chart = chartFor(kind);
     const html = docsFor(kind);
     expect(html).toContain(chart.component);
     expect(html).toContain(escaped(chart.dataShape));
     expect(html).toContain(escaped(chart.whenToUse));
     expect(html).toContain(escaped(chart.whenNotToUse));
-    expect(html).toContain(`json-schema/${kind}.json`);
-    expect(html).toContain(`from &quot;@howells/hairline/${kind}&quot;`);
-    // The props table: one row for every declared property.
-    for (const name of declared(chart.schema)) {
-      expect(html).toMatch(new RegExp(`<code[^>]*>${name}</code>`, "u"));
-    }
-    expect(html).toContain("<table");
   });
+
+  it.each(registry.map((chart) => chart.kind))(
+    "%s: its example, schema and props table",
+    (kind) => {
+      const chart = chartFor(kind);
+      const html = docsFor(kind);
+      expect(html).toContain(`json-schema/${kind}.json`);
+      expect(html).toContain(`from &quot;@howells/hairline/${kind}&quot;`);
+      // The props table: one row for every declared property.
+      for (const name of declared(chart.schema)) {
+        expect(html).toMatch(new RegExp(`<code[^>]*>${name}</code>`, "u"));
+      }
+      expect(html).toContain("<table");
+    }
+  );
 
   it("says so for an unknown kind", () => {
     expect(docsFor("pie")).toContain("No chart called pie");
@@ -191,7 +204,7 @@ describe("the README is accurate where that can be checked", () => {
   });
 
   it("describes the install as forthcoming and gives the local build", () => {
-    expect(readme).toMatch(/not yet (published|on npm)/iu);
+    expect(readme).toMatch(/not yet published to npm/iu);
     expect(readme).toContain("pnpm build:lib");
   });
 

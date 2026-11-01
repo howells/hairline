@@ -19,15 +19,15 @@ pnpm test         # builds lib/, then tests it the way a consumer imports it
 pnpm llms         # rewrites public/llms.txt from the built registry
 ```
 
-| Route               | What                                                              |
-| ------------------- | ----------------------------------------------------------------- |
-| `#/`                | The grid: every chart, each in the house frame, with nothing else |
-| `#/chart/<ID>`      | One chart on its own, for example `#/chart/L13`                   |
-| `#/docs`            | The docs index                                                    |
-| `#/docs/<kind>`     | One chart's reference: props, data shape, guidance, example       |
-| `#/docs/philosophy` | What is fixed and what is configurable                            |
-| `#/kit`             | The fills, marks and type the charts are drawn from               |
-| `#/sources`         | Where each chart's numbers come from                              |
+| Route | What |
+| --- | --- |
+| `#/` | The grid: every chart, each in the house frame, with nothing else |
+| `#/chart/<ID>` | One chart on its own, for example `#/chart/L13` |
+| `#/docs` | The docs index |
+| `#/docs/<kind>` | One chart's reference: props, data shape, guidance, example |
+| `#/docs/philosophy` | What is fixed and what is configurable |
+| `#/kit` | The fills, marks and type the charts are drawn from |
+| `#/sources` | Where each chart's numbers come from |
 
 Three modes, Pink (the default, after the salmon broadsheet), Paper and Dark, set the same ink on three papers. The switcher recolours everything with a cross-fade and is remembered between visits.
 
@@ -75,7 +75,11 @@ import { RungBars } from "@howells/hairline/rung-bars";
   ```tsx
   import { deriveTheme } from "@howells/hairline/theme";
 
-  const theme = deriveTheme({ paper: "#faf9f6", ink: "#1d1d1b", hero: "#a3402b" });
+  const theme = deriveTheme({
+    paper: "#faf9f6",
+    ink: "#1d1d1b",
+    hero: "#a3402b",
+  });
 
   <div className="hl-root" style={theme}>
     {/* charts */}

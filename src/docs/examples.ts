@@ -1,6 +1,8 @@
 // React-free. One small, valid payload per chart: it is the live example on a
 // chart's docs page, the code beside it, and a test checks each against the
 // chart's schema. The figures are rounded public numbers, for illustration.
+import { z } from "zod";
+
 import type { ChartKind } from "../schema/registry";
 
 const DAY = 86_400_000;
@@ -12,7 +14,8 @@ const daily = (start: string, values: number[]) =>
     value,
   }));
 
-export type Payload = Record<string, unknown>;
+/** A payload as the JSON an agent would write. */
+export type Payload = Record<string, z.infer<ReturnType<typeof z.json>>>;
 
 export const EXAMPLES: Record<ChartKind, Payload> = {
   "dumbbell-queue": {
@@ -32,8 +35,8 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
     data: daily(
       "2025-12-01",
       [
-        7.5, 7.4, 7.3, 7.2, 7.1, 7.05, 7.0, 6.95, 6.9, 6.88, 6.86, 6.85, 6.84,
-        6.83, 6.83, 6.83, 6.84, 6.85, 6.86, 6.88, 6.9, 6.93, 6.96, 7.0, 7.04,
+        7.5, 7.4, 7.3, 7.2, 7.1, 7.05, 7, 6.95, 6.9, 6.88, 6.86, 6.85, 6.84,
+        6.83, 6.83, 6.83, 6.84, 6.85, 6.86, 6.88, 6.9, 6.93, 6.96, 7, 7.04,
         7.08, 7.12, 7.17,
       ]
     ),
@@ -73,6 +76,7 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
     unitNote: "One rung = 500 m",
   },
   slope: {
+    emphasis: "India",
     labels: ["2000", "2020"],
     rows: [
       { from: 1262, name: "China", to: 1411 },
@@ -82,41 +86,31 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
       { from: 82, name: "Germany", to: 83 },
       { from: 59, name: "United Kingdom", to: 67 },
     ],
-    emphasis: "India",
   },
 };
 
+const Rows = z.array(z.record(z.string(), z.json())).min(1);
+
 /** One object on one line: { label: "K2", value: 8611 }. */
-const row = (item: object) =>
+const row = (item: Payload) =>
   `{ ${Object.entries(item)
     .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
     .join(", ")} }`;
 
-/** A value as it reads in JSX: arrays of objects one row to a line. */
-const literal = (value: unknown, indent: string): string => {
-  if (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    value.every((item) => typeof item === "object" && item !== null)
-  ) {
-    const rows = value.map((item) => `${indent}  ${row(item)},`);
-    return `[\n${rows.join("\n")}\n${indent}]`;
-  }
-  return Array.isArray(value)
-    ? `[${value.map((item) => JSON.stringify(item)).join(", ")}]`
+/** A prop's value as it reads in JSX: arrays of objects one row to a line. */
+const literal = (value: Payload[string]) => {
+  const rows = Rows.safeParse(value);
+  return rows.success
+    ? `[\n${rows.data.map((item) => `    ${row(item)},`).join("\n")}\n  ]`
     : JSON.stringify(value);
 };
 
 /** The copyable code for a chart: its import and a call with the example payload. */
-export const exampleCode = (
-  component: string,
-  kind: ChartKind,
-  payload: Payload = EXAMPLES[kind]
-) => {
-  const props = Object.entries(payload).map(([name, value]) =>
-    typeof value === "string"
+export const exampleCode = (component: string, kind: ChartKind) => {
+  const props = Object.entries(EXAMPLES[kind]).map(([name, value]) =>
+    z.string().safeParse(value).success
       ? `  ${name}=${JSON.stringify(value)}`
-      : `  ${name}={${literal(value, "  ")}}`
+      : `  ${name}={${literal(value)}}`
   );
   return [
     `import { ${component} } from "@howells/hairline/${kind}";`,
