@@ -76,4 +76,5 @@ export type {
   RungBarsData,
   RungBarsProps,
 } from "./schema/rung-bars";
+export type { ScaleOptions } from "./schema/scale";
 export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";

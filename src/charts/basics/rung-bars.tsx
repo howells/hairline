@@ -175,6 +175,7 @@ export const RungBars = (props: RungBarsProps) => {
   return (
     <Plot
       initialWidth={props.initialWidth}
+      scaling={{ fit: props.fit, scale: props.scale, strokes: props.strokes }}
       width={props.width}
       overlay={
         hover.at === null ? null : (
