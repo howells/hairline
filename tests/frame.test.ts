@@ -118,19 +118,26 @@ describe("the in-plot note is unitNote", () => {
   });
 
   it("every chart's props take unitNote, with note marked deprecated", () => {
-    const root = new URL("../lib/types/charts/", import.meta.url).pathname;
-    const withNote = readdirSync(root, { encoding: "utf-8", recursive: true })
-      .filter((f) => f.endsWith(".d.ts"))
-      // The map base is internal: its two wrappers are the charts.
-      .filter(
-        (f) => !["choropleth.d.ts", "util.d.ts"].includes(path.basename(f))
-      )
-      .filter((f) => /^\s*note\?: string;/mu.test(read(root, f)));
+    // Props live beside the chart, or in its schema module once it has one.
+    const roots = ["charts", "schema"].map(
+      (dir) => new URL(`../lib/types/${dir}/`, import.meta.url).pathname
+    );
+    const withNote = roots.flatMap((root) =>
+      readdirSync(root, { encoding: "utf-8", recursive: true })
+        .filter((f) => f.endsWith(".d.ts"))
+        // The map base is internal (its two wrappers are the charts); util
+        // holds the helper that reads the alias.
+        .filter(
+          (f) => !["choropleth.d.ts", "util.d.ts"].includes(path.basename(f))
+        )
+        .map((f) => read(root, f))
+        .filter((text) => /^\s*note\?: string;/mu.test(text))
+    );
     expect(withNote.length).toBeGreaterThan(40);
     const lacking = withNote.filter(
-      (f) =>
-        !/@deprecated[^/]*\*\/\s*note\?: string;/u.test(read(root, f)) ||
-        !/^\s*unitNote\?: string;/mu.test(read(root, f))
+      (text) =>
+        !/@deprecated[^/]*\*\/\s*note\?: string;/u.test(text) ||
+        !/\bunitNote\??:/u.test(text)
     );
     expect(lacking).toStrictEqual([]);
   });

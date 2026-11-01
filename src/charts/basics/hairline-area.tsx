@@ -4,6 +4,8 @@ import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
 import { fmtInt, monthTickLabels } from "../../lib/format";
+import { resolveDateFormat, resolveFormat } from "../../schema/format";
+import type { HairlineAreaProps } from "../../schema/hairline-area";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
@@ -17,36 +19,22 @@ import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
-import { hairlineAreaDemo } from "./hairline-area.data";
-import type { DailyDatum } from "./hairline-line.data";
-import { VALUE_AXIS_ROOM, dailyFloor, fmtMonthDay } from "./util-a";
-
-interface HairlineAreaProps {
-  data?: DailyDatum[];
-  height?: number;
-  format?: (v: number) => string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
-  /** Index drawn in the hero colour. Defaults to the peak. */
-  highlight?: number;
-  formatDate?: (d: Date) => string;
-  /** Value-axis ticks; the scale runs to the last. Defaults to four nice steps. */
-  ticks?: number[];
-  /**
-   * Widest the plot gets, in px. Defaults to 640, which suits a gallery
-   * card; pass `Infinity` to fill a full-width row.
-   */
-  maxWidth?: number;
-}
+import { DailyEmpty } from "./daily-empty";
+import {
+  isLive,
+  liveOf,
+  reactKeyOf,
+  readingsOf,
+  valueAt,
+} from "./daily-readings";
+import type { Reading } from "./daily-readings";
+import { VALUE_AXIS_ROOM, dailyFloor } from "./util-a";
 
 interface Frame {
   floor: number;
   x: ScaleLinear<number, number>;
   y: ScaleLinear<number, number>;
 }
-
-const dayKey = (d: DailyDatum) => d.date.toISOString();
 
 const stemClass = (hero: boolean, hovered: boolean) => {
   if (hero) {
@@ -66,7 +54,7 @@ const WEEKLY_SPAN = 120;
  * span), on the hero and on the hovered day.
  */
 const hasStem = (
-  d: DailyDatum,
+  d: Reading,
   i: number,
   marks: { hero: number; hover: number | null; monthly: boolean }
 ) =>
@@ -76,28 +64,31 @@ const hasStem = (
 
 /** Weekly (or monthly) 2px stems, floor to value, on whole pixels. */
 const DayStems = ({
-  data,
   frame,
   hero,
   hover,
+  live,
+  readings,
 }: {
-  data: DailyDatum[];
   frame: Frame;
   hero: number;
   hover: number | null;
+  live: number[];
+  readings: Reading[];
 }) => (
   <g>
-    {data.map((d, i) => {
-      if (!hasStem(d, i, { hero, hover, monthly: data.length > WEEKLY_SPAN })) {
+    {live.map((i) => {
+      const monthly = readings.length > WEEKLY_SPAN;
+      if (!hasStem(readings[i], i, { hero, hover, monthly })) {
         return null;
       }
-      const top = Math.round(frame.y(d.value));
+      const top = Math.round(frame.y(valueAt(readings, i)));
       const base = Math.round(frame.floor);
       return (
         <rect
           className={`transition-tone ${stemClass(i === hero, i === hover)}`}
           height={Math.max(0, base - top)}
-          key={dayKey(d)}
+          key={reactKeyOf(readings[i], i)}
           style={stagger(i, "fine")}
           width={MARK_WEIGHT}
           x={Math.round(frame.x(i)) - MARK_WEIGHT / 2}
@@ -112,20 +103,26 @@ const DayStems = ({
  * A label at each first of the month (each quarter over a long span); the
  * year on the first and where it changes.
  */
-const MonthAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
-  const every = data.length > WEEKLY_SPAN ? 3 : 1;
-  const months = data.flatMap((d, i) =>
-    d.date.getUTCDate() === 1 && d.date.getUTCMonth() % every === 0 ? [i] : []
+const MonthAxis = ({
+  frame,
+  readings,
+}: {
+  frame: Frame;
+  readings: Reading[];
+}) => {
+  const every = readings.length > WEEKLY_SPAN ? 3 : 1;
+  const months = readings.flatMap((r, i) =>
+    r.date.getUTCDate() === 1 && r.date.getUTCMonth() % every === 0 ? [i] : []
   );
   const axis = months.includes(0) ? months : [0, ...months];
-  const labels = monthTickLabels(axis.map((i) => data[i].date));
+  const labels = monthTickLabels(axis.map((i) => readings[i].date));
   return (
     <g>
       {axis.map((i, k) => (
         <Label
           anchor={k === 0 ? "start" : "middle"}
           dx={k === 0 ? -6 : 0}
-          key={dayKey(data[i])}
+          key={reactKeyOf(readings[i], i)}
           voice="axis"
           x={frame.x(i)}
           y={frame.floor + 20}
@@ -137,26 +134,94 @@ const MonthAxis = ({ data, frame }: { data: DailyDatum[]; frame: Frame }) => {
   );
 };
 
-/** The value scale: up to the last of `ticks`, or to four nice steps over the peak. */
-const valueScale = (max: number, floor: number, ticks?: number[]) =>
-  ticks === undefined
-    ? scaleLinear().domain([0, max]).nice(4).range([floor, 40])
-    : scaleLinear()
-        .domain([0, ticks.at(-1) ?? max])
-        .range([floor, 40]);
+/**
+ * The value scale: from zero (or the lowest value, if below) up to the last
+ * of `ticks`, or to four nice steps over the peak.
+ */
+const valueScale = (
+  extent: { hi: number; lo: number },
+  floor: number,
+  ticks?: number[]
+) => {
+  const top = ticks?.at(-1);
+  if (top !== undefined && top > 0) {
+    return scaleLinear().domain([0, top]).range([floor, 40]);
+  }
+  const lo = Math.min(0, extent.lo);
+  const hi = Math.max(lo + 1, extent.hi);
+  return scaleLinear().domain([lo, hi]).nice(4).range([floor, 40]);
+};
+
+/** The live index nearest a position along the index axis. */
+const nearestOf = (live: number[], at: number) => {
+  let [nearest] = live;
+  for (const k of live) {
+    if (Math.abs(k - at) < Math.abs(nearest - at)) {
+      nearest = k;
+    }
+  }
+  return nearest;
+};
+
+/** The hero: an ink dot on the line with its value above. */
+const HeroMark = ({
+  format,
+  frame,
+  value,
+  x,
+}: {
+  format: (v: number) => string;
+  frame: Frame;
+  value: number;
+  x: number;
+}) => (
+  <>
+    <Dot
+      className="pop fill-hero"
+      cx={x}
+      cy={frame.y(value)}
+      size="md"
+      style={stagger(40, "fine")}
+    />
+    <Label
+      anchor="middle"
+      order={10}
+      voice="value"
+      x={x}
+      y={frame.y(value) - 13}
+    >
+      {format(value)}
+    </Label>
+  </>
+);
+
+/** The line and the area under it, each broken where a reading is a gap. */
+const shapesOf = (readings: Reading[], frame: Frame) => ({
+  fill:
+    d3area<Reading>()
+      .defined(isLive)
+      .x((_, i) => frame.x(i))
+      .y0(Math.round(frame.floor))
+      .y1((r) => frame.y(r.value ?? 0))(readings) ?? "",
+  path:
+    d3line<Reading>()
+      .defined(isLive)
+      .x((_, i) => frame.x(i))
+      .y((r) => frame.y(r.value ?? 0))(readings) ?? "",
+});
 
 interface SvgProps {
   clear: () => void;
   /** Pattern id of the stipple under the line. */
   stipple: string;
-  data: DailyDatum[];
+  emphasis: string | undefined;
   fmtDate: (d: Date) => string;
   format: (v: number) => string;
   height: number;
-  highlight: number | undefined;
   hover: number | null;
   maxWidth: number;
   note: string | undefined;
+  readings: Reading[];
   show: (i: number, x: number, y: number) => void;
   ticks: number[] | undefined;
   width: number;
@@ -165,51 +230,61 @@ interface SvgProps {
 const HairlineAreaSvg = ({
   clear,
   stipple,
-  data,
+  emphasis,
   fmtDate,
   format,
   height,
-  highlight,
   hover,
   maxWidth,
   note,
+  readings,
   show,
   ticks,
   width,
 }: SvgProps) => {
-  const values = data.map((d) => d.value);
+  const live = liveOf(readings);
+  const floor = dailyFloor(height, note, width);
+  if (live.length === 0) {
+    return <DailyEmpty floor={floor} height={height} width={width} />;
+  }
+  const values = live.map((i) => valueAt(readings, i));
   const max = Math.max(...values);
-  const peak = values.indexOf(max);
-  const hero = highlight ?? peak;
-  const last = data.length - 1;
+  const peak = live[values.indexOf(max)];
+  // Emphasis is by key (id, else date) so reordering never moves it; a key
+  // that names a gap or no reading emphasises none.
+  const hero =
+    emphasis === undefined
+      ? peak
+      : (live.find((i) => readings[i].key === emphasis) ?? -1);
+  const last = readings.length - 1;
   const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
-  const half = Math.ceil(sansWidth(format(values[hero]), 12) / 2) + 2;
+  const half =
+    hero < 0
+      ? 0
+      : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
   const start = hero === 0 ? Math.max(8, half) : 8;
   const x0 = Math.round((width - frameW) / 2);
   const x1 = x0 + frameW;
-  const floor = dailyFloor(height, note, width);
   const frame: Frame = {
     floor,
     x: scaleLinear()
-      .domain([0, last])
+      .domain([0, Math.max(1, last)])
       .range([x0 + start, x1 - VALUE_AXIS_ROOM]),
-    y: valueScale(max, floor, ticks),
+    y: valueScale({ hi: max, lo: Math.min(...values) }, floor, ticks),
   };
-  const path =
-    d3line<DailyDatum>()
-      .x((_, i) => frame.x(i))
-      .y((d) => frame.y(d.value))(data) ?? "";
-  const fill =
-    d3area<DailyDatum>()
-      .x((_, i) => frame.x(i))
-      .y0(Math.round(floor))
-      .y1((d) => frame.y(d.value))(data) ?? "";
-  const label = `Daily values, ${fmtDate(data[0].date)} to ${fmtDate(data[last].date)}: peak ${format(max)} on ${fmtDate(data[peak].date)}`;
+  const { fill, path } = shapesOf(readings, frame);
+  const [first] = live;
+  const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${fmtDate(readings[peak].date)}`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
-    const i = Math.max(0, Math.min(last, Math.round(frame.x.invert(px))));
-    show(i, frame.x(i), frame.y(data[i].value) - (i === hero ? 16 : 10));
+    const at = frame.x.invert(px);
+    const nearest = nearestOf(live, at);
+    show(
+      nearest,
+      frame.x(nearest),
+      frame.y(valueAt(readings, nearest)) - (nearest === hero ? 16 : 10)
+    );
   };
 
   return (
@@ -240,7 +315,13 @@ const HairlineAreaSvg = ({
         fill={paint(stipple)}
         style={stagger(2, "series")}
       />
-      <DayStems data={data} frame={frame} hero={hero} hover={hover} />
+      <DayStems
+        frame={frame}
+        hero={hero}
+        hover={hover}
+        live={live}
+        readings={readings}
+      />
       <HRule x0={x0} x1={x1} y={floor} />
       <path
         className="draw stroke-l3 stroke-medium cap-round fill-none"
@@ -252,27 +333,19 @@ const HairlineAreaSvg = ({
         <Dot
           className="fill-l2"
           cx={frame.x(hover)}
-          cy={frame.y(values[hover])}
+          cy={frame.y(valueAt(readings, hover))}
           size="sm"
         />
       )}
-      <Dot
-        className="pop fill-hero"
-        cx={frame.x(hero)}
-        cy={frame.y(values[hero])}
-        size="md"
-        style={stagger(40, "fine")}
-      />
-      <Label
-        anchor="middle"
-        order={10}
-        voice="value"
-        x={frame.x(hero)}
-        y={frame.y(values[hero]) - 13}
-      >
-        {format(values[hero])}
-      </Label>
-      <MonthAxis data={data} frame={frame} />
+      {hero < 0 ? null : (
+        <HeroMark
+          format={format}
+          frame={frame}
+          value={valueAt(readings, hero)}
+          x={frame.x(hero)}
+        />
+      )}
+      <MonthAxis frame={frame} readings={readings} />
       <FootNote gutter={12} height={height} text={note} width={width} />
     </ChartSvg>
   );
@@ -283,22 +356,36 @@ const HairlineAreaSvg = ({
  * per 4px cell, with a 2px stem every seventh day (every month over a year). The peak stands in ink,
  * labelled, with its label kept inside the frame when it is the first day;
  * hovering a day raises its stem.
+ *
+ * Props are the `hairlineAreaSchema` payload (src/schema/hairline-area.ts);
+ * `data` is required and never defaults to demo data; dates are ISO strings.
+ * Give `width` and `height` for a fixed-size chart that is complete on the
+ * first (server) render. Bad input is tolerated: readings are drawn in date
+ * order, spaced evenly; a reading whose value is null, NaN or infinite is a
+ * gap, with the area and line broken there; one reading draws a lone dot;
+ * negatives are drawn below the zero line; no readings (or only gaps) draw a
+ * quiet empty axis; `emphasis` is a reading's `id` or date, and one that names
+ * no live reading emphasises none.
  */
 export const HairlineArea = (props: HairlineAreaProps) => {
-  const data = props.data ?? hairlineAreaDemo;
-  const format = props.format ?? fmtInt;
-  const fmtDate = props.formatDate ?? fmtMonthDay;
+  const readings = readingsOf(props.data ?? []);
+  const format =
+    props.format === undefined ? fmtInt : resolveFormat(props.format);
+  const fmtDate = resolveDateFormat(props.dateFormat);
   const { at, clear, key: hover, show } = useHover<number>();
   const stipple = useTextureIds("daily")("stipple");
+  const tip = at === null ? undefined : readings[at.key];
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
-        at === null ? null : (
+        at === null || tip === undefined ? null : (
           <Tooltip x={at.x} y={at.y}>
             <TipText
-              facts={[format(data[at.key].value)]}
-              lead={fmtDate(data[at.key].date)}
+              facts={[format(tip.value ?? 0)]}
+              lead={fmtDate(tip.date)}
             />
           </Tooltip>
         )
@@ -307,15 +394,15 @@ export const HairlineArea = (props: HairlineAreaProps) => {
       {(width) => (
         <HairlineAreaSvg
           clear={clear}
+          emphasis={props.emphasis}
           stipple={stipple}
-          data={data}
           fmtDate={fmtDate}
           format={format}
           height={props.height ?? 440}
-          highlight={props.highlight}
           hover={hover}
           maxWidth={props.maxWidth ?? 640}
           note={noteOf(props)}
+          readings={readings}
           show={show}
           ticks={props.ticks}
           width={width}
