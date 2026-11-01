@@ -41,6 +41,10 @@ export const rungBarsSchema = z
     initialWidth: z.number().int().positive().optional(),
     /** Footnote under the axis, e.g. "One rung = 100 rings". */
     note: z.string().optional(),
+    /** Show the data table to sighted readers too. It is always there for screen readers. */
+    table: z.boolean().optional(),
+    /** The chart's accessible name. Defaults to "Bar chart of N values". */
+    title: z.string().min(1).optional(),
     /** Units per rung. */
     scale: scaleShape.scale,
     strokes: scaleShape.strokes,
