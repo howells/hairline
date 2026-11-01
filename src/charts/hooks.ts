@@ -175,7 +175,9 @@ const phaseOf = (still: boolean, revealed: boolean): Phase => {
  * for animate="mount"), then "shown"; "still" when nothing animates (animate
  * "off", or the reader prefers reduced motion), so the chart is simply drawn.
  * The server and the first client render always agree: hidden, or still for
- * "off"; the reader's motion preference is only known after hydration.
+ * "off"; the reader's motion preference is only known after hydration. Until
+ * then the stylesheet already draws the plot under reduced motion (nothing is
+ * hidden there), and `ready` follows hydration.
  *
  * `ready` turns true once the entry has finished (at once when still);
  * `onReady` is called at that moment. A new `replayKey` starts a new cycle:

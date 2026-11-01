@@ -5,9 +5,11 @@ import { z } from "zod";
 
 export const motionShape = {
   /**
-   * When the entry draws in. "scroll" (default): when the chart scrolls into
-   * view. "mount": at once, without scrolling. "off": never; the chart is
-   * drawn, and ready, in the first HTML.
+   * When the entry draws in. "scroll": when the chart scrolls into view.
+   * "mount": at once, without scrolling. "off": never; the chart is drawn, and
+   * ready, in the first HTML. The default is "off" for a fixed-size chart
+   * (`width` and `height` given) and "scroll" for a responsive one. Under
+   * reduced motion the chart is drawn in the first paint whatever this says.
    */
   animate: z.enum(["scroll", "mount", "off"]).optional(),
   /** Change it to replay the entry without remounting the chart. */

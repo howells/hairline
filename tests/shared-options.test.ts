@@ -294,9 +294,17 @@ describe.each(kinds)("%s shares the options", (kind) => {
     expect(html).not.toContain("<svg");
   });
 
-  it('animate="off" is drawn and ready in the first HTML; the default is not', () => {
+  it('animate="off" is drawn and ready in the first HTML, and so is a fixed-size chart by default', () => {
     expect(render(kind, { animate: "off" })).toContain('data-hl-ready="true"');
-    expect(render(kind)).not.toContain('data-hl-ready="true"');
+    expect(render(kind)).toContain('data-hl-ready="true"');
+  });
+
+  it("asking a fixed-size chart to animate starts it hidden and not ready", () => {
+    for (const animate of ["scroll", "mount"] as const) {
+      const html = render(kind, { animate });
+      expect(html).toContain("is-hidden");
+      expect(html).not.toContain('data-hl-ready="true"');
+    }
   });
 
   it("metrics for another face change the layout", () => {

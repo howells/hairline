@@ -201,6 +201,12 @@ describe("the precompiled stylesheet stays inside the Hairline root", () => {
     expect(bare).not.toContain("--font-sans");
   });
 
+  it("never hides a plot under reduced motion: the first paint is the drawn chart", () => {
+    expect(bare).not.toMatch(
+      /prefers-reduced-motion: reduce\)\s*\{[^@]*is-hidden/u
+    );
+  });
+
   it("hides unrevealed plots on screens only", () => {
     expect(bare).toMatch(
       /@media screen and \(prefers-reduced-motion: no-preference\)\s*\{[^@]*is-hidden/u

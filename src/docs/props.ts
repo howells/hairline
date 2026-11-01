@@ -115,7 +115,7 @@ const typeOf = (node: Node, expandObject: boolean): string => {
  */
 export const SHARED_NOTES = {
   animate:
-    'When the entry draws in: "scroll" (default) as the chart scrolls into view, "mount" at once, "off" never (drawn, and ready, in the first HTML).',
+    'When the entry draws in: "scroll" as the chart scrolls into view, "mount" at once, "off" never (drawn, and ready, in the first HTML). The default is "off" for a fixed-size chart and "scroll" for a responsive one.',
   data: "The values to draw. Required; the package never falls back to demo data.",
   emphasis:
     "The datum to draw in the hero colour, by its id (else its label or date).",

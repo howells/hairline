@@ -10,7 +10,7 @@ Hairline has a look, and the look is the product. A chart here is drawn the way 
 - Texture is engraved: regular pitches from one module, never random, never a gradient, shadow or glow.
 - Solid ramp tones, not opacity, for resting marks. Opacity is for interaction only.
 - Type is Inter's roles in sentence case, with tabular figures. Label widths are measured for Inter.
-- Motion comes from one set of tokens, runs once, and fades under reduced motion.
+- Motion comes from one set of tokens, runs once, and is simply drawn under reduced motion.
 - Every chart has an accessible name, a description and a data table.
 
 ## Configurable

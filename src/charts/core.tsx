@@ -41,9 +41,12 @@ export const Chart = (props: ChartProps) => {
 
 interface PlotProps {
   /**
-   * When the entry draws in: "scroll" (default) when scrolled into view,
-   * "mount" at once, "off" never. Off, and reduced motion, draw the chart
-   * and mark it ready (`data-hl-ready="true"`) in the first HTML or at once.
+   * When the entry draws in: "scroll" when scrolled into view, "mount" at
+   * once, "off" never. The default is "off" for a fixed-size chart (`width`
+   * given) and "scroll" for a responsive one. Off draws the chart and marks it
+   * ready (`data-hl-ready="true"`) in the first HTML. Under reduced motion the
+   * stylesheet draws the plot in the first paint; `ready` follows hydration,
+   * when the reader's preference is known.
    */
   animate?: Animate;
   children: (width: number) => ReactNode;
@@ -92,7 +95,12 @@ export const Plot = (props: PlotProps) => {
     !fixed
   );
   const width = props.width ?? measured;
-  const entry = useEntry(ref, props);
+  // A fixed-size chart is a server or export render: drawn and ready at once
+  // unless it asks to animate. The measured, responsive chart reveals on scroll.
+  const entry = useEntry(ref, {
+    ...props,
+    animate: props.animate ?? (fixed ? "off" : "scroll"),
+  });
   return (
     <div
       ref={ref}

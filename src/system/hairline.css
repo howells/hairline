@@ -236,8 +236,8 @@
  * Bars and areas grow from scale 0 on purpose: that edge is their baseline,
  * so the mark rises from the axis rather than appearing from a point.
  *
- * Under reduced motion nothing travels: the marks are simply there, and the
- * whole plot fades in (bottom of this file). Hiding is for screens only: in
+ * Under reduced motion nothing travels or fades: the marks are simply there
+ * in the first paint (see the note after the utilities). Hiding is for screens only: in
  * print media an unrevealed plot is drawn in full, so an all-charts print page
  * never exports blank. A plot with animation off (or under reduced motion once
  * the page knows) carries neither class, and is simply drawn.
@@ -382,14 +382,17 @@
   }
 }
 
-@media screen and (prefers-reduced-motion: reduce) {
-  .is-hidden {
-    opacity: 0;
-  }
-  .is-shown {
-    animation: fade-in var(--hl-duration-change) var(--hl-ease-enter) both;
-  }
+/* A still plot (animation off) plays no entry: it is simply drawn. */
+.is-still {
+  animation: none;
 }
+
+/*
+ * Under reduced motion the plot is drawn in the first paint: every hiding rule
+ * above sits under no-preference, so .is-hidden has no effect here and nothing
+ * fades or travels. `data-hl-ready` may still read "false" in the server HTML;
+ * it turns "true" once hydration has read the preference.
+ */
 
 /*
  * A chart's note (Frame, and the gallery cell): a popover hung below its (i) and

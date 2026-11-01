@@ -137,8 +137,28 @@ describe("motion", () => {
       expect(html).not.toContain("is-hidden");
     });
 
-    it("the default is scroll: it starts hidden and not ready, as the gallery does", () => {
+    it("a fixed-size chart defaults to off: drawn and ready in the first HTML", () => {
       const html = renderToString(createElement(RungBars, base));
+      expect(html).toContain("</svg>");
+      expect(html).toContain('data-hl-ready="true"');
+      expect(html).not.toContain("is-hidden");
+    });
+
+    it.each(["scroll", "mount"] as const)(
+      'a fixed-size chart asked for animate="%s" still animates: hidden and not ready',
+      (animate) => {
+        const html = renderToString(
+          createElement(RungBars, { ...base, animate })
+        );
+        expect(html).toContain("is-hidden");
+        expect(html).not.toContain('data-hl-ready="true"');
+      }
+    );
+
+    it("a responsive chart defaults to scroll, as the gallery does", () => {
+      const html = renderToString(
+        createElement(RungBars, { data: base.data, initialWidth: 480 })
+      );
       expect(html).toContain("is-hidden");
       expect(html).not.toContain('data-hl-ready="true"');
     });
@@ -187,7 +207,7 @@ describe("motion", () => {
 
     it('animate="scroll" stays hidden and not ready until scrolled into view', async () => {
       const onReady = vi.fn<() => void>();
-      const { host } = await mount({ ...base, onReady });
+      const { host } = await mount({ ...base, animate: "scroll", onReady });
       await frames();
       expect(host.querySelector(".is-hidden")).not.toBeNull();
       expect(ready(host)).toBe(false);
@@ -196,7 +216,7 @@ describe("motion", () => {
 
     it('animate="scroll" draws and is ready once scrolled into view', async () => {
       const onReady = vi.fn<() => void>();
-      const { host } = await mount({ ...base, onReady });
+      const { host } = await mount({ ...base, animate: "scroll", onReady });
       await scrollIntoView();
       await frames();
       expect(host.querySelector(".is-shown")).not.toBeNull();
