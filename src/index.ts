@@ -72,6 +72,11 @@ export { ResponseTime } from "./charts/originals/response-time";
 export { RevenueByPlan } from "./charts/originals/revenue-by-plan";
 export type { FontMetrics } from "./schema/metrics";
 export type {
+  DumbbellDatum,
+  DumbbellQueueData,
+  DumbbellQueueProps,
+} from "./schema/dumbbell-queue";
+export type {
   RungDatum,
   RungBarsData,
   RungBarsProps,
