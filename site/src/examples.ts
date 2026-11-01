@@ -1,9 +1,8 @@
 // React-free. One small, valid payload per chart: it is the live example on a
-// chart's docs page, the code beside it, and a test checks each against the
+// chart's page, the code beside it, and a test checks each against the
 // chart's schema. The figures are rounded public numbers, for illustration.
+import type { ChartKind } from "@howells/hairline/schema";
 import { z } from "zod";
-
-import type { ChartKind } from "../schema/registry";
 
 const DAY = 86_400_000;
 
@@ -40,6 +39,7 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
         7.08, 7.12, 7.17,
       ]
     ),
+    format: { maximumFractionDigits: 1 },
     ticks: [0, 2, 4, 6, 8],
     unitNote: "Hours of daylight",
   },
@@ -49,20 +49,26 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
       [7.05, 6.97, 6.9, 6.86, 6.84, 6.83, 6.83, 6.83, 6.84, 6.86, 6.9]
     ),
     extreme: "trough",
+    format: { maximumFractionDigits: 2, minimumFractionDigits: 2 },
     unitNote: "Hours of daylight",
   },
   "plumb-scatter": {
+    // Degrees north, and hours from sunrise to sunset on 21 December.
     data: [
-      { label: "Mercury", x: 0.39, y: 0.24 },
-      { label: "Venus", x: 0.72, y: 0.62 },
-      { label: "Earth", x: 1, y: 1 },
-      { label: "Mars", x: 1.52, y: 1.88 },
-      { label: "Jupiter", x: 5.2, y: 11.86 },
-      { label: "Saturn", x: 9.58, y: 29.45 },
+      { label: "Athens", x: 38, y: 9.5 },
+      { label: "Rome", x: 41.9, y: 9.1 },
+      { label: "Paris", x: 48.9, y: 8.2 },
+      { label: "London", x: 51.5, y: 7.8 },
+      { label: "Edinburgh", x: 56, y: 7 },
+      { label: "Stockholm", x: 59.3, y: 6.1 },
+      { label: "Reykjavik", x: 64.2, y: 4.1 },
     ],
-    emphasis: "Earth",
-    xLabels: ["Near the Sun", "Far from the Sun"],
-    yLabel: "Years per orbit",
+    emphasis: "London",
+    labelled: ["Athens", "London", "Reykjavik"],
+    xDomain: [35, 65],
+    xLabels: ["Further south", "Further north"],
+    yDomain: [0, 10],
+    yLabel: "Hours of daylight, 21 December",
   },
   "rung-bars": {
     data: [
@@ -105,9 +111,20 @@ const literal = (value: Payload[string]) => {
     : JSON.stringify(value);
 };
 
+const isKind = (kind: string): kind is ChartKind =>
+  Object.hasOwn(EXAMPLES, kind);
+
+/** The example for a kind, or a throw: every registry kind has one. */
+export const exampleFor = (kind: string): Payload => {
+  if (!isKind(kind)) {
+    throw new Error(`No example for ${kind}`);
+  }
+  return EXAMPLES[kind];
+};
+
 /** The copyable code for a chart: its import and a call with the example payload. */
-export const exampleCode = (component: string, kind: ChartKind) => {
-  const props = Object.entries(EXAMPLES[kind]).map(([name, value]) =>
+export const exampleCode = (component: string, kind: string) => {
+  const props = Object.entries(exampleFor(kind)).map(([name, value]) =>
     z.string().safeParse(value).success
       ? `  ${name}=${JSON.stringify(value)}`
       : `  ${name}={${literal(value)}}`

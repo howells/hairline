@@ -1,0 +1,16 @@
+{
+  "name": "@howells/hairline-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -w build:lib && blume build",
+    "dev": "pnpm -w build:lib && blume dev"
+  },
+  "dependencies": {
+    "@howells/hairline": "workspace:*",
+    "blume": "2.2.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.7"
+  }
+}

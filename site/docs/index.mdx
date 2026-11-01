@@ -1,0 +1,132 @@
+---
+title: Getting started
+description: Install Hairline, draw a chart, theme it with your own colours, and render it on the server or for a slide.
+sidebar:
+  order: 1
+---
+
+## Install
+
+`@howells/hairline` is not yet published to npm. Until the first release, build it from the repository and install it from a path:
+
+```sh
+pnpm install
+pnpm build:lib
+```
+
+```json package.json
+{
+  "dependencies": {
+    "@howells/hairline": "file:../hairline"
+  }
+}
+```
+
+A `file:` install is a copy, so rebuild and reinstall after a change. The host needs React 19.
+
+## Draw a chart
+
+Import the stylesheet once, put the chart inside an element with the `hl-root` class, and give it data:
+
+```tsx
+import "@howells/hairline/hairline.css";
+import { RungBars } from "@howells/hairline/rung-bars";
+
+<div className="hl-root">
+  <RungBars
+    data={[
+      { label: "Everest", value: 8849 },
+      { label: "K2", value: 8611 },
+      { label: "Kangchenjunga", value: 8586 },
+    ]}
+    unit={500}
+    unitNote="One rung = 500 m"
+  />
+</div>;
+```
+
+`hairline.css` is precompiled: tokens, text roles, rules, textures and motion in one file, so the host needs no Tailwind. Its selectors sit under `.hl-root` and its custom properties start with `--hl-`, so nothing in it meets the host's own styles. The library sets nothing on `:root`.
+
+A host that builds with Tailwind v4 can import `@howells/hairline/tokens.css` and `@howells/hairline/theme.css` after `@import "tailwindcss"` instead.
+
+## Theme it
+
+`deriveTheme` from `@howells/hairline/theme` takes a paper and an ink, and optionally a hero, an alert, a font and a mode. It returns every `--hl-*` property the charts draw with, ready to set as a `style` on the root:
+
+```tsx
+import { deriveTheme } from "@howells/hairline/theme";
+
+const theme = deriveTheme({
+  paper: "#faf9f6",
+  ink: "#1d1d1b",
+  hero: "#a3402b",
+});
+
+<div className="hl-root" style={theme}>
+  {/* charts */}
+</div>;
+```
+
+For a dark page pass `mode: "dark"` with a dark paper and a light ink. The grey ramp is derived again for that mode, not inverted, so the faintest step stays visible above the page. Setting the `--hl-*` variables in your own stylesheet works too; this site sets both modes that way, from `deriveTheme`.
+
+`font` (or `--hl-font`) sets the face. Label widths are measured for Inter, so another face may crowd; pass the chart's `metrics` prop with that face's glyph widths.
+
+## On the server
+
+Give a chart `width` and `height` and it draws at exactly that size, measuring nothing. `renderToString` returns the complete chart, already marked ready with `data-hl-ready="true"`, with no client code:
+
+```tsx
+import { renderToString } from "react-dom/server";
+import { HairlineLine } from "@howells/hairline/hairline-line";
+
+const html = renderToString(
+  <div className="hl-root">
+    <HairlineLine data={readings} width={960} height={400} />
+  </div>
+);
+```
+
+Every module starts with `"use client"`, so a server component can render a chart whose props are plain data. A formatter function cannot cross that boundary: use a descriptor such as `"percent"`, or wrap the chart in a client component of your own.
+
+Leave out `width` for a responsive chart, which measures its container. Give it `initialWidth` and its first render, on the server too, already has the chart's marks; it redraws at the measured width once the page loads.
+
+## Animation and the ready state
+
+`animate` chooses when a chart draws in:
+
+- `"scroll"` as it scrolls into view. The default for a responsive chart.
+- `"mount"` at once, without waiting to be seen.
+- `"off"` never: the chart is drawn, and ready, in the first HTML. The default for a fixed-size chart.
+
+The chart root carries `data-hl-ready`, which turns `"true"` once the chart has settled, and `onReady` fires at the same moment. An exporter can wait on `[data-hl-ready="true"]` before it prints. Change `replayKey` to play the entry again without remounting, as when a slide becomes current.
+
+Under reduced motion nothing travels or fades: the stylesheet shows the plot in the first paint, and `data-hl-ready` turns `"true"` once hydration has read the preference.
+
+## Slides and exports
+
+Draw at the logical `width` and set `scale` to show the whole composition larger through the viewBox, type and textures with it: an 11px label at `scale={2.5}` reads at 27.5px. `fit` fills the container's width at the chart's aspect ratio instead.
+
+`strokes="device"` keeps every stroke at one device pixel however large the chart is shown. It acts on stroked geometry only (rules, lines, rings, outlines); filled marks such as the bars of RungBars scale with the composition either way.
+
+## Imports
+
+Each chart is its own subpath, so a bundle takes only what it draws:
+
+| Import | What it holds |
+| --- | --- |
+| `@howells/hairline/rung-bars`, `/hairline-line`, `/hairline-area`, `/plumb-scatter`, `/dumbbell-queue`, `/slope` | One chart each, with its props and datum types |
+| `@howells/hairline/schema` | The schemas, `validate`, the formatters and the registry. React-free |
+| `@howells/hairline/json-schema/<kind>.json` | Each chart's JSON Schema, and `index.json` listing them |
+| `@howells/hairline/theme` | `deriveTheme`. React-free |
+| `@howells/hairline/draw` | `drawers`: validate a payload by kind and get the chart element |
+| `@howells/hairline/frame` | `Frame`, the house frame: name, note, source and footnote round a chart |
+| `@howells/hairline/kit` | The parts the charts are drawn from, for a new chart in the same hand |
+| `@howells/hairline/hairline.css` | The precompiled stylesheet |
+
+## Several charts on one page
+
+Every SVG id comes from React's `useId`, so charts in one React tree never collide. Charts rendered in separate React roots on one page need `idPrefix`, which leads every id the chart writes.
+
+## Accessibility
+
+Each chart is an image to a screen reader, with an accessible name, a description of its data and a data table. `title` sets the name; `table` shows the table to sighted readers too.

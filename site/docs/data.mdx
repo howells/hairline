@@ -1,0 +1,40 @@
+---
+title: Data
+description: The contract every payload follows, whichever chart it is for.
+sidebar:
+  order: 2
+---
+
+A chart takes one plain object. A zod schema in the package is the source of truth for it: the TypeScript types, the published JSON Schemas and the props tables in these docs are all generated from that schema. This page covers what is the same for every chart. Each chart's own page gives the shape of its data.
+
+## Data is required
+
+`data` (or `rows`, for Slope) is required, and the package never fills in missing data. In TypeScript a payload the schema rejects is a type error. At runtime `validate` returns the issues, each with the path to the bad value:
+
+```ts
+import { getChart } from "@howells/hairline/schema";
+
+const result = getChart("rung-bars").validate(payload);
+// { ok: true, value }
+// or { ok: false, issues: [{ pointer: "data[2].value", code, message, path }] }
+```
+
+Unknown keys are errors too, so a misspelt option is reported.
+
+## Plain JSON
+
+- **Dates** are ISO strings: a day (`"2025-12-08"`) or an instant (`"2025-12-08T09:00:00Z"`), never a `Date`.
+- **Gaps** in a daily series are `null` (or `NaN` from TypeScript). The chart leaves a gap there, not a zero.
+- **Formats** are descriptors: `"integer"`, `"decimal"`, `"compact"`, `"percent"` (a fraction, so `0.12` prints as 12%), or Intl number-format options with an optional `locale`. They print in en-US unless the descriptor says otherwise, so the server and the browser agree. A function also works from TypeScript, but it cannot cross from a server component to the client.
+- **Keys.** A datum is addressed by its `id`, else its label (`name` in Slope, `date` in the daily charts). `emphasis` and `labelled` name data by key, never by index, so sorting or filtering never moves the highlight. Give an `id` when labels repeat.
+- **Limits** are enforced by the schema and listed in the registry under `limits`. A chart that takes twelve rows says so, and a thirteenth is an issue.
+
+## Choosing a chart
+
+Each registry entry names the jobs from the FT Visual Vocabulary that the chart does best (`jobs`), what it suits (`whenToUse`) and what it does not (`whenNotToUse`). An agent picks a chart by its job, writes `data` to `dataShape`, and checks it with `validate` before rendering:
+
+```ts
+import { registry } from "@howells/hairline/schema";
+
+const forRanking = registry.filter((chart) => chart.jobs.includes("ranking"));
+```

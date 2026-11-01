@@ -3,6 +3,7 @@ import { scaleBand } from "d3-scale";
 import { plural } from "../../lib/format";
 import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
+import type { FontMetrics } from "../../schema/metrics";
 import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -14,7 +15,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, noteOf, countingUnit } from "../util";
+import { noteSpace, stagger, noteOf, countingUnit, sansWidth } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { maxIndex } from "./util-b";
@@ -29,6 +30,25 @@ const SHADOW_SHARE = 0.4;
 /** The long, dark rung: every tenth, reaching this far past the column. */
 const TENS = 10;
 const TENS_REACH = 3;
+/** Room kept between two neighbouring bar labels, px. */
+const LABEL_ROOM = 8;
+/** How far the second line of bar labels sits below the first, px. */
+const LABEL_STEP = 14;
+
+/**
+ * True when two neighbouring labels, each centred on its bar, would touch:
+ * then every other label drops to a second line, as a narrow chart needs.
+ */
+const labelsCollide = (
+  labels: readonly string[],
+  step: number,
+  metrics: FontMetrics | undefined
+) => {
+  const widths = labels.map((label) => sansWidth(label, undefined, metrics));
+  return widths
+    .slice(1)
+    .some((width, i) => (widths[i] + width) / 2 + LABEL_ROOM > step);
+};
 
 interface Ladder {
   bandwidth: number;
@@ -38,6 +58,8 @@ interface Ladder {
   format: (v: number) => string;
   hero: boolean;
   index: number;
+  /** How far below the first line this bar's label sits: 0, or LABEL_STEP. */
+  labelDrop: number;
   left: number;
   pitch: number;
   rungs: number;
@@ -132,7 +154,7 @@ const LadderBar = (props: Ladder) => {
         muted
         voice="label"
         x={centre}
-        y={props.floor + 18}
+        y={props.floor + 18 + props.labelDrop}
       >
         {props.datum.label}
       </Label>
@@ -175,6 +197,33 @@ const rungTip = (
     </Tooltip>
   );
 
+/** Side margin either side of the bars, px. */
+const SIDE = 16;
+
+/**
+ * The bars' bands across the width, centred and at most 120px a bar, and
+ * whether their labels need two lines to clear each other.
+ */
+const bands = (
+  data: RungDatum[],
+  width: number,
+  metrics: FontMetrics | undefined
+) => {
+  const plotWidth = Math.min(width - SIDE * 2, data.length * 120);
+  const x0 = (width - plotWidth) / 2;
+  const x = scaleBand<number>()
+    .domain(data.map((_, i) => i))
+    .range([x0, x0 + plotWidth])
+    .paddingInner(0.42)
+    .paddingOuter(0.3);
+  const alternate = labelsCollide(
+    data.map((d) => d.label),
+    x.step(),
+    metrics
+  );
+  return { alternate, plotWidth, x, x0 };
+};
+
 const RungBarsPlot = (props: RungBarsProps) => {
   const data = (props.data ?? []).filter((d) => Number.isFinite(d.value));
   const unit = countingUnit(
@@ -204,22 +253,16 @@ const RungBarsPlot = (props: RungBarsProps) => {
       {(width) => {
         const margin = {
           bottom: 30 + noteSpace(noteOf(props), width - 16, 20, props.metrics),
-          left: 16,
-          right: 16,
           top: 28,
         };
-        const plotWidth = Math.min(
-          width - margin.left - margin.right,
-          data.length * 120
+        const { alternate, plotWidth, x, x0 } = bands(
+          data,
+          width,
+          props.metrics
         );
-        const x0 = (width - plotWidth) / 2;
-        const x = scaleBand<number>()
-          .domain(data.map((_, i) => i))
-          .range([x0, x0 + plotWidth])
-          .paddingInner(0.42)
-          .paddingOuter(0.3);
+        const bottom = margin.bottom + (alternate ? LABEL_STEP : 0);
         const max = Math.max(0, ...data.map((d) => d.value / unit));
-        const pitch = rungPitch(height - margin.bottom - margin.top, max);
+        const pitch = rungPitch(height - bottom - margin.top, max);
         // When the pitch reaches its cap the columns stop short of the
         // room, so the plot closes up round them instead of leaving air;
         // at its floor the tallest column needs more, so the plot grows.
@@ -228,13 +271,10 @@ const RungBarsPlot = (props: RungBarsProps) => {
         const fitted = fixedHeight
           ? height
           : Math.max(
-              Math.min(
-                height,
-                margin.top + Math.ceil(max) * pitch + margin.bottom
-              ),
-              margin.top + tallest + margin.bottom
+              Math.min(height, margin.top + Math.ceil(max) * pitch + bottom),
+              margin.top + tallest + bottom
             );
-        const floor = Math.round(fitted - margin.bottom);
+        const floor = Math.round(fitted - bottom);
         const shadow = Math.min(
           SHADOW,
           Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
@@ -277,6 +317,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
                   format={format}
                   hero={hero === index}
                   index={index}
+                  labelDrop={alternate && index % 2 === 1 ? LABEL_STEP : 0}
                   left={left}
                   pitch={pitch}
                   rungs={rungs}

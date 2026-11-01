@@ -99,7 +99,9 @@ const typeOf = (node: Node, expandObject: boolean): string => {
     return node.enum.map((value) => JSON.stringify(value)).join(" | ");
   }
   if (node.anyOf !== undefined) {
-    return node.anyOf.map((option) => typeOf(option, expandObject)).join(" | ");
+    // Two string formats (a day, an instant) are both "string" to TypeScript.
+    const options = node.anyOf.map((option) => typeOf(option, expandObject));
+    return [...new Set(options)].join(" | ");
   }
   // A nullable scalar arrives as ["number", "null"].
   const types = Array.isArray(node.type) ? node.type : [node.type ?? "unknown"];

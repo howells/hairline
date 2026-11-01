@@ -1,0 +1,59 @@
+/*
+ * The site in the charts' hand. The colours come from deriveTheme (see
+ * src/theme.ts); this file sets only what a token cannot: the paper's grain,
+ * the type and the copy control.
+ */
+
+/* The paper's grain, as on the gallery: noise in the ink's colour, behind everything. */
+body {
+  background-image: var(--site-grain);
+}
+
+/* Sentence-case headings at Inter's own spacing, sized as a column of type rather than a poster. */
+.prose :where(h1, h2, h3) {
+  letter-spacing: -0.01em;
+}
+
+.prose :where(h1) {
+  font-size: 2.25rem;
+}
+
+.prose :where(h2) {
+  font-size: 1.5rem;
+}
+
+/* Body text in ink, as the gallery sets it; muted is for what sits beside the text. */
+.prose :where(p:not([class]), li) {
+  color: var(--blume-foreground);
+}
+
+/* The copy control: the gallery's pill, with a 44px target. */
+[data-blume-copy] {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  top: 0;
+  right: 0.25rem;
+}
+
+/* Bars that paint the paper (the header, code) carry the grain too, fixed to the page so it runs on unbroken. */
+body,
+header,
+pre {
+  background-attachment: fixed;
+}
+
+header,
+pre {
+  background-image: var(--site-grain);
+}
+
+/* Copied is confirmed in ink, not green: one ink, as in the charts. */
+[data-blume-copy] svg:first-child {
+  color: var(--blume-foreground);
+}
+
+/* Inline code on a faint grid-tone chip; blocks keep the paper. */
+.prose :not(pre) > code {
+  background-color: var(--blume-muted);
+}

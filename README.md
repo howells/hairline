@@ -17,16 +17,19 @@ pnpm lint:fix
 pnpm build:lib     # the package, into lib/
 pnpm test          # builds lib/, then tests it the way a consumer imports it
 pnpm e2e           # the acceptance suite in the Playwright image (acceptance/README.md)
-pnpm generate:llms # rewrites public/llms.txt from the built registry
+```
+
+The docs site is its own workspace package in `site/`, built with [Blume](https://github.com/haydenbleasel/blume). Both commands build `lib/` first, since the site draws its examples with the package:
+
+```sh
+pnpm --filter @howells/hairline-site dev     # http://localhost:4321
+pnpm --filter @howells/hairline-site build   # static HTML in site/dist
 ```
 
 | Route | What |
 | --- | --- |
 | `#/` | The grid: every chart, each in the house frame, with nothing else |
 | `#/chart/<ID>` | One chart on its own, for example `#/chart/L13` |
-| `#/docs` | The docs index |
-| `#/docs/<kind>` | One chart's reference: props, data shape, guidance, example |
-| `#/docs/philosophy` | What is fixed and what is configurable |
 | `#/kit` | The fills, marks and type the charts are drawn from |
 | `#/sources` | Where each chart's numbers come from |
 
@@ -34,10 +37,7 @@ Three modes, Pink (the default, after the salmon broadsheet), Paper and Dark, se
 
 ## Docs
 
-- Per-chart reference at `#/docs/<kind>` on the site. The props tables are generated from the zod schemas, so they cannot drift from what a chart validates.
-- [Philosophy](docs/PHILOSOPHY.md): what is fixed, what is configurable, what closes without discussion.
-- [Data](docs/DATA.md): the contract every payload follows.
-- [llms.txt](public/llms.txt): for agents. It lists every chart in the registry with its JSON Schema.
+How to use the package lives on the docs site in [`site/`](site): getting started, the payload contract, the philosophy, and a page per chart. The chart pages are generated from the registry and the zod schemas (`site/src/chart-pages.ts`), so a chart's props table and JSON Schema cannot drift from what it validates. The site's `llms.txt` lists every registry kind with its JSON Schema, for agents.
 
 ## Using it in an app
 
@@ -87,7 +87,7 @@ import { RungBars } from "@howells/hairline/rung-bars";
   </div>;
   ```
 
-- **Data is required.** The package never falls back to demo data. The six charts with schemas take a `data` (or, for `Slope`, `rows`) prop that a zod 4 schema validates; see `#/docs/<kind>` and [Data](docs/DATA.md).
+- **Data is required.** The package never falls back to demo data. The six charts with schemas take a `data` (or, for `Slope`, `rows`) prop that a zod 4 schema validates; see the chart's page on the docs site.
 - **The schema contract.** `@howells/hairline/schema` is React-free: one schema per chart, the types inferred from it, `validate` returning path-specific issues, formatter descriptors (`"percent"`, or Intl number-format options; functions still work from TypeScript), and a `registry` of each chart's `kind`, Visual Vocabulary job, data shape, limits and guidance. The JSON Schemas are emitted at build to `lib/json-schema/<kind>.json` (`@howells/hairline/json-schema/<kind>.json`), with an `index.json`.
 - **Server mode.** Pass `width` and `height` for a fixed-size chart that is complete in the server's first HTML (`renderToString` returns the drawn chart), and it is drawn and ready (`data-hl-ready="true"`) with no client: a fixed-size chart defaults to `animate="off"`, while `animate="scroll"` or `"mount"` asks for the entry animation (then it starts hidden). The responsive chart defaults to `"scroll"`. Omit `width` for the measured, responsive chart, and give it `initialWidth` so its first render is real. A summary and a data table are in the markup for screen readers; `table` shows the table to everyone. Every module starts with `"use client"`, so a server component can render a chart whose props are plain data. A formatter function cannot cross that boundary, so use a descriptor, or wrap the chart in a client component of your own.
 - **Export mode.** For slides and rendered images, draw at the logical `width` and set `scale` to show the whole composition larger through the viewBox, type and textures with it. `fit` fills the container at the chart's aspect ratio. `strokes="device"` keeps every stroke at one device pixel however large the chart is shown. It acts on stroked geometry only (rules, lines, rings, outlines); filled marks such as RungBars' bars scale with the composition either way, so there it changes just the baseline rule. `animate="off"` and `onReady` tell a renderer when the chart has settled.
@@ -126,14 +126,12 @@ src/
     axes.ts      tick helpers and crisp()
     lupi/ basics/ glance/ big/ maps/ board/ originals/ forms/   one kebab-case file per chart + <chart>.data.ts
   schema/      one zod schema per packaged chart, and the registry (React-free)
-  docs/        what the docs routes generate from: the props table and the examples
   gallery/     the registry of every chart (GalleryEntry)
-  pages/       the grid, the single-chart page and the docs routes
+  pages/       the grid and the single-chart page
 docs/
   REFINE.md    the design rules (the amendments are the current word)
-  DATA.md      the data contract: shapes, dates, formats, keys, gaps
-  PHILOSOPHY.md  what is fixed and what is configurable
   BRIEF.md     the original build brief and the reference mapping
+site/          the docs site (Blume): hand-written pages in docs/, a page per chart from src/chart-pages.ts
 reference/     (local only, git-ignored) the screenshots the first versions were rebuilt from
 reports/ and research_notes/   research on broadsheet chart craft, with public-domain example plates
 ```
@@ -143,7 +141,7 @@ reports/ and research_notes/   research on broadsheet chart craft, with public-d
 1. Create `src/charts/<family>/<name>.tsx`. Render only the plot, inside `<Plot>`; the grid supplies the frame and the name.
 2. Take data through props, required; never default to demo data. Use the text roles, the rule ladder, the shared textures and theme colours only.
 3. Register it as a `GalleryEntry` with a plain, sentence-case name, and add its numbers to `src/gallery/sources.json` and `about.json`. Pick every fill from the Fills sheet; if a chart needs one that isn't there, add it to `fills.ts` so the sheet shows it.
-4. To package it, add `src/schema/<kind>.ts` following `rung-bars.ts`, an entry in `src/schema/registry.ts`, and an example in `src/docs/examples.ts`. The docs route, the JSON Schema and `llms.txt` (`pnpm generate:llms`) follow from those.
+4. To package it, add `src/schema/<kind>.ts` following `rung-bars.ts`, an entry in `src/schema/registry.ts`, and an example in `site/src/examples.ts`. The chart's docs page, its JSON Schema and its line in the site's `llms.txt` follow from those.
 5. `pnpm typecheck`, `pnpm lint` and `pnpm test` must be clean, and the chart must be looked at in the browser at 1440 and 390.
 
 ## Provenance

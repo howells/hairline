@@ -1,6 +1,6 @@
 /*
  * Which component draws which kind: the registry says what a chart is, this
- * table says how to draw one from a payload. The docs page and the acceptance
+ * table says how to draw one from a payload. The docs site and the acceptance
  * suite both draw through it, so a seventh chart is added here once.
  */
 import { createElement } from "react";

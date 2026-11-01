@@ -36,8 +36,12 @@ const Columns = (props: {
     </g>
   ));
 
-/** The labels carry semibold values, so less is shaved off their width. */
-const LABEL_SHAVE = 0.95;
+/**
+ * The labels carry semibold values, wider than the measure's regular glyphs,
+ * so nothing is shaved off their width: a shave let the longest name run past
+ * the svg's edge at phone widths, where it was clipped.
+ */
+const LABEL_SHAVE = 1;
 
 /** Below this width the narrow format is used, px. */
 const NARROW = 520;

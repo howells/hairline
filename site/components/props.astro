@@ -1,0 +1,53 @@
+---
+// A chart's props, one row each, with every description in view: the name
+// and its flags on a line, then the type, then the description. Static, no
+// script; hairline rules between rows, as the charts rule their tables.
+import type { PropRow } from "../src/props";
+
+interface Props {
+  rows: PropRow[];
+}
+
+const { rows } = Astro.props;
+
+/** A description's `code` spans, split out so they set as code. */
+const parts = (text: string) =>
+  text.split(/(?<code>`[^`]+`)/u).map((part) => ({
+    code: part.startsWith("`"),
+    text: part.replaceAll("`", ""),
+  }));
+---
+
+<dl class="not-prose my-6 border-t border-border">
+  {
+    rows.map((row) => (
+      <div class="grid gap-0.5 border-b border-border py-3">
+        <dt class="flex flex-wrap items-baseline gap-x-2.5">
+          <code class="font-mono text-sm font-medium text-foreground">
+            {row.name}
+          </code>
+          {row.required && (
+            <span class="text-sm text-muted-foreground">Required</span>
+          )}
+          {row.deprecated && (
+            <span class="text-sm text-muted-foreground">Deprecated</span>
+          )}
+        </dt>
+        <dd class="m-0! grid gap-1">
+          <code class="font-mono text-sm break-words text-muted-foreground">
+            {row.type}
+          </code>
+          <p class="m-0! text-sm text-foreground">
+            {parts(row.description).map((part) =>
+              part.code ? (
+                <code class="font-mono">{part.text}</code>
+              ) : (
+                part.text
+              )
+            )}
+          </p>
+        </dd>
+      </div>
+    ))
+  }
+</dl>
