@@ -1,7 +1,9 @@
 import type { GalleryEntry } from "../../gallery/types";
 import { fmtInt } from "../../lib/format";
 import { HairlineArea } from "./hairline-area";
+import { hairlineAreaDemo } from "./hairline-area.data";
 import { HairlineLine } from "./hairline-line";
+import { hairlineLineDemo } from "./hairline-line.data";
 import { PairedRungs } from "./paired-rungs";
 import { PlumbScatter } from "./plumb-scatter";
 import { plumbScatterDemo } from "./plumb-scatter.data";
@@ -33,14 +35,24 @@ export const entries: GalleryEntry[] = [
     family: "basics",
     id: "F2",
     name: "Sterling in September",
-    render: () => <HairlineLine emphasis="trough" format={fmtDollars} />,
+    render: () => (
+      <HairlineLine
+        data={hairlineLineDemo}
+        extreme="trough"
+        format={fmtDollars}
+      />
+    ),
   },
   {
     family: "basics",
     id: "F3",
     name: "Daylight in Tromsø",
     render: () => (
-      <HairlineArea format={fmtDaylight} ticks={[0, 6, 12, 18, 24]} />
+      <HairlineArea
+        data={hairlineAreaDemo}
+        format={fmtDaylight}
+        ticks={[0, 6, 12, 18, 24]}
+      />
     ),
   },
   {
