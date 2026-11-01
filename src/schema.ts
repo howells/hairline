@@ -9,6 +9,8 @@ export {
   resolveFormat,
 } from "./schema/format";
 export type { FormatDescriptor, FormatInput } from "./schema/format";
+export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";
+export type { FontMetrics } from "./schema/metrics";
 export { charts, registry, getChart } from "./schema/registry";
 export type { Job, ChartEntry, ChartKind } from "./schema/registry";
 export { rungDatumSchema, keyOf, rungBarsSchema } from "./schema/rung-bars";
