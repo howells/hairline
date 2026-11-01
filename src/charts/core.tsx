@@ -1,8 +1,10 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
+import type { ScaleOptions } from "../schema/scale";
 import { useMeasure, useReveal } from "./hooks";
 import { PANEL } from "./roles";
+import { ScaleContext } from "./scale-context";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
 
@@ -42,6 +44,8 @@ interface PlotProps {
    */
   initialWidth?: number;
   overlay?: ReactNode;
+  /** Slide scale (see schema/scale.ts), applied to every ChartSvg inside. */
+  scaling?: ScaleOptions;
   style?: CSSProperties;
   /**
    * Fixed mode: draw at exactly this width, in px. Nothing is measured, so
@@ -60,6 +64,8 @@ interface PlotProps {
  * <Card>. Tooltips and other HTML overlays go in `overlay`, positioned against
  * this box.
  */
+const NO_SCALE: ScaleOptions = {};
+
 export const Plot = (props: PlotProps) => {
   const fixed = props.width !== undefined;
   const [ref, measured] = useMeasure<HTMLDivElement>(
@@ -74,7 +80,9 @@ export const Plot = (props: PlotProps) => {
       className={`[&_svg:focus-visible]:outline-muted relative min-w-0 [&_svg]:block [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-solid ${revealClass(shown)} ${props.className ?? ""}`}
       style={props.style}
     >
-      {width > 0 && props.children(width)}
+      <ScaleContext.Provider value={props.scaling ?? NO_SCALE}>
+        {width > 0 && props.children(width)}
+      </ScaleContext.Provider>
       {props.overlay}
     </div>
   );
