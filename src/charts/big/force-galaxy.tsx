@@ -10,7 +10,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace } from "../util";
+import { clamp, noteSpace, noteOf } from "../util";
 import {
   RING_BELOW,
   buildGalaxy,
@@ -40,7 +40,9 @@ interface ForceGalaxyProps {
   data?: GalaxyData;
   format?: (v: number) => string;
   height?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Unit after the volume in the tooltip. */
   unit?: string;
 }
@@ -489,7 +491,7 @@ export const ForceGalaxy = (props: ForceGalaxyProps) => {
         <GalaxySvg
           data={data}
           height={props.height ?? 480}
-          note={props.note}
+          note={noteOf(props)}
           onTip={setTip}
           width={width}
         />

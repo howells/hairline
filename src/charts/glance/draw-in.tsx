@@ -22,7 +22,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotScreen } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
-import { noteSpace } from "../util";
+import { noteSpace, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { ControlSlot } from "./control-slot";
 import { drawInDemo } from "./draw-in.data";
@@ -37,7 +37,9 @@ interface DrawInProps {
   caption?: string;
   /** Draw duration in ms. */
   duration?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
 }
 
 const fmtDate = utcFormat("%-d %b");
@@ -214,6 +216,7 @@ const valueAt = (data: DrawInDatum[], e: number) => {
  * shows the end.
  */
 export const DrawIn = (props: DrawInProps) => {
+  const unitNote = noteOf(props);
   const data = props.data ?? drawInDemo;
   const format = props.format ?? goalsOf;
   const clip = useSvgId("drawin");
@@ -256,7 +259,7 @@ export const DrawIn = (props: DrawInProps) => {
           // Narrow: the counter sits above the plot; leave caption room only when there is one.
           const counterH = props.caption === undefined ? 48 : 70;
           const m = {
-            bottom: 26 + noteSpace(props.note, width - 16, 18),
+            bottom: 26 + noteSpace(unitNote, width - 16, 18),
             left: 4,
             // The scale reads at the right, beside the line's end.
             right: 48,
@@ -327,7 +330,7 @@ export const DrawIn = (props: DrawInProps) => {
                   size="md"
                 />
               ) : null}
-              <FootNote height={height} text={props.note} width={width} />
+              <FootNote height={height} text={unitNote} width={width} />
             </ChartSvg>
           );
         }}

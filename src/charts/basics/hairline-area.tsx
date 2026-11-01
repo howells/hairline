@@ -17,7 +17,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { sansWidth, stagger } from "../util";
+import { sansWidth, stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
 import {
@@ -401,7 +401,7 @@ export const HairlineArea = (props: HairlineAreaProps) => {
           height={props.height ?? 440}
           hover={hover}
           maxWidth={props.maxWidth ?? 640}
-          note={props.note}
+          note={noteOf(props)}
           readings={readings}
           show={show}
           ticks={props.ticks}

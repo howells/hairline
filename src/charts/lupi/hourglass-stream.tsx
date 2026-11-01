@@ -8,7 +8,7 @@ import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { hourglassDemo } from "./hourglass-stream.data";
 import type { StageDatum } from "./hourglass-stream.data";
 import { vCurve } from "./util-b";
@@ -17,7 +17,9 @@ interface HourglassStreamProps {
   data?: StageDatum[];
   height?: number;
   format?: (v: number) => string;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Index of the stage drawn in the hero colour. Defaults to the last. */
   highlight?: number;
 }
@@ -233,7 +235,11 @@ export const HourglassStream = (props: HourglassStreamProps) => {
         const top = h / 2 + 4;
         const pitch =
           data.length > 1
-            ? (height - top - h / 2 - 12 - noteSpace(props.note, noteW, 24)) /
+            ? (height -
+                top -
+                h / 2 -
+                12 -
+                noteSpace(noteOf(props), noteW, 24)) /
               (data.length - 1)
             : 0;
         const yOf = (i: number) => top + pitch * i;
@@ -286,7 +292,12 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                   />
                 </DimGroup>
               ))}
-              <PlotNote text={props.note} width={noteW} x={cx} y={height - 6} />
+              <PlotNote
+                text={noteOf(props)}
+                width={noteW}
+                x={cx}
+                y={height - 6}
+              />
             </ChartSvg>
             {tip !== undefined && hover.key !== null && first !== undefined && (
               <Tooltip x={cx} y={yOf(hover.key) - h / 2 - 4}>

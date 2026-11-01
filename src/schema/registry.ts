@@ -108,7 +108,7 @@ export const charts = {
   "rung-bars": entry({
     component: "RungBars",
     dataShape:
-      "data: { label: string; value: number; id?: string }[], one bar each; optional emphasis (a bar's id or label), unit (value per rung), format, note.",
+      "data: { label: string; value: number; id?: string }[], one bar each; optional emphasis (a bar's id or label), unit (value per rung), format, unitNote.",
     jobs: ["magnitude", "ranking"],
     kind: "rung-bars",
     limits: { categories: { max: 24, min: 1 }, series: { max: 1, min: 1 } },

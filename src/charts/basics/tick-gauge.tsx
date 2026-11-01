@@ -6,7 +6,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { clamp, stagger } from "../util";
+import { clamp, stagger, noteOf } from "../util";
 import { tickGaugeDemo } from "./tick-gauge.data";
 import type { TickGaugeDatum } from "./tick-gauge.data";
 import { polar } from "./util-b";
@@ -18,7 +18,9 @@ interface TickGaugeProps {
   /** Formats the raw value and target for the tooltip. */
   format?: (v: number) => string;
   height?: number;
+  /** @deprecated Use `unitNote`. */
   note?: string;
+  unitNote?: string;
   /** Total sweep of the dial in degrees, centred on 12 o'clock. */
   sweep?: number;
   /** How many ticks make the full dial. */
@@ -287,7 +289,7 @@ export const TickGauge = (props: TickGaugeProps) => {
           sweep,
           n,
           earned,
-          props.note !== undefined
+          noteOf(props) !== undefined
         );
         return (
           <ChartSvg
@@ -315,7 +317,7 @@ export const TickGauge = (props: TickGaugeProps) => {
                 hover.show(part, x, y);
               }}
             />
-            <FootNote height={dial.height} text={props.note} width={width} />
+            <FootNote height={dial.height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

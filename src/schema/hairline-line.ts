@@ -22,8 +22,10 @@ export const hairlineLineSchema = z
     height: z.number().int().positive().optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
-    /** Footnote under the axis, e.g. "one dot = one day · hollow = weekend". */
-    note: z.string().optional(),
+    // The old name for `unitNote`; JSON Schema marks it deprecated.
+    note: z.string().optional().meta({ deprecated: true }),
+    /** The in-plot key under the axis. */
+    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -42,8 +44,10 @@ export type HairlineLineData = z.infer<typeof hairlineLineSchema>;
 /** What `<HairlineLine>` takes: the payload, with both formats also allowed as functions. */
 export type HairlineLineProps = Omit<
   z.input<typeof hairlineLineSchema>,
-  "dateFormat" | "format"
+  "dateFormat" | "format" | "note"
 > & {
   dateFormat?: DateFormatInput;
   format?: FormatInput;
+  /** @deprecated Use `unitNote`. */
+  note?: string;
 };

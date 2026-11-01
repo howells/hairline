@@ -38,10 +38,12 @@ export const rungBarsSchema = z
     height: z.number().int().positive().optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
-    /** Footnote under the axis, e.g. "One rung = 100 rings". */
-    note: z.string().optional(),
+    // The old name for `unitNote`; JSON Schema marks it deprecated.
+    note: z.string().optional().meta({ deprecated: true }),
     /** Units per rung. */
     unit: z.number().positive().optional(),
+    /** The in-plot key under the axis, e.g. "One rung = 100 rings". */
+    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -61,6 +63,8 @@ export type RungDatum = z.infer<typeof rungDatumSchema>;
 export type RungBarsData = z.infer<typeof rungBarsSchema>;
 /** What `<RungBars>` takes: the payload, with `format` also allowed as a function. */
 export type RungBarsProps = SharedCallbacks &
-  Omit<z.input<typeof rungBarsSchema>, "format"> & {
+  Omit<z.input<typeof rungBarsSchema>, "format" | "note"> & {
     format?: FormatInput;
+    /** @deprecated Use `unitNote`. */
+    note?: string;
   };

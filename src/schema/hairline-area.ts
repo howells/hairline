@@ -22,10 +22,12 @@ export const hairlineAreaSchema = z
     initialWidth: z.number().int().positive().optional(),
     /** Widest the plot gets, in px. Defaults to 640. */
     maxWidth: z.number().positive().optional(),
-    /** Footnote under the axis. */
-    note: z.string().optional(),
+    // The old name for `unitNote`; JSON Schema marks it deprecated.
+    note: z.string().optional().meta({ deprecated: true }),
     /** Value-axis ticks, ascending; the scale runs from 0 to the last. */
     ticks: z.array(z.number()).min(2).max(12).optional(),
+    /** The in-plot key under the axis. */
+    unitNote: z.string().optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z.number().int().positive().optional(),
   })
@@ -44,8 +46,10 @@ export type HairlineAreaData = z.infer<typeof hairlineAreaSchema>;
 /** What `<HairlineArea>` takes: the payload, with both formats also allowed as functions. */
 export type HairlineAreaProps = Omit<
   z.input<typeof hairlineAreaSchema>,
-  "dateFormat" | "format"
+  "dateFormat" | "format" | "note"
 > & {
   dateFormat?: DateFormatInput;
   format?: FormatInput;
+  /** @deprecated Use `unitNote`. */
+  note?: string;
 };

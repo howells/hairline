@@ -17,7 +17,7 @@ import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { stagger } from "../util";
+import { stagger, noteOf } from "../util";
 import { inkWidth, maxIndex } from "./util-b";
 
 interface Layout {
@@ -307,10 +307,10 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
           width,
           height,
           data,
-          props.note !== undefined,
+          noteOf(props) !== undefined,
           format
         );
-        const endsY = height - (props.note === undefined ? 10 : 40);
+        const endsY = height - (noteOf(props) === undefined ? 10 : 40);
         return (
           <ChartSvg
             height={height}
@@ -339,7 +339,7 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
             <Label anchor="end" voice="axis" x={layout.x.range()[1]} y={endsY}>
               {ends[1]}
             </Label>
-            <FootNote height={height} text={props.note} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}
