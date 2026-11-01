@@ -25,8 +25,10 @@ export const scaleShape = {
       "Slides: draw at the logical width, then show the composition this many times larger, type and textures with it."
     ),
   /**
-   * "proportional" (default) lets strokes scale with the composition;
-   * "device" keeps every stroke at one device pixel however large it is shown.
+   * "device" keeps every stroke at one device pixel however large it is shown;
+   * it is the default once the chart is scaled (`scale` or `fit`).
+   * "proportional" lets strokes scale with the composition, and is what an
+   * unscaled chart draws.
    * The policy acts on stroked geometry only: rules, grid lines, lines and
    * paths, rings and outlines. Filled marks (the bars of RungBars and the
    * stems of HairlineArea are rects, the textures are fills) scale with the
@@ -38,7 +40,7 @@ export const scaleShape = {
     .enum(["proportional", "device"])
     .optional()
     .describe(
-      '"proportional" (default) scales strokes with the composition; "device" keeps every stroke at one device pixel. It acts on stroked geometry only (rules, lines, rings, outlines): filled marks, such as the bars of RungBars, scale either way.'
+      '"device" keeps every stroke at one device pixel, and is the default when the chart is scaled (`scale` or `fit`); "proportional" scales strokes with the composition. It acts on stroked geometry only (rules, lines, rings, outlines): filled marks, such as the bars of RungBars, scale either way.'
     ),
 };
 

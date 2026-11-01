@@ -106,7 +106,7 @@ Under reduced motion nothing travels or fades: the stylesheet shows the plot in 
 
 Draw at the logical `width` and set `scale` to show the whole composition larger through the viewBox, type and textures with it: an 11px label at `scale={2.5}` reads at 27.5px. `fit` fills the container's width at the chart's aspect ratio instead.
 
-`strokes="device"` keeps every stroke at one device pixel however large the chart is shown. It acts on stroked geometry only (rules, lines, rings, outlines); filled marks such as the bars of RungBars scale with the composition either way.
+A scaled chart (`scale` or `fit`) keeps every stroke at one device pixel however large it is shown: `strokes="device"` is its default. Set `strokes="proportional"` to let strokes grow with the composition. An unscaled chart is unchanged. The policy acts on stroked geometry only (rules, lines, rings, outlines); filled marks such as the bars of RungBars scale with the composition either way.
 
 ## Imports
 

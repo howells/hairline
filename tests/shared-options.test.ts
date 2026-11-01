@@ -251,9 +251,19 @@ describe.each(kinds)("%s shares the options", (kind) => {
     expect(tag(render(kind, { scale: 2, strokes: "device" }), "svg")).toContain(
       'data-hl-strokes="device"'
     );
-    expect(tag(render(kind, { scale: 2 }), "svg")).not.toContain(
-      "data-hl-strokes"
+    expect(
+      tag(render(kind, { scale: 2, strokes: "proportional" }), "svg")
+    ).not.toContain("data-hl-strokes");
+  });
+
+  it("a scaled chart defaults to device strokes; an unscaled one carries no mark", () => {
+    expect(tag(render(kind, { scale: 2 }), "svg")).toContain(
+      'data-hl-strokes="device"'
     );
+    expect(tag(render(kind, { fit: true }), "svg")).toContain(
+      'data-hl-strokes="device"'
+    );
+    expect(tag(render(kind), "svg")).not.toContain("data-hl-strokes");
   });
 
   it("idPrefix leads every id", () => {

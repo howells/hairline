@@ -40,6 +40,7 @@ export const ChartSvg = ({
   const descId = useSvgId("desc");
   const { fit, scale, strokes } = useContext(ScaleContext);
   const scaled = fit === true || scale !== undefined;
+  const policy = strokes ?? (scaled ? "device" : "proportional");
   const size = scaled
     ? {
         height: fit === true ? undefined : height * (scale ?? 1),
@@ -53,7 +54,7 @@ export const ChartSvg = ({
     : { height, style, viewBox: undefined, width };
   return (
     <svg
-      data-hl-strokes={strokes === "device" ? "device" : undefined}
+      data-hl-strokes={policy === "device" ? "device" : undefined}
       {...size}
       aria-describedby={desc === undefined ? undefined : descId}
       aria-label={label}

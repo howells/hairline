@@ -305,8 +305,17 @@ describe("scale for slides", () => {
     expect(svg).not.toContain('width="768"');
   });
 
-  it("proportional strokes are the default and carry no policy mark", () => {
-    expect(svgOf({ ...slide, scale: 2 })).not.toContain("data-hl-strokes");
+  it("a scaled chart defaults to device strokes, and fit does too", () => {
+    expect(svgOf({ ...slide, scale: 2 })).toContain('data-hl-strokes="device"');
+    expect(svgOf({ ...slide, fit: true })).toContain(
+      'data-hl-strokes="device"'
+    );
+  });
+
+  it("an explicit proportional policy carries no device mark", () => {
+    expect(
+      svgOf({ ...slide, scale: 2, strokes: "proportional" })
+    ).not.toContain("data-hl-strokes");
   });
 
   it("the one-device-pixel policy marks the chart, and the stylesheet keeps rules at a device pixel", () => {
