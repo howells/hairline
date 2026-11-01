@@ -34,22 +34,20 @@ const charts = {
     })
   ),
   Frame: renderToString(
-    createElement(
-      Frame,
-      {
-        footnote: "A footnote",
-        name: "Name",
-        note: "A note",
-        source: "A source",
-      },
-      createElement(RungBars, {
+    createElement(Frame, {
+      // oxlint-disable-next-line react/no-children-prop -- createElement's children argument does not satisfy the required prop
+      children: createElement(RungBars, {
         data: [
           { label: "2021", value: 19 },
           { label: "2022", value: 11 },
         ],
         ...sized,
-      })
-    )
+      }),
+      footnote: "A footnote",
+      name: "Name",
+      note: "A note",
+      source: "A source",
+    })
   ),
   HairlineArea: renderToString(
     createElement(HairlineArea, {
