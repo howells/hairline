@@ -288,7 +288,7 @@
     :where(.is-shown) & {
       animation: grow-y var(--hl-duration-grow) var(--hl-ease-enter) both;
       animation-delay: calc(
-        var(--i, 0) * var(--stagger, var(--hl-stagger-mark))
+        var(--hl-i, 0) * var(--hl-stagger, var(--hl-stagger-mark))
       );
     }
   }
@@ -310,7 +310,7 @@
     :where(.is-shown) & {
       animation: grow-x var(--hl-duration-grow) var(--hl-ease-enter) both;
       animation-delay: calc(
-        var(--i, 0) * var(--stagger, var(--hl-stagger-mark))
+        var(--hl-i, 0) * var(--hl-stagger, var(--hl-stagger-mark))
       );
     }
   }
@@ -332,7 +332,7 @@
     :where(.is-shown) & {
       animation: pop var(--hl-duration-enter) var(--hl-ease-enter) both;
       animation-delay: calc(
-        var(--i, 0) * var(--stagger, var(--hl-stagger-fine))
+        var(--hl-i, 0) * var(--hl-stagger, var(--hl-stagger-fine))
       );
     }
   }
@@ -360,7 +360,7 @@
     :where(.is-shown) & {
       animation: fade-in var(--hl-duration-enter) var(--hl-ease-enter) both;
       animation-delay: calc(
-        var(--i, 0) * var(--stagger, var(--hl-stagger-mark)) +
+        var(--hl-i, 0) * var(--hl-stagger, var(--hl-stagger-mark)) +
           var(--hl-fade-lag)
       );
     }
@@ -376,7 +376,7 @@
     :where(.is-shown) & {
       animation: draw var(--hl-duration-long) var(--hl-ease-travel) backwards;
       animation-delay: calc(
-        var(--i, 0) * var(--stagger, var(--hl-stagger-series))
+        var(--hl-i, 0) * var(--hl-stagger, var(--hl-stagger-series))
       );
     }
   }
@@ -399,7 +399,7 @@
  * in the viewport. It settles 4px into place as it fades in; under reduced
  * motion it is simply there.
  */
-@position-try --note-scroll {
+@position-try --hl-note-scroll {
   position-area: bottom span-left;
   max-height: calc(100% - 1.5rem);
 }
@@ -410,7 +410,7 @@
     inset: auto;
     margin: 0.625rem 0 0;
     position-area: bottom span-left;
-    position-try-fallbacks: flip-block, --note-scroll;
+    position-try-fallbacks: flip-block, --hl-note-scroll;
   }
   @media (prefers-reduced-motion: no-preference) {
     transition:
