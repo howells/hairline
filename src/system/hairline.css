@@ -104,7 +104,7 @@
 }
 
 /*
- * SVG text roles. Charts pick a role, never a font. Everything is Inter, in
+ * SVG text roles. Charts pick a role, never a font. Everything is Inter unless the host sets --hl-font, in
  * sentence case, with tabular figures wherever numbers line up. Axis, label
  * and value share one size and differ by weight and tone only; figure is the
  * single big number a chart may lead with.
@@ -112,7 +112,7 @@
 /* Ticks, scale labels, keys, units and notes. */
 @utility t-axis {
   fill: var(--muted);
-  font-family: var(--font-sans);
+  font-family: var(--hl-font, var(--font-sans));
   font-size: --theme(--text-tick);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
@@ -121,7 +121,7 @@
 /* Category, series and place names. */
 @utility t-label {
   fill: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--hl-font, var(--font-sans));
   font-size: --theme(--text-tick);
   font-weight: 500;
 }
@@ -129,7 +129,7 @@
 /* Data values. */
 @utility t-value {
   fill: var(--ink);
-  font-family: var(--font-sans);
+  font-family: var(--hl-font, var(--font-sans));
   font-size: --theme(--text-tick);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -138,7 +138,7 @@
 /* The one big figure a chart may lead with. */
 @utility t-figure {
   fill: var(--ink);
-  font-family: var(--font-sans);
+  font-family: var(--hl-font, var(--font-sans));
   font-size: --theme(--text-figure);
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -419,4 +419,10 @@
       }
     }
   }
+}
+
+/* Slide scale, one-device-pixel policy: the viewBox scales the composition but
+   every stroke stays one device pixel wide. */
+svg[data-hl-strokes="device"] * {
+  vector-effect: non-scaling-stroke;
 }

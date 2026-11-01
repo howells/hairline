@@ -18,7 +18,7 @@ import {
   noteLines,
   sansWidth,
   stagger,
-  unitNoteOf,
+  noteOf,
 } from "../util";
 import { plumbScatterDemo } from "./plumb-scatter.data";
 import type { PlumbDatum } from "./plumb-scatter.data";
@@ -238,7 +238,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
   const format = props.format ?? String;
   const formatX = props.formatX ?? ((v: number) => `${Math.round(v)}`);
   const [lowName, highName] = props.xLabels ?? ["Low", "High"];
-  const hasNote = hasText(unitNoteOf(props));
+  const hasNote = hasText(noteOf(props));
   const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
@@ -280,7 +280,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
       {(width) => {
         const plotW = Math.min(width - EDGE * 2, 600);
         const x0 = (width - plotW) / 2;
-        const notes = noteLines(unitNoteOf(props), width - 24);
+        const notes = noteLines(noteOf(props), width - 24);
         const floor =
           Math.round(height) -
           (hasNote ? 58 : 36) -
@@ -340,7 +340,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { dottyMatrixDemo, dottyPeriodLabel } from "./dotty-matrix.data";
 import type { DottyGroup } from "./dotty-matrix.data";
 
@@ -182,7 +182,7 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
           height,
           data.length,
           n,
-          noteSpace(unitNoteOf(props), width - 16, 20),
+          noteSpace(noteOf(props), width - 16, 20),
           Math.max(0, ...data.map((d) => sansWidth(d.label, 10.7)))
         );
         const scale = scaleSqrt()
@@ -216,11 +216,7 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
                 screen={screen}
               />
             ))}
-            <FootNote
-              height={geo.height}
-              text={unitNoteOf(props)}
-              width={width}
-            />
+            <FootNote height={geo.height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

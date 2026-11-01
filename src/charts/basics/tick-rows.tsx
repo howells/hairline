@@ -10,7 +10,7 @@ import {
   hasText,
   noteLines,
   stagger,
-  unitNoteOf,
+  noteOf,
   wrapWords,
 } from "../util";
 import { RUNG } from "./rung-geometry";
@@ -179,7 +179,7 @@ export const TickRows = (props: TickRowsProps) => {
   const data = props.data ?? tickRowsDemo;
   const unit = props.unit ?? 1;
   const format = props.format ?? String;
-  const hasNote = hasText(unitNoteOf(props));
+  const hasNote = hasText(noteOf(props));
   const baseHeight = props.height ?? data.length * 66 + (hasNote ? 56 : 24);
   const hover = useHover<number>();
   const label = data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
@@ -224,7 +224,7 @@ export const TickRows = (props: TickRowsProps) => {
         );
         const span = (slots - 1) * pitch + 2;
         const track = slots * pitch;
-        const notes = noteLines(unitNoteOf(props), width - 24);
+        const notes = noteLines(noteOf(props), width - 24);
         const height = baseHeight + Math.max(0, notes.length - 1) * NOTE_LINE;
         const pitchY = (baseHeight - (hasNote ? 56 : 24)) / data.length;
         const frame: RowFrame = {
@@ -263,7 +263,7 @@ export const TickRows = (props: TickRowsProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

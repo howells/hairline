@@ -1,5 +1,8 @@
 import { bisectCenter } from "d3-array";
 import {
+  createContext,
+  createElement,
+  useContext,
   useEffect,
   useId,
   useLayoutEffect,
@@ -9,6 +12,7 @@ import {
 } from "react";
 import type {
   CSSProperties,
+  ReactNode,
   KeyboardEvent,
   PointerEvent,
   RefObject,
@@ -102,9 +106,26 @@ export const useMotionPreference = () =>
 /** Assume reduced motion until hydration supplies the reader's preference. */
 export const useReducedMotion = () => useMotionPreference() ?? true;
 
-/** React's useId, made safe for url(#id) references. */
-export const useSvgId = (prefix: string) =>
-  `${prefix}-${useId().replaceAll(/[^\w-]/gu, "")}`;
+const IdPrefix = createContext("");
+
+/**
+ * Separates one React root's SVG ids from another's. React's `useId` is only
+ * unique within a root, so charts rendered in separate roots on one page give
+ * each root its own prefix. Every chart inside it prefixes all its ids.
+ */
+export const IdScope = (props: { children?: ReactNode; prefix: string }) =>
+  createElement(IdPrefix.Provider, { value: props.prefix }, props.children);
+
+/**
+ * The one source of SVG ids (patterns, clips, masks, gradients): React's
+ * `useId`, made safe for url(#id) references, led by the surrounding
+ * `IdScope` prefix. Every chart derives its ids from this.
+ */
+export const useSvgId = (prefix: string) => {
+  const scope = useContext(IdPrefix);
+  const id = `${prefix}-${useId().replaceAll(/[^\w-]/gu, "")}`;
+  return scope === "" ? id : `${scope}-${id}`;
+};
 
 /** Shared hover time, so small multiples scrub together. */
 export interface Sync {

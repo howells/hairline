@@ -3,7 +3,7 @@ import type { FeatureCollection } from "geojson";
 import { useMemo } from "react";
 
 import { fmtInt } from "../../lib/format";
-import { unitNoteOf } from "../util";
+import { noteOf } from "../util";
 import { Choropleth } from "./choropleth";
 import { usChoroplethDemo, usStates } from "./us-choropleth.data";
 import type { StateDatum } from "./us-choropleth.data";
@@ -69,7 +69,7 @@ export const USChoropleth = (props: USChoroplethProps) => {
       format={format}
       labels={labels}
       maxHeight={props.height ?? 420}
-      note={unitNoteOf(props)}
+      note={noteOf(props)}
       project={project}
       regions={usStates}
       short={props.short ?? treesShort}

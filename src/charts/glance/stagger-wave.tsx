@@ -13,7 +13,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { cx, noteSpace, stagger, unitNoteOf } from "../util";
+import { cx, noteSpace, stagger, noteOf } from "../util";
 import { staggerWaveDemo } from "./stagger-wave.data";
 import type { WaveDatum } from "./stagger-wave.data";
 import { labelRoom } from "./util-a";
@@ -162,7 +162,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
       }
     >
       {(width) => {
-        const bottom = 24 + noteSpace(unitNoteOf(props), width - 16, 16);
+        const bottom = 24 + noteSpace(noteOf(props), width - 16, 16);
         const floor = height - bottom;
         const y = scaleLinear()
           .domain([Math.min(0, lowest), Math.max(0, max)])
@@ -239,7 +239,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
               ticks={ticks.map((t) => ({ at: x(t.i) ?? 0, d: t.d }))}
               y={floor + 16}
             />
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

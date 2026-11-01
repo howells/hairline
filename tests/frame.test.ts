@@ -136,33 +136,31 @@ describe("the in-plot note is unitNote", () => {
   });
 });
 
-describe("no chart takes a title or a source", () => {
-  it("the schema rejects both", () => {
+describe("no chart takes a source, and a title is only ever the accessible name", () => {
+  it("the schema rejects a source", () => {
     const checked = getChart("rung-bars").validate({
       data: bars,
       source: "x",
-      title: "y",
     });
-    expect(checked.ok).toBe(false);
+    expect(
+      checked.ok ? [] : checked.issues.map((i) => i.pointer)
+    ).toStrictEqual([""]);
   });
 
-  it("no chart's props declare either", () => {
+  it("no chart's props declare a source, or a title that is not the accessible one", () => {
     const root = new URL("../lib/types/charts/", import.meta.url).pathname;
-    const files = readdirSync(root, {
-      encoding: "utf-8",
-      recursive: true,
-    }).filter(
-      (f) =>
-        f.endsWith(".d.ts") &&
-        !f.includes(".data.") &&
-        !f.startsWith("board") &&
-        !["frame.d.ts", "svg.d.ts"].includes(path.basename(f))
-    );
-    const offenders = files.filter((f) =>
-      /^\s*(?:title|source)\??:/mu.test(
-        readFileSync(path.join(root, f), "utf-8")
-      )
-    );
+    const files = readdirSync(root, { encoding: "utf-8", recursive: true })
+      .filter((f) => f.endsWith(".d.ts") && !f.includes(".data."))
+      .filter((f) => !["frame.d.ts", "svg.d.ts"].includes(path.basename(f)));
+    const offenders = files.filter((f) => {
+      const text = read(root, f);
+      return (
+        /^\s*source\??:/mu.test(text) ||
+        /^\s*title\??:/mu.test(
+          text.replaceAll(/\/\*\* [^*]*accessible[^*]*\*\/\s*title\??:/gu, "")
+        )
+      );
+    });
     expect(offenders).toStrictEqual([]);
   });
 });

@@ -13,7 +13,7 @@ import {
   noteSpace,
   sansWidth,
   stagger,
-  unitNoteOf,
+  noteOf,
 } from "../util";
 import { radialConvergenceDemo } from "./radial-convergence.data";
 import type { ConvergenceItem } from "./radial-convergence.data";
@@ -291,7 +291,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
       }
     >
       {(width) => {
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 20);
+        const noteH = noteSpace(noteOf(props), width - 16, 20);
         const { plotH, rim } = rimFor(width, height, data, noteH);
         const hubs = buildHubs(data, rim);
         const hubOf = new Map(hubs.map((h) => [h.theme, h]));
@@ -351,7 +351,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
               );
             })}
             <HubDots R={rim.R} hero={hero} hubs={hubs} />
-            <FootNote height={plotH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={plotH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

@@ -18,7 +18,7 @@ import {
   sansWidth,
   stagger,
   sum,
-  unitNoteOf,
+  noteOf,
 } from "../util";
 import {
   brandSpectrumCompetitors,
@@ -44,6 +44,8 @@ interface BrandSpectrumProps {
    * when the poles are measured values and the reading is a value too.
    */
   describe?: (row: SpectrumRow, position: number) => string;
+  /** The drawing's accessible title. */
+  title?: string;
 }
 
 interface SpectrumHover {
@@ -376,7 +378,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
           54 +
           10 +
           (key.at(-1)?.line ?? 0) * KEY_LINE +
-          noteSpace(unitNoteOf(props), width - 16, 18);
+          noteSpace(noteOf(props), width - 16, 18);
         const layout = spectrumLayout(axis, height, data.length, footH);
         const legendY = layout.rowY(data.length - 1) + 54;
         return (
@@ -386,7 +388,10 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
             leave={() => {
               setHover(null);
             }}
-            title="Where one hill sits between opposing poles, against others"
+            title={
+              props.title ??
+              "Where one hill sits between opposing poles, against others"
+            }
             width={width}
           >
             <defs>
@@ -406,7 +411,7 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
             <SpectrumKey entries={key} x={axis.x0} y={legendY} />
             <FootNote
               height={layout.height}
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

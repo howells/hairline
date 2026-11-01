@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotScreen, KeySwatch, PlateLabel } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { matrixHeatGlanceDemo } from "./matrix-heat-glance.data";
 import type { MatrixGlanceData } from "./matrix-heat-glance.data";
 import { labelRoom, textWidth } from "./util-a";
@@ -282,7 +282,7 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
         const keyY = top + nR * pitch + gap * (nR - 1) + 18;
         const height =
           props.height ??
-          keyY + SWATCH + 6 + noteSpace(unitNoteOf(props), width - 16, 30);
+          keyY + SWATCH + 6 + noteSpace(noteOf(props), width - 16, 30);
 
         return (
           <ChartSvg
@@ -332,7 +332,7 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
               screens={screens}
               y={keyY}
             />
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

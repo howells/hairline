@@ -13,6 +13,8 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
+import { fontMetricsSchema } from "./metrics";
+import { scaleShape } from "./scale";
 
 /** The bars: a label, a value, and an optional key for when labels repeat. */
 export const rungDatumSchema = z.strictObject({
@@ -31,14 +33,28 @@ export const rungBarsSchema = z
     data: z.array(rungDatumSchema).min(1).max(24),
     /** The bar to draw in the hero colour, by key. Defaults to the largest. */
     emphasis: z.string().optional(),
+    fit: scaleShape.fit,
     /** How values print: a preset name or Intl number-format options. */
     format: formatSchema.optional(),
     /** Fixed height in px. Without it a bar chart is 460 tall. */
     height: z.number().int().positive().optional(),
+    /** Leads every SVG id, to separate charts rendered in separate React roots on one page. */
+    idPrefix: z
+      .string()
+      .regex(/^[A-Za-z][\w-]*$/u)
+      .optional(),
     /** Responsive mode only: the width of the first render, before measuring. */
     initialWidth: z.number().int().positive().optional(),
+    /** Glyph widths of a face other than Inter, so notes wrap and reserve room for it. */
+    metrics: fontMetricsSchema.optional(),
     // The old name for `unitNote`; JSON Schema marks it deprecated.
     note: z.string().optional().meta({ deprecated: true }),
+    scale: scaleShape.scale,
+    strokes: scaleShape.strokes,
+    /** Show the data table to sighted readers too. It is always there for screen readers. */
+    table: z.boolean().optional(),
+    /** The chart's accessible name. Defaults to "Bar chart of N values". */
+    title: z.string().min(1).optional(),
     /** Units per rung. */
     unit: z.number().positive().optional(),
     /** The in-plot key under the axis, e.g. "One rung = 100 rings". */

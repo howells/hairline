@@ -22,7 +22,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotScreen } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
-import { noteSpace, unitNoteOf } from "../util";
+import { noteSpace, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { ControlSlot } from "./control-slot";
 import { drawInDemo } from "./draw-in.data";
@@ -216,7 +216,7 @@ const valueAt = (data: DrawInDatum[], e: number) => {
  * shows the end.
  */
 export const DrawIn = (props: DrawInProps) => {
-  const unitNote = unitNoteOf(props);
+  const unitNote = noteOf(props);
   const data = props.data ?? drawInDemo;
   const format = props.format ?? goalsOf;
   const clip = useSvgId("drawin");

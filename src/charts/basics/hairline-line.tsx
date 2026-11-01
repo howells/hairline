@@ -16,7 +16,7 @@ import { ChartSvg } from "../svg";
 import { Label, XLabels } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { stagger, unitNoteOf } from "../util";
+import { stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { hairlineLineDemo } from "./hairline-line.data";
 import type { DailyDatum } from "./hairline-line.data";
@@ -325,7 +325,7 @@ export const HairlineLine = (props: HairlineLineProps) => {
           height={props.height ?? 440}
           highlight={props.highlight}
           hover={hover}
-          note={unitNoteOf(props)}
+          note={noteOf(props)}
           show={show}
           width={width}
         />

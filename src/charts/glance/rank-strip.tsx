@@ -8,7 +8,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, PlateLabel } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { rankStripDemo } from "./rank-strip.data";
 import type { RankSeries, RankStripData } from "./rank-strip.data";
 import { textWidth } from "./util-a";
@@ -275,7 +275,7 @@ export const RankStrip = (props: RankStripProps) => {
             nS * cell +
             rowGap * (nS - 1) +
             10 +
-            noteSpace(unitNoteOf(props), width - 16, 34);
+            noteSpace(noteOf(props), width - 16, 34);
 
         return (
           <ChartSvg
@@ -324,7 +324,7 @@ export const RankStrip = (props: RankStripProps) => {
                 y={top + i * (cell + rowGap)}
               />
             ))}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

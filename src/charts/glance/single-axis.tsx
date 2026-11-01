@@ -12,7 +12,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, ranks, sansWidth, stagger, noteOf } from "../util";
 import { singleAxisDemo } from "./single-axis.data";
 import type { SingleAxisRow } from "./single-axis.data";
 
@@ -179,7 +179,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
     >
       {(width) => {
         const m = {
-          bottom: 28 + noteSpace(unitNoteOf(props), width - 16, 18),
+          bottom: 28 + noteSpace(noteOf(props), width - 16, 18),
           // Room for the longest station name.
           left:
             Math.ceil(Math.max(...data.map((d) => sansWidth(d.label, 12)))) +
@@ -253,7 +253,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
             <Label anchor="end" voice="axis" x={width - m.right} y={floor + 16}>
               {zone}
             </Label>
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

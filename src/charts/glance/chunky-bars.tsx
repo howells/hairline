@@ -10,7 +10,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { chunkyBarsDemo } from "./chunky-bars.data";
 import type { ChunkyDatum } from "./chunky-bars.data";
 import { rankTones } from "./util-a";
@@ -91,7 +91,7 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
       {(width) => {
         const narrow = width < 460;
         const m = {
-          bottom: 34 + noteSpace(unitNoteOf(props), width - 16, 18),
+          bottom: 34 + noteSpace(noteOf(props), width - 16, 18),
           left: 8,
           right: 8,
           top: 40,
@@ -165,7 +165,7 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
               );
             })}
             <HRule x0={m.left} x1={width - m.right} y={floor} />
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

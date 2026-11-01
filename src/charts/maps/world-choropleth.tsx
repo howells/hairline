@@ -2,7 +2,7 @@ import { geoEqualEarth } from "d3-geo";
 import type { FeatureCollection } from "geojson";
 import { useMemo } from "react";
 
-import { unitNoteOf } from "../util";
+import { noteOf } from "../util";
 import { Choropleth } from "./choropleth";
 import { withoutRemoteIslets, withoutWrappedParts } from "./geo";
 import { worldChoroplethDemo, worldCountries } from "./world-choropleth.data";
@@ -75,7 +75,7 @@ export const WorldChoropleth = (props: WorldChoroplethProps) => {
       format={format}
       labels={labels}
       maxHeight={props.height ?? 480}
-      note={unitNoteOf(props)}
+      note={noteOf(props)}
       project={project}
       regions={regions}
       short={props.short ?? litres}

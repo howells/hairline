@@ -7,7 +7,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, PixelLine } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace, stagger, unitNoteOf } from "../util";
+import { clamp, noteSpace, stagger, noteOf } from "../util";
 import { radialPatchworkDemo } from "./radial-patchwork.data";
 import type { PatchworkEvent } from "./radial-patchwork.data";
 import { clock, sectorPath } from "./util-a";
@@ -257,7 +257,7 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
     >
       {(width) => {
         // Hour labels reach ~40px beyond the rim, above and below.
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 20);
+        const noteH = noteSpace(noteOf(props), width - 16, 20);
         const R = clamp(
           Math.min(width / 2 - 48, (height - 88 - noteH) / 2),
           90,
@@ -319,7 +319,7 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
               }}
               spans={spans}
             />
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

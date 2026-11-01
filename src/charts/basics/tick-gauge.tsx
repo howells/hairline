@@ -6,7 +6,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { clamp, stagger, unitNoteOf } from "../util";
+import { clamp, stagger, noteOf } from "../util";
 import { tickGaugeDemo } from "./tick-gauge.data";
 import type { TickGaugeDatum } from "./tick-gauge.data";
 import { polar } from "./util-b";
@@ -289,7 +289,7 @@ export const TickGauge = (props: TickGaugeProps) => {
           sweep,
           n,
           earned,
-          unitNoteOf(props) !== undefined
+          noteOf(props) !== undefined
         );
         return (
           <ChartSvg
@@ -317,11 +317,7 @@ export const TickGauge = (props: TickGaugeProps) => {
                 hover.show(part, x, y);
               }}
             />
-            <FootNote
-              height={dial.height}
-              text={unitNoteOf(props)}
-              width={width}
-            />
+            <FootNote height={dial.height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

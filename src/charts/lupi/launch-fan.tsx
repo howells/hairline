@@ -8,7 +8,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { PixelLine } from "../texture";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import {
   ARRIVAL_WEEKS,
   arrivalWeekDate,
@@ -355,7 +355,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
       }
     >
       {(width) => {
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 30);
+        const noteH = noteSpace(noteOf(props), width - 16, 30);
         const layout = fanLayout(width, height, data, weeks, ringLabelW, noteH);
         // On narrow screens the fan is width-bound: drop the unused height.
         const svgH = Math.min(height, Math.round(layout.bottom + 6 + noteH));
@@ -382,7 +382,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
                 weeks={weeks}
               />
             ))}
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

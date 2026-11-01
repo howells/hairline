@@ -14,7 +14,7 @@ import {
   ranks,
   sansWidth,
   stagger,
-  unitNoteOf,
+  noteOf,
   wrapWords,
 } from "../util";
 import { tickDonutDemo } from "./tick-donut.data";
@@ -463,7 +463,7 @@ export const TickDonut = (props: TickDonutProps) => {
           format={format}
           height={props.height ?? 420}
           highlight={props.highlight}
-          note={unitNoteOf(props)}
+          note={noteOf(props)}
           show={hover.show}
           width={width}
         />

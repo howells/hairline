@@ -1,6 +1,12 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
+import { dumbbellKeyOf } from "../../schema/dumbbell-queue";
+import type {
+  DumbbellDatum,
+  DumbbellQueueProps,
+} from "../../schema/dumbbell-queue";
+import { resolveFormat } from "../../schema/format";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
@@ -11,27 +17,8 @@ import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { stagger, unitNoteOf } from "../util";
-import { dumbbellQueueDemo } from "./dumbbell-queue.data";
-import type { DumbbellDatum } from "./dumbbell-queue.data";
+import { stagger, noteOf } from "../util";
 import { inkWidth, maxIndex } from "./util-b";
-
-interface DumbbellQueueProps {
-  /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
-  alert?: "fall" | "rise";
-  data?: DumbbellDatum[];
-  /** Axis end labels: [low end, high end]. */
-  ends?: readonly [string, string];
-  format?: (v: number) => string;
-  height?: number;
-  /** Label of the row to draw in the hero colour. Defaults to the biggest change. */
-  highlight?: string;
-  /** @deprecated Use `unitNote`. */
-  note?: string;
-  unitNote?: string;
-  /** Size of one bead in data units. */
-  unit?: number;
-}
 
 interface Layout {
   dotR: number;
@@ -79,12 +66,16 @@ const buildLayout = (
   hasNote: boolean,
   format: (v: number) => string
 ): Layout => {
-  const longest = Math.max(...data.map((d) => inkWidth(d.label)));
+  const longest = Math.max(0, ...data.map((d) => inkWidth(d.label)));
   // The row names end at `labelW`, the longest starting at the edge margin.
   const labelW = EDGE + Math.min(width * 0.32, Math.ceil(longest));
   const top = 36;
   const bottom = hasNote ? 74 : 44;
-  const max = Math.max(...data.flatMap((d) => [d.before, d.after]));
+  const values = data.flatMap((d) => [d.before, d.after]);
+  // The axis runs from zero, or below it when a value is negative.
+  const lo = Math.min(0, ...values) * 1.04;
+  const hi = Math.max(0, ...values) * 1.04;
+  const span = hi > lo ? hi - lo : 1;
   const dotSize: DotSize = width < 420 ? "md" : "lg";
   const dotR = DOT[dotSize];
   const x0 = labelW + 12;
@@ -92,7 +83,7 @@ const buildLayout = (
   const x1 = Math.min(
     width - EDGE,
     ...data.map((d) => {
-      const t = Math.max(d.before, d.after) / (max * 1.04);
+      const t = (Math.max(d.before, d.after) - lo) / span;
       return t > 0
         ? x0 + (width - EDGE - rightLabelW(d, format, dotR) - x0) / t
         : Infinity;
@@ -105,7 +96,7 @@ const buildLayout = (
     pitch: (height - top - bottom) / Math.max(1, data.length - 1),
     top,
     x: scaleLinear()
-      .domain([0, max * 1.04])
+      .domain([lo, lo + span])
       .range([x0, x1]),
   };
 };
@@ -245,28 +236,58 @@ const describe = (d: DumbbellDatum, format: (v: number) => string): string =>
     ? `${format(d.before - d.after)} less`
     : `${format(d.after - d.before)} more`;
 
+/** React keys: each datum's key, numbered when the key repeats. */
+const reactKeys = (data: DumbbellDatum[]) => {
+  const seen = new Map<string, number>();
+  return data.map((d) => {
+    const key = dumbbellKeyOf(d);
+    const nth = seen.get(key) ?? 0;
+    seen.set(key, nth + 1);
+    return `${key}#${nth}`;
+  });
+};
+
 /**
+ * Props are the `dumbbellQueueSchema` payload (src/schema/dumbbell-queue.ts);
+ * `data` is required and never defaults to demo data. Give `width` and
+ * `height` for a fixed-size chart that is complete on the first (server)
+ * render. Bad input is tolerated: a row with a value that is not a finite
+ * number is skipped, negatives extend the axis below zero, equal ends draw
+ * no rungs, duplicate labels each get a row (give them `id`s to tell them
+ * apart), and no data draws a quiet empty axis.
+ *
  * F12 Before and after. Hollow dot = before, solid dot = after, and the gap
  * between them holds one 2px rung per unit of change, so it can be counted.
  * The biggest change is in ink; a row that changed the alert way (a rise by default) rungs in the alert colour.
  */
 export const DumbbellQueue = (props: DumbbellQueueProps) => {
-  const data = props.data ?? dumbbellQueueDemo;
+  const data = (props.data ?? []).filter(
+    (d) => Number.isFinite(d.before) && Number.isFinite(d.after)
+  );
   const height = props.height ?? 380;
-  const format = props.format ?? String;
-  const unit = props.unit ?? 1;
+  const format = resolveFormat(props.format);
+  const unit = props.unit !== undefined && props.unit > 0 ? props.unit : 1;
   const alert = props.alert ?? "rise";
   const ends = props.ends ?? ["0", "Units"];
+  const keys = reactKeys(data);
+  // Emphasis is by key (id, else label) so reordering never moves it; none
+  // given, the biggest change. A key that names no row emphasises none.
   const hero =
-    props.highlight ??
-    data[maxIndex(data.map((d) => Math.abs(d.before - d.after)))]?.label;
+    props.emphasis === undefined
+      ? maxIndex(data.map((d) => Math.abs(d.before - d.after)))
+      : data.findIndex((d) => dumbbellKeyOf(d) === props.emphasis);
   const hover = useHover<number>();
-  const label = data
-    .map((d) => `${d.label}: ${format(d.before)} to ${format(d.after)}`)
-    .join(", ");
+  const label =
+    data.length === 0
+      ? "No data"
+      : data
+          .map((d) => `${d.label}: ${format(d.before)} to ${format(d.after)}`)
+          .join(", ");
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
         hover.at === null ? null : (
           <Tooltip x={hover.at.x} y={hover.at.y}>
@@ -286,10 +307,10 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
           width,
           height,
           data,
-          unitNoteOf(props) !== undefined,
+          noteOf(props) !== undefined,
           format
         );
-        const endsY = height - (unitNoteOf(props) === undefined ? 10 : 40);
+        const endsY = height - (noteOf(props) === undefined ? 10 : 40);
         return (
           <ChartSvg
             height={height}
@@ -303,22 +324,22 @@ export const DumbbellQueue = (props: DumbbellQueueProps) => {
                 datum={d}
                 dim={hover.dim(i)}
                 format={format}
-                hero={hero === d.label}
+                hero={hero === i}
                 index={i}
-                key={d.label}
+                key={keys[i]}
                 layout={layout}
                 onHover={hover.showAt(i)}
                 unit={unit}
                 width={width}
               />
             ))}
-            <Label voice="axis" x={layout.x(0)} y={endsY}>
+            <Label voice="axis" x={layout.x.range()[0]} y={endsY}>
               {ends[0]}
             </Label>
             <Label anchor="end" voice="axis" x={layout.x.range()[1]} y={endsY}>
               {ends[1]}
             </Label>
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

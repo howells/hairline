@@ -15,7 +15,7 @@ import {
   noteSpace,
   sansWidth,
   stagger,
-  unitNoteOf,
+  noteOf,
   wrapWords,
 } from "../util";
 import { typeColonnadeDemo } from "./type-colonnade.data";
@@ -393,7 +393,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
           height,
           data,
           owners,
-          noteSpace(unitNoteOf(props), width - 16, 24)
+          noteSpace(noteOf(props), width - 16, 24)
         );
         const layer: LayerProps = {
           at,
@@ -424,11 +424,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
               </defs>
               <Lights {...layer} />
               <Owners {...layer} />
-              <FootNote
-                height={at.height}
-                text={unitNoteOf(props)}
-                width={width}
-              />
+              <FootNote height={at.height} text={noteOf(props)} width={width} />
             </ChartSvg>
             {focusOwner !== undefined && (
               <Tooltip

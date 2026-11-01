@@ -5,7 +5,7 @@ import { DimGroup, HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { CircleLink, CircleNode } from "./circular-graph.data";
 import { LinkBundle } from "./link-bundle";
@@ -190,7 +190,7 @@ export const CircularGraph = (props: CircularGraphProps) => {
     >
       {(width) => {
         const narrow = width < 460;
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 16);
+        const noteH = noteSpace(noteOf(props), width - 16, 16);
         const rMax = narrow ? 18 : 26;
         const R0 = Math.min(
           height / 2 - rMax - 12,
@@ -264,7 +264,7 @@ export const CircularGraph = (props: CircularGraphProps) => {
                 }}
               />
             ))}
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

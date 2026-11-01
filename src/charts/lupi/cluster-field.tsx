@@ -6,7 +6,7 @@ import { Dot, Ring } from "../markers";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { clamp, noteSpace, sansWidth, stagger, sum, unitNoteOf } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, sum, noteOf } from "../util";
 import { clusterFieldDemo } from "./cluster-field.data";
 import type {
   ClusterDatum,
@@ -270,7 +270,7 @@ export const ClusterField = (props: ClusterFieldProps) => {
         const layout = fieldLayout(width, data.clusters, coreId);
         const height =
           props.height ??
-          layout.height + noteSpace(unitNoteOf(props), width - 16, 24);
+          layout.height + noteSpace(noteOf(props), width - 16, 24);
         return (
           <ChartSvg
             height={height}
@@ -290,7 +290,7 @@ export const ClusterField = (props: ClusterFieldProps) => {
                 s={layout.s}
               />
             ))}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

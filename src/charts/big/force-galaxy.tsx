@@ -10,7 +10,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace, unitNoteOf } from "../util";
+import { clamp, noteSpace, noteOf } from "../util";
 import {
   RING_BELOW,
   buildGalaxy,
@@ -491,7 +491,7 @@ export const ForceGalaxy = (props: ForceGalaxyProps) => {
         <GalaxySvg
           data={data}
           height={props.height ?? 480}
-          note={unitNoteOf(props)}
+          note={noteOf(props)}
           onTip={setTip}
           width={width}
         />

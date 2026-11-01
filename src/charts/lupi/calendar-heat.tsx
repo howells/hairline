@@ -15,7 +15,7 @@ import {
   paint,
   useTextureIds,
 } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { calendarHeatDemo } from "./calendar-heat.data";
 import type { DayDatum } from "./calendar-heat.data";
 
@@ -345,7 +345,7 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
       {(width) => {
         const days = toDays(data, width < 640 ? NARROW_MONTHS : WIDE_MONTHS);
         const peak = days.find((d) => d.value === max);
-        const extra = 6 + noteSpace(unitNoteOf(props), width - 16, 24);
+        const extra = 6 + noteSpace(noteOf(props), width - 16, 24);
         const g = layout(width, days, max, extra, props.height);
         const index = new Map(
           days.map((d, i) => [keyOf(d.band, d.col, d.dow), i])
@@ -388,11 +388,7 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
                   y={cellY(g, hovered) + 0.5}
                 />
               )}
-              <FootNote
-                height={g.svgH}
-                text={unitNoteOf(props)}
-                width={width}
-              />
+              <FootNote height={g.svgH} text={noteOf(props)} width={width} />
             </ChartSvg>
             {hovered !== undefined && (
               <Tooltip

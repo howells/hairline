@@ -3,6 +3,7 @@
 // checks it with `validate`. Add one entry per chart, in kind order.
 import type { ZodType } from "zod";
 
+import { dumbbellQueueSchema } from "./dumbbell-queue";
 import { rungBarsSchema } from "./rung-bars";
 import { validate } from "./validate";
 import type { Validated } from "./validate";
@@ -48,6 +49,19 @@ const entry = <T>(details: Omit<ChartEntry<T>, "validate">): ChartEntry<T> => ({
 
 /** Every chart by kind, typed: `charts["rung-bars"].validate(x)` returns that chart's data. */
 export const charts = {
+  "dumbbell-queue": entry({
+    component: "DumbbellQueue",
+    dataShape:
+      'data: { label: string; before: number; after: number; id?: string }[], one row each; optional emphasis (a row\'s id or label), alert ("rise" or "fall": the direction drawn in the alert colour), unit (change per rung), ends (two axis labels), format, note.',
+    jobs: ["deviation", "change-over-time"],
+    kind: "dumbbell-queue",
+    limits: { categories: { max: 12, min: 1 }, series: { max: 2, min: 2 } },
+    schema: dumbbellQueueSchema,
+    whenNotToUse:
+      "More than a dozen rows, more than two states per row, or changes so large that counting rungs is hopeless (raise `unit`).",
+    whenToUse:
+      "The same few things measured at two moments, or against a target: how far each moved, and which way.",
+  }),
   "rung-bars": entry({
     component: "RungBars",
     dataShape:

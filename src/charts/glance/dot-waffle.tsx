@@ -7,7 +7,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, KeySwatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { dimClass, noteSpace, ranks, stagger, unitNoteOf } from "../util";
+import { dimClass, noteSpace, ranks, stagger, noteOf } from "../util";
 import { dotWaffleDemo } from "./dot-waffle.data";
 import type { WaffleDatum } from "./dot-waffle.data";
 import { labelRoom } from "./util-a";
@@ -252,7 +252,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
         const narrow = width < 460;
         const entryW = narrow ? 0 : entryWidth(data, format);
         const legendW = narrow ? 0 : entryW + 20;
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 22);
+        const noteH = noteSpace(noteOf(props), width - 16, 22);
         const legendRows = narrow ? Math.ceil(data.length / 2) : 0;
         const pitch =
           Math.min(
@@ -312,7 +312,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
               inset={narrow ? 0 : 8}
               onEnter={enter}
             />
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

@@ -12,7 +12,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { divergingBarDemo } from "./diverging-bar.data";
 import type { DivergingDatum } from "./diverging-bar.data";
 import { labelRoom } from "./util-a";
@@ -221,7 +221,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
           "t-value"
         );
         const m = {
-          bottom: 4 + noteSpace(unitNoteOf(props), width - 16, 24),
+          bottom: 4 + noteSpace(noteOf(props), width - 16, 24),
           left: labelW + 16,
           right: 40,
           top: 4,
@@ -280,7 +280,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
               );
             })}
             <VRule x={x(0)} y0={m.top} y1={height - m.bottom} />
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

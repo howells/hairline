@@ -12,7 +12,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, ranks, sansWidth, stagger, noteOf } from "../util";
 import { bigSliceDemo } from "./big-slice.data";
 import type { SliceDatum } from "./big-slice.data";
 
@@ -428,7 +428,7 @@ export const BigSlice = (props: BigSliceProps) => {
             : `${shareOf(d)} · ${format(d.intensity)}`,
           name: d.label,
         });
-        const bottom = 8 + noteSpace(unitNoteOf(props), width - 16, 18);
+        const bottom = 8 + noteSpace(noteOf(props), width - 16, 18);
         const slices = pie<SliceDatum>()
           .value((d) => d.share)
           .sortValues(null)
@@ -499,7 +499,7 @@ export const BigSlice = (props: BigSliceProps) => {
                 />
               ))}
             </g>
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

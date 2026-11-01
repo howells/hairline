@@ -7,7 +7,7 @@ import { HitCircle, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { clamp, noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { arcMatrixDemo } from "./arc-matrix.data";
 import type { ArcMatrixData } from "./arc-matrix.data";
 
@@ -219,7 +219,7 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
       }
     >
       {(width) => {
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 20);
+        const noteH = noteSpace(noteOf(props), width - 16, 20);
         const layout = arcLayout(width, height, data, max, noteH);
         const svgH = Math.min(height, Math.round(layout.bottom));
         return (
@@ -272,7 +272,7 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
                 </g>
               );
             })}
-            <FootNote height={svgH} text={unitNoteOf(props)} width={width} />
+            <FootNote height={svgH} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

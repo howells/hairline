@@ -9,7 +9,7 @@ import { HRule, Tick } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
-import { stagger, unitNoteOf } from "../util";
+import { stagger, noteOf } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { binMedian, rungHistogramDemo } from "./rung-histogram.data";
 import type { HistBin } from "./rung-histogram.data";
@@ -235,7 +235,7 @@ export const RungHistogram = (props: RungHistogramProps) => {
           height,
           data,
           unit,
-          unitNoteOf(props) !== undefined
+          noteOf(props) !== undefined
         );
         return (
           <ChartSvg
@@ -272,7 +272,7 @@ export const RungHistogram = (props: RungHistogramProps) => {
                 value={marker}
               />
             ) : null}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

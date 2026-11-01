@@ -8,7 +8,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { RingData } from "./circular-graph.data";
 
@@ -534,7 +534,7 @@ export const CircularGraph = (props: CircularGraphProps) => {
           focus={focus}
           height={props.height ?? 560}
           highlight={props.highlight}
-          note={unitNoteOf(props)}
+          note={noteOf(props)}
           onFocus={(id, t) => {
             setFocus(id);
             setTip(t);

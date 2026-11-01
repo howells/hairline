@@ -14,7 +14,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { ControlSlot } from "./control-slot";
 import { placeNames } from "./scatter-labels";
 import { scatterMorphDemo } from "./scatter-morph.data";
@@ -540,7 +540,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
       </ControlSlot>
       <Plot>
         {(width) => {
-          const noteH = noteSpace(unitNoteOf(props), width - 16, 16);
+          const noteH = noteSpace(noteOf(props), width - 16, 16);
           const h = height - CONTROL_SLOT_H - noteH;
           const ctx: Ctx = {
             data,
@@ -601,7 +601,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                 ) : null}
                 <FootNote
                   height={h + noteH}
-                  text={unitNoteOf(props)}
+                  text={noteOf(props)}
                   width={width}
                 />
               </ChartSvg>

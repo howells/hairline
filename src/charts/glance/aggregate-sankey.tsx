@@ -10,7 +10,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, stagger, unitNoteOf, wrapWords } from "../util";
+import { noteSpace, ranks, stagger, noteOf, wrapWords } from "../util";
 import { aggregateSankeyDemo } from "./aggregate-sankey.data";
 import type { AggregateSankeyData, SankeyFlow } from "./aggregate-sankey.data";
 import { textWidth } from "./util-a";
@@ -439,7 +439,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        const bottom = 8 + noteSpace(unitNoteOf(props), width - 16, 32);
+        const bottom = 8 + noteSpace(noteOf(props), width - 16, 32);
         const margins = labelMargins(data, width, narrow, (name) =>
           format(total(name))
         );
@@ -481,7 +481,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
                 valueText={format(n.value ?? 0)}
               />
             ))}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

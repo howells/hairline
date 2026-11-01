@@ -23,7 +23,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, PlateLabel, Rules, Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { sansWidth, stagger, sum, unitNoteOf } from "../util";
+import { sansWidth, stagger, sum, noteOf } from "../util";
 import { streamRibbonDemo } from "./stream-ribbon.data";
 import type { StreamData } from "./stream-ribbon.data";
 import { inkWidth, maxIndex } from "./util-b";
@@ -501,7 +501,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
       }
     >
       {(width) => {
-        const hasNote = unitNoteOf(props) !== undefined;
+        const hasNote = noteOf(props) !== undefined;
         const layout = buildLayout(width, height, data, river, hasNote, format);
         return (
           <ChartSvg
@@ -548,7 +548,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
               y={layout.height - (hasNote ? 84 : 42) + 10}
             />
             <PlotNote
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width - 16}
               x={layout.px0 + layout.plotW / 2}
               y={layout.height - 6}

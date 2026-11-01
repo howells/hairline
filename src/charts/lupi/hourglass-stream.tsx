@@ -8,7 +8,7 @@ import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { dimClass, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { hourglassDemo } from "./hourglass-stream.data";
 import type { StageDatum } from "./hourglass-stream.data";
 import { vCurve } from "./util-b";
@@ -239,7 +239,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                 top -
                 h / 2 -
                 12 -
-                noteSpace(unitNoteOf(props), noteW, 24)) /
+                noteSpace(noteOf(props), noteW, 24)) /
               (data.length - 1)
             : 0;
         const yOf = (i: number) => top + pitch * i;
@@ -293,7 +293,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                 </DimGroup>
               ))}
               <PlotNote
-                text={unitNoteOf(props)}
+                text={noteOf(props)}
                 width={noteW}
                 x={cx}
                 y={height - 6}

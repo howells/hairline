@@ -13,7 +13,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { ridgelineDemo } from "./ridgeline.data";
 import type { RidgeSeries } from "./ridgeline.data";
 
@@ -290,7 +290,7 @@ export const Ridgeline = (props: RidgelineProps) => {
           .domain([d0, d1])
           .range([x0, x0 + plotW]);
         const noteW = width - 16 - Math.abs(2 * x0 + plotW - width);
-        const bottom = 34 + noteSpace(unitNoteOf(props), noteW, 24);
+        const bottom = 34 + noteSpace(noteOf(props), noteW, 24);
         const rowGap = (height - bottom - 30) / (ridges.length + 0.9);
         const ridgeH = rowGap * 1.9;
         const baseOf = (i: number) =>
@@ -348,7 +348,7 @@ export const Ridgeline = (props: RidgelineProps) => {
                 format={format}
               />
               <PlotNote
-                text={unitNoteOf(props)}
+                text={noteOf(props)}
                 width={noteW}
                 x={x0 + plotW / 2}
                 y={height - 6}

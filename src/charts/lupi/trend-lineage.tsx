@@ -15,7 +15,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { trendLineageDemo } from "./trend-lineage.data";
 import type { LineageDatum } from "./trend-lineage.data";
 import { byStep } from "./util-b";
@@ -270,8 +270,7 @@ export const TrendLineage = (props: TrendLineageProps) => {
       {(width) => {
         const m = {
           bottom:
-            (width < 480 ? 84 : 76) +
-            noteSpace(unitNoteOf(props), width - 16, 24),
+            (width < 480 ? 84 : 76) + noteSpace(noteOf(props), width - 16, 24),
           // The year names, then the columns run to the right edge.
           left: 16 + yearW,
           right: 0,
@@ -336,11 +335,7 @@ export const TrendLineage = (props: TrendLineageProps) => {
                   />
                 </DimGroup>
               ))}
-              <FootNote
-                height={height}
-                text={unitNoteOf(props)}
-                width={width}
-              />
+              <FootNote height={height} text={noteOf(props)} width={width} />
             </ChartSvg>
             {tip !== undefined && hover.key !== null && (
               <Tooltip x={cx(hover.key)} y={y(tip.shipped) - DOT[size] - 4}>

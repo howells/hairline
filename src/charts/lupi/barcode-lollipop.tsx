@@ -14,7 +14,7 @@ import { PlotNote } from "../plot-note";
 import { Stem, VRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { clamp, noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { barcodeLollipopDemo } from "./barcode-lollipop.data";
 import type { BarcodeDatum } from "./barcode-lollipop.data";
 import { argMax } from "./util-b";
@@ -248,7 +248,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
     >
       {(width) => {
         const m = {
-          bottom: 30 + noteSpace(unitNoteOf(props), width - 12, 20),
+          bottom: 30 + noteSpace(noteOf(props), width - 12, 20),
           left: 4,
           right: 8,
           top: 10,
@@ -308,7 +308,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
               />
             ))}
             <PlotNote
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width - m.left - m.right}
               x={(m.left + width - m.right) / 2}
               y={height - 6}

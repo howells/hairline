@@ -4,7 +4,8 @@ import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/rung-bars";
 import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
 import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
+import { DataTable } from "../data-table";
+import { IdScope, useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
@@ -12,7 +13,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, stagger, unitNoteOf } from "../util";
+import { noteSpace, stagger, noteOf } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { maxIndex } from "./util-b";
@@ -138,6 +139,36 @@ const LadderBar = (props: Ladder) => {
   );
 };
 
+const plural = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+
+/** What the bars say, in words, from the data passed in. */
+const describe = (data: RungDatum[], format: (v: number) => string) => {
+  if (data.length === 0) {
+    return "No data.";
+  }
+  const at = (i: number) => `${data[i].label}, ${format(data[i].value)}`;
+  const hi = maxIndex(data.map((d) => d.value));
+  const lo = maxIndex(data.map((d) => -d.value));
+  return `${plural(data.length, "bar")}. Largest: ${at(hi)}.${
+    data.length > 1 ? ` Smallest: ${at(lo)}.` : ""
+  } The data table lists every bar.`;
+};
+
+/** Every bar's label and value as a table: hidden by default, or shown. */
+const rungTable = (
+  data: RungDatum[],
+  format: (v: number) => string,
+  caption: string,
+  visible: boolean | undefined
+) => (
+  <DataTable
+    caption={caption}
+    columns={["Label", "Value"]}
+    rows={data.map((d) => [d.label, format(d.value)])}
+    visible={visible}
+  />
+);
+
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: RungDatum[]) => {
   const seen = new Map<string, number>();
@@ -149,21 +180,7 @@ const reactKeys = (data: RungDatum[]) => {
   });
 };
 
-/**
- * F1 Counted bars. Each bar is a carved column of solid 2px rungs at one
- * pitch, one per unit, every tenth long and dark like the marks on a rule,
- * casting an engraved hatch shadow behind and to its right. The largest bar
- * is in ink and its shadow is crosshatched.
- *
- * Props are the `rungBarsSchema` payload (src/schema/rung-bars.ts); `data` is
- * required and never defaults to demo data. Give `width` and `height` for a
- * fixed-size chart that is complete on the first (server) render. Bad input
- * is tolerated: a datum whose value is not a finite number is skipped,
- * a negative value stands as an empty column with its figure, duplicate
- * labels each get a bar (give them `id`s to tell them apart), and no data
- * draws a quiet empty axis.
- */
-export const RungBars = (props: RungBarsProps) => {
+const RungBarsPlot = (props: RungBarsProps) => {
   const data = (props.data ?? []).filter((d) => Number.isFinite(d.value));
   const unit = props.unit !== undefined && props.unit > 0 ? props.unit : 1;
   const fixedHeight = props.width !== undefined && props.height !== undefined;
@@ -171,10 +188,13 @@ export const RungBars = (props: RungBarsProps) => {
   const format = resolveFormat(props.format);
   const hover = useHover<number>();
   const tex = useTextureIds("counted");
+  const name = props.title ?? `Bar chart of ${plural(data.length, "value")}`;
 
   return (
     <Plot
       initialWidth={props.initialWidth}
+      scaling={{ fit: props.fit, scale: props.scale, strokes: props.strokes }}
+      table={rungTable(data, format, name, props.table)}
       width={props.width}
       overlay={
         hover.at === null ? null : (
@@ -189,7 +209,7 @@ export const RungBars = (props: RungBarsProps) => {
     >
       {(width) => {
         const margin = {
-          bottom: 30 + noteSpace(unitNoteOf(props), width - 16, 20),
+          bottom: 30 + noteSpace(noteOf(props), width - 16, 20, props.metrics),
           left: 16,
           right: 16,
           top: 28,
@@ -232,15 +252,12 @@ export const RungBars = (props: RungBarsProps) => {
           props.emphasis === undefined
             ? maxIndex(data.map((d) => d.value))
             : data.findIndex((d) => keyOf(d) === props.emphasis);
-        const label =
-          data.length === 0
-            ? "No data"
-            : data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
 
         return (
           <ChartSvg
+            desc={describe(data, format)}
             height={fitted}
-            label={label}
+            label={name}
             leave={hover.clear}
             width={width}
           >
@@ -279,10 +296,38 @@ export const RungBars = (props: RungBarsProps) => {
                 />
               );
             })}
-            <FootNote height={fitted} text={unitNoteOf(props)} width={width} />
+            <FootNote
+              height={fitted}
+              metrics={props.metrics}
+              text={noteOf(props)}
+              width={width}
+            />
           </ChartSvg>
         );
       }}
     </Plot>
   );
 };
+
+/**
+ * F1 Counted bars. Each bar is a carved column of solid 2px rungs at one
+ * pitch, one per unit, every tenth long and dark like the marks on a rule,
+ * casting an engraved hatch shadow behind and to its right. The largest bar
+ * is in ink and its shadow is crosshatched.
+ *
+ * Props are the `rungBarsSchema` payload (src/schema/rung-bars.ts); `data` is
+ * required and never defaults to demo data. Give `width` and `height` for a
+ * fixed-size chart that is complete on the first (server) render. Bad input
+ * is tolerated: a datum whose value is not a finite number is skipped,
+ * a negative value stands as an empty column with its figure, duplicate
+ * labels each get a bar (give them `id`s to tell them apart), and no data
+ * draws a quiet empty axis.
+ */
+export const RungBars = (props: RungBarsProps) =>
+  props.idPrefix === undefined ? (
+    <RungBarsPlot {...props} />
+  ) : (
+    <IdScope prefix={props.idPrefix}>
+      <RungBarsPlot {...props} />
+    </IdScope>
+  );

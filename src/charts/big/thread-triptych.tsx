@@ -10,7 +10,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { threadTriptychDemo } from "./thread-triptych.data";
 import type { ThreadPath, TriptychData } from "./thread-triptych.data";
 
@@ -612,7 +612,7 @@ export const ThreadTriptych = (props: ThreadTriptychProps) => {
             props.headings ?? ["Genera", "Families", "Orders", "Superorders"]
           }
           height={props.height ?? 560}
-          note={unitNoteOf(props)}
+          note={noteOf(props)}
           onHover={(f) => {
             setHover((h) => (sameFocus(h, f) ? h : f));
           }}

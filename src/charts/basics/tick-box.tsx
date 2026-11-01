@@ -13,7 +13,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { stagger, unitNoteOf } from "../util";
+import { stagger, noteOf } from "../util";
 import { tickBoxDemo } from "./tick-box.data";
 import type { BoxDatum } from "./tick-box.data";
 import { inkWidth } from "./util-b";
@@ -313,7 +313,7 @@ export const TickBox = (props: TickBoxProps) => {
           width,
           height,
           data,
-          unitNoteOf(props) !== undefined,
+          noteOf(props) !== undefined,
           format,
           props.ticks
         );
@@ -342,7 +342,7 @@ export const TickBox = (props: TickBoxProps) => {
                 onHover={hover.showAt(i)}
               />
             ))}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

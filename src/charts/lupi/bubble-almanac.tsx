@@ -13,7 +13,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing, DotScreen } from "../texture";
 import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import {
   bubbleAlmanacDemo,
   bubbleAlmanacLabelled,
@@ -324,7 +324,7 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
       }
     >
       {(width) => {
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 18);
+        const noteH = noteSpace(noteOf(props), width - 16, 18);
         const layout = almanacLayout(width, height, data, noteH);
         // Bigger blobs first so small ones stay visible on top.
         const order = data.toSorted((a, b) => b.value - a.value);
@@ -361,7 +361,7 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
                 onEnter={hover.showAt(cellId(d))}
               />
             ))}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}

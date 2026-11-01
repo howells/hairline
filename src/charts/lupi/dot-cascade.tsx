@@ -6,7 +6,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { PixelLine } from "../texture";
-import { clamp, noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { dotCascadeDemo } from "./dot-cascade.data";
 import type { DotCascadeDatum } from "./dot-cascade.data";
 
@@ -200,7 +200,7 @@ export const DotCascade = (props: DotCascadeProps) => {
           height,
           counts,
           data.map((d) => d.label),
-          noteSpace(unitNoteOf(props), width - 16, 20)
+          noteSpace(noteOf(props), width - 16, 20)
         );
         const fx0 = layout.colX(0) - layout.pitch * 0.7;
         const fx1 = layout.colX(data.length - 1) + layout.pitch * 0.7;
@@ -235,7 +235,7 @@ export const DotCascade = (props: DotCascadeProps) => {
             ))}
             <FootNote
               height={layout.height}
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

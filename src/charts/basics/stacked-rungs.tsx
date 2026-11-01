@@ -9,7 +9,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Beads, Rules, Stipple } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
-import { NOTE_LINE, hasText, noteLines, sum, unitNoteOf } from "../util";
+import { NOTE_LINE, hasText, noteLines, sum, noteOf } from "../util";
 import { rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { SeriesKey } from "./series-key";
@@ -188,7 +188,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
   const unit = props.unit ?? 1;
   const height = props.height ?? 440;
   const format = props.format ?? String;
-  const hasNote = hasText(unitNoteOf(props));
+  const hasNote = hasText(noteOf(props));
   const hover = useHover<number>();
   const ids = useTextureIds("stack");
   const partName = (k: number) => series.at(k) ?? `#${k + 1}`;
@@ -225,7 +225,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
         const band = x.bandwidth();
         const labelRoom = width < 440 ? 18 : 26;
         const bw = Math.round(Math.min(56, band - labelRoom - 6));
-        const notes = noteLines(unitNoteOf(props), width - 24);
+        const notes = noteLines(noteOf(props), width - 24);
         const floor = Math.round(
           height -
             (hasNote ? 50 : 30) -
@@ -286,7 +286,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
             <FootNote
               gutter={12}
               height={height}
-              text={unitNoteOf(props)}
+              text={noteOf(props)}
               width={width}
             />
           </ChartSvg>

@@ -5,7 +5,7 @@ import { TICK } from "../marks";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { noteSpace, sansWidth, stagger, unitNoteOf } from "../util";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { ballotTallyDemo } from "./ballot-tally.data";
 import type { TallyDatum } from "./ballot-tally.data";
 import { argMax } from "./util-b";
@@ -158,7 +158,7 @@ export const BallotTally = (props: BallotTallyProps) => {
   return (
     <Plot>
       {(width) => {
-        const noteH = noteSpace(unitNoteOf(props), width - 16, 24);
+        const noteH = noteSpace(noteOf(props), width - 16, 24);
         // Whole-pixel pitch, the widest that fits the ruler and the value
         // after its longest run; that block is centred.
         const valueW = data.map((d) => sansWidth(format(d.value), 11));
@@ -211,11 +211,7 @@ export const BallotTally = (props: BallotTallyProps) => {
                   />
                 </DimGroup>
               ))}
-              <FootNote
-                height={height}
-                text={unitNoteOf(props)}
-                width={width}
-              />
+              <FootNote height={height} text={noteOf(props)} width={width} />
             </ChartSvg>
             {tip !== undefined && hover.key !== null && (
               <Tooltip

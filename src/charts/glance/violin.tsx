@@ -14,7 +14,7 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { noteSpace, ranks, stagger, unitNoteOf } from "../util";
+import { noteSpace, ranks, stagger, noteOf } from "../util";
 import { labelRoom } from "./util-a";
 import { density, silverman } from "./util-b";
 import { violinDemo } from "./violin.data";
@@ -253,7 +253,7 @@ export const Violin = (props: ViolinProps) => {
     >
       {(width) => {
         const narrow = width < 480;
-        const bottom = 32 + noteSpace(unitNoteOf(props), width - 16, 20);
+        const bottom = 32 + noteSpace(noteOf(props), width - 16, 20);
         const y = scaleLinear()
           .domain([0, maxV])
           .nice()
@@ -323,7 +323,7 @@ export const Violin = (props: ViolinProps) => {
                 y={y}
               />
             ))}
-            <FootNote height={height} text={unitNoteOf(props)} width={width} />
+            <FootNote height={height} text={noteOf(props)} width={width} />
           </ChartSvg>
         );
       }}
