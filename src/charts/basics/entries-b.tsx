@@ -3,6 +3,7 @@ import { fmtInt } from "../../lib/format";
 import { Candlestick } from "./candlestick";
 import { DotHeat } from "./dot-heat";
 import { DumbbellQueue } from "./dumbbell-queue";
+import { dumbbellQueueDemo } from "./dumbbell-queue.data";
 import { NestedTreemap } from "./nested-treemap";
 import { RungHistogram } from "./rung-histogram";
 import { StreamRibbon } from "./stream-ribbon";
@@ -30,6 +31,7 @@ export const entries: GalleryEntry[] = [
     render: () => (
       <DumbbellQueue
         alert="fall"
+        data={dumbbellQueueDemo}
         ends={["0", "Millions of visits"]}
         format={(v) => v.toFixed(1)}
         unit={0.25}

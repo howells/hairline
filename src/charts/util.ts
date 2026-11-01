@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 
 import { mulberry32 } from "../lib/random";
+import { INTER_METRICS, textWidth } from "../schema/metrics";
+import type { FontMetrics } from "../schema/metrics";
 import type { StaggerTier } from "./motion";
 
 /*
@@ -99,39 +101,17 @@ export const normals = (
 
 /* ---------- Label measuring ---------- */
 
-const SANS_NARROW = new Set(" !',.:;Iijl|·’");
-const SANS_SLIM = new Set("()/1[]frt");
-const SANS_WIDE = new Set("mw");
-const SANS_WIDEST = new Set("%@MW—…");
-
-/** Em advance of one Inter glyph, bucketed from measurements (rounded up). */
-const sansEm = (ch: string) => {
-  if (SANS_NARROW.has(ch)) {
-    return 0.3;
-  }
-  if (SANS_SLIM.has(ch)) {
-    return 0.41;
-  }
-  if (SANS_WIDE.has(ch)) {
-    return 0.9;
-  }
-  if (SANS_WIDEST.has(ch)) {
-    return 1.02;
-  }
-  return ch === ch.toLowerCase() ? 0.63 : 0.76;
-};
-
 /**
  * Estimated width of a string in the Inter roles (`t-label`, `t-axis`) at
- * `size` px. Errs slightly wide, so a label that "fits" really does.
+ * `size` px, from a metrics table (Inter's unless the chart supplies its
+ * own). Errs slightly wide, so a label that "fits" really does. Never
+ * measures the DOM, so every environment gets the same answer.
  */
-export const sansWidth = (text: string, size = 11) => {
-  let em = 0;
-  for (const ch of text) {
-    em += sansEm(ch);
-  }
-  return em * size;
-};
+export const sansWidth = (
+  text: string,
+  size = 11,
+  metrics: FontMetrics = INTER_METRICS
+) => textWidth(text, size, metrics);
 
 /** `t-axis` is set at 11px. */
 const NOTE_SIZE = 11;
@@ -141,12 +121,16 @@ const NOTE_SIZE = 11;
  * lines (the note hides) when there is no text or when even one segment is
  * wider than the room: a clipped footnote is worse than none.
  */
-export const noteLines = (text: string | undefined, width: number) => {
+export const noteLines = (
+  text: string | undefined,
+  width: number,
+  metrics?: FontMetrics
+) => {
   if (!hasText(text)) {
     return [];
   }
   const parts = text.split(" · ");
-  if (parts.some((part) => sansWidth(part, NOTE_SIZE) > width)) {
+  if (parts.some((part) => sansWidth(part, NOTE_SIZE, metrics) > width)) {
     return [];
   }
   const lines: string[] = [];
@@ -154,7 +138,7 @@ export const noteLines = (text: string | undefined, width: number) => {
     const last = lines.at(-1);
     if (
       last !== undefined &&
-      sansWidth(`${last} · ${part}`, NOTE_SIZE) <= width
+      sansWidth(`${last} · ${part}`, NOTE_SIZE, metrics) <= width
     ) {
       lines[lines.length - 1] = `${last} · ${part}`;
     } else {
@@ -171,9 +155,10 @@ export const noteLines = (text: string | undefined, width: number) => {
 export const noteSpace = (
   text: string | undefined,
   width: number,
-  room: number
+  room: number,
+  metrics?: FontMetrics
 ) => {
-  const n = noteLines(text, width).length;
+  const n = noteLines(text, width, metrics).length;
   return n === 0 ? 0 : room + (n - 1) * NOTE_LINE;
 };
 

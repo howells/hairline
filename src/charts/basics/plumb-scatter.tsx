@@ -1,6 +1,9 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
+import { resolveFormat } from "../../schema/format";
+import { plumbKeyOf } from "../../schema/plumb-scatter";
+import type { PlumbDatum, PlumbScatterProps } from "../../schema/plumb-scatter";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -13,30 +16,6 @@ import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
 import { NOTE_LINE, hasText, noteLines, sansWidth, stagger } from "../util";
-import { plumbScatterDemo } from "./plumb-scatter.data";
-import type { PlumbDatum } from "./plumb-scatter.data";
-
-interface PlumbScatterProps {
-  data?: PlumbDatum[];
-  height?: number;
-  /** Formats y (the height). */
-  format?: (v: number) => string;
-  formatX?: (v: number) => string;
-  note?: string;
-  /** Names for the low and high ends of the x axis. */
-  xLabels?: [string, string];
-  /** Name for the y direction, drawn up the left side. */
-  yLabel?: string;
-  xDomain?: [number, number];
-  yDomain?: [number, number];
-  /**
-   * Indices to name beside their dot. Defaults to the highest and lowest. A
-   * name with nowhere to sit clear of the other stems is left to the tooltip.
-   */
-  labelled?: number[];
-  /** Index drawn in the hero colour. */
-  highlight?: number;
-}
 
 interface FloorProps {
   floor: number;
@@ -218,42 +197,113 @@ const Point = ({
   );
 };
 
+/** React keys: each datum's key, numbered when the key repeats. */
+const reactKeys = (data: PlumbDatum[]) => {
+  const seen = new Map<string, number>();
+  return data.map((d) => {
+    const key = plumbKeyOf(d);
+    const nth = seen.get(key) ?? 0;
+    seen.set(key, nth + 1);
+    return `${key}#${nth}`;
+  });
+};
+
+/** Default y range: from a tidy floor under the lowest (zero if none dips below) to the highest. */
+const defaultYDomain = (ys: number[]): [number, number] => {
+  if (ys.length === 0) {
+    return [0, 1];
+  }
+  const min = Math.min(...ys);
+  const tidy = Math.floor((min - 10) / 10) * 10;
+  const lo = min < 0 ? tidy : Math.max(0, tidy);
+  const hi = Math.max(...ys);
+  return [lo, hi > lo ? hi : lo + 1];
+};
+
+/** Default x range: zero (or a tidy floor, if any x is negative) to a little past the largest. */
+const defaultXDomain = (xs: number[]): [number, number] => {
+  if (xs.length === 0) {
+    return [0, 10];
+  }
+  const lo =
+    Math.min(...xs) < 0 ? Math.floor((Math.min(...xs) * 1.12) / 10) * 10 : 0;
+  const hi = Math.ceil((Math.max(...xs) * 1.12) / 10) * 10;
+  return [lo, hi > lo ? hi : lo + 10];
+};
+
+/** Indices of the points to name: those whose key is listed, else `fallback`. */
+const labelledIndices = (
+  data: PlumbDatum[],
+  keys: string[] | undefined,
+  fallback: number[]
+) => {
+  if (keys === undefined) {
+    return new Set(fallback);
+  }
+  const wanted = new Set(keys);
+  return new Set(
+    data.flatMap((d, i) => (wanted.has(plumbKeyOf(d)) ? [i] : []))
+  );
+};
+
+/** The svg's accessible name: every point read out, or "No data". */
+const describe = (
+  data: PlumbDatum[],
+  formatX: (v: number) => string,
+  format: (v: number) => string
+) =>
+  data.length === 0
+    ? "No data"
+    : data.map((d) => `${d.label}: ${formatX(d.x)}, ${format(d.y)}`).join("; ");
+
 /**
  * F8 Stem scatter. Up to twenty points, each on a stem to the floor so x can
  * be read where the stem lands: dotted at pitch 3, solid ink for the hero.
  * The highest point is the hero; the highest and lowest are named.
+ *
+ * Props are the `plumbScatterSchema` payload (src/schema/plumb-scatter.ts);
+ * `data` is required and never defaults to demo data. Give `width` and
+ * `height` for a fixed-size chart that is complete on the first (server)
+ * render. Bad input is tolerated: a point with a coordinate that is not a
+ * finite number is skipped, coincident points each get a dot, negatives are
+ * drawn on the axes, and no data draws a quiet empty axis.
  */
 export const PlumbScatter = (props: PlumbScatterProps) => {
-  const data = props.data ?? plumbScatterDemo;
+  const data = (props.data ?? []).filter(
+    (d) => Number.isFinite(d.x) && Number.isFinite(d.y)
+  );
   const height = props.height ?? 440;
-  const format = props.format ?? String;
-  const formatX = props.formatX ?? ((v: number) => `${Math.round(v)}`);
+  const format = resolveFormat(props.format);
+  const formatX =
+    props.formatX === undefined
+      ? (v: number) => `${Math.round(v)}`
+      : resolveFormat(props.formatX);
   const [lowName, highName] = props.xLabels ?? ["Low", "High"];
   const hasNote = hasText(props.note);
   const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
   const xs = data.map((d) => d.x);
-  const hero = props.highlight ?? ys.indexOf(Math.max(...ys));
-  const labelled = new Set(
-    props.labelled ?? [ys.indexOf(Math.max(...ys)), ys.indexOf(Math.min(...ys))]
-  );
-  const xDomain = props.xDomain ?? [
-    0,
-    Math.ceil((Math.max(...xs) * 1.12) / 10) * 10,
-  ];
-  const yDomain = props.yDomain ?? [
-    Math.max(0, Math.floor((Math.min(...ys) - 10) / 10) * 10),
-    Math.max(...ys),
-  ];
+  const keys = reactKeys(data);
+  const highest = ys.length === 0 ? -1 : ys.indexOf(Math.max(...ys));
+  const lowest = ys.length === 0 ? -1 : ys.indexOf(Math.min(...ys));
+  // Emphasis and labels are by key so reordering never moves them; a key that
+  // names no point emphasises or names none.
+  const hero =
+    props.emphasis === undefined
+      ? highest
+      : data.findIndex((d) => plumbKeyOf(d) === props.emphasis);
+  const labelled = labelledIndices(data, props.labelled, [highest, lowest]);
+  const xDomain = props.xDomain ?? defaultXDomain(xs);
+  const yDomain = props.yDomain ?? defaultYDomain(ys);
   const byX = data.map((d, i) => ({ i, x: d.x })).toSorted((a, b) => a.x - b.x);
   const order = new Map(byX.map((entry, r) => [entry.i, r]));
-  const label = data
-    .map((d) => `${d.label}: ${formatX(d.x)}, ${format(d.y)}`)
-    .join("; ");
+  const label = describe(data, formatX, format);
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
         hover.at === null ? null : (
           <Tooltip x={hover.at.x} y={hover.at.y}>
@@ -321,7 +371,7 @@ export const PlumbScatter = (props: PlumbScatterProps) => {
                 floor={floor}
                 format={format}
                 hero={hero === i}
-                key={d.label}
+                key={keys[i]}
                 onEnter={hover.showAt(i)}
                 order={order.get(i) ?? i}
                 x={x}
