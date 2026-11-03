@@ -166,6 +166,7 @@ describe("the registry", () => {
       "max",
       "metrics",
       "note",
+      "printHidden",
       "replayKey",
       "scale",
       "strokes",
@@ -447,6 +448,13 @@ describe("RungBars withheld bars, details and a shared scale", () => {
     expect(render({ data: tiers, hidden: "Too few", ...sized })).toContain(
       ">Too few<"
     );
+  });
+
+  it("leaves the word off a withheld column when printHidden is false, but not its description", () => {
+    const printed = count(render({ data: tiers, ...sized }), />Hidden</gu);
+    const html = render({ data: tiers, printHidden: false, ...sized });
+    expect(count(html, />Hidden</gu)).toBe(printed - 1);
+    expect(html).toContain("Hidden: 1 bar.");
   });
 
   it("validates a null value and a detail line", () => {

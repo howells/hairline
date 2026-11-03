@@ -58,6 +58,8 @@ interface Ladder {
   format: (v: number) => string;
   /** What a withheld bar prints. */
   hidden: string;
+  /** Print `hidden` above a withheld column. */
+  printHidden: boolean;
   hero: boolean;
   index: number;
   /** How far below the first line this bar's label sits: 0, or LABEL_STEP. */
@@ -153,18 +155,20 @@ const LadderBar = (props: Ladder) => {
         pitch={props.pitch}
         width={props.bandwidth}
       />
-      <Label
-        anchor="middle"
-        order={props.index}
-        muted={props.datum.value === null}
-        voice="value"
-        x={centre}
-        y={top - 10}
-      >
-        {props.datum.value === null
-          ? props.hidden
-          : props.format(props.datum.value)}
-      </Label>
+      {props.datum.value === null && !props.printHidden ? null : (
+        <Label
+          anchor="middle"
+          order={props.index}
+          muted={props.datum.value === null}
+          voice="value"
+          x={centre}
+          y={top - 10}
+        >
+          {props.datum.value === null
+            ? props.hidden
+            : props.format(props.datum.value)}
+        </Label>
+      )}
       <Label
         anchor="middle"
         muted
@@ -368,6 +372,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
                   floor={floor}
                   format={format}
                   hidden={hidden}
+                  printHidden={props.printHidden ?? true}
                   hero={hero === index}
                   index={index}
                   labelDrop={alternate && index % 2 === 1 ? LABEL_STEP : 0}
@@ -408,7 +413,8 @@ const RungBarsPlot = (props: RungBarsProps) => {
  * fixed-size chart that is complete on the first (server) render. Bad input
  * is tolerated: a datum whose value is not a finite number is skipped,
  * a negative value stands as an empty column with its figure, a null one
- * as an empty column printed with `hidden` ("Hidden"), duplicate
+ * as an empty column printed with `hidden` ("Hidden") unless
+ * `printHidden` is false, duplicate
  * labels each get a bar (give them `id`s to tell them apart), and no data
  * draws a quiet empty axis.
  */

@@ -108,6 +108,16 @@ export const rungBarsSchema = z
       .describe(
         "The value the tallest column's room is sized for, at least the largest bar: give charts set side by side the same one, and the same height, and they share a scale and a floor."
       ),
+    /**
+     * Print `hidden` above a withheld column (default true). False leaves the
+     * column's dotted floor, and the word to its tooltip, table and description.
+     */
+    printHidden: z
+      .boolean()
+      .optional()
+      .describe(
+        "Print `hidden` above a withheld column (default true). False leaves the column's dotted floor, and the word to its tooltip, table and description."
+      ),
     /** Units per rung. */
     unit: z.number().positive().optional().describe("Units per rung."),
     /** Fixed width in px. Giving it turns measuring off. */
