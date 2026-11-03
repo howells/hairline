@@ -30,6 +30,18 @@ interface JitterStripProps extends NoteProps {
   unit?: string;
   /** Index of the hero group (default the first: median and name in ink); a given one also inks its rings. */
   highlight?: number;
+  /**
+   * A record's name, from `names`: in every group that has it, that record
+   * is a solid ink dot with its value above, and every group name is in ink.
+   * No group is the hero unless `highlight` is given.
+   */
+  mark?: string;
+  /** Draw each group's median tick (default true). */
+  median?: boolean;
+  /** Responsive mode only: the width of the first render, before measuring. */
+  initialWidth?: number;
+  /** Fixed width in px. Giving it turns measuring off. */
+  width?: number;
 }
 
 interface Hit {
@@ -50,7 +62,12 @@ interface BandProps {
   heroRow: boolean;
   group: JitterGroup;
   hover: Hit | null;
-  med: number;
+  /** The marked record's ordinal in this group, if it has it. */
+  marked: number | undefined;
+  /** Name every group in ink: something is marked. */
+  inkLabel: boolean;
+  med: number | undefined;
+  format: (v: number) => string;
   onEnter: (hit: Hit) => void;
   top: number;
   x: ScaleLinear<number, number>;
@@ -100,6 +117,42 @@ const seats = (
   });
 };
 
+/** The marked record: a solid ink dot, a size up, its value above it. */
+const MarkedDot = (p: {
+  dot: DotSize;
+  format: (v: number) => string;
+  onEnter: (x: number, y: number) => void;
+  seat: Seat;
+  value: number;
+}) => {
+  const radius = DOT[p.dot === "sm" ? "md" : "lg"];
+  return (
+    <g className="pop">
+      <circle
+        className="fill-ink stroke-paper"
+        cx={p.seat.x}
+        cy={p.seat.y}
+        r={radius}
+        strokeWidth={2}
+        pointerEvents="visible"
+        onPointerEnter={() => {
+          p.onEnter(p.seat.x, p.seat.y - radius - 4);
+        }}
+      />
+      <Label
+        anchor="middle"
+        className="fill-ink"
+        halo
+        voice="label"
+        x={p.seat.x}
+        y={p.seat.y - radius - 5}
+      >
+        {p.format(p.value)}
+      </Label>
+    </g>
+  );
+};
+
 /** One group: its label, a dot per record jittered across the band, and a median tick. */
 const Band = (p: BandProps) => {
   const radius = DOT[p.dot];
@@ -113,9 +166,9 @@ const Band = (p: BandProps) => {
   return (
     <DimGroup dim={p.hover !== null && p.hover.g !== p.g}>
       <Label
-        className={p.heroRow ? "fill-ink" : undefined}
+        className={p.heroRow || p.inkLabel ? "fill-ink" : undefined}
         dy="0.35em"
-        muted={!p.heroRow}
+        muted={!p.heroRow && !p.inkLabel}
         voice="label"
         x={p.labelX}
         y={p.top + p.band / 2}
@@ -123,6 +176,9 @@ const Band = (p: BandProps) => {
         {p.group.label}
       </Label>
       {p.group.values.map((_, k) => {
+        if (k === p.marked) {
+          return null;
+        }
         const seat = lattice[k];
         const on = p.hover !== null && p.hover.g === p.g && p.hover.k === k;
         return (
@@ -142,9 +198,9 @@ const Band = (p: BandProps) => {
           />
         );
       })}
-      {p.heroRow ? (
+      {p.med === undefined ? null : (
         <line
-          className="fade stroke-ink"
+          className={`fade ${p.heroRow ? "stroke-ink" : "stroke-rule"}`}
           style={stagger(8 + p.g)}
           x1={Math.round(p.x(p.med))}
           x2={Math.round(p.x(p.med))}
@@ -152,15 +208,16 @@ const Band = (p: BandProps) => {
           y2={Math.round(p.top + p.band * 0.96)}
           strokeWidth={MARK_WEIGHT}
         />
-      ) : (
-        <line
-          className="fade stroke-rule"
-          style={stagger(8 + p.g)}
-          x1={Math.round(p.x(p.med))}
-          x2={Math.round(p.x(p.med))}
-          y1={Math.round(p.top + p.band * 0.04)}
-          y2={Math.round(p.top + p.band * 0.96)}
-          strokeWidth={MARK_WEIGHT}
+      )}
+      {p.marked === undefined ? null : (
+        <MarkedDot
+          dot={p.dot}
+          format={p.format}
+          onEnter={(x, y) => {
+            p.onEnter({ g: p.g, k: p.marked ?? 0, x, y });
+          }}
+          seat={lattice[p.marked]}
+          value={p.group.values[p.marked]}
         />
       )}
     </DimGroup>
@@ -183,17 +240,36 @@ export const JitterStrip = (props: JitterStripProps) => {
   const [hover, setHover] = useState<Hit | null>(null);
   const max = Math.max(...data.flatMap((d) => d.values));
   const medians = data.map((d) => median(d.values) ?? 0);
-  const label = `Jitter strip: ${data.map((d, i) => `${d.label}, ${d.values.length} records, median ${format(medians[i])}`).join("; ")}`;
+  const showMedian = props.median ?? true;
+  const markedOf = (d: JitterGroup) => {
+    const at =
+      props.mark === undefined ? -1 : (d.names?.indexOf(props.mark) ?? -1);
+    return at === -1 ? undefined : at;
+  };
+  const label = `Jitter strip: ${data
+    .map((d, i) => {
+      const at = markedOf(d);
+      return [
+        `${d.label}, ${d.values.length} records`,
+        showMedian ? `median ${format(medians[i])}` : null,
+        at === undefined ? null : `${props.mark ?? ""} ${format(d.values[at])}`,
+      ]
+        .filter((part) => part !== null)
+        .join(", ");
+    })
+    .join("; ")}`;
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
         hover === null ? null : (
           <Tooltip x={hover.x} y={hover.y}>
             <TipText
               facts={[
                 `${data[hover.g].names?.[hover.k] ?? `this ${unit}`} ${format(data[hover.g].values[hover.k])}`,
-                `median ${format(medians[hover.g])}`,
+                ...(showMedian ? [`median ${format(medians[hover.g])}`] : []),
               ]}
               lead={data[hover.g].label}
             />
@@ -252,13 +328,18 @@ export const JitterStrip = (props: JitterStripProps) => {
                 key={d.label}
                 band={band}
                 dot={narrow ? "sm" : "md"}
+                format={format}
                 hero={props.highlight === g}
-                heroRow={(props.highlight ?? 0) === g}
+                heroRow={
+                  (props.highlight ?? (props.mark === undefined ? 0 : -1)) === g
+                }
+                inkLabel={props.mark !== undefined}
+                marked={markedOf(d)}
                 g={g}
                 group={d}
                 hover={hover}
                 labelX={0}
-                med={medians[g]}
+                med={showMedian ? medians[g] : undefined}
                 onEnter={setHover}
                 top={m.top + band * g}
                 x={x}
