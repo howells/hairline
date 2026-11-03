@@ -7,6 +7,7 @@ import type { Point } from "../../lib/data";
 import type { Margin } from "../axes";
 import type { LegendItem } from "../core";
 import type { Sync } from "../hooks";
+import type { EndSeries } from "../line-ends";
 import type { Threshold } from "./breach";
 import { scaleWidth } from "./room";
 
@@ -85,6 +86,13 @@ export interface TimeLinesProps {
   /** The shade's engraving. Defaults to a hatch. */
   texture?: Shade;
   future?: Future;
+  /**
+   * Name the lines where they end instead of in a key: the primary line
+   * first, then the highest and lowest, the rest folded into one label,
+   * "7 other regions" for `others: "regions"`. Every series needs a `name`;
+   * not with a right-hand scale or a legend.
+   */
+  endLabels?: { named?: number; others: string };
   step?: boolean;
   bands?: Band[];
   zero?: boolean;
@@ -121,9 +129,46 @@ export const LINE_TONE = {
 } as const;
 export const DOT_TONE = { 1: "fill-hero", 2: "fill-l3" } as const;
 
-/** A series is identified within its chart by its tone and dash. */
+/** A series is identified within its chart by its tone, dash and name. */
 export const seriesKey = (s: LineSeries) =>
-  `line-${s.tone}-${s.dashed === true ? "dashed" : "solid"}`;
+  `line-${s.tone}-${s.dashed === true ? "dashed" : "solid"}-${s.name ?? ""}`;
 
 export const curveOf = (props: TimeLinesProps) =>
   props.step === true ? curveStepAfter : curveLinear;
+
+/**
+ * The series as end labels see them: the primary line (tone 1) is the hero,
+ * and carries its last value. `y` places a value on the plot, px.
+ */
+export const endSeriesOf = (
+  props: TimeLinesProps,
+  y: (v: number) => number
+): EndSeries[] =>
+  props.series.map((s) => {
+    const last = s.data.at(-1)?.value ?? 0;
+    return {
+      display: s.format(last),
+      hero: s.tone === 1,
+      name: s.name ?? "",
+      value: last,
+      y: y(last),
+    };
+  });
+
+/** Fails loudly where end labels cannot work. */
+export const checkEndLabels = (props: TimeLinesProps) => {
+  if (props.endLabels === undefined) {
+    return;
+  }
+  if (props.series.some((s) => s.name === undefined || s.name === "")) {
+    throw new Error("TimeLines endLabels: every series needs a name");
+  }
+  if (isRightAxis(props.y)) {
+    throw new Error(
+      "TimeLines endLabels: the right margin is the labels', so the scale cannot sit there"
+    );
+  }
+  if (props.readout === "legend") {
+    throw new Error("TimeLines endLabels replace the legend readout");
+  }
+};

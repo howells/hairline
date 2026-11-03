@@ -6,7 +6,9 @@ import type { Point } from "../../lib/data";
 import { fmtDay } from "../../lib/format";
 import type { Margin } from "../axes";
 import { Chart, SplitClips } from "../core";
+import { EndLabels } from "../end-labels";
 import { useScrub } from "../hooks";
+import { endLabelRoom, placeEndLabels } from "../line-ends";
 import { Ring } from "../markers";
 import { CAPTION, DOT, LINE, RULE_ZERO } from "../roles";
 import { Cursor, HGrid, HRule } from "../rules";
@@ -26,7 +28,9 @@ import { Patterns, SeasonBands, ShadeLayer } from "./time-fills";
 import {
   DOT_TONE,
   LINE_TONE,
+  checkEndLabels,
   curveOf,
+  endSeriesOf,
   gridEnd,
   isRightAxis,
   seriesKey,
@@ -52,9 +56,16 @@ const plotMargin = (props: TimeLinesProps, readout: Readout): Margin => {
   if (props.compact !== undefined) {
     return { bottom: 4, left: 2, right: 2, top: 4, ...props.margin };
   }
+  const right =
+    props.endLabels === undefined
+      ? 2
+      : endLabelRoom(
+          endSeriesOf(props, () => 0),
+          props.endLabels
+        );
   return {
     bottom: 30,
-    ...sideMargins(props.y, 8, 2),
+    ...sideMargins(props.y, 8, right),
     top: topRoom(props, readout),
     ...props.margin,
   };
@@ -201,7 +212,6 @@ const ThresholdRule = (props: { frame: Frame; threshold: Threshold }) => {
       {th.label !== undefined && th.label !== "" && (
         <Label
           anchor="end"
-          halo
           voice="axis"
           x={width - m.right}
           y={th.alert === "below" ? thY + 14 : thY - 6}
@@ -402,6 +412,16 @@ const TimeLinesPlot = (props: {
       {chart.threshold !== undefined && (
         <ThresholdRule frame={frame} threshold={chart.threshold} />
       )}
+      {chart.endLabels === undefined ? null : (
+        <EndLabels
+          placed={placeEndLabels(endSeriesOf(chart, frame.y), {
+            ...chart.endLabels,
+            max: frame.plotBottom - 6,
+            min: frame.m.top + 6,
+          })}
+          x={width - frame.m.right}
+        />
+      )}
       {!compact && <MonthTicks frame={frame} ticks={ticks} dateX={dateX} />}
       {readout === "figure" && (
         <FigureReadout
@@ -428,11 +448,15 @@ const TimeLinesPlot = (props: {
 
 /** Weekly lines with a scrub cursor: solid before it, evenly dotted after. */
 export const TimeLines = (props: TimeLinesProps) => {
+  checkEndLabels(props);
   const tex = useTextureIds("tl");
   const dates = props.series[0].data.map((d) => d.date);
   const scrub = useScrub(props.rest, dates, props.sync);
   const readout =
-    props.readout ?? (props.compact === undefined ? "legend" : "none");
+    props.readout ??
+    (props.compact === undefined && props.endLabels === undefined
+      ? "legend"
+      : "none");
 
   return (
     <Chart

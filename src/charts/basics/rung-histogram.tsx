@@ -184,7 +184,6 @@ const Marker = (props: { label: string; layout: Layout; value: number }) => {
       />
       <Label
         anchor={flip ? "end" : "start"}
-        halo
         voice="axis"
         x={mx + (flip ? -8 : 8)}
         y={layout.top + 2}

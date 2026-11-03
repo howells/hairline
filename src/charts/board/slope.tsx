@@ -8,6 +8,8 @@ import type { SlopeProps, SlopeRow as RowData } from "../../schema/slope";
 import { Plot } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup } from "../hover";
+import { nudge } from "../line-ends";
+import type { Nudged } from "../line-ends";
 import { Dot, Ring } from "../markers";
 import { VALUE } from "../roles";
 import { VRule } from "../rules";
@@ -16,7 +18,6 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger } from "../util";
 import { nameWidth } from "./room";
-import { relax } from "./spread";
 
 type Row = RowData;
 
@@ -48,6 +49,23 @@ const NARROW = 520;
 
 /** Gap between a column and its row labels, px. */
 const LABEL_GAP = 14;
+
+/** A label nudged off its row's end is joined back to it by a short leader. */
+const Leader = (props: {
+  at: number;
+  label: Nudged;
+  side: 1 | -1;
+  x: number;
+}) =>
+  props.label.moved ? (
+    <line
+      className="rule"
+      x1={props.x + props.side * 4}
+      x2={props.x + props.side * (LABEL_GAP - 3)}
+      y1={props.at}
+      y2={props.label.y}
+    />
+  ) : null;
 
 type Role = "lead" | "worst" | "rest";
 
@@ -84,7 +102,7 @@ const SlopeRow = (props: {
   row: Row;
   i: number;
   xs: [number, number];
-  labelYs: [number, number];
+  labelYs: [Nudged, Nudged];
   y: ScaleLinear<number, number>;
   dim: boolean;
   /** The biggest fall, the biggest rise, or neither. */
@@ -128,9 +146,11 @@ const SlopeRow = (props: {
         cy={y(row.to)}
         size={props.role === "rest" ? "sm" : "md"}
       />
+      <Leader at={y(row.from)} label={props.labelYs[0]} side={-1} x={xa} />
+      <Leader at={y(row.to)} label={props.labelYs[1]} side={1} x={xb} />
       <text
         x={xa - LABEL_GAP}
-        y={props.labelYs[0]}
+        y={props.labelYs[0].y}
         dy="0.34em"
         textAnchor="end"
         className="t-label"
@@ -140,7 +160,7 @@ const SlopeRow = (props: {
       </text>
       <text
         x={xb + LABEL_GAP}
-        y={props.labelYs[1]}
+        y={props.labelYs[1].y}
         dy="0.34em"
         className="t-label"
       >
@@ -238,11 +258,18 @@ const SlopePlot = (props: SlopeProps) => {
         const y = scaleLinear()
           .domain(domain)
           .range([h - bottom, top + 16]);
-        // relax reads its first item, so no rows is spared the call.
-        const spread = (ys: number[]) =>
-          ys.length === 0 ? ys : relax(ys, 15, top + 8, h - 8);
-        const lys = spread(rows.map((r) => y(r.from)));
-        const rys = spread(rows.map((r) => y(r.to)));
+        const lys = nudge(
+          rows.map((r) => y(r.from)),
+          15,
+          top + 8,
+          h - 8
+        );
+        const rys = nudge(
+          rows.map((r) => y(r.to)),
+          15,
+          top + 8,
+          h - 8
+        );
         const seen = new Map<string, number>();
         const keys = rows.map((r) => {
           const key = keyOf(r);

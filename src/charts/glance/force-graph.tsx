@@ -300,6 +300,7 @@ const ForceDot = ({
         n.hub ? "fill-paper pointer-events-none" : "pointer-events-none"
       }
       dy="0.35em"
+      halo={!n.hub}
       muted={!n.hub}
       voice="label"
       x={labelX(n.hub, left, at.x, r)}

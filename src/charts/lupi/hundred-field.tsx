@@ -253,7 +253,7 @@ const WedgeMarks = ({ head, w }: { head: Head; w: Wedge }) => {
         />
       ))}
       <text
-        className="fade fill-text"
+        className="fade fill-text t-halo"
         style={stagger(w.index + 4, "series")}
         textAnchor={label.anchor}
         x={label.x}

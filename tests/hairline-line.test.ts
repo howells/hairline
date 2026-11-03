@@ -32,7 +32,7 @@ const count = (html: string, pattern: RegExp) =>
 const dots = (html: string) => count(html, /class="[^"]*\bpop\b/gu);
 /** The hero prints its value in the value voice: that value, or "none". */
 const hero = (props: Partial<HairlineLineProps>) =>
-  /class="[^"]*t-value"[^>]*>(?<value>[^<]*)</u.exec(
+  /class="[^"]*t-value[^"]*"[^>]*>(?<value>[^<]*)</u.exec(
     render({ data: week, ...sized, ...props })
   )?.groups?.value ?? "none";
 /** The line is one path of class draw: one M for each unbroken run. */
@@ -136,6 +136,7 @@ describe("the registry", () => {
       "initialWidth",
       "metrics",
       "note",
+      "notes",
       "replayKey",
       "scale",
       "strokes",
@@ -288,7 +289,7 @@ describe("degenerate data", () => {
 const axisLabels = (html: string) =>
   [
     ...html.matchAll(
-      /<text class="t-axis" text-anchor="end" x="\d+" y="\d+">(?<text>[^<]*)<\/text>/gu
+      /<text class="t-axis t-halo" text-anchor="end" x="\d+" y="\d+">(?<text>[^<]*)<\/text>/gu
     ),
   ].map((m) => m.groups?.text ?? "");
 

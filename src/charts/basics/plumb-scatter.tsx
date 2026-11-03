@@ -192,7 +192,6 @@ const Point = ({
       {place === undefined ? null : (
         <Label
           anchor={place.anchor}
-          halo
           order={order + 8}
           tier="mark"
           voice={hero ? "label" : "axis"}

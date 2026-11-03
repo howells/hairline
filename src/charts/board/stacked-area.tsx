@@ -8,6 +8,7 @@ import { useScrub } from "../hooks";
 import { Ring } from "../markers";
 import { LABEL, LINE, VALUE } from "../roles";
 import { Cursor, HRule } from "../rules";
+import { relax } from "../spread";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { Hatch, Rules, Stipple } from "../texture";
@@ -16,7 +17,6 @@ import { ValueGrid } from "../value-grid";
 import { MonthAxis } from "./month-axis";
 import { labelledTicks, monthTicks } from "./month-ticks";
 import { SIDE_GAP, scaleWidth, sideRoom } from "./room";
-import { relax } from "./spread";
 
 /** A layer's engraving, on paper: rules lie level, or stand upright. */
 type Engraving = "hatch" | "stipple" | "rules" | "upright";

@@ -139,7 +139,7 @@ const StreamLayer = (p: LayerProps) => (
     />
     <HRule x0={p.left} x1={p.width} y={p.floor} />
     <Dot className="fill-hero" cx={p.right} cy={p.headY} size="md" />
-    <Label dy="0.35em" halo voice="value" x={p.right + 9} y={p.headY}>
+    <Label dy="0.35em" voice="value" x={p.right + 9} y={p.headY}>
       {p.format(p.latest)}
     </Label>
   </>

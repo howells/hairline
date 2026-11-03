@@ -6,6 +6,7 @@ import { dailyDatumSchema } from "./daily";
 import { dateFormatSchema, formatSchema } from "./format";
 import type { DateFormatInput, FormatInput } from "./format";
 import { keyOf } from "./key";
+import { NOTES_NAME_DATA, dailyNotesSchema, notesNameData } from "./notes";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
 
@@ -60,6 +61,8 @@ export const hairlineAreaSchema = z
       .positive()
       .optional()
       .describe("Widest the plot gets, in px. Defaults to 640."),
+    /** Notes tied to readings: beside their points, or numbered on a narrow chart. */
+    notes: dailyNotesSchema.optional(),
     /** Value-axis ticks, ascending; the scale runs from 0 to the last. */
     ticks: z
       .array(z.number())
@@ -85,7 +88,8 @@ export const hairlineAreaSchema = z
       message: "emphasis names no reading: it must equal a datum's id or date",
       path: ["emphasis"],
     }
-  );
+  )
+  .refine(notesNameData, NOTES_NAME_DATA);
 
 /** The validated payload. */
 export type HairlineAreaData = z.infer<typeof hairlineAreaSchema>;

@@ -1,11 +1,22 @@
 import type { ScaleLinear } from "d3-scale";
 
 import { crisp } from "./axes";
+import { labelBox, touches } from "./label-box";
+import type { Box } from "./label-box";
 
 /** How far a right-hand value sits above its rule, baseline to rule, in px. */
 const RIDE = 4;
 
+/** Air kept between a value and a label it gives way to, px. */
+const CLEAR = 8;
+
 interface ValueGridProps {
+  /**
+   * Boxes the right-hand scale's values keep clear of, such as a value
+   * label by the latest data: a value that would touch one is not printed
+   * (its rule stays).
+   */
+  clear?: readonly Box[];
   /** Rules are drawn only above this y; the baseline itself is the chart's own. */
   floor: number;
   format: (v: number) => string;
@@ -32,6 +43,21 @@ export const ValueGrid = (props: ValueGridProps) => {
       {props.ticks.flatMap((v) => {
         const at = props.y(v);
         const ruled = at < props.floor - 1;
+        const text = props.format(v);
+        const shown =
+          !right ||
+          !(props.clear ?? []).some((b) =>
+            touches(
+              b,
+              labelBox(
+                text,
+                Math.round(props.x1),
+                Math.round(at) - RIDE,
+                "end"
+              ),
+              CLEAR
+            )
+          );
         if (!ruled && props.labelFloor !== true) {
           return [];
         }
@@ -46,15 +72,17 @@ export const ValueGrid = (props: ValueGridProps) => {
                 y2={crisp(at)}
               />
             ) : null}
-            <text
-              className="t-axis"
-              dy={right ? undefined : "0.34em"}
-              textAnchor="end"
-              x={right ? Math.round(props.x1) : props.x0 - 8}
-              y={right ? Math.round(at) - RIDE : at}
-            >
-              {props.format(v)}
-            </text>
+            {shown ? (
+              <text
+                className="t-axis t-halo"
+                dy={right ? undefined : "0.34em"}
+                textAnchor="end"
+                x={right ? Math.round(props.x1) : props.x0 - 8}
+                y={right ? Math.round(at) - RIDE : at}
+              >
+                {text}
+              </text>
+            ) : null}
           </g>
         );
       })}

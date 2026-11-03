@@ -2,9 +2,9 @@
 // name-and-value tag beside each dot.
 
 import { VALUE } from "../roles";
+import { relax } from "../spread";
 import { Label } from "../text";
 import { PlateLabel } from "../texture";
-import { relax } from "./spread";
 
 /** The lone value over the cursor. */
 export const ValueReadout = (props: { text: string; x: number; y: number }) => (
@@ -76,7 +76,6 @@ export const CursorTags = (props: {
   return props.tags.map((t, i) => (
     <Label
       anchor={flip ? "end" : "start"}
-      halo
       key={t.id}
       middle
       voice="axis"

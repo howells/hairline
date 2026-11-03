@@ -44,6 +44,13 @@ export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";
 export type { FontMetrics } from "./schema/metrics";
 export { motionShape } from "./schema/motion";
 export type { MotionCallbacks } from "./schema/motion";
+export {
+  dailyNoteSchema,
+  dailyNotesSchema,
+  notesNameData,
+  NOTES_NAME_DATA,
+} from "./schema/notes";
+export type { DailyNote } from "./schema/notes";
 export { sharedShape, noteShape } from "./schema/options";
 export type { NoteNames, NoteProps, SharedCallbacks } from "./schema/options";
 export { plumbDatumSchema, plumbScatterSchema } from "./schema/plumb-scatter";

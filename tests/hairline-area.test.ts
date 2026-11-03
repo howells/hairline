@@ -30,7 +30,7 @@ const count = (html: string, pattern: RegExp) =>
 const stems = (html: string) => count(html, /class="[^"]*\bgrow-y\b/gu);
 /** The hero prints its value in the value voice: that value, or "none". */
 const hero = (props: Partial<HairlineAreaProps>) =>
-  /class="[^"]*t-value"[^>]*>(?<value>[^<]*)</u.exec(
+  /class="[^"]*t-value[^"]*"[^>]*>(?<value>[^<]*)</u.exec(
     render({ data: fortnight, ...sized, ...props })
   )?.groups?.value ?? "none";
 /** The line is one path of class draw: one M for each unbroken run. */
@@ -138,6 +138,7 @@ describe("the registry", () => {
       "maxWidth",
       "metrics",
       "note",
+      "notes",
       "replayKey",
       "scale",
       "strokes",
@@ -331,7 +332,7 @@ describe("two charts on one page", () => {
 const axisLabels = (html: string) =>
   [
     ...html.matchAll(
-      /<text class="t-axis" text-anchor="end" x="\d+" y="\d+">(?<text>[^<]*)<\/text>/gu
+      /<text class="t-axis t-halo" text-anchor="end" x="\d+" y="\d+">(?<text>[^<]*)<\/text>/gu
     ),
   ].map((m) => m.groups?.text ?? "");
 

@@ -272,7 +272,6 @@ const Blob = ({
         <Label
           anchor="middle"
           className="fade"
-          halo
           voice={hero ? "value" : "axis"}
           x={cx}
           // Above the circle, clear of the hero's 2px outline; with no room

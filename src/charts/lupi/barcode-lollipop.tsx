@@ -143,7 +143,6 @@ const DayMark = ({
         <Label
           anchor="middle"
           className="fade"
-          halo
           voice={hero ? "value" : "axis"}
           x={labelX ?? x}
           y={cy - r - 8}

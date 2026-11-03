@@ -41,6 +41,7 @@ import { highestIndex, lowestIndex } from "./extremes";
 import { HBars } from "./h-bars";
 import { Heatmap } from "./heatmap";
 import { MonthlyBars } from "./monthly-bars";
+import { regionalDemand } from "./regional-demand.data";
 import { Sankey } from "./sankey";
 import { Scatter } from "./scatter";
 import type { ScatterPoint } from "./scatter";
@@ -170,6 +171,7 @@ export const BOARD_PRESETS: BoardPresetMap = {
         label="Weekly national demand, 2024 against the same weeks of 2023"
         height={410}
         rest={WIDEST_GAP}
+        endLabels={{ others: "years" }}
         series={[
           { data: demand2024, format: fmtGWh, name: "2024", tone: 1 },
           { data: demand2023, format: fmtGWh, name: "2023", tone: 2 },
@@ -364,6 +366,26 @@ export const BOARD_PRESETS: BoardPresetMap = {
             values: halfYearGeneration.wind,
           },
         ]}
+      />
+    ),
+  },
+  D20: {
+    name: "Demand by region",
+    render: () => (
+      <TimeLines
+        label="Weekly demand index for eleven regions through 2024, the leader named at the line ends"
+        height={440}
+        rest={regionalDemand[0].data.length - 1}
+        cursorAtRest={false}
+        endLabels={{ named: 4, others: "regions" }}
+        future="none"
+        series={regionalDemand.map((r, k) => ({
+          data: r.data,
+          format: (v) => String(Math.round(v)),
+          name: r.name,
+          tone: k === 0 ? 1 : 2,
+        }))}
+        y={{ domain: [0, 100], ticks: range(0, 100, 25) }}
       />
     ),
   },
