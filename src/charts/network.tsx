@@ -31,7 +31,6 @@ export const NodeCaption = ({
     <g className="pointer-events-none">
       <Label
         anchor={turn === 1 ? "start" : "end"}
-        halo
         voice="label"
         x={x + turn * (r + 6)}
         y={y - 1}
@@ -40,7 +39,6 @@ export const NodeCaption = ({
       </Label>
       <Label
         anchor={turn === 1 ? "start" : "end"}
-        halo
         muted
         voice="axis"
         x={x + turn * (r + 6)}
@@ -51,6 +49,23 @@ export const NodeCaption = ({
     </g>
   );
 };
+
+/** The selected node's name and reach, centred on a spot chosen clear of nodes and links. */
+export const PlacedCaption = (props: {
+  name: string;
+  note: string;
+  x: number;
+  y: number;
+}) => (
+  <g className="pointer-events-none">
+    <Label anchor="middle" voice="label" x={props.x} y={props.y - 1}>
+      {props.name}
+    </Label>
+    <Label anchor="middle" muted voice="axis" x={props.x} y={props.y + 12}>
+      {props.note}
+    </Label>
+  </g>
+);
 
 /** The selection, said aloud: the chart is one image to a screen reader, so this is how it hears the change. */
 export const NetworkLive = (props: { text: string }) => (

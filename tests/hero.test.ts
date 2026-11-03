@@ -133,7 +133,7 @@ const line = (props: Partial<ComponentProps<typeof HairlineLine>>) =>
   );
 
 const peak = (props: Partial<ComponentProps<typeof HairlineLine>>) =>
-  /class="[^"]*t-value"[^>]*>(?<v>[^<]*)</u.exec(line(props))?.groups?.v;
+  /class="[^"]*t-value[^"]*"[^>]*>(?<v>[^<]*)</u.exec(line(props))?.groups?.v;
 
 describe("HairlineLine hero and context", () => {
   it("draws several heroes in ink on a paper ring, above the rest", () => {

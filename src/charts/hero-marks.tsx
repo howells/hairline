@@ -65,7 +65,6 @@ export const HeroLabel = ({
       />
       <Label
         anchor={turn === 1 ? "start" : "end"}
-        halo
         voice="label"
         x={to.x + turn * 4}
         y={to.y}
@@ -74,7 +73,6 @@ export const HeroLabel = ({
       </Label>
       <Label
         anchor={turn === 1 ? "start" : "end"}
-        halo
         muted
         voice="axis"
         x={to.x + turn * 4}

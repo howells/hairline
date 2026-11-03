@@ -330,8 +330,8 @@ const GalaxyMarks = (props: {
         }}
         visibility="hidden"
       >
-        <Label halo voice="label" y={-1} />
-        <Label halo muted voice="axis" y={12} />
+        <Label voice="label" y={-1} />
+        <Label muted voice="axis" y={12} />
       </g>
     </>
   );

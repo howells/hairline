@@ -209,6 +209,10 @@ describe("hero", () => {
     expect(hero({ data: gappy, hero: ["2024-03-06"] })).toBe("none");
   });
 
+  it("an empty hero list draws no hero, where no list draws the extreme", () => {
+    expect([hero({ hero: [] }), hero({})]).toStrictEqual(["none", "14"]);
+  });
+
   it("lets an id tell apart readings on the same day", () => {
     const twins: DailyDatum[] = [
       { date: "2024-03-04", id: "a", value: 3 },

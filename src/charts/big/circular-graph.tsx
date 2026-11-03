@@ -4,7 +4,7 @@ import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { TipText } from "../hover";
 import { RING_STEP } from "../marks";
-import { NetworkLive, NodeCaption } from "../network";
+import { NetworkLive, PlacedCaption } from "../network";
 import { FOCUS_RING, useNodeSelection } from "../network-select";
 import {
   STEP_FILL,
@@ -20,6 +20,8 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
 import { noteSpace, sansWidth, stagger, noteOf } from "../util";
+import { captionSpot } from "./caption-spot";
+import type { Cubic } from "./caption-spot";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { RingData } from "./circular-graph.data";
 
@@ -55,6 +57,7 @@ interface Bead {
 
 /** A link drawn as a chord-like curve inside the ring. */
 interface Chord {
+  curve: Cubic;
   d: string;
   id: string;
   source: string;
@@ -146,16 +149,27 @@ const hubIds = (data: RingData, highlight: string | string[] | undefined) => {
 };
 
 /** Cubic through two control points pulled toward the centre: near pairs loop deep, far pairs cross the middle. */
-const chordPath = (a: Bead, b: Bead, cx: number, cy: number, R: number) => {
+const chordCurve = (
+  a: Bead,
+  b: Bead,
+  cx: number,
+  cy: number,
+  R: number
+): Cubic => {
   let gap = Math.abs(a.angle - b.angle) % (Math.PI * 2);
   if (gap > Math.PI) {
     gap = Math.PI * 2 - gap;
   }
   const k = 0.18 + 0.32 * (1 - gap / Math.PI);
-  const c = (n: Bead) =>
-    `${(cx + R * k * Math.cos(n.angle)).toFixed(1)},${(cy + R * k * Math.sin(n.angle)).toFixed(1)}`;
-  return `M${a.x.toFixed(1)},${a.y.toFixed(1)}C${c(a)} ${c(b)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+  const c = (n: Bead) => ({
+    x: cx + R * k * Math.cos(n.angle),
+    y: cy + R * k * Math.sin(n.angle),
+  });
+  return [a, c(a), c(b), b];
 };
+
+const pathOf = ([a, c1, c2, b]: Cubic) =>
+  `M${a.x.toFixed(1)},${a.y.toFixed(1)}C${c1.x.toFixed(1)},${c1.y.toFixed(1)} ${c2.x.toFixed(1)},${c2.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 
 /** Clear space round a small ring: just its biggest bead, so the ink runs edge to edge. */
 const SMALL_MARGIN = 8;
@@ -286,8 +300,10 @@ const layoutRing = (
     const a = byId.get(l.source);
     const b = byId.get(l.target);
     if (a !== undefined && b !== undefined) {
+      const curve = chordCurve(a, b, cx, cy, R);
       chords.push({
-        d: chordPath(a, b, cx, cy, R),
+        curve,
+        d: pathOf(curve),
         id: `${l.source}~${l.target}`,
         source: l.source,
         target: l.target,
@@ -399,7 +415,7 @@ const FocusLayer = (props: {
   steps: ReadonlyMap<string, Step>;
   width: number;
 }) => {
-  const { byId, chords } = props.layout;
+  const { beads, byId, chords } = props.layout;
   const { steps } = props;
   const [bead] = [...steps].flatMap(([id, step]) =>
     step === 0 ? (byId.get(id) ?? []) : []
@@ -412,6 +428,13 @@ const FocusLayer = (props: {
     return b === undefined ? [] : [{ b, step }];
   });
   const direct = inRange.filter((n) => n.step === 1);
+  const note = reachText(steps);
+  const spot = captionSpot(
+    props.layout,
+    { h: 28, w: Math.max(sansWidth(bead.id, 11), sansWidth(note, 11)) + 8 },
+    beads,
+    chords.map((c) => c.curve)
+  );
   const chordsAt = (step: Step) =>
     chords.filter((c) => linkStepOf(steps, c.source, c.target) === step);
   return (
@@ -441,15 +464,7 @@ const FocusLayer = (props: {
         ))}
       {!props.small &&
         direct.map((n) => <BeadLabel bead={n.b} bright={false} key={n.b.id} />)}
-      <NodeCaption
-        name={bead.id}
-        note={reachText(steps)}
-        r={bead.r}
-        side={Math.cos(bead.angle) < 0 ? 1 : -1}
-        width={props.width}
-        x={bead.x}
-        y={bead.y}
-      />
+      <PlacedCaption name={bead.id} note={note} {...spot} />
     </g>
   );
 };

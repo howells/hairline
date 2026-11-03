@@ -13,6 +13,9 @@ import {
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 
+import { captionSpot, touchesDisc } from "../src/charts/big/caption-spot";
+import type { Cubic } from "../src/charts/big/caption-spot";
+import { circularGraphDemo } from "../src/charts/big/circular-graph.data";
 import { forceGalaxyDemo } from "../src/charts/big/force-galaxy.data";
 import {
   REACH,
@@ -23,6 +26,7 @@ import {
   reachText,
   stepsFrom,
 } from "../src/charts/network-steps";
+import { sansWidth } from "../src/charts/util";
 import { mount, pointerAt, press, stubBrowser, svgOf } from "./measured";
 
 stubBrowser();
@@ -310,5 +314,78 @@ describe(ForceGalaxy, () => {
     await press(svg, "Escape");
     expect(svg.dataset.focus).toBe("false");
     expect(svg.querySelectorAll("[data-step]")).toHaveLength(0);
+  });
+});
+
+const nameAndNote = async (selected: string) => {
+  const host = await mount(
+    createElement(CircularBeadGraph, { data: circularGraphDemo, selected })
+  );
+  const svg = svgOf(host);
+  const note = [...svg.querySelectorAll("text")].find((t) =>
+    t.textContent?.includes("direct")
+  );
+  const name = note?.previousElementSibling;
+  if (note === undefined || name?.textContent !== selected) {
+    throw new Error("The caption was not drawn");
+  }
+  return { discs: svg.querySelectorAll("circle"), name, note };
+};
+
+describe("the ring's selection caption", () => {
+  it.each(["Germany", "France", "Brazil", "Austria"])(
+    "%s: sits inside the ring and touches no node",
+    async (selected) => {
+      const { discs, name, note } = await nameAndNote(selected);
+      const spot = {
+        x: Number(name.getAttribute("x")),
+        y:
+          (Number(name.getAttribute("y")) + Number(note.getAttribute("y"))) / 2,
+      };
+      const w = Math.max(
+        sansWidth(selected, 11),
+        sansWidth(note.textContent ?? "", 11)
+      );
+      const touching = [...discs].filter((c) =>
+        touchesDisc(spot, w, 26, {
+          r: Number(c.getAttribute("r")),
+          x: Number(c.getAttribute("cx")),
+          y: Number(c.getAttribute("cy")),
+        })
+      );
+      expect(touching).toHaveLength(0);
+    }
+  );
+
+  it("is centred, not beside the node", async () => {
+    const { name } = await nameAndNote("Germany");
+    expect(name.getAttribute("text-anchor")).toBe("middle");
+  });
+});
+
+describe(captionSpot, () => {
+  const frame = { R: 100, cx: 0, cy: 0 };
+
+  it("avoids a node and prefers the spot the fewest links cross", () => {
+    const wall: Cubic = [
+      { x: -60, y: -60 },
+      { x: -60, y: -20 },
+      { x: -60, y: 20 },
+      { x: -60, y: 60 },
+    ];
+    const spot = captionSpot(
+      frame,
+      { h: 26, w: 60 },
+      [{ r: 8, x: 0, y: 0 }],
+      [wall]
+    );
+    expect(touchesDisc(spot, 60, 26, { r: 8, x: 0, y: 0 })).toBe(false);
+    expect(Math.hypot(spot.x, spot.y)).toBeLessThan(90);
+  });
+
+  it("falls back to the centre when the ring is too small for the box", () => {
+    expect(
+      captionSpot({ R: 20, cx: 5, cy: 5 }, { h: 26, w: 60 }, [], [])
+    ).toStrictEqual({ x: 5, y: 5 });
   });
 });

@@ -28,13 +28,13 @@ const apples = (context: "grey" | "opacity") => (
 export const entries: GalleryEntry[] = [
   {
     family: "basics",
-    id: "F18",
+    id: "F20",
     name: "Best yields",
     render: () => apples("grey"),
   },
   {
     family: "basics",
-    id: "F19",
+    id: "F21",
     name: "Faint crowd",
     render: () => apples("opacity"),
   },
