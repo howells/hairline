@@ -75,10 +75,8 @@ describe("a consumer renders HairlineLine through the registry", () => {
     ).toStrictEqual(["", "data[0].date", "data[1].value"]);
   });
 
-  it("emphasis is checked against the readings once the rest is sound", () => {
-    expect(pointers({ data: week, emphasis: "nope" })).toStrictEqual([
-      "emphasis",
-    ]);
+  it("hero is checked against the readings once the rest is sound", () => {
+    expect(pointers({ data: week, hero: ["nope"] })).toStrictEqual(["hero[0]"]);
   });
 
   it("missing data is the only issue", () => {
@@ -125,15 +123,16 @@ describe("the registry", () => {
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
       "animate",
+      "context",
       "data",
       "dateFormat",
       "domain",
-      "emphasis",
       "extreme",
       "fit",
       "forecast",
       "format",
       "height",
+      "hero",
       "idPrefix",
       "initialWidth",
       "intervals",
@@ -193,21 +192,21 @@ describe("formatters are data", () => {
   });
 });
 
-describe("emphasis", () => {
+describe("hero", () => {
   it("defaults to the peak, or the trough when asked", () => {
     expect([hero({}), hero({ extreme: "trough" })]).toStrictEqual(["14", "8"]);
   });
 
   it("follows its key when the data is reordered", () => {
     expect([
-      hero({ emphasis: "2024-03-06" }),
-      hero({ data: week.toReversed(), emphasis: "2024-03-06" }),
+      hero({ hero: ["2024-03-06"] }),
+      hero({ data: week.toReversed(), hero: ["2024-03-06"] }),
     ]).toStrictEqual(["9", "9"]);
   });
 
   it("a key that names no live reading emphasises none", () => {
     const gappy = [...week.slice(0, 2), { date: "2024-03-06", value: null }];
-    expect(hero({ data: gappy, emphasis: "2024-03-06" })).toBe("none");
+    expect(hero({ data: gappy, hero: ["2024-03-06"] })).toBe("none");
   });
 
   it("lets an id tell apart readings on the same day", () => {
@@ -217,9 +216,9 @@ describe("emphasis", () => {
       { date: "2024-03-05", value: 4 },
     ];
     expect([
-      hero({ data: twins, emphasis: "a" }),
-      hero({ data: twins.toReversed(), emphasis: "a" }),
-      hero({ data: twins, emphasis: "b" }),
+      hero({ data: twins, hero: ["a"] }),
+      hero({ data: twins.toReversed(), hero: ["a"] }),
+      hero({ data: twins, hero: ["b"] }),
     ]).toStrictEqual(["3", "3", "5"]);
   });
 });

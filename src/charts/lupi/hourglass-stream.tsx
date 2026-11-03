@@ -2,14 +2,16 @@ import { fmtInt } from "../../lib/format";
 import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
+import { FlowGradient } from "../flow";
+import { useHover, useSvgId } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { PlotNote } from "../plot-note";
+import { flowClass } from "../roles";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { TEXTURE_PITCH } from "../texture-ids";
-import { dimClass, noteSpace, sansWidth, stagger, noteOf } from "../util";
+import { TEXTURE_PITCH, paint } from "../texture-ids";
+import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { hourglassDemo } from "./hourglass-stream.data";
 import type { StageDatum } from "./hourglass-stream.data";
 import { vCurve } from "./util-b";
@@ -197,11 +199,32 @@ const StepShares = ({ data, left, strips, yOf }: StepProps) => (
   </g>
 );
 
+/** One gradient for each step: dark at the strip above, fading into the one below. */
+const StepGradients = (props: {
+  data: StageDatum[];
+  flow: string;
+  h: number;
+  yOf: (i: number) => number;
+}) => (
+  <defs>
+    {props.data.slice(1).map((d, k) => (
+      <FlowGradient
+        id={`${props.flow}-${k}`}
+        key={`step-${d.label}`}
+        start={{ x: 0, y: props.yOf(k) + props.h / 2 }}
+        end={{ x: 0, y: props.yOf(k + 1) - props.h / 2 }}
+      />
+    ))}
+  </defs>
+);
+
 /**
  * L13 Library earnings. A funnel poured top to bottom: each stage is a
  * barcode strip of evenly pitched bars whose width is the count at that
  * stage, ordered fans of hairline threads pour from one strip to the next,
- * and the share that gets through each step sits in the left margin, its
+ * each a gradient of the ink, dark at the strip above and fading into the one
+ * below, the hero's (or the hovered stage's) steps in full and the rest
+ * pale, and the share that gets through each step sits in the left margin, its
  * leader running into that step's fan.
  */
 export const HourglassStream = (props: HourglassStreamProps) => {
@@ -209,6 +232,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
   const height = props.height ?? 470;
   const format = props.format ?? fmtInt;
   const hover = useHover<number>();
+  const flow = useSvgId("flow");
   const max = Math.max(...data.map((d) => d.value));
 
   return (
@@ -245,6 +269,9 @@ export const HourglassStream = (props: HourglassStreamProps) => {
           stripFor(d, max, cx, Math.floor((a1 - a0) / PITCH))
         );
         const tip = hover.key === null ? undefined : data[hover.key];
+        // The stage whose steps lead: the hovered one, else the hero.
+        const heroAt = props.highlight ?? data.length - 1;
+        const active = hover.key ?? heroAt;
         const [first] = data;
         return (
           <div className="relative">
@@ -255,16 +282,14 @@ export const HourglassStream = (props: HourglassStreamProps) => {
               title="Library earnings"
               width={width}
             >
-              <g className="stroke-l5 fill-none">
+              <StepGradients data={data} flow={flow} h={h} yOf={yOf} />
+              <g className="fill-none">
                 {threadsFor(strips, yOf, h).map((t) => (
                   <path
                     key={t.id}
-                    className={`draw ${dimClass(
-                      hover.key !== null &&
-                        hover.key !== t.step &&
-                        hover.key !== t.step + 1
-                    )}`}
+                    className={`draw ${flowClass(t.step === active || t.step + 1 === active)}`}
                     pathLength={1}
+                    stroke={paint(`${flow}-${t.step}`)}
                     style={stagger(t.step * 10 + (t.k % 10), "fine")}
                     d={t.d}
                     strokeWidth={1}
@@ -285,7 +310,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                     y={yOf(i)}
                     h={h}
                     labelX={labelX}
-                    hero={(props.highlight ?? data.length - 1) === i}
+                    hero={heroAt === i}
                     format={format}
                   />
                 </DimGroup>

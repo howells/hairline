@@ -17,7 +17,7 @@ const points: PlumbDatum[] = [
   { label: "Cedar", x: 70, y: 22 },
 ];
 const sized = { height: 400, width: 560 };
-const keyed = { emphasis: "Cedar", labelled: ["Cedar"], ...sized };
+const keyed = { hero: ["Cedar"], labelled: ["Cedar"], ...sized };
 
 /** React puts a comment between adjacent text nodes; drop them so labels read whole. */
 const render = (props: PlumbScatterProps) =>
@@ -25,9 +25,10 @@ const render = (props: PlumbScatterProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
-/** Every point is one dot of class pop; the hero's is fill-hero. */
-const dots = (html: string) => count(html, /class="pop /gu);
-const heroDots = (html: string) => count(html, /class="pop fill-hero"/gu);
+/** Every point is one circle; the hero's is fill-hero on a paper ring. */
+const dots = (html: string) => count(html, /<circle/gu);
+const heroDots = (html: string) =>
+  count(html, /class="fill-hero stroke-paper pop"/gu);
 
 const pointers = (payload: Payload) => {
   const checked = getChart("plumb-scatter").validate(payload);
@@ -64,10 +65,10 @@ describe("a consumer renders PlumbScatter through the registry", () => {
     ]);
   });
 
-  it("emphasis and labelled are checked against the points", () => {
+  it("hero and labelled are checked against the points", () => {
     expect(
-      pointers({ data: points, emphasis: "nope", labelled: ["Alder", "zzz"] })
-    ).toStrictEqual(["emphasis", "labelled[1]"]);
+      pointers({ data: points, hero: ["nope"], labelled: ["Alder", "zzz"] })
+    ).toStrictEqual(["hero[0]", "labelled[1]"]);
   });
 
   it("a reversed domain is rejected", () => {
@@ -137,8 +138,8 @@ describe("formatters are data", () => {
   });
 });
 
-describe("emphasis and labelling by key", () => {
-  it("emphasis follows its key when the data is reordered", () => {
+describe("hero and labelling by key", () => {
+  it("the hero follows its key when the data is reordered", () => {
     const forward = render({ data: points, ...keyed });
     const reversed = render({ data: points.toReversed(), ...keyed });
     expect(heroDots(forward)).toBe(1);
@@ -152,7 +153,7 @@ describe("emphasis and labelling by key", () => {
       { id: "a", label: "Same", x: 10, y: 5 },
       { id: "b", label: "Same", x: 50, y: 9 },
     ];
-    const html = render({ data: twins, emphasis: "a", ...sized });
+    const html = render({ data: twins, hero: ["a"], ...sized });
     expect(dots(html)).toBe(2);
     expect(heroDots(html)).toBe(1);
   });

@@ -86,5 +86,22 @@ export const heroOf = (
     : (live.find((i) => readings[i].key === emphasis) ?? -1);
 };
 
+/**
+ * The readings to draw in ink: the live ones whose keys are in `hero`, else
+ * the live reading `fallback`. A key that names a gap or no reading draws none.
+ */
+export const heroesOf = (
+  readings: Reading[],
+  live: number[],
+  hero: readonly string[] | undefined,
+  fallback: number
+): ReadonlySet<number> => {
+  if (hero === undefined) {
+    return new Set([fallback]);
+  }
+  const wanted = new Set(hero);
+  return new Set(live.filter((i) => wanted.has(readings[i].key)));
+};
+
 /** A reading that has a value: the line and area break where it is false. */
 export const isLive = (reading: Reading) => reading.value !== null;

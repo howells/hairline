@@ -4,9 +4,12 @@ import { dayTickLabels, fmtInt } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
+import type { HeroContext } from "../../schema/hero";
 import type { FontMetrics } from "../../schema/metrics";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { contextClass, heroLast } from "../hero";
+import { HeroDot } from "../hero-marks";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
@@ -30,7 +33,7 @@ import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
 import { foundNotes, notesDesc, withNotes } from "./daily-notes";
 import type { FoundNote } from "./daily-notes";
 import {
-  heroOf,
+  heroesOf,
   seriesOf,
   reactKeyOf,
   readingRows,
@@ -52,11 +55,11 @@ import type { Frame } from "./line-frame";
 import { describeLine } from "./line-words";
 import { axisRoom, dailyFloor, isWeekend } from "./util-a";
 
-/** A dot's tone: by whether it clears a reference line when one asks, else the hero's ink or grey. */
+/** A dot's tone: by whether it clears a reference line when one asks, else the context's. */
 const dotClass = (
   hollow: boolean,
-  hero: boolean,
-  clearing: boolean | undefined
+  clearing: boolean | undefined,
+  context: HeroContext | undefined
 ) => {
   if (clearing !== undefined) {
     if (clearing) {
@@ -64,62 +67,68 @@ const dotClass = (
     }
     return hollow ? "stroke-l5" : "fill-l5";
   }
-  if (hero) {
-    return "fill-hero";
-  }
-  return hollow ? "stroke-l3" : "fill-l3";
+  return contextClass(context, hollow ? "stroke" : "fill");
 };
 
 interface DotsProps extends Series {
   /** Whether a reading clears the reference line that asks for ink; undefined when none does. */
   clearing: (i: number) => boolean | undefined;
+  context: HeroContext | undefined;
   /** The first forecast reading: those after the last one carry no dot of their own. */
   forecast: number;
   format: (v: number) => string;
   frame: Frame;
-  hero: number;
+  heroes: ReadonlySet<number>;
   hover: number | null;
 }
 
 /**
- * Day dots: hollow on weekends, the hero larger and in ink. The hero carries
- * its value; the latest day carries its value quietly. A gap has no dot.
+ * Day dots: hollow on weekends; the heroes larger, in ink on a paper ring and
+ * drawn above the rest. Each hero carries its value; the latest day carries
+ * its value quietly. A gap has no dot.
  */
 const Dots = ({
   clearing,
+  context,
   forecast,
   format,
   frame,
-  hero,
+  heroes,
   hover,
   live,
   readings,
 }: DotsProps) => {
   const last = live.at(-1) ?? 0;
-  const size = (i: number): DotSize =>
-    i === hero || hover === i ? "md" : "sm";
-  const labels = hero === last || hero < 0 ? [last] : [hero, last];
+  const labels = [...new Set([...heroes, last])];
   return (
     <g>
-      {live.map((i) => {
+      {heroLast(live, (i) => heroes.has(i)).map((i) => {
         // A forecast is its dashed line and its last value, a hollow ring.
-        if (i >= forecast && i !== hero && i !== last) {
+        if (i >= forecast && !heroes.has(i) && i !== last) {
           return null;
         }
-        const hollow =
-          i !== hero && (isWeekend(readings[i].date) || i >= forecast);
+        const hero = heroes.has(i);
+        const hollow = !hero && (isWeekend(readings[i].date) || i >= forecast);
         const props = {
-          className: `pop transition-radius ${dotClass(hollow, i === hero, clearing(i))}`,
+          className: "pop transition-radius",
           cx: crisp(frame.x(i)),
           cy: frame.y(valueAt(readings, i)),
-          size: size(i),
           style: stagger(i, "mark"),
         };
         const key = reactKeyOf(readings[i], i);
+        const tone = clearing(i);
+        if (hero && tone === undefined) {
+          return <HeroDot key={key} {...props} />;
+        }
+        const dot = {
+          ...props,
+          className: `${props.className} ${dotClass(hollow, tone, context)}`,
+          size: (hero || hover === i ? "md" : "sm") as DotSize,
+        };
         return hollow ? (
-          <Ring key={key} {...props} />
+          <Ring key={key} {...dot} />
         ) : (
-          <Dot key={key} {...props} />
+          <Dot key={key} {...dot} />
         );
       })}
       {labels.map((i) => (
@@ -128,7 +137,7 @@ const Dots = ({
           key={reactKeyOf(readings[i], i)}
           order={last}
           tier="mark"
-          voice={i === hero ? "value" : "axis"}
+          voice={heroes.has(i) ? "value" : "axis"}
           x={frame.x(i)}
           y={frame.y(valueAt(readings, i)) - 12}
         >
@@ -140,18 +149,20 @@ const Dots = ({
 };
 
 interface StemsProps extends Series {
+  context: HeroContext | undefined;
   floor: number;
   forecast: number;
   frame: Frame;
-  hero: number;
+  heroes: ReadonlySet<number>;
 }
 
-/** Weekend days drop an evenly dotted stem to the floor; the hero a solid ink one. */
+/** Weekend days drop an evenly dotted stem to the floor; each hero a solid ink one. */
 const Stems = ({
+  context,
   floor,
   forecast,
   frame,
-  hero,
+  heroes,
   live,
   readings,
 }: StemsProps) => (
@@ -159,7 +170,7 @@ const Stems = ({
     {live.map((i) => {
       const px = frame.x(i);
       const key = reactKeyOf(readings[i], i);
-      if (i === hero) {
+      if (heroes.has(i)) {
         return (
           <Stem
             className="grow-y stroke-hero"
@@ -179,7 +190,7 @@ const Stems = ({
         <g className="fade" key={key} style={stagger(i, "mark")}>
           <DottedLine
             pitch={TEXTURE_PITCH.dense}
-            tone="fill-l4"
+            tone={contextClass(context, "fill")}
             x0={px}
             x1={px}
             y0={frame.y(valueAt(readings, i)) + 6}
@@ -195,12 +206,13 @@ interface SvgProps {
   axis: ValueAxis;
   bands: Band[];
   clear: () => void;
+  context: HeroContext | undefined;
   forecast: { at: number; label: string };
   extreme: "peak" | "trough";
   domain: [number, number] | undefined;
-  emphasis: string | null | undefined;
   fmtDate: (d: Date) => string;
   format: (v: number) => string;
+  hero: readonly string[] | undefined;
   height: number;
   hover: number | null;
   metrics: FontMetrics | undefined;
@@ -240,13 +252,14 @@ interface LayersProps {
   axis: ValueAxis;
   bands: Band[];
   clearing: (i: number) => boolean | undefined;
+  context: HeroContext | undefined;
   forecast: number;
   forecastLabel: string;
   forecasting: boolean;
   format: (v: number) => string;
   frame: Frame;
   height: number;
-  hero: number;
+  heroes: ReadonlySet<number>;
   hover: number | null;
   last: number;
   metrics: FontMetrics | undefined;
@@ -264,18 +277,15 @@ interface LayersProps {
 
 /** Everything the plot draws, back to front. */
 const LineLayers = (p: LayersProps) => {
-  const { bands, forecast, frame, hero, hover, readings, references } = p;
+  const { bands, forecast, frame, heroes, hover, readings, references } = p;
   const { floor, x0, x1, y } = frame;
   return (
     <>
       <DailyGrid
         axis={p.axis}
-        clear={valueLabelBoxes(
-          readings,
-          frame,
-          p.format,
-          hero === p.last || hero < 0 ? [p.last] : [hero, p.last]
-        )}
+        clear={valueLabelBoxes(readings, frame, p.format, [
+          ...new Set([...heroes, p.last]),
+        ])}
         floor={floor}
         format={p.format}
         ticks={y.ticks(5)}
@@ -294,13 +304,14 @@ const LineLayers = (p: LayersProps) => {
       <IntervalBands bands={bands} x={frame.x} y={y} />
       <HRule x0={x0} x1={x1} y={floor} />
       <Stems
+        context={p.context}
         floor={floor}
         forecast={forecast}
         frame={frame}
-        hero={hero}
+        heroes={heroes}
         {...p.series}
       />
-      {hover === null || hover === hero ? null : (
+      {hover === null || heroes.has(hover) ? null : (
         <VRule
           kind="rule"
           x={frame.x(hover)}
@@ -308,10 +319,13 @@ const LineLayers = (p: LayersProps) => {
           y1={crisp(floor)}
         />
       )}
-      <DailyLine d={p.paths.observed} />
+      <DailyLine
+        d={p.paths.observed}
+        tone={contextClass(p.context, "stroke")}
+      />
       {p.paths.forecast === "" ? null : (
         <path
-          className="fade dash-rule stroke-l3 stroke-medium fill-none"
+          className={`fade dash-rule ${contextClass(p.context, "stroke")} stroke-medium fill-none`}
           d={p.paths.forecast}
         />
       )}
@@ -331,10 +345,11 @@ const LineLayers = (p: LayersProps) => {
       />
       <Dots
         clearing={p.clearing}
+        context={p.context}
         forecast={forecast}
         format={p.format}
         frame={frame}
-        hero={hero}
+        heroes={heroes}
         hover={hover}
         {...p.series}
       />
@@ -374,12 +389,13 @@ const HairlineLineSvg = ({
   axis,
   bands,
   clear,
+  context,
   domain,
-  emphasis,
   extreme,
   fmtDate,
   forecast,
   format,
+  hero,
   height,
   hover,
   metrics,
@@ -415,7 +431,7 @@ const HairlineLineSvg = ({
   const loRead = Math.min(...values);
   const last = live.at(-1) ?? 0;
   const [first] = live;
-  const hero = heroOf(readings, live, emphasis, { peak, trough }[extreme]);
+  const heroes = heroesOf(readings, live, hero, { peak, trough }[extreme]);
   const { dayAt, frame, xScale } = frameOf(readings, {
     axis,
     domain,
@@ -443,9 +459,10 @@ const HairlineLineSvg = ({
   const clearing = (i: number) => clears(references, valueAt(readings, i));
   const avoid = [
     ...live.map((i) => ({ x: frame.x(i), y: y(valueAt(readings, i)) })),
-    ...[hero, last].flatMap((i) =>
-      i < 0 ? [] : [{ x: frame.x(i), y: y(valueAt(readings, i)) - 12 }]
-    ),
+    ...[...heroes, last].map((i) => ({
+      x: frame.x(i),
+      y: y(valueAt(readings, i)) - 12,
+    })),
   ];
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
@@ -469,13 +486,14 @@ const HairlineLineSvg = ({
         axis={axis}
         bands={bands}
         clearing={clearing}
+        context={context}
         forecast={forecast.at}
         forecastLabel={forecast.label}
         forecasting={forecasting}
         format={format}
         frame={frame}
         height={height}
-        hero={hero}
+        heroes={heroes}
         hover={hover}
         last={last}
         metrics={metrics}
@@ -559,11 +577,12 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
             domain={props.domain}
             bands={bands}
             clear={clear}
+            context={props.context}
             forecast={forecast}
-            emphasis={props.emphasis}
             extreme={props.extreme ?? "peak"}
             fmtDate={fmtDate}
             format={format}
+            hero={props.hero}
             height={props.height ?? 440}
             hover={hover}
             metrics={props.metrics}
@@ -596,8 +615,9 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
  * first (server) render. Bad input is tolerated: readings are drawn in date
  * order; a reading whose value is null, NaN or infinite is a gap, with no dot
  * and a break in the line; one reading draws a lone dot; no readings (or only
- * gaps) draw a quiet empty axis; `emphasis` is a reading's `id` or date, and
- * one that names no live reading emphasises none.
+ * gaps) draw a quiet empty axis; `hero` lists readings' `id`s or dates (an
+ * empty list for none), and one that names no live reading draws none.
+ * `context` sets how the rest are drawn.
  */
 export const HairlineLine = (props: HairlineLineProps) =>
   scoped(props.idPrefix, <HairlineLinePlot {...props} />);

@@ -3,8 +3,11 @@ import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 import { useState } from "react";
 
+import type { HeroContext } from "../../schema/hero";
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
+import { contextClass } from "../hero";
+import { HeroDot } from "../hero-marks";
 import { DimGroup, TipText } from "../hover";
 import { Ring } from "../markers";
 import { DOT, MARK_WEIGHT } from "../marks";
@@ -31,11 +34,13 @@ interface JitterStripProps extends NoteProps {
   /** Index of the hero group (default the first: median and name in ink); a given one also inks its rings. */
   highlight?: number;
   /**
-   * A record's name, from `names`: in every group that has it, that record
-   * is a solid ink dot with its value above, and every group name is in ink.
-   * No group is the hero unless `highlight` is given.
+   * Records' names, from `names`: in every group that has one, that record is
+   * a solid ink dot on a paper ring with its value above, and every group name
+   * is in ink. No group is the highlight unless `highlight` is given.
    */
-  mark?: string;
+  hero?: string[];
+  /** How the other records are drawn: a pale `grey` ring (default), or `opacity`, the ink at low opacity. */
+  context?: HeroContext;
   /** Draw each group's median tick (default true). */
   median?: boolean;
   /** Responsive mode only: the width of the first render, before measuring. */
@@ -62,8 +67,9 @@ interface BandProps {
   heroRow: boolean;
   group: JitterGroup;
   hover: Hit | null;
-  /** The marked record's ordinal in this group, if it has it. */
-  marked: number | undefined;
+  context: HeroContext | undefined;
+  /** The hero records' ordinals in this group. */
+  marked: number[];
   /** Name every group in ink: something is marked. */
   inkLabel: boolean;
   med: number | undefined;
@@ -117,7 +123,7 @@ const seats = (
   });
 };
 
-/** The marked record: a solid ink dot, a size up, its value above it. */
+/** A hero record: a solid ink dot on a paper ring, a size up, its value above it. */
 const MarkedDot = (p: {
   dot: DotSize;
   format: (v: number) => string;
@@ -128,12 +134,10 @@ const MarkedDot = (p: {
   const radius = DOT[p.dot === "sm" ? "md" : "lg"];
   return (
     <g className="pop">
-      <circle
-        className="fill-ink stroke-paper"
+      <HeroDot
         cx={p.seat.x}
         cy={p.seat.y}
-        r={radius}
-        strokeWidth={2}
+        size={p.dot === "sm" ? "md" : "lg"}
         pointerEvents="visible"
         onPointerEnter={() => {
           p.onEnter(p.seat.x, p.seat.y - radius - 4);
@@ -155,6 +159,7 @@ const MarkedDot = (p: {
 /** One group: its label, a dot per record jittered across the band, and a median tick. */
 const Band = (p: BandProps) => {
   const radius = DOT[p.dot];
+  const marked = new Set(p.marked);
   const lattice = seats(
     p.group.values.map((v) => p.x(v)),
     radius * 2 + 2,
@@ -175,7 +180,7 @@ const Band = (p: BandProps) => {
         {p.group.label}
       </Label>
       {p.group.values.map((_, k) => {
-        if (k === p.marked) {
+        if (marked.has(k)) {
           return null;
         }
         const seat = lattice[k];
@@ -184,7 +189,7 @@ const Band = (p: BandProps) => {
           <Ring
             // Records carry no id; group + ordinal is their identity.
             key={`${p.group.label}-${String(k)}`}
-            className={`pop ${on || p.hero ? "stroke-ink" : "stroke-l4"}`}
+            className={`pop ${on || p.hero ? "stroke-ink" : contextClass(p.context, "stroke")}`}
             style={stagger(k, "dense")}
             cx={seat.x}
             cy={seat.y}
@@ -208,17 +213,18 @@ const Band = (p: BandProps) => {
           strokeWidth={MARK_WEIGHT}
         />
       )}
-      {p.marked === undefined ? null : (
+      {p.marked.map((k) => (
         <MarkedDot
           dot={p.dot}
           format={p.format}
+          key={`${p.group.label}-hero-${String(k)}`}
           onEnter={(x, y) => {
-            p.onEnter({ g: p.g, k: p.marked ?? 0, x, y });
+            p.onEnter({ g: p.g, k, x, y });
           }}
-          seat={lattice[p.marked]}
-          value={p.group.values[p.marked]}
+          seat={lattice[k]}
+          value={p.group.values[k]}
         />
-      )}
+      ))}
     </DimGroup>
   );
 };
@@ -240,22 +246,21 @@ export const JitterStrip = (props: JitterStripProps) => {
   const max = Math.max(...data.flatMap((d) => d.values));
   const medians = data.map((d) => median(d.values) ?? 0);
   const showMedian = props.median ?? true;
-  const markedOf = (d: JitterGroup) => {
-    const at =
-      props.mark === undefined ? -1 : (d.names?.indexOf(props.mark) ?? -1);
-    return at === -1 ? undefined : at;
-  };
+  const heroNames = new Set(props.hero);
+  const markedOf = (d: JitterGroup) =>
+    (d.names ?? []).flatMap((name, k) => (heroNames.has(name) ? [k] : []));
   const label = `Jitter strip: ${data
-    .map((d, i) => {
-      const at = markedOf(d);
-      return [
+    .map((d, i) =>
+      [
         `${d.label}, ${d.values.length} records`,
         showMedian ? `median ${format(medians[i])}` : null,
-        at === undefined ? null : `${props.mark ?? ""} ${format(d.values[at])}`,
+        ...markedOf(d).map(
+          (k) => `${d.names?.[k] ?? ""} ${format(d.values[k])}`
+        ),
       ]
         .filter((part) => part !== null)
-        .join(", ");
-    })
+        .join(", ")
+    )
     .join("; ")}`;
 
   return (
@@ -330,9 +335,10 @@ export const JitterStrip = (props: JitterStripProps) => {
                 format={format}
                 hero={props.highlight === g}
                 heroRow={
-                  (props.highlight ?? (props.mark === undefined ? 0 : -1)) === g
+                  (props.highlight ?? (props.hero === undefined ? 0 : -1)) === g
                 }
-                inkLabel={props.mark !== undefined}
+                context={props.context}
+                inkLabel={props.hero !== undefined}
                 marked={markedOf(d)}
                 g={g}
                 group={d}

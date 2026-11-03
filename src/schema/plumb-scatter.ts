@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
+import { heroLabelShape, heroShape } from "./hero";
 import { keyOf } from "./key";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
@@ -34,6 +35,8 @@ const domainSchema = z.tuple([z.number(), z.number()]);
 
 export const plumbScatterSchema = z
   .strictObject({
+    ...heroLabelShape,
+    ...heroShape,
     ...noteShape,
     ...referencesShape,
     ...sharedShape,
@@ -43,13 +46,6 @@ export const plumbScatterSchema = z
       .min(1)
       .max(20)
       .describe("The points, 1 to 20."),
-    /** The point to draw in the hero colour, by key. Defaults to the highest. */
-    emphasis: z
-      .string()
-      .optional()
-      .describe(
-        "The point to draw in the hero colour, by key. Defaults to the highest."
-      ),
     /** How y prints: a preset name or Intl number-format options. */
     format: formatSchema
       .optional()
@@ -111,12 +107,14 @@ export const plumbScatterSchema = z
   })
   .superRefine((props, ctx) => {
     const keys = new Set(props.data.map(keyOf));
-    if (props.emphasis !== undefined && !keys.has(props.emphasis)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "emphasis names no point: it must equal a datum's id or label",
-        path: ["emphasis"],
-      });
+    for (const [i, key] of (props.hero ?? []).entries()) {
+      if (!keys.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "hero names no point: it must equal a datum's id or label",
+          path: ["hero", i],
+        });
+      }
     }
     for (const [i, key] of (props.labelled ?? []).entries()) {
       if (!keys.has(key)) {

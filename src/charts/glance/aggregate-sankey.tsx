@@ -3,14 +3,15 @@ import type { SankeyGraph, SankeyNode } from "d3-sankey";
 import { useState } from "react";
 
 import type { NoteProps } from "../../schema/options";
-import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { FlowGradient } from "../flow";
+import { useSvgId } from "../hooks";
 import { DimGroup, TipText } from "../hover";
 import { FootNote } from "../plot-note";
+import { flowClass } from "../roles";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { CrossHatch, Hatch, Rules, Stipple } from "../texture";
-import { paint, useTextureIds } from "../texture-ids";
+import { paint } from "../texture-ids";
 import { noteSpace, ranks, stagger, noteOf, wrapWords } from "../util";
 import { aggregateSankeyDemo } from "./aggregate-sankey.data";
 import type { AggregateSankeyData, SankeyFlow } from "./aggregate-sankey.data";
@@ -59,12 +60,6 @@ interface Focus {
 type Graph = SankeyGraph<NodeExtra, LinkExtra>;
 
 const round = (v: number) => Math.round(v).toLocaleString("en-GB");
-
-/**
- * Engraving grammar for the sources after the hero, top to bottom: each
- * keeps its own texture, and neighbouring hatches lean opposite ways.
- */
-const GRAIN = ["falling", "rising", "dots", "rule"] as const;
 
 /** Node bar to label, and label to the svg edge. */
 const LABEL_GAP = 12;
@@ -186,16 +181,6 @@ const isLit = (focus: Focus | null, f: SankeyFlow, k: number) => {
   return f.from === focus.node || f.to === focus.node;
 };
 
-/** Engraved ribbons at rest; hover inks the traced ones solid and drops the rest back. */
-const ribbonTone = (focus: Focus | null, lit: boolean) => {
-  if (focus === null) {
-    return { face: "", ribbon: "" };
-  }
-  return lit
-    ? { face: "stroke-l3", ribbon: "" }
-    : { face: "", ribbon: "opacity-30" };
-};
-
 const nodeLit = (
   focus: Focus | null,
   data: AggregateSankeyData,
@@ -214,73 +199,66 @@ const nodeLit = (
 interface RibbonsProps {
   data: AggregateSankeyData;
   focus: Focus | null;
+  /** The id each flow's gradient takes, by the flow's place in the data. */
+  flowId: (k: number) => string;
   graph: Graph;
-  /** Pattern id for each source's ribbons and node. */
-  grainOf: (source: string) => string;
-  /** Pattern id of the hero source, laid on top. */
-  heroGrain: string;
+  /** The source whose flows lead while nothing is hovered. */
+  heroSource: string;
   midX: number;
   onFocus: (focus: Focus) => void;
 }
 
+/** The x of a node's right (`x1`) or left (`x0`) edge, by its id. */
+const edgeOf = (graph: Graph, id: string, edge: "x0" | "x1") => {
+  const x = graph.nodes.find((n) => n.id === id)?.[edge];
+  if (x === undefined) {
+    throw new Error(`The sankey has no node ${id}`);
+  }
+  return x;
+};
+
+/** Whether a flow leads: the hovered one's, or the hero source's at rest. */
+const leads = (p: RibbonsProps, from: string, k: number) =>
+  p.focus === null ? from === p.heroSource : isLit(p.focus, p.data.flows[k], k);
+
 /**
- * One engraved ribbon per flow, drawn in left to right: its source's texture
- * on paper inside a 1px l5 rim (an l5 underlay 2px wider), so a ribbon
- * cleanly covers the one it crosses instead of mixing two screens. The hero
- * source's crosshatched ribbons are laid over the rest.
+ * One ribbon per flow, its width the amount, painted with a gradient of the
+ * ink from its source node to its target node, so the direction reads. The
+ * flows that lead (the hero source's at rest, the traced ones on hover) are
+ * drawn as they are and the rest pushed back; the leading ones sit on top.
  */
 const Ribbons = (p: RibbonsProps) => {
   const ribbon = sankeyLinkHorizontal<NodeExtra, LinkExtra>();
   const order = p.graph.links
-    .map((l, k) => ({ k, l }))
-    .toSorted(
-      (a, b) =>
-        Number(p.grainOf(a.l.from) === p.heroGrain) -
-        Number(p.grainOf(b.l.from) === p.heroGrain)
-    );
+    .map((l, k) => ({ k, l, lead: leads(p, l.from, k) }))
+    .toSorted((a, b) => Number(a.lead) - Number(b.lead));
   return (
     <g>
-      {order.map(({ l, k }) => {
-        const tone = ribbonTone(p.focus, isLit(p.focus, p.data.flows[k], k));
-        return (
-          <g
-            key={`${l.from}-${l.to}`}
-            className={`fill-none transition-opacity ${tone.ribbon}`}
-            onPointerEnter={() => {
-              p.onFocus({
-                flow: k,
-                node: null,
-                x: p.midX,
-                y: ((l.y0 ?? 0) + (l.y1 ?? 0)) / 2 - (l.width ?? 0) / 2 - 4,
-              });
-            }}
-          >
-            <path
-              className="draw stroke-l5"
-              d={ribbon(l) ?? ""}
-              pathLength={1}
-              strokeWidth={Math.max(3, l.width ?? 1)}
-              style={stagger(k, "mark")}
-            />
-            <path
-              className={`draw transition-tone ${tone.face}`}
-              d={ribbon(l) ?? ""}
-              pathLength={1}
-              stroke={paint(p.grainOf(l.from))}
-              strokeWidth={Math.max(1, (l.width ?? 1) - 2)}
-              style={stagger(k, "mark")}
-            />
-          </g>
-        );
-      })}
+      {order.map(({ l, k, lead }) => (
+        <path
+          key={`${l.from}-${l.to}`}
+          className={`draw fill-none ${flowClass(lead)}`}
+          d={ribbon(l) ?? ""}
+          onPointerEnter={() => {
+            p.onFocus({
+              flow: k,
+              node: null,
+              x: p.midX,
+              y: ((l.y0 ?? 0) + (l.y1 ?? 0)) / 2 - (l.width ?? 0) / 2 - 4,
+            });
+          }}
+          pathLength={1}
+          stroke={paint(p.flowId(k))}
+          strokeWidth={Math.max(1, l.width ?? 1)}
+          style={stagger(k, "mark")}
+        />
+      ))}
     </g>
   );
 };
 
 interface NodeProps {
   fill: string;
-  /** Engraved pattern fill for a source node; omit for a solid bar. */
-  pattern?: string;
   i: number;
   /** Source label lines; the last is the value when the label wraps. */
   lines: string[];
@@ -356,13 +334,11 @@ const NodeMark = (p: NodeProps) => {
       <rect
         className={`grow-y ${p.fill}`}
         style={stagger(p.i, "mark")}
-        x={p.pattern === undefined ? x0 : crisp(x0)}
-        y={p.pattern === undefined ? y0 : crisp(y0)}
-        width={Math.round(x1 - x0) - (p.pattern === undefined ? 0 : 1)}
+        x={x0}
+        y={y0}
+        width={Math.round(x1 - x0)}
         height={Math.max(2, Math.round(y1 - y0) - 1)}
         rx={2}
-        fill={p.pattern}
-        strokeWidth={1}
       />
       {p.node.side === "source" ? (
         <SourceLabel
@@ -386,26 +362,14 @@ const NodeMark = (p: NodeProps) => {
   );
 };
 
-/** The grains: the hero's crosshatch, then the rest in GRAIN order, all on paper. */
-const GrainDefs = ({ tex }: { tex: (name: string) => string }) => (
-  <defs>
-    <CrossHatch id={tex("cross")} tone="fill-l3" />
-    <Hatch angle="falling" id={tex("falling")} tone="fill-l4" />
-    <Hatch id={tex("rising")} tone="fill-l4" />
-    <Stipple id={tex("dots")} tone="fill-l3" />
-    <Rules id={tex("rule")} tone="fill-l4" />
-  </defs>
-);
-
 /**
  * G22 Free vote. Two columns: sources on the left, destinations on
- * the right; ribbon width = amount. Each source's ribbons are engraved in
- * its own grain on paper (hatches leaning alternately, then stipple and
- * rules), keyed by its node bar; the biggest source (or the highlight) is
- * the one ink node and its ribbons are crosshatched and laid on top. A
- * crossing ribbon covers the one beneath, so screens never mix into moiré.
- * Target totals sit inline with their names. Hover a node or a ribbon to
- * trace it.
+ * the right; ribbon width = amount. Every ribbon is a gradient of the ink,
+ * dark at its source and fading to its target, so direction reads without
+ * arrows; the biggest source (or the highlight) is the one ink node and its
+ * ribbons are drawn in full while the rest sit pale. Target totals sit
+ * inline with their names. Hover a node or a ribbon to trace it: its flows
+ * lead.
  */
 export const AggregateSankey = (props: AggregateSankeyProps) => {
   const data = props.data ?? aggregateSankeyDemo;
@@ -419,20 +383,13 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
       data.flows.filter((f) => f.from === s).reduce((a, f) => a + f.value, 0)
     )
   );
-  const tex = useTextureIds("flow");
+  const flow = useSvgId("flow");
   const heroSource = props.highlight ?? data.sources[srcRank.indexOf(0)] ?? "";
-  // Sources after the hero, top to bottom, each take the next grain.
-  const rest = data.sources.filter((name) => name !== heroSource);
-  const heroGrain = tex("cross");
-  const grainOf = (source: string) =>
-    source === heroSource
-      ? heroGrain
-      : tex(GRAIN[rest.indexOf(source) % GRAIN.length]);
   const nodeFill = (n: { name: string; side: "source" | "target" }) => {
     if (n.side === "target") {
       return "fill-l4";
     }
-    return n.name === heroSource ? "fill-hero" : "stroke-l5";
+    return n.name === heroSource ? "fill-hero" : "fill-l3";
   };
   const total = (name: string) =>
     data.flows
@@ -481,13 +438,25 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
             }}
             width={width}
           >
-            <GrainDefs tex={tex} />
+            <defs>
+              {graph.links.map((l, k) => (
+                <FlowGradient
+                  id={`${flow}-${k}`}
+                  key={`${l.from}-${l.to}`}
+                  start={{
+                    x: edgeOf(graph, `s:${l.from}`, "x1"),
+                    y: l.y0 ?? 0,
+                  }}
+                  end={{ x: edgeOf(graph, `t:${l.to}`, "x0"), y: l.y1 ?? 0 }}
+                />
+              ))}
+            </defs>
             <Ribbons
               data={data}
+              flowId={(k) => `${flow}-${k}`}
               focus={focus}
               graph={graph}
-              grainOf={grainOf}
-              heroGrain={heroGrain}
+              heroSource={heroSource}
               midX={width / 2}
               onFocus={setFocus}
             />
@@ -495,11 +464,6 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
               <NodeMark
                 key={n.id}
                 fill={nodeFill(n)}
-                pattern={
-                  n.side === "source" && n.name !== heroSource
-                    ? paint(grainOf(n.name))
-                    : undefined
-                }
                 i={i}
                 lines={margins.sourceLines.get(n.name) ?? []}
                 lit={nodeLit(focus, data, n.name)}

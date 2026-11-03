@@ -1,17 +1,26 @@
 import type { Simulation } from "d3-force";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { PointerEvent, RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent, PointerEvent, RefObject } from "react";
 
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal } from "../hooks";
 import { HitRect, TipText } from "../hover";
+import { FOCUS_RING } from "../network-select";
+import {
+  REACH,
+  linkStepOf,
+  nextByKey,
+  pickNode,
+  reachText,
+  stepsFrom,
+} from "../network-steps";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch, PlateLabel } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { clamp, noteSpace, noteOf } from "../util";
+import { clamp, noteSpace, noteOf, sansWidth } from "../util";
 import {
   RING_BELOW,
   buildGalaxy,
@@ -20,6 +29,7 @@ import {
   labelAt,
   labelOnEngraving,
   makeSimulation,
+  placeCaption,
   settle,
 } from "./force-galaxy-model";
 import type {
@@ -43,6 +53,8 @@ interface ForceGalaxyProps extends NoteProps {
   height?: number;
   /** Unit after the volume in the tooltip. */
   unit?: string;
+  /** Node id selected until the pointer or keys choose another; everything fades out from it by links. */
+  selected?: string;
 }
 
 /** Class names per tone, written out so Tailwind sees them. */
@@ -66,10 +78,18 @@ const edgeWidth = (e: Edge) =>
   e.kind === "mesh"
     ? MESH_WIDTHS[Math.min(MESH_WIDTHS.length, Math.max(1, e.weight)) - 1]
     : 1;
-const DIM =
-  "transition-opacity group-data-[focus=true]/galaxy:not-data-[on=true]:opacity-30";
-const EDGE_DIM =
-  "transition-tone group-data-[focus=true]/galaxy:not-data-[on=true]:opacity-5 data-[on=true]:stroke-ink";
+/*
+ * Selecting a star sets data-step on it and on what it reaches (0 itself, 1
+ * direct, 2 two steps) and data-focus on the root; the browser restyles, React
+ * renders nothing. What is further than two steps has no step and fades.
+ */
+/** A satellite: ink at 0 and 1, mid at 2, the rest back to the paper. */
+const STAR_STEP = `transition-opacity group-data-[focus=true]/galaxy:not-data-[step]:opacity-40 group-data-[focus=true]/galaxy:data-[step=0]:fill-hero group-data-[focus=true]/galaxy:data-[step=1]:fill-ink group-data-[focus=true]/galaxy:data-[step=2]:fill-l3`;
+/** A hub is engraved: its rule takes the step's tone. */
+const HUB_STEP = `transition-opacity group-data-[focus=true]/galaxy:not-data-[step]:opacity-40 group-data-[focus=true]/galaxy:data-[step=0]:stroke-ink group-data-[focus=true]/galaxy:data-[step=1]:stroke-ink group-data-[focus=true]/galaxy:data-[step=2]:stroke-l3`;
+/** A hub's name: faded with the rest, and left to the caption when selected. */
+const NAME_STEP = `transition-opacity group-data-[focus=true]/galaxy:not-data-[step]:opacity-40 group-data-[focus=true]/galaxy:data-[step=0]:opacity-0`;
+const EDGE_STEP = `transition-tone group-data-[focus=true]/galaxy:not-data-[step]:opacity-10 group-data-[focus=true]/galaxy:data-[step=1]:stroke-ink group-data-[focus=true]/galaxy:data-[step=2]:stroke-l3`;
 
 /** Runs the layout once the plot is on screen; stops it on unmount or resize. */
 const useGalaxySimulation = (
@@ -98,42 +118,89 @@ const useGalaxySimulation = (
   return sim;
 };
 
-/** Focus by data attributes: the browser restyles, React renders nothing. */
-const useStarFocus = (galaxy: Galaxy, handles: Handles) => {
+/** The caption's name and reach, set on the caption the star follows. */
+const writeCaption = (caption: SVGGElement | undefined, text: string[]) => {
+  if (caption === undefined) {
+    return;
+  }
+  const [name, note] = text.length === 0 ? ["", ""] : text;
+  const lines = caption.querySelectorAll("text");
+  lines[0].textContent = name;
+  lines[1].textContent = note;
+  caption.dataset.run = String(
+    Math.max(sansWidth(name, 11), sansWidth(note, 11))
+  );
+  caption.setAttribute("visibility", text.length === 0 ? "hidden" : "visible");
+};
+
+/**
+ * Focus by data attributes: the browser restyles, React renders nothing. A
+ * fresh layout is fresh elements, so the `rest` node (the preselected one, if
+ * any) is lit on them whenever the layout or `rest` changes.
+ */
+const useStarFocus = (
+  galaxy: Galaxy,
+  handles: Handles,
+  rest: string | null
+) => {
   const lit = useRef<SVGElement[]>([]);
   const current = useRef<string | null>(null);
-  return (id: string | null) => {
-    if (current.current === id) {
-      return;
-    }
-    current.current = id;
-    for (const el of lit.current) {
-      delete el.dataset.on;
-    }
-    lit.current = [];
-    const root = handles.frame.get("root");
-    if (root !== undefined) {
-      root.dataset.focus = String(id !== null);
-    }
-    if (id === null) {
-      return;
-    }
-    const on = (el: SVGElement | undefined) => {
-      if (el !== undefined) {
-        el.dataset.on = "true";
-        lit.current.push(el);
+  const live = useRef<HTMLSpanElement | null>(null);
+  const focus = useCallback(
+    (id: string | null) => {
+      if (current.current === id) {
+        return;
       }
-    };
-    for (const n of [id, ...(galaxy.neighbours.get(id) ?? [])]) {
-      on(handles.stars.get(n));
-      on(handles.labels.get(n));
-    }
-    for (const e of galaxy.edges) {
-      if (e.a.id === id || e.b.id === id) {
-        on(handles.edges.get(e.id));
+      current.current = id;
+      for (const el of lit.current) {
+        delete el.dataset.step;
       }
-    }
-  };
+      lit.current = [];
+      const root = handles.frame.get("root");
+      if (root !== undefined) {
+        root.dataset.focus = String(id !== null);
+      }
+      const caption = handles.caption.get("root");
+      if (caption !== undefined) {
+        caption.dataset.id = id ?? "";
+      }
+      if (id === null) {
+        writeCaption(caption, []);
+        if (live.current !== null) {
+          live.current.textContent = "";
+        }
+        return;
+      }
+      const steps = stepsFrom(galaxy.neighbours, id);
+      const mark = (el: SVGElement | undefined, step: number) => {
+        if (el !== undefined) {
+          el.dataset.step = String(step);
+          lit.current.push(el);
+        }
+      };
+      for (const [n, step] of steps) {
+        mark(handles.stars.get(n), step);
+        mark(handles.labels.get(n), step);
+      }
+      for (const e of galaxy.edges) {
+        const step = linkStepOf(steps, e.a.id, e.b.id);
+        if (step < 3) {
+          mark(handles.edges.get(e.id), step);
+        }
+      }
+      writeCaption(caption, [id, reachText(steps)]);
+      placeCaption(galaxy, handles);
+      if (live.current !== null) {
+        live.current.textContent = `${id}: ${reachText(steps)}`;
+      }
+    },
+    [galaxy, handles]
+  );
+  useEffect(() => {
+    current.current = null;
+    focus(rest);
+  }, [focus, rest]);
+  return { current, focus, live };
 };
 
 /** Hub textures: each tone hatched on paper; the hero crosshatched in ink. */
@@ -153,7 +220,7 @@ const HubDefs = (props: { pid: string }) => (
   </defs>
 );
 
-/** Hubs: engraved fill inside a 1px rule (ink for the hero). Satellites: solid, with a wide invisible stroke to catch the pointer. */
+/** Hubs: engraved fill inside a 1px rule (ink for the hero). Satellites: solid. */
 const starPaint = (s: Star, pid: string) =>
   s.hub
     ? {
@@ -162,9 +229,9 @@ const starPaint = (s: Star, pid: string) =>
         strokeWidth: 1,
       }
     : {
-        className: `stroke-transparent ${TONE_CLASS[s.tone].fill}`,
+        className: TONE_CLASS[s.tone].fill,
         fill: undefined,
-        strokeWidth: 7,
+        strokeWidth: undefined,
       };
 
 const GalaxyMarks = (props: {
@@ -178,7 +245,7 @@ const GalaxyMarks = (props: {
       <g>
         {galaxy.edges.map((e) => (
           <line
-            className={`${EDGE_CLASS[e.kind]} ${EDGE_DIM}`}
+            className={`${EDGE_CLASS[e.kind]} ${EDGE_STEP}`}
             key={e.id}
             ref={(el) => {
               if (el !== null) {
@@ -199,7 +266,7 @@ const GalaxyMarks = (props: {
           const look = starPaint(s, pid);
           return (
             <circle
-              className={`cursor-grab touch-none ${look.className} ${DIM}`}
+              className={`cursor-grab touch-none ${look.className} ${s.hub ? HUB_STEP : STAR_STEP}`}
               cx={s.x}
               cy={s.y}
               data-id={s.id}
@@ -224,7 +291,7 @@ const GalaxyMarks = (props: {
           // position and the choice current as hubs move.
           return (
             <g
-              className={`group/hub ${DIM}`}
+              className={`group/hub ${NAME_STEP}`}
               data-plate={String(labelOnEngraving(galaxy, ring, spot))}
               key={ring.hub.id}
               ref={(el) => {
@@ -254,6 +321,18 @@ const GalaxyMarks = (props: {
           );
         })}
       </g>
+      <g
+        className="pointer-events-none"
+        ref={(el) => {
+          if (el !== null) {
+            handles.caption.set("root", el);
+          }
+        }}
+        visibility="hidden"
+      >
+        <Label halo voice="label" y={-1} />
+        <Label halo muted voice="axis" y={12} />
+      </g>
     </>
   );
 };
@@ -271,23 +350,30 @@ const pointerIn = (e: PointerEvent<SVGSVGElement>) => {
   return { x: e.clientX - box.left, y: e.clientY - box.top };
 };
 
+/** The star under the pointer, or the nearest within reach of it: a fingertip reaches further than a mouse. */
 const starUnder = (e: PointerEvent<SVGSVGElement>, galaxy: Galaxy) => {
-  const { target } = e;
-  const id = target instanceof SVGElement ? target.dataset.id : undefined;
-  return id === undefined
-    ? null
-    : (galaxy.stars.find((s) => s.id === id) ?? null);
+  const { x, y } = pointerIn(e);
+  const at = pickNode(
+    galaxy.stars.map((s) => ({ r: s.r, x: s.x ?? 0, y: s.y ?? 0 })),
+    x,
+    y,
+    e.pointerType === "touch" ? REACH.touch : REACH.mouse
+  );
+  return galaxy.stars[at] ?? null;
 };
 
 /** Drag with spring-back, hover focus and click-empty-space-to-replay, all on the <svg>. */
 const useGalaxyPointer = (args: {
+  current: RefObject<string | null>;
   focus: (id: string | null) => void;
   galaxy: Galaxy;
   handles: Handles;
   onTip: (t: StarTip | null) => void;
+  /** The node selected when the pointer is on none: the preselected one, if any. */
+  rest: string | null;
   sim: RefObject<Simulation<Star, Edge> | null>;
 }) => {
-  const { focus, galaxy, handles, onTip, sim } = args;
+  const { current, focus, galaxy, handles, onTip, rest, sim } = args;
   const drag = useRef<DragState | null>(null);
   const tipFor = (s: Star): StarTip => ({
     degree: galaxy.neighbours.get(s.id)?.length ?? 0,
@@ -339,7 +425,7 @@ const useGalaxyPointer = (args: {
       return;
     }
     const star = starUnder(e, galaxy);
-    focus(star?.id ?? null);
+    focus(star?.id ?? rest);
     onTip(star === null ? null : tipFor(star));
   };
   const onPointerUp = (e: PointerEvent<SVGSVGElement>) => {
@@ -371,18 +457,36 @@ const useGalaxyPointer = (args: {
       sim.current?.alpha(1).restart();
     }
   };
-  const onPointerLeave = () => {
-    if (drag.current === null || drag.current.star === null) {
-      focus(null);
+  /** A tap holds its node: a finger lifting is not the pointer leaving. */
+  const onPointerLeave = (e: PointerEvent<SVGSVGElement>) => {
+    if (
+      e.pointerType !== "touch" &&
+      (drag.current === null || drag.current.star === null)
+    ) {
+      focus(rest);
       onTip(null);
     }
   };
+  /** Arrow keys step through the stars; Escape gives the selection back. */
+  const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
+    const ids = galaxy.stars.map((s) => s.id);
+    const next = nextByKey(e.key, ids, current.current);
+    if (next === undefined) {
+      return;
+    }
+    e.preventDefault();
+    const star = galaxy.stars.find((s) => s.id === next);
+    focus(next ?? rest);
+    onTip(star === undefined ? null : tipFor(star));
+  };
   return {
+    onKeyDown,
     onPointerCancel: onPointerUp,
     onPointerDown,
     onPointerLeave,
     onPointerMove,
     onPointerUp,
+    tabIndex: 0,
   };
 };
 
@@ -391,6 +495,7 @@ const GalaxySvg = (props: {
   height: number;
   note?: string;
   onTip: (t: StarTip | null) => void;
+  selected?: string;
   width: number;
 }) => {
   const { data, onTip, width } = props;
@@ -409,6 +514,7 @@ const GalaxySvg = (props: {
   );
   const handles = useMemo<Handles>(
     () => ({
+      caption: new Map(),
       edges: new Map(),
       frame: new Map(),
       labels: new Map(),
@@ -418,12 +524,15 @@ const GalaxySvg = (props: {
   );
   const sim = useGalaxySimulation(galaxy, shown, handles);
   const pid = useTextureIds("galaxy")("hub");
-  const focus = useStarFocus(galaxy, handles);
+  const rest = props.selected ?? null;
+  const { current, focus, live } = useStarFocus(galaxy, handles, rest);
   const pointer = useGalaxyPointer({
+    current,
     focus,
     galaxy,
     handles,
     onTip,
+    rest,
     sim,
   });
   // Built once per layout; the simulation then moves these elements directly.
@@ -437,7 +546,8 @@ const GalaxySvg = (props: {
   return (
     <div className="fade" ref={wrap}>
       <ChartSvg
-        className="group/galaxy touch-pan-y data-[dragging=true]:cursor-grabbing"
+        className={`group/galaxy touch-pan-y data-[dragging=true]:cursor-grabbing ${FOCUS_RING}`}
+        desc="Arrow keys step through the stations and lines; Escape clears."
         height={height}
         label={label}
         ref={(el) => {
@@ -453,6 +563,7 @@ const GalaxySvg = (props: {
         {marks}
         <FootNote height={height} text={props.note} width={width} />
       </ChartSvg>
+      <span aria-live="polite" className="sr-only" ref={live} />
     </div>
   );
 };
@@ -461,7 +572,9 @@ const GalaxySvg = (props: {
  * B2 Lines and stations. Stations round the lines they sit on: d3-force lays out the hubs,
  * and each hub carries its satellites on one ring at an even angular pitch,
  * busiest first from noon. Drag a hub (or any of its satellites) and it
- * springs back when released; hover to focus a node and its neighbours;
+ * springs back when released; hover, tap or arrow to a node and everything
+ * fades out from it by links (it and its direct links in ink, two steps in a
+ * mid tone, the rest near the paper), with its name and reach beside it;
  * click empty space to replay the big bang.
  */
 export const ForceGalaxy = (props: ForceGalaxyProps) => {
@@ -490,6 +603,7 @@ export const ForceGalaxy = (props: ForceGalaxyProps) => {
           height={props.height ?? 480}
           note={noteOf(props)}
           onTip={setTip}
+          selected={props.selected}
           width={width}
         />
       )}
