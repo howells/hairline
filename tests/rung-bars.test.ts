@@ -29,6 +29,9 @@ const count = (html: string, pattern: RegExp) =>
 const rungs = (html: string) => count(html, /class="grow-x/gu);
 const heroRungs = (html: string) => count(html, /class="grow-x fill-hero"/gu);
 const noteLineCount = (html: string) => count(html, /class="t-axis"/gu);
+/** The y of the chart's floor rule, the first line it draws. */
+const floorOf = (html: string) =>
+  /<line[^>]*?\sy1="(?<y>[\d.]+)"/u.exec(html)?.groups?.y;
 /** The highest rung's top edge: a smaller y is a taller column. */
 const top = (html: string) =>
   Math.min(
@@ -454,6 +457,20 @@ describe("RungBars withheld bars, details and a shared scale", () => {
     expect(hero(tiers)).toBeGreaterThan(0);
     expect(heroRungs(render({ data: tiers, emphasis: null, ...sized }))).toBe(
       0
+    );
+  });
+
+  it("keeps one floor for a shared max, whether or not labels stagger", () => {
+    const narrow = { height: 240, width: 200 };
+    const long = ["Occasional", "Frequent", "Regular", "Power"].map(
+      (label, index) => ({ label, value: 100 * (index + 1) })
+    );
+    const short = [
+      { label: "A", value: 50 },
+      { label: "B", value: 90 },
+    ];
+    expect(floorOf(render({ data: long, max: 400, ...narrow }))).toBe(
+      floorOf(render({ data: short, max: 400, ...narrow }))
     );
   });
 

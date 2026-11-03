@@ -308,7 +308,11 @@ const RungBarsPlot = (props: RungBarsProps) => {
           width,
           props.metrics
         );
-        const bottom = margin.bottom + (alternate ? LABEL_STEP : 0);
+        // A shared max keeps room for a second line of labels either way,
+        // so charts set side by side keep one pitch and one floor.
+        const bottom =
+          margin.bottom +
+          (alternate || props.max !== undefined ? LABEL_STEP : 0);
         const max = largest / unit;
         const pitch = rungPitch(height - bottom - margin.top, max);
         // When the pitch reaches its cap the columns stop short of the

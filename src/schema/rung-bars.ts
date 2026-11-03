@@ -99,14 +99,14 @@ export const rungBarsSchema = z
       ),
     /**
      * The value the tallest column's room is sized for, at least the largest
-     * bar: give charts set side by side the same one and they share a scale.
+     * bar: give charts set side by side the same one, and the same height, and they share a scale and a floor.
      */
     max: z
       .number()
       .positive()
       .optional()
       .describe(
-        "The value the tallest column's room is sized for, at least the largest bar: give charts set side by side the same one and they share a scale."
+        "The value the tallest column's room is sized for, at least the largest bar: give charts set side by side the same one, and the same height, and they share a scale and a floor."
       ),
     /** Units per rung. */
     unit: z.number().positive().optional().describe("Units per rung."),
