@@ -120,10 +120,11 @@ const Dots = ({
         if (hero && tone === undefined) {
           return <HeroDot key={key} {...props} />;
         }
+        const size: DotSize = hero || hover === i ? "md" : "sm";
         const dot = {
           ...props,
           className: `${props.className} ${dotClass(hollow, tone, context)}`,
-          size: (hero || hover === i ? "md" : "sm") as DotSize,
+          size,
         };
         return hollow ? (
           <Ring key={key} {...dot} />
@@ -385,6 +386,19 @@ const LineLayers = (p: LayersProps) => {
   );
 };
 
+/** Spots reference labels keep clear of: every dot, and the value printed over each hero and the latest. */
+const labelSpots = (
+  readings: Reading[],
+  frame: Frame,
+  [dots, named]: [number[], number[]]
+) => {
+  const spot = (i: number, dy: number) => ({
+    x: frame.x(i),
+    y: frame.y(valueAt(readings, i)) + dy,
+  });
+  return [...dots.map((i) => spot(i, 0)), ...named.map((i) => spot(i, -12))];
+};
+
 const HairlineLineSvg = ({
   axis,
   bands,
@@ -440,7 +454,7 @@ const HairlineLineSvg = ({
     top: notes.length > 0 ? NOTED_TOP : 40,
     width,
   });
-  const { x0, x1, y } = frame;
+  const { x0, x1 } = frame;
   const paths = linePaths(readings, frame, forecast.at);
   const forecasting = forecast.at > 0 && forecast.at < readings.length;
   const { desc, label } = describeLine({
@@ -457,14 +471,7 @@ const HairlineLineSvg = ({
   const plane = { x0, x1, y0: notes.length > 0 ? NOTED_TOP : 40, y1: floor };
   const within = [x0, x1 - axisRoom(axis).right] as const;
   const clearing = (i: number) => clears(references, valueAt(readings, i));
-  const avoid = [
-    ...live.map((i) => ({ x: frame.x(i), y: y(valueAt(readings, i)) })),
-    ...[...heroes, last].map((i) => ({
-      x: frame.x(i),
-      y: y(valueAt(readings, i)) - 12,
-    })),
-  ];
-
+  const avoid = labelSpots(readings, frame, [live, [...heroes, last]]);
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = pointerX(e, width);
     const nearest = nearestDay(live, first, dayAt, xScale.invert(px));

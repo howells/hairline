@@ -394,7 +394,11 @@ const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
 
 /** The topmost of the given points on the page (the smallest y). */
 const topmost = (points: { x: number; y: number }[]) =>
-  points.reduce((top, p) => (p.y < top.y ? p : top));
+  points.toSorted((a, b) => a.y - b.y)[0];
+
+/** Whether a point clears the reference lines that ask for ink; undefined when none does. */
+const clearingOf = (props: PlumbScatterProps, d: PlumbDatum) =>
+  clearsAll([clears(props.references, d.y), clears(props.xReferences, d.x)]);
 
 interface SvgProps {
   data: PlumbDatum[];
@@ -483,10 +487,7 @@ const PlumbScatterSvg = ({
       />
       {heroLast([...data.keys()], (i) => heroes.has(i)).map((i) => (
         <Point
-          clearing={clearsAll([
-            clears(props.references, data[i].y),
-            clears(props.xReferences, data[i].x),
-          ])}
+          clearing={clearingOf(props, data[i])}
           context={props.context}
           place={places[i]}
           datum={data[i]}

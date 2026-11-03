@@ -42,6 +42,8 @@ export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
+export { contextSchema, heroShape, heroLabelShape } from "./schema/hero";
+export type { HeroContext } from "./schema/hero";
 export {
   intervalPointSchema,
   intervalSchema,
@@ -51,8 +53,6 @@ export {
   intervalIssues,
 } from "./schema/intervals";
 export type { IntervalPoint, Interval, Forecast } from "./schema/intervals";
-export { contextSchema, heroShape, heroLabelShape } from "./schema/hero";
-export type { HeroContext } from "./schema/hero";
 export { keyOf } from "./schema/key";
 export type { Keyed } from "./schema/key";
 export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";

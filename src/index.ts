@@ -87,8 +87,8 @@ export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
-export type { IntervalPoint, Interval, Forecast } from "./schema/intervals";
 export type { HeroContext } from "./schema/hero";
+export type { IntervalPoint, Interval, Forecast } from "./schema/intervals";
 export type { Keyed } from "./schema/key";
 export type { FontMetrics } from "./schema/metrics";
 export type { MotionCallbacks } from "./schema/motion";
