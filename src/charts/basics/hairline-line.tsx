@@ -13,6 +13,7 @@ import { useHover } from "../hooks";
 import { TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import type { DotSize } from "../marks";
+import { NOTED_TOP } from "../note-layout";
 import { FootNote } from "../plot-note";
 import { HRule, Stem, VRule } from "../rules";
 import { scoped, chartTable, plotOptions, pointerX } from "../shared-options";
@@ -23,6 +24,9 @@ import { TEXTURE_PITCH } from "../texture-ids";
 import { stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
+import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
+import { foundNotes, notesDesc, withNotes } from "./daily-notes";
+import type { FoundNote } from "./daily-notes";
 import {
   heroOf,
   isLive,
@@ -159,6 +163,7 @@ interface SvgProps {
   hover: number | null;
   metrics: FontMetrics | undefined;
   note: string | undefined;
+  notes: FoundNote[];
   readings: Reading[];
   show: (i: number, x: number, y: number) => void;
   title: string | undefined;
@@ -213,6 +218,34 @@ const nearestDay = (
 /** A range narrower than this is flat: below it d3 cannot count ticks (the step underflows). */
 const FLAT_SPAN = 1e-290;
 
+/** The value scale: a quarter of the span below the low, up to the high. */
+const valueScaleOf = (
+  extent: { hi: number; lo: number },
+  floor: number,
+  top: number
+) => {
+  const span = extent.hi - extent.lo;
+  return scaleLinear()
+    .domain(
+      span < FLAT_SPAN
+        ? [extent.lo - 1, extent.hi + 1]
+        : [extent.lo - span * 0.25, extent.hi]
+    )
+    .nice(5)
+    .range([floor, top]);
+};
+
+/** Where a reading stands along the frame: by its date, so a gap leaves a gap. */
+const dayScaleOf = (readings: Reading[], x0: number, x1: number) => {
+  const start = readings[0].date.getTime();
+  const dayAt = (i: number) =>
+    Math.round((readings[i].date.getTime() - start) / DAY_MS);
+  const xScale = scaleLinear()
+    .domain([0, Math.max(1, dayAt(readings.length - 1))])
+    .range([x0 + 8, x1 - VALUE_AXIS_ROOM]);
+  return { dayAt, xScale };
+};
+
 const HairlineLineSvg = ({
   clear,
   emphasis,
@@ -223,6 +256,7 @@ const HairlineLineSvg = ({
   hover,
   metrics,
   note,
+  notes,
   readings,
   show,
   title,
@@ -248,17 +282,8 @@ const HairlineLineSvg = ({
   const frameW = Math.min(width - 16, 680);
   const x0 = Math.round((width - frameW) / 2);
   const x1 = x0 + frameW;
-  const span = hi - lo;
-  const y = scaleLinear()
-    .domain(span < FLAT_SPAN ? [lo - 1, hi + 1] : [lo - span * 0.25, hi])
-    .nice(5)
-    .range([floor, 40]);
-  const start = readings[0].date.getTime();
-  const dayAt = (i: number) =>
-    Math.round((readings[i].date.getTime() - start) / DAY_MS);
-  const xScale = scaleLinear()
-    .domain([0, Math.max(1, dayAt(readings.length - 1))])
-    .range([x0 + 8, x1 - VALUE_AXIS_ROOM]);
+  const y = valueScaleOf({ hi, lo }, floor, notes.length > 0 ? NOTED_TOP : 40);
+  const { dayAt, xScale } = dayScaleOf(readings, x0, x1);
   const frame: Frame = {
     floor,
     x: (i) => xScale(dayAt(i)),
@@ -269,7 +294,7 @@ const HairlineLineSvg = ({
   const path = linePath(readings, frame);
   const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[last].date)}: high ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}, latest ${format(valueAt(readings, last))}`;
 
-  const desc = `${plural(live.length, "reading")}. High ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}. The data table lists every reading.`;
+  const desc = `${plural(live.length, "reading")}. High ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}. The data table lists every reading.${notesDesc(notes, readings, fmtDate)}`;
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = pointerX(e, width);
@@ -319,6 +344,18 @@ const HairlineLineSvg = ({
         hover={hover}
         {...series}
       />
+      {notes.length === 0 ? null : (
+        <DailyNoteMarks
+          floor={floor}
+          frame={frame}
+          live={live}
+          notes={notes}
+          readings={readings}
+          width={width}
+          x0={x0}
+          x1={x1}
+        />
+      )}
       <DayAxis frame={frame} readings={readings} />
       <FootNote
         gutter={12}
@@ -338,6 +375,12 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
   const fmtDate = resolveDateFormat(props.dateFormat);
   const { at, clear, key: hover, show } = useHover<number>();
   const tip = at === null ? undefined : readings[at.key];
+  const notes = foundNotes(props.notes, readings);
+  const table = withNotes(
+    ["Date", "Value"],
+    readingRows(readings, fmtDate, format),
+    notes
+  );
 
   return (
     <Plot
@@ -347,8 +390,8 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
       table={chartTable(
         props,
         props.title ?? "Daily values",
-        ["Date", "Value"],
-        readingRows(readings, fmtDate, format)
+        table.columns,
+        table.rows
       )}
       overlay={
         at === null || tip === undefined ? null : (
@@ -365,22 +408,26 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
       }
     >
       {(width) => (
-        <HairlineLineSvg
-          clear={clear}
-          emphasis={props.emphasis}
-          extreme={props.extreme ?? "peak"}
-          fmtDate={fmtDate}
-          format={format}
-          height={props.height ?? 440}
-          hover={hover}
-          metrics={props.metrics}
-          note={noteOf(props)}
-          readings={readings}
-          show={show}
-          title={props.title}
-          wholeNumbers={props.format === undefined}
-          width={width}
-        />
+        <>
+          <HairlineLineSvg
+            clear={clear}
+            emphasis={props.emphasis}
+            extreme={props.extreme ?? "peak"}
+            fmtDate={fmtDate}
+            format={format}
+            height={props.height ?? 440}
+            hover={hover}
+            metrics={props.metrics}
+            note={noteOf(props)}
+            notes={notes}
+            readings={readings}
+            show={show}
+            title={props.title}
+            wholeNumbers={props.format === undefined}
+            width={width}
+          />
+          <DailyNoteList notes={notes} width={width} />
+        </>
       )}
     </Plot>
   );

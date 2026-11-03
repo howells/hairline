@@ -6,6 +6,7 @@ import { dailyDatumSchema } from "./daily";
 import { dateFormatSchema, formatSchema } from "./format";
 import type { DateFormatInput, FormatInput } from "./format";
 import { keyOf } from "./key";
+import { NOTES_NAME_DATA, dailyNotesSchema, notesNameData } from "./notes";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
 
@@ -59,6 +60,8 @@ export const hairlineLineSchema = z
       .describe(
         "Responsive mode only: the width of the first render, before measuring."
       ),
+    /** Notes tied to readings: beside their points, or numbered on a narrow chart. */
+    notes: dailyNotesSchema.optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z
       .number()
@@ -75,7 +78,8 @@ export const hairlineLineSchema = z
       message: "emphasis names no reading: it must equal a datum's id or date",
       path: ["emphasis"],
     }
-  );
+  )
+  .refine(notesNameData, NOTES_NAME_DATA);
 
 /** The validated payload. */
 export type HairlineLineData = z.infer<typeof hairlineLineSchema>;

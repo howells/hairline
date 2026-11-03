@@ -12,6 +12,7 @@ import { useHover } from "../hooks";
 import { TipText } from "../hover";
 import { Dot } from "../markers";
 import { MARK_WEIGHT } from "../marks";
+import { NOTED_TOP } from "../note-layout";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { scoped, chartTable, plotOptions, pointerX } from "../shared-options";
@@ -22,6 +23,9 @@ import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger, noteOf } from "../util";
 import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
+import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
+import { foundNotes, notesDesc, withNotes } from "./daily-notes";
+import type { FoundNote } from "./daily-notes";
 import {
   isLive,
   heroOf,
@@ -139,15 +143,16 @@ const MonthAxis = ({
 const valueScale = (
   extent: { hi: number; lo: number },
   floor: number,
+  top: number,
   ticks?: number[]
 ) => {
-  const top = ticks?.at(-1);
-  if (top !== undefined && top > 0) {
-    return scaleLinear().domain([0, top]).range([floor, 40]);
+  const last = ticks?.at(-1);
+  if (last !== undefined && last > 0) {
+    return scaleLinear().domain([0, last]).range([floor, top]);
   }
   const lo = Math.min(0, extent.lo);
   const hi = Math.max(lo + 1, extent.hi);
-  return scaleLinear().domain([lo, hi]).nice(4).range([floor, 40]);
+  return scaleLinear().domain([lo, hi]).nice(4).range([floor, top]);
 };
 
 /** The live index nearest a position along the index axis. */
@@ -193,6 +198,37 @@ const HeroMark = ({
   </>
 );
 
+/** The hovered day's dot, and the hero's dot with its value. */
+const Accents = (props: {
+  format: (v: number) => string;
+  frame: Frame;
+  hero: number;
+  hover: number | null;
+  readings: Reading[];
+}) => {
+  const { frame, hero, hover, readings } = props;
+  return (
+    <>
+      {hover === null || hover === hero ? null : (
+        <Dot
+          className="fill-l2"
+          cx={frame.x(hover)}
+          cy={frame.y(valueAt(readings, hover))}
+          size="sm"
+        />
+      )}
+      {hero < 0 ? null : (
+        <HeroMark
+          format={props.format}
+          frame={frame}
+          value={valueAt(readings, hero)}
+          x={frame.x(hero)}
+        />
+      )}
+    </>
+  );
+};
+
 /** The line and the area under it, each broken where a reading is a gap. */
 const shapesOf = (readings: Reading[], frame: Frame) => ({
   fill:
@@ -228,6 +264,37 @@ const startOf = (
   return hero === 0 ? Math.max(8, half) : 8;
 };
 
+interface FrameArgs {
+  floor: number;
+  format: (v: number) => string;
+  hero: number;
+  maxWidth: number;
+  notes: number;
+  readings: Reading[];
+  ticks: number[] | undefined;
+  values: number[];
+  width: number;
+}
+
+/** The frame's edges and scales; a chart with notes leaves room over its peak. */
+const frameOf = (a: FrameArgs) => {
+  const [x0, x1] = edgesOf(a.width, a.maxWidth);
+  const start = startOf(a.readings, a.hero, a.format);
+  const frame: Frame = {
+    floor: a.floor,
+    x: scaleLinear()
+      .domain([0, Math.max(1, a.readings.length - 1)])
+      .range([x0 + start, x1 - VALUE_AXIS_ROOM]),
+    y: valueScale(
+      { hi: Math.max(...a.values), lo: Math.min(...a.values) },
+      a.floor,
+      a.notes > 0 ? NOTED_TOP : 40,
+      a.ticks
+    ),
+  };
+  return { frame, x0, x1 };
+};
+
 interface SvgProps {
   clear: () => void;
   /** Pattern id of the stipple under the line. */
@@ -240,6 +307,7 @@ interface SvgProps {
   maxWidth: number;
   metrics: FontMetrics | undefined;
   note: string | undefined;
+  notes: FoundNote[];
   readings: Reading[];
   show: (i: number, x: number, y: number) => void;
   title: string | undefined;
@@ -260,6 +328,7 @@ const HairlineAreaSvg = ({
   maxWidth,
   metrics,
   note,
+  notes,
   readings,
   show,
   title,
@@ -279,23 +348,21 @@ const HairlineAreaSvg = ({
   const max = Math.max(...values);
   const peak = live[values.indexOf(max)];
   const hero = heroOf(readings, live, emphasis, peak);
-  const last = readings.length - 1;
-  const [x0, x1] = edgesOf(width, maxWidth);
-  const start = startOf(readings, hero, format);
-  const frame: Frame = {
+  const { frame, x0, x1 } = frameOf({
     floor,
-    x: scaleLinear()
-      .domain([0, Math.max(1, last)])
-      .range([x0 + start, x1 - VALUE_AXIS_ROOM]),
-    y: valueScale({ hi: max, lo: Math.min(...values) }, floor, ticks),
-  };
+    format,
+    hero,
+    maxWidth,
+    notes: notes.length,
+    readings,
+    ticks,
+    values,
+    width,
+  });
   const { fill, path } = shapesOf(readings, frame);
-  const axisTicks = ticks ?? frame.y.ticks(4);
-  const [first] = live;
   const peakAt = fmtDate(readings[peak].date);
-  const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
-  const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${peakAt}. The data table lists every reading.`;
-
+  const label = `Daily values, ${fmtDate(readings[live[0]].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
+  const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${peakAt}. The data table lists every reading.${notesDesc(notes, readings, fmtDate)}`;
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = pointerX(e, width);
     const at = frame.x.invert(px);
@@ -321,8 +388,8 @@ const HairlineAreaSvg = ({
         labelFloor
         side="right"
         floor={floor}
-        format={axisFormat(format, wholeNumbers, axisTicks)}
-        ticks={axisTicks}
+        format={axisFormat(format, wholeNumbers, ticks ?? frame.y.ticks(4))}
+        ticks={ticks ?? frame.y.ticks(4)}
         x0={x0}
         x1={x1}
         y={frame.y}
@@ -341,20 +408,23 @@ const HairlineAreaSvg = ({
         pathLength={1}
         style={stagger(4, "series")}
       />
-      {hover === null || hover === hero ? null : (
-        <Dot
-          className="fill-l2"
-          cx={frame.x(hover)}
-          cy={frame.y(valueAt(readings, hover))}
-          size="sm"
-        />
-      )}
-      {hero < 0 ? null : (
-        <HeroMark
-          format={format}
+      <Accents
+        format={format}
+        frame={frame}
+        hero={hero}
+        hover={hover}
+        readings={readings}
+      />
+      {notes.length === 0 ? null : (
+        <DailyNoteMarks
+          floor={floor}
           frame={frame}
-          value={valueAt(readings, hero)}
-          x={frame.x(hero)}
+          live={live}
+          notes={notes}
+          readings={readings}
+          width={width}
+          x0={x0}
+          x1={x1}
         />
       )}
       <MonthAxis frame={frame} readings={readings} />
@@ -377,6 +447,12 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
   const { at, clear, key: hover, show } = useHover<number>();
   const stipple = useTextureIds("daily")("stipple");
   const tip = at === null ? undefined : readings[at.key];
+  const notes = foundNotes(props.notes, readings);
+  const table = withNotes(
+    ["Date", "Value"],
+    readingRows(readings, fmtDate, format),
+    notes
+  );
 
   return (
     <Plot
@@ -386,8 +462,8 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
       table={chartTable(
         props,
         props.title ?? "Daily values",
-        ["Date", "Value"],
-        readingRows(readings, fmtDate, format)
+        table.columns,
+        table.rows
       )}
       overlay={
         at === null || tip === undefined ? null : (
@@ -401,24 +477,28 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
       }
     >
       {(width) => (
-        <HairlineAreaSvg
-          clear={clear}
-          emphasis={props.emphasis}
-          stipple={stipple}
-          fmtDate={fmtDate}
-          format={format}
-          height={props.height ?? 440}
-          hover={hover}
-          maxWidth={props.maxWidth ?? 640}
-          metrics={props.metrics}
-          note={noteOf(props)}
-          readings={readings}
-          show={show}
-          title={props.title}
-          ticks={props.ticks}
-          wholeNumbers={props.format === undefined}
-          width={width}
-        />
+        <>
+          <HairlineAreaSvg
+            clear={clear}
+            emphasis={props.emphasis}
+            stipple={stipple}
+            fmtDate={fmtDate}
+            format={format}
+            height={props.height ?? 440}
+            hover={hover}
+            maxWidth={props.maxWidth ?? 640}
+            metrics={props.metrics}
+            note={noteOf(props)}
+            notes={notes}
+            readings={readings}
+            show={show}
+            title={props.title}
+            ticks={props.ticks}
+            wholeNumbers={props.format === undefined}
+            width={width}
+          />
+          <DailyNoteList notes={notes} width={width} />
+        </>
       )}
     </Plot>
   );

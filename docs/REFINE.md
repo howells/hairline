@@ -125,6 +125,12 @@ The owner approved mockups where ink is the data rather than the one emphasis. T
 
 All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; the wordmark differs by weight alone. Inside charts every label, value, tick and note is one size, 11px, told apart by weight and tone; the single big figure (`t-figure`) is the only exception. One 1px rule under the header; no bar above chart names.
 
+## Amendment: annotations and labels on paper (approved)
+
+- **Halo.** Every `Label` sits on a paper halo by default (`t-halo`: a 5px paper stroke painted under the glyphs, so 2.5px of paper shows round every letter at any scale and on every palette). Lines, gridlines, marks and ribbons stop short of the text. Opt out with `halo={false}` only for text that sits on a plate of its own or on a fill, where a paper outline would show. Raw `<text>` that can cross marks takes `t-halo`.
+- **Line-end labels.** A set of lines is named where the lines end, not in a key: the hero in ink with its value, then the highest and lowest, the rest folded into one quiet group label ("7 other regions"). Labels are nudged apart (never closer than 15px, inside the plot) and a nudged label carries a short 1px `rule` leader back to its line. Room on the right is reserved only when the labels are shown, and the key they replace is removed.
+- **Annotations.** The one exception to "no prose inside charts": an opt-in `notes` prop (off by default) on the daily charts. Each note is tied to one reading, has a short title (32 characters) and an optional second line (60), and is drawn beside its point: title in `t-label` ink, second line in `t-axis`, on a halo, with a 1px `rule` leader, on the side and at the end that keep clear of the line, the other notes and the plot's edges. At most eight. Below 520px wide the notes become small numbered ink discs (radius 8, the one radius outside the dot scale) by their points, and the words are listed as HTML under the chart. Notes are also a column of the data table and part of the chart's description.
+
 ## Per chart: what to do
 
 For each chart you own:

@@ -40,6 +40,14 @@ export const entries: GalleryEntry[] = [
         data={hairlineLineDemo}
         extreme="trough"
         format={fmtDollars}
+        notes={[
+          { at: "2022-09-12", detail: "$1.1701", title: "Month's high" },
+          {
+            at: "2022-09-23",
+            detail: "Tax cuts announced",
+            title: "Mini-budget",
+          },
+        ]}
       />
     ),
   },
@@ -51,6 +59,15 @@ export const entries: GalleryEntry[] = [
       <HairlineArea
         data={hairlineAreaDemo}
         format={fmtDaylight}
+        notes={[
+          { at: "2026-01-15", detail: "50 minutes", title: "The sun returns" },
+          {
+            at: "2026-07-24",
+            detail: "68 days in all",
+            title: "Last midnight sun",
+          },
+          { at: "2026-11-28", detail: "It stays down", title: "Polar night" },
+        ]}
         ticks={[0, 6, 12, 18, 24]}
       />
     ),
