@@ -18,6 +18,7 @@ import { Label } from "../text";
 import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
 import { barcodeLollipopDemo } from "./barcode-lollipop.data";
 import type { BarcodeDatum } from "./barcode-lollipop.data";
+import { TideKey } from "./tide-key";
 import { argMax } from "./util-b";
 
 interface BarcodeLollipopProps extends NoteProps {
@@ -28,6 +29,8 @@ interface BarcodeLollipopProps extends NoteProps {
   aside?: string;
   /** How many top days to label. Default 3. */
   top?: number;
+  /** Draw one day large above the chart, its parts named (default true). */
+  glyphKey?: boolean;
 }
 
 const twoDp = d3format(".2f");
@@ -273,44 +276,49 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
         };
 
         return (
-          <ChartSvg
-            height={height}
-            label={`Daily high and low water over ${data.length} days. Highest high water: ${[...top].map((i) => `${dayFmt(data[i].date)} ${format(data[i].value)}`).join(", ")}`}
-            leave={hover.clear}
-            onPointerMove={onMove}
-            title="One hairline per day, a lollipop at each day's high water"
-            width={width}
-          >
-            <Barcode
-              data={data}
-              floor={floor}
-              hover={hover.key}
-              top={m.top}
-              x={x}
-            />
-            {data.map((d, i) => (
-              <DayMark
-                datum={d}
-                dim={hover.dim(i)}
-                dotSize={dotSize}
-                format={format}
-                i={i}
-                hero={i === peak}
-                isTop={top.has(i)}
-                labelX={labelX.get(i)}
-                key={`day-${d.date.toISOString()}`}
-                low={lows[i]}
-                x={x(i)}
-                y={y}
+          <>
+            {props.glyphKey === false ? null : (
+              <TideKey data={data} day={dayFmt} format={format} width={width} />
+            )}
+            <ChartSvg
+              height={height}
+              label={`Daily high and low water over ${data.length} days. Highest high water: ${[...top].map((i) => `${dayFmt(data[i].date)} ${format(data[i].value)}`).join(", ")}`}
+              leave={hover.clear}
+              onPointerMove={onMove}
+              title="One hairline per day, a lollipop at each day's high water"
+              width={width}
+            >
+              <Barcode
+                data={data}
+                floor={floor}
+                hover={hover.key}
+                top={m.top}
+                x={x}
               />
-            ))}
-            <PlotNote
-              text={noteOf(props)}
-              width={width - m.left - m.right}
-              x={(m.left + width - m.right) / 2}
-              y={height - 6}
-            />
-          </ChartSvg>
+              {data.map((d, i) => (
+                <DayMark
+                  datum={d}
+                  dim={hover.dim(i)}
+                  dotSize={dotSize}
+                  format={format}
+                  i={i}
+                  hero={i === peak}
+                  isTop={top.has(i)}
+                  labelX={labelX.get(i)}
+                  key={`day-${d.date.toISOString()}`}
+                  low={lows[i]}
+                  x={x(i)}
+                  y={y}
+                />
+              ))}
+              <PlotNote
+                text={noteOf(props)}
+                width={width - m.left - m.right}
+                x={(m.left + width - m.right) / 2}
+                y={height - 6}
+              />
+            </ChartSvg>
+          </>
         );
       }}
     </Plot>

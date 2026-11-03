@@ -9,6 +9,7 @@ import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { clamp, noteSpace, sansWidth, stagger, noteOf } from "../util";
+import { ArcKey } from "./arc-key";
 import { arcMatrixDemo } from "./arc-matrix.data";
 import type { ArcMatrixData } from "./arc-matrix.data";
 
@@ -20,6 +21,8 @@ interface ArcMatrixProps extends NoteProps {
   noun?: string;
   /** How many top cells to label; the largest is inked. Default 3. */
   top?: number;
+  /** Draw one bubble large above the chart, its parts named (default true). */
+  glyphKey?: boolean;
 }
 
 interface CellHover {
@@ -221,57 +224,62 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
         const layout = arcLayout(width, height, data, max, noteH);
         const svgH = Math.min(height, Math.round(layout.bottom));
         return (
-          <ChartSvg
-            height={svgH}
-            label={`Matrix of ${data.rows.length} by ${data.cols.length}. Largest: ${ranked.map((d) => `${data.rows[d.r]} in ${data.cols[d.c]} ${format(d.v)}`).join(", ")}`}
-            leave={() => {
-              setHover(null);
-            }}
-            title="Bubble matrix with bowed rows"
-            width={width}
-          >
-            <Frame data={data} hover={hover} layout={layout} />
-            {cells.map((d) => {
-              const x = layout.colX(d.c);
-              const y = layout.arcY(d.r, x);
-              const rr = layout.radius(d.v);
-              const isTop = topIds.has(d.id);
-              return (
-                <g
-                  className={`transition-opacity ${inCross(d) ? "" : "opacity-30"}`}
-                  key={d.id}
-                  onPointerEnter={() => {
-                    setHover({ c: d.c, r: d.r, x, y: y - rr - 4 });
-                  }}
-                >
-                  <HitCircle
-                    cx={x}
-                    cy={y}
-                    r={Math.max(rr, layout.colPitch / 2.2)}
-                  />
-                  <circle
-                    className={`pop ${d.id === heroId ? "fill-hero" : "fill-l4"}`}
-                    cx={x}
-                    cy={y}
-                    r={rr}
-                    style={stagger(d.r * 3 + d.c, "dense")}
-                  />
-                  {isTop ? (
-                    <Label
-                      anchor="middle"
-                      className="fade"
-                      voice={d.id === heroId ? "value" : "axis"}
-                      x={x}
-                      y={y - rr - 6}
-                    >
-                      {format(d.v)}
-                    </Label>
-                  ) : null}
-                </g>
-              );
-            })}
-            <FootNote height={svgH} text={noteOf(props)} width={width} />
-          </ChartSvg>
+          <>
+            {props.glyphKey === false ? null : (
+              <ArcKey data={data} format={format} noun={noun} width={width} />
+            )}
+            <ChartSvg
+              height={svgH}
+              label={`Matrix of ${data.rows.length} by ${data.cols.length}. Largest: ${ranked.map((d) => `${data.rows[d.r]} in ${data.cols[d.c]} ${format(d.v)}`).join(", ")}`}
+              leave={() => {
+                setHover(null);
+              }}
+              title="Bubble matrix with bowed rows"
+              width={width}
+            >
+              <Frame data={data} hover={hover} layout={layout} />
+              {cells.map((d) => {
+                const x = layout.colX(d.c);
+                const y = layout.arcY(d.r, x);
+                const rr = layout.radius(d.v);
+                const isTop = topIds.has(d.id);
+                return (
+                  <g
+                    className={`transition-opacity ${inCross(d) ? "" : "opacity-30"}`}
+                    key={d.id}
+                    onPointerEnter={() => {
+                      setHover({ c: d.c, r: d.r, x, y: y - rr - 4 });
+                    }}
+                  >
+                    <HitCircle
+                      cx={x}
+                      cy={y}
+                      r={Math.max(rr, layout.colPitch / 2.2)}
+                    />
+                    <circle
+                      className={`pop ${d.id === heroId ? "fill-hero" : "fill-l4"}`}
+                      cx={x}
+                      cy={y}
+                      r={rr}
+                      style={stagger(d.r * 3 + d.c, "dense")}
+                    />
+                    {isTop ? (
+                      <Label
+                        anchor="middle"
+                        className="fade"
+                        voice={d.id === heroId ? "value" : "axis"}
+                        x={x}
+                        y={y - rr - 6}
+                      >
+                        {format(d.v)}
+                      </Label>
+                    ) : null}
+                  </g>
+                );
+              })}
+              <FootNote height={svgH} text={noteOf(props)} width={width} />
+            </ChartSvg>
+          </>
         );
       }}
     </Plot>

@@ -9,22 +9,20 @@ import { Label } from "../text";
 import { CrossHatch, Hatch, PixelLine } from "../texture";
 import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
 import { clamp, noteSpace, stagger, noteOf } from "../util";
+import { FlareKey } from "./flare-key";
+import { FlareWedge } from "./flare-wedge";
 import { radialPatchworkDemo } from "./radial-patchwork.data";
 import type { PatchworkEvent } from "./radial-patchwork.data";
-import { clock, sectorPath } from "./util-a";
+import { clock, hhmm, sectorPath, spanOf } from "./util-a";
+import type { Dial, Span } from "./util-a";
 
 interface RadialPatchworkProps extends NoteProps {
   data?: PatchworkEvent[];
   height?: number;
   /** What a flagged (crosshatched) wedge means, e.g. "class M or stronger". */
   outlined?: string;
-}
-
-interface Dial {
-  cx: number;
-  cy: number;
-  r0: number;
-  R: number;
+  /** Draw one flare large above the chart, its parts named (default true). */
+  glyphKey?: boolean;
 }
 
 /** Hatch pitch for one, two, and three or more overlapping wedges. */
@@ -33,12 +31,6 @@ const DENSITY = [
   TEXTURE_PITCH.hatch,
   TEXTURE_PITCH.dense,
 ] as const;
-
-const hhmm = (hour: number) => {
-  const h = Math.floor(hour);
-  const m = Math.round((hour - h) * 60);
-  return `${String(h % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-};
 
 /** One rim tick per hour, drawn on whole pixels; every sixth is labelled. */
 const DialFace = (props: { dial: Dial }) => {
@@ -84,22 +76,6 @@ const DialFace = (props: { dial: Dial }) => {
       })}
     </g>
   );
-};
-
-interface Span {
-  a0: number;
-  a1: number;
-  reach: number;
-}
-
-/** A wedge's clock angles (degrees) and reach. */
-const spanOf = (dial: Dial, event: PatchworkEvent, maxSize: number): Span => {
-  const a0 = event.hour * 15;
-  return {
-    a0,
-    a1: a0 + Math.max(4, event.minutes / 4),
-    reach: dial.r0 + ((dial.R - dial.r0) * event.size) / maxSize,
-  };
 };
 
 /** One angular slice and how far its first, second and third wedge reach. */
@@ -271,54 +247,51 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
         const spans = data.map((event) => spanOf(dial, event, maxSize));
         const flagged = spans.filter((_, i) => data[i]?.flagged === true);
         return (
-          <ChartSvg
-            height={svgH}
-            label={`${data.length} solar flares on a 24-hour dial in UTC, ${flagged.length} of ${outlined}`}
-            leave={hover.clear}
-            title="Solar flares overlaid on a 24-hour dial"
-            width={width}
-          >
-            <defs>
-              {DENSITY.map((pitch, level) => (
-                <Hatch
-                  id={levelIds[level] ?? ""}
-                  key={`def-${pitch}`}
-                  pitch={pitch}
-                  tone="fill-l3"
+          <>
+            {props.glyphKey === false ? null : (
+              <FlareKey data={data} outlined={outlined} width={width} />
+            )}
+            <ChartSvg
+              height={svgH}
+              label={`${data.length} solar flares on a 24-hour dial in UTC, ${flagged.length} of ${outlined}`}
+              leave={hover.clear}
+              title="Solar flares overlaid on a 24-hour dial"
+              width={width}
+            >
+              <defs>
+                {DENSITY.map((pitch, level) => (
+                  <Hatch
+                    id={levelIds[level] ?? ""}
+                    key={`def-${pitch}`}
+                    pitch={pitch}
+                    tone="fill-l3"
+                  />
+                ))}
+                <CrossHatch id={id("hero")} tone="fill-hero" />
+              </defs>
+              <DialFace dial={dial} />
+              <Density dial={dial} ids={levelIds} slices={slicesOf(spans)} />
+              {flagged.map((span, k) => (
+                <FlareWedge
+                  className="fade"
+                  dial={dial}
+                  fill={paint(id("hero"))}
+                  key={`flag-${span.a0}-${span.a1}`}
+                  span={span}
+                  style={stagger(DENSITY.length + k)}
                 />
               ))}
-              <CrossHatch id={id("hero")} tone="fill-hero" />
-            </defs>
-            <DialFace dial={dial} />
-            <Density dial={dial} ids={levelIds} slices={slicesOf(spans)} />
-            {flagged.map((span, k) => (
-              <path
-                className="fade stroke-hero"
-                d={sectorPath(
-                  dial.cx,
-                  dial.cy,
-                  dial.r0,
-                  span.reach,
-                  span.a0,
-                  span.a1
-                )}
-                fill={paint(id("hero"))}
-                key={`flag-${span.a0}-${span.a1}`}
-                strokeLinejoin="round"
-                strokeWidth={1}
-                style={stagger(DENSITY.length + k)}
+              <HitWedges
+                dial={dial}
+                hovered={hover.key}
+                onEnter={(i, x, y) => {
+                  hover.show(i, x, y);
+                }}
+                spans={spans}
               />
-            ))}
-            <HitWedges
-              dial={dial}
-              hovered={hover.key}
-              onEnter={(i, x, y) => {
-                hover.show(i, x, y);
-              }}
-              spans={spans}
-            />
-            <FootNote height={svgH} text={noteOf(props)} width={width} />
-          </ChartSvg>
+              <FootNote height={svgH} text={noteOf(props)} width={width} />
+            </ChartSvg>
+          </>
         );
       }}
     </Plot>

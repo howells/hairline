@@ -34,7 +34,11 @@ const SUBPATH_CHARTS = new Set([
 const KIT = [
   "axes",
   "core",
+  "facet-layout",
+  "facets",
   "fills",
+  "glyph-box",
+  "glyph-key",
   "hooks",
   "hover",
   "markers",

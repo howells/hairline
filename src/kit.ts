@@ -7,12 +7,25 @@ export type { Margin, TickMark } from "./charts/axes";
 export { Chart, Plot, Tooltip, SplitClips } from "./charts/core";
 export type { LegendItem } from "./charts/core";
 export {
+  FACET_GAP,
+  FACET_MIN_WIDTH,
+  facetColumns,
+  facetWidth,
+  facetDomains,
+  highestPanel,
+} from "./charts/facet-layout";
+export type { FacetPanel, FacetCell } from "./charts/facet-layout";
+export { Facets } from "./charts/facets";
+export {
   FILL_TONES,
   FILL_FAMILIES,
   FILL_LADDERS,
   toneClass,
 } from "./charts/fills";
 export type { FillTone, FillFamily } from "./charts/fills";
+export { GLYPH_KEY_HEIGHT, GLYPH_KEY_PAD, glyphBox } from "./charts/glyph-box";
+export type { GlyphBox, GlyphPart } from "./charts/glyph-box";
+export { GlyphKey } from "./charts/glyph-key";
 export {
   useMeasure,
   useReveal,

@@ -15,24 +15,15 @@ import { paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
 import { signupMonthsDemo } from "./radial-year.data";
 import type { MonthValue } from "./radial-year.data";
+import { angleOf, fmtRing, polar } from "./year-geometry";
+import { YearKey } from "./year-key";
 
 const fmt = fmtDegC;
-/** Ring values are whole degrees ("20 °C"). */
-const fmtRing = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
-
 /** Room outside the outer ring for the month names. */
 const EDGE = 30;
 
-/** Month i's angle, clockwise from twelve o'clock. */
-const angleOf = (i: number, n: number) => (i / n) * Math.PI * 2;
-
 /** Ring values sit just inside their rings, half a month past twelve o'clock. */
 const RING_LABEL = Math.PI / 12;
-
-const polar = (angle: number, r: number) => ({
-  x: Math.sin(angle) * r,
-  y: -Math.cos(angle) * r,
-});
 
 interface DialProps {
   data: MonthValue[];
@@ -179,7 +170,11 @@ const Trace = (props: DialProps & { peak: number }) => {
  * O7 Year in the round. Twelve months as one closed, hatched shape under
  * evenly dotted rings; the peak month is the single ink mark, with its value.
  */
-export const RadialYear = (props: { data?: MonthValue[] }) => {
+export const RadialYear = (props: {
+  data?: MonthValue[];
+  /** Draw one month large above the chart, its parts named (default true). */
+  glyphKey?: boolean;
+}) => {
   const data = props.data ?? signupMonthsDemo;
   const hover = useHover<number>();
   const hatch = useTextureIds("year")("hatch");
@@ -227,23 +222,28 @@ export const RadialYear = (props: { data?: MonthValue[] }) => {
           rings,
         };
         return (
-          <ChartSvg
-            className="touch-pan-y"
-            height={size}
-            label={label}
-            leave={hover.clear}
-            onPointerMove={onMove}
-            width={width}
-          >
-            <defs>
-              <Hatch id={hatch} tone="fill-l5" />
-            </defs>
-            <g transform={`translate(${cx} ${cy})`}>
-              <YearFill {...dial} hatch={hatch} />
-              <Furniture {...dial} />
-              <Trace {...dial} peak={peak} />
-            </g>
-          </ChartSvg>
+          <>
+            {props.glyphKey === false ? null : (
+              <YearKey data={data} width={width} />
+            )}
+            <ChartSvg
+              className="touch-pan-y"
+              height={size}
+              label={label}
+              leave={hover.clear}
+              onPointerMove={onMove}
+              width={width}
+            >
+              <defs>
+                <Hatch id={hatch} tone="fill-l5" />
+              </defs>
+              <g transform={`translate(${cx} ${cy})`}>
+                <YearFill {...dial} hatch={hatch} />
+                <Furniture {...dial} />
+                <Trace {...dial} peak={peak} />
+              </g>
+            </ChartSvg>
+          </>
         );
       }}
     </Plot>
