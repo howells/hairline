@@ -251,14 +251,13 @@ const tangent = (angle: number) => {
 /** A ring's value: along the ring in a gap when there is one, else tucked left of 12 o'clock. */
 const RingLabel = (p: RingLabelProps) =>
   p.angle === null ? (
-    <Label anchor="end" dy="0.7em" halo voice="axis" x={-5} y={-p.radius + 3}>
+    <Label anchor="end" dy="0.7em" voice="axis" x={-5} y={-p.radius + 3}>
       {p.text}
     </Label>
   ) : (
     <Label
       anchor="middle"
       dy="0.35em"
-      halo
       transform={`translate(${Math.sin(p.angle) * p.radius},${-Math.cos(p.angle) * p.radius}) rotate(${tangent(p.angle)})`}
       voice="axis"
     >
@@ -305,7 +304,7 @@ const Slice = (p: SliceProps) => {
       />
       {/* Narrow: the name keeps its share and drops the duration, never the name. */}
       <text
-        className="fade fill-text"
+        className="fade fill-text t-halo"
         style={stagger(p.i + 3)}
         x={lx}
         y={ly}

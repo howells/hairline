@@ -307,7 +307,6 @@ export const Candlestick = (props: CandlestickProps) => {
             {bottom === undefined ? null : (
               <Label
                 anchor="middle"
-                halo
                 order={10}
                 voice="axis"
                 x={centre(layout, bottom)}

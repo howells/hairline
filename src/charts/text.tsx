@@ -20,7 +20,10 @@ const MIDDLE = "0.34em";
 
 type LabelProps = Omit<SVGProps<SVGTextElement>, "order"> & {
   anchor?: "end" | "middle" | "start";
-  /** Paper behind the letters, for text over lines and marks. */
+  /**
+   * Paper behind the letters, so lines and marks stop short of them. On by
+   * default; turn it off only for text that sits on a plate of its own.
+   */
   halo?: boolean;
   /** Centre the text on `y`; otherwise `y` is its baseline. */
   middle?: boolean;
@@ -34,13 +37,14 @@ type LabelProps = Omit<SVGProps<SVGTextElement>, "order"> & {
 
 /**
  * Text in one of the chart voices: axis, label, value or figure. It may
- * centre on its y, sit on a halo, take the muted tone and fade in at an
- * entry step; anything else (a hero tone, rotation) passes through.
+ * centre on its y, take the muted tone and fade in at an entry step; it sits
+ * on a paper halo unless `halo={false}`. Anything else (a hero tone, rotation)
+ * passes through.
  */
 export const Label = ({
   anchor,
   className,
-  halo = false,
+  halo = true,
   middle = false,
   muted = false,
   order,

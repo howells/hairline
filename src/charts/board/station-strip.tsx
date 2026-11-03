@@ -128,7 +128,6 @@ const StationDot = (props: {
       {named && (
         <Label
           anchor={anchor}
-          halo
           voice={props.active ? "value" : "axis"}
           x={anchor === "end" ? cx + 6 : cx}
           y={cy - 10}

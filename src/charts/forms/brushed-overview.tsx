@@ -216,7 +216,6 @@ const Detail = (props: DetailProps) => {
       <Label
         anchor="middle"
         className="fade"
-        halo
         voice="value"
         x={clamp(x(peak), X0 + 16, x1 - 16)}
         y={y(props.data[peak].value) - 10}

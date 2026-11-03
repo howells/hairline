@@ -145,11 +145,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Text over marks: a paper-coloured stroke behind the glyphs. */
+/*
+ * Text over marks: a paper-coloured stroke behind the glyphs. Painted first
+ * (paint-order) and centred on the glyph edge, so half its width shows: 5px
+ * leaves a 2.5px paper gap round every letter, at any scale.
+ */
 @utility t-halo {
   paint-order: stroke;
   stroke: var(--hl-paper);
-  stroke-width: 3px;
+  stroke-width: 5px;
   stroke-linejoin: round;
 }
 

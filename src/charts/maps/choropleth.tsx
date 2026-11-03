@@ -367,14 +367,7 @@ const MapLabels = (props: MapLabelsProps) => (
             />
           )}
           {p.leader ? (
-            <Label
-              anchor={p.anchor}
-              dy="0.35em"
-              halo
-              voice="value"
-              x={p.x}
-              y={p.y}
-            >
+            <Label anchor={p.anchor} dy="0.35em" voice="value" x={p.x} y={p.y}>
               {p.text}
             </Label>
           ) : (

@@ -47,7 +47,7 @@ export const ValueGrid = (props: ValueGridProps) => {
               />
             ) : null}
             <text
-              className="t-axis"
+              className="t-axis t-halo"
               dy={right ? undefined : "0.34em"}
               textAnchor="end"
               x={right ? Math.round(props.x1) : props.x0 - 8}

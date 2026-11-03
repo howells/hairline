@@ -94,7 +94,7 @@ const Furniture = (props: DialProps) => {
                 y={at.y}
               />
             ) : (
-              <Label anchor="middle" halo middle voice="axis" x={at.x} y={at.y}>
+              <Label anchor="middle" middle voice="axis" x={at.x} y={at.y}>
                 {fmtRing(v)}
               </Label>
             )}
@@ -162,7 +162,6 @@ const Trace = (props: DialProps & { peak: number }) => {
       <Label
         anchor={pp.x >= 0 ? "start" : "end"}
         dx={pp.x >= 0 ? 10 : -10}
-        halo
         middle
         order={4}
         tier="series"

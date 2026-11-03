@@ -142,7 +142,6 @@ const MarkedDot = (p: {
       <Label
         anchor="middle"
         className="fill-ink"
-        halo
         voice="label"
         x={p.seat.x}
         y={p.seat.y - radius - 5}

@@ -314,7 +314,6 @@ const StopMark = (props: {
           <Label
             className={textTone(bright, "fill-muted")}
             dy="0.35em"
-            halo
             voice="axis"
             x={x + 9}
             y={stop.y}

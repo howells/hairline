@@ -203,7 +203,6 @@ const LimitRule = (props: { frame: Frame; zone: string; limit: number }) => {
       {axis.limitLabel !== "" && (
         <Label
           anchor="end"
-          halo
           voice="axis"
           x={width - m.right - 8}
           y={y(props.limit) + 16}

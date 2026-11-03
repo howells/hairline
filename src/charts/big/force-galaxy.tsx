@@ -246,7 +246,6 @@ const GalaxyMarks = (props: {
                 anchor="middle"
                 className="group-data-[plate=true]/hub:hidden"
                 dy="0.35em"
-                halo
                 voice="label"
               >
                 {ring.hub.id}
