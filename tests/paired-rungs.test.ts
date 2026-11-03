@@ -20,8 +20,7 @@ const render = (props: ComponentProps<typeof PairedRungs>) =>
 
 const svgHeight = (html: string) =>
   Number(
-    /<svg[^>]*height="(?<height>\d+)"/u.exec(html)?.groups?.height ??
-      Number.NaN
+    /<svg[^>]*height="(?<height>\d+)"/u.exec(html)?.groups?.height ?? Number.NaN
   );
 
 describe("PairedRungs at a given width", () => {
