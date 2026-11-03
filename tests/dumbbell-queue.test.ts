@@ -56,6 +56,23 @@ describe("a consumer renders DumbbellQueue through the registry", () => {
     expect(rungs(html)).toBe(11);
   });
 
+  it("alert none draws no rung in the alert colour; the default marks the rise", () => {
+    expect(render({ data: rows, ...sized })).toContain("fill-alert");
+    expect(render({ alert: "none", data: rows, ...sized })).not.toContain(
+      "fill-alert"
+    );
+  });
+
+  it("the scale ends are whole steps, not the padded maximum", () => {
+    const html = render({
+      data: [{ after: 5.99, before: 8.85, label: "Tate" }],
+      format: (v) => `${v}m`,
+      ...sized,
+    });
+    expect(html).toContain(">10m<");
+    expect(html).not.toContain("9.204m");
+  });
+
   it("an invalid payload returns path-specific issues", () => {
     const bad = chart.validate({
       data: [{ after: "12", before: 1, label: "a" }, { label: "b" }],

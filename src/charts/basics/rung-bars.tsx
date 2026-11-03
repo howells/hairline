@@ -368,6 +368,26 @@ interface SvgProps {
   width: number;
 }
 
+/** Where each bar's printed value sits, so a reference name keeps clear of it. */
+const valueSpotsOf = (
+  data: readonly { value?: number | null }[],
+  o: {
+    floor: number;
+    pitch: number;
+    unit: number;
+    x: { (index: number): number | undefined; bandwidth: () => number };
+  }
+) =>
+  data.map((datum, index) => ({
+    x: (o.x(index) ?? 0) + o.x.bandwidth() / 2,
+    y:
+      rungY(
+        o.floor,
+        Math.max(0, Math.round((datum.value ?? 0) / o.unit)) - 1,
+        o.pitch
+      ) - 14,
+  }));
+
 /** The ladder bars, their references and the floor they stand on. */
 const RungBarsSvg = ({
   data,
@@ -405,6 +425,7 @@ const RungBarsSvg = ({
     props.emphasis === undefined
       ? maxIndex(values)
       : data.findIndex((d) => keyOf(d) === props.emphasis);
+  const valueSpots = valueSpotsOf(data, { floor, pitch, unit, x });
   // A reference line that asks for ink decides each bar's tone instead.
   const standing = (index: number) =>
     clears(props.references, data[index].value ?? Number.NaN);
@@ -478,6 +499,7 @@ const RungBarsSvg = ({
           ))}
           <ReferenceOverlay
             along="y"
+            avoid={valueSpots}
             plane={plane}
             refs={props.references}
             scale={valueY}

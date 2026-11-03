@@ -102,8 +102,11 @@ export const buildLayout = (
   const labelW = EDGE + Math.min(width * 0.32, Math.ceil(longest));
   const bottom = hasNote ? BOTTOM + 30 : BOTTOM;
   const values = [...data.flatMap((d) => [d.before, d.after]), ...marked];
-  const lo = Math.min(0, ...values) * 1.04;
-  const hi = Math.max(0, ...values) * 1.04;
+  // Round the ends outwards so the axis ends read as whole steps, not 9.204.
+  const [lo, hi] = scaleLinear()
+    .domain([Math.min(0, ...values) * 1.04, Math.max(0, ...values) * 1.04])
+    .nice()
+    .domain();
   const span = hi > lo ? hi - lo : 1;
   const dotSize: DotSize = width < 420 ? "md" : "lg";
   const dotR = DOT[dotSize];

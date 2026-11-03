@@ -115,7 +115,7 @@ const marks: GalleryEntry[] = [
       <RungBars
         data={rungBarsDemo}
         format={fmtInt}
-        references={[{ emphasis: "above", label: "15", value: 15 }]}
+        references={[{ emphasis: "above", label: "15 a year", value: 15 }]}
       />
     ),
   },
@@ -140,6 +140,7 @@ const marks: GalleryEntry[] = [
     name: "Museum visits over six million",
     render: () => (
       <DumbbellQueue
+        alert="none"
         data={dumbbellQueueDemo}
         format={(v) => `${v}m`}
         references={[{ emphasis: "above", label: "6m", value: 6 }]}
