@@ -56,6 +56,8 @@ interface Ladder {
   dim: boolean;
   floor: number;
   format: (v: number) => string;
+  /** What a withheld bar prints. */
+  hidden: string;
   hero: boolean;
   index: number;
   /** How far below the first line this bar's label sits: 0, or LABEL_STEP. */
@@ -118,6 +120,17 @@ const LadderBar = (props: Ladder) => {
         x={props.left - 6}
         y={top - 24}
       />
+      {props.datum.value === null ? (
+        <line
+          className="stroke-l4"
+          strokeDasharray="2 3"
+          strokeWidth={1}
+          x1={Math.round(props.left)}
+          x2={right}
+          y1={props.floor - 4.5}
+          y2={props.floor - 4.5}
+        />
+      ) : null}
       <CastShadow
         floor={props.floor}
         hero={props.hero}
@@ -143,11 +156,14 @@ const LadderBar = (props: Ladder) => {
       <Label
         anchor="middle"
         order={props.index}
+        muted={props.datum.value === null}
         voice="value"
         x={centre}
         y={top - 10}
       >
-        {props.format(props.datum.value)}
+        {props.datum.value === null
+          ? props.hidden
+          : props.format(props.datum.value)}
       </Label>
       <Label
         anchor="middle"
@@ -163,17 +179,35 @@ const LadderBar = (props: Ladder) => {
 };
 
 /** What the bars say, in words, from the data passed in. */
-const describe = (data: RungDatum[], format: (v: number) => string) => {
-  if (data.length === 0) {
-    return "No data.";
+const describe = (
+  data: RungDatum[],
+  format: (v: number) => string,
+  hidden: string
+) => {
+  const shown = data.flatMap((d) =>
+    d.value === null ? [] : [{ label: d.label, value: d.value }]
+  );
+  const withheld = data.length - shown.length;
+  const held = withheld === 0 ? "" : ` ${hidden}: ${plural(withheld, "bar")}.`;
+  if (shown.length === 0) {
+    return data.length === 0
+      ? "No data."
+      : `${plural(data.length, "bar")}.${held}`;
   }
-  const at = (i: number) => `${data[i].label}, ${format(data[i].value)}`;
-  const hi = maxIndex(data.map((d) => d.value));
-  const lo = maxIndex(data.map((d) => -d.value));
+  const at = (i: number) => `${shown[i].label}, ${format(shown[i].value)}`;
+  const hi = maxIndex(shown.map((d) => d.value));
+  const lo = maxIndex(shown.map((d) => -d.value));
   return `${plural(data.length, "bar")}. Largest: ${at(hi)}.${
-    data.length > 1 ? ` Smallest: ${at(lo)}.` : ""
-  } The data table lists every bar.`;
+    shown.length > 1 ? ` Smallest: ${at(lo)}.` : ""
+  }${held} The data table lists every bar.`;
 };
+
+/** A bar's value as printed: its figure, or the withheld word. */
+const printed = (
+  datum: RungDatum,
+  format: (v: number) => string,
+  hidden: string
+) => (datum.value === null ? hidden : format(datum.value));
 
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: RungDatum[]) => {
@@ -189,11 +223,20 @@ const reactKeys = (data: RungDatum[]) => {
 const rungTip = (
   at: { key: number; x: number; y: number } | null,
   data: RungDatum[],
-  format: (value: number) => string
+  format: (value: number) => string,
+  hidden: string
 ) =>
   at === null ? null : (
     <Tooltip x={at.x} y={at.y}>
-      <TipText facts={[format(data[at.key].value)]} lead={data[at.key].label} />
+      <TipText
+        facts={[
+          printed(data[at.key], format, hidden),
+          ...(data[at.key].detail === undefined
+            ? []
+            : [data[at.key].detail ?? ""]),
+        ]}
+        lead={data[at.key].label}
+      />
     </Tooltip>
   );
 
@@ -225,11 +268,16 @@ const bands = (
 };
 
 const RungBarsPlot = (props: RungBarsProps) => {
-  const data = (props.data ?? []).filter((d) => Number.isFinite(d.value));
+  const data = (props.data ?? []).filter(
+    (d) => d.value === null || Number.isFinite(d.value)
+  );
+  const values = data.map((d) => d.value ?? 0);
+  const largest = Math.max(0, props.max ?? 0, ...values);
   const unit = countingUnit(
     props.unit !== undefined && props.unit > 0 ? props.unit : 1,
-    Math.max(0, ...data.map((d) => d.value))
+    largest
   );
+  const hidden = props.hidden ?? "Hidden";
   const fixedHeight = props.width !== undefined && props.height !== undefined;
   const height = props.height ?? 460;
   const format = resolveFormat(props.format);
@@ -245,10 +293,10 @@ const RungBarsPlot = (props: RungBarsProps) => {
         props,
         name,
         ["Label", "Value"],
-        data.map((d) => [d.label, format(d.value)])
+        data.map((d) => [d.label, printed(d, format, hidden)])
       )}
       width={props.width}
-      overlay={rungTip(hover.at, data, format)}
+      overlay={rungTip(hover.at, data, format, hidden)}
     >
       {(width) => {
         const margin = {
@@ -261,7 +309,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
           props.metrics
         );
         const bottom = margin.bottom + (alternate ? LABEL_STEP : 0);
-        const max = Math.max(0, ...data.map((d) => d.value / unit));
+        const max = largest / unit;
         const pitch = rungPitch(height - bottom - margin.top, max);
         // When the pitch reaches its cap the columns stop short of the
         // room, so the plot closes up round them instead of leaving air;
@@ -284,12 +332,12 @@ const RungBarsPlot = (props: RungBarsProps) => {
         // none given, the largest. A key that names no bar emphasises none.
         const hero =
           props.emphasis === undefined
-            ? maxIndex(data.map((d) => d.value))
+            ? maxIndex(values)
             : data.findIndex((d) => keyOf(d) === props.emphasis);
 
         return (
           <ChartSvg
-            desc={describe(data, format)}
+            desc={describe(data, format, hidden)}
             height={fitted}
             label={name}
             leave={hover.clear}
@@ -306,7 +354,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
             />
             {data.map((datum, index) => {
               const left = x(index) ?? 0;
-              const rungs = Math.max(0, Math.round(datum.value / unit));
+              const rungs = Math.max(0, Math.round((datum.value ?? 0) / unit));
               return (
                 <LadderBar
                   key={keys[index]}
@@ -315,6 +363,7 @@ const RungBarsPlot = (props: RungBarsProps) => {
                   dim={hover.dim(index)}
                   floor={floor}
                   format={format}
+                  hidden={hidden}
                   hero={hero === index}
                   index={index}
                   labelDrop={alternate && index % 2 === 1 ? LABEL_STEP : 0}
@@ -354,7 +403,8 @@ const RungBarsPlot = (props: RungBarsProps) => {
  * required and never defaults to demo data. Give `width` and `height` for a
  * fixed-size chart that is complete on the first (server) render. Bad input
  * is tolerated: a datum whose value is not a finite number is skipped,
- * a negative value stands as an empty column with its figure, duplicate
+ * a negative value stands as an empty column with its figure, a null one
+ * as an empty column printed with `hidden` ("Hidden"), duplicate
  * labels each get a bar (give them `id`s to tell them apart), and no data
  * draws a quiet empty axis.
  */

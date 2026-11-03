@@ -60,7 +60,7 @@ describe("the props table is generated from the schema", () => {
     const byName = (name: string) => rows.find((row) => row.name === name);
     expect(byName("data")).toMatchObject({
       required: true,
-      type: "{ label: string; value: number; id?: string }[]",
+      type: "{ label: string; value: number | null; detail?: string; id?: string }[]",
     });
     expect(byName("animate")?.type).toBe('"scroll" | "mount" | "off"');
     expect(byName("unit")).toMatchObject({ required: false, type: "number" });
