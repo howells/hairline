@@ -2,7 +2,7 @@
 // ./rung-bars; the shared daily series is in ./daily.
 import { z } from "zod";
 
-import { dailyDatumSchema } from "./daily";
+import { dailyDatumSchema, valueAxisSchema } from "./daily";
 import { dateFormatSchema, formatSchema } from "./format";
 import type { DateFormatInput, FormatInput } from "./format";
 import { keyOf } from "./key";
@@ -26,12 +26,24 @@ export const hairlineAreaSchema = z
       .describe(
         "How dates print on the axis and in the tooltip. Defaults to day-month."
       ),
+    /**
+     * The value scale's ends, lowest then highest. Give small multiples the
+     * same one and they share a scale. Without it the scale fits the data.
+     */
+    domain: z
+      .tuple([z.number(), z.number()])
+      .refine(([lo, hi]) => lo < hi, "domain must run from lower to higher")
+      .optional()
+      .describe(
+        "The value scale's ends, lowest then highest. Give small multiples the same one and they share a scale. Without it the scale fits the data."
+      ),
     /** The reading to draw in the hero colour, by key. Defaults to the peak. */
     emphasis: z
       .string()
+      .nullable()
       .optional()
       .describe(
-        "The reading to draw in the hero colour, by key. Defaults to the peak."
+        "The reading to draw in the hero colour, by key; null for none. Defaults to the peak."
       ),
     /** How values print: a preset name or Intl number-format options. */
     format: formatSchema
@@ -72,6 +84,8 @@ export const hairlineAreaSchema = z
       .describe(
         "Value-axis ticks, ascending; the scale runs from 0 to the last."
       ),
+    /** Where the value axis prints its numbers. Defaults to the right. */
+    valueAxis: valueAxisSchema.optional(),
     /** Fixed width in px. Giving it turns measuring off. */
     width: z
       .number()
@@ -83,6 +97,7 @@ export const hairlineAreaSchema = z
   .refine(
     (props) =>
       props.emphasis === undefined ||
+      props.emphasis === null ||
       props.data.some((d) => keyOf(d) === props.emphasis),
     {
       message: "emphasis names no reading: it must equal a datum's id or date",

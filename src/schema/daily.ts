@@ -29,3 +29,13 @@ export const dailyDatumSchema = z.strictObject({
 
 /** One reading. */
 export type DailyDatum = z.infer<typeof dailyDatumSchema>;
+
+/** Where a daily chart prints the numbers of its value axis. */
+export const valueAxisSchema = z
+  .enum(["left", "none", "right"])
+  .describe(
+    'Where the value axis prints its numbers: "right" (default) by the latest data, "left" in a margin of their own, "none" to keep the gridlines and drop the numbers and their room. Small multiples print them on the left of the first column only.'
+  );
+
+/** Where the numbers print. */
+export type ValueAxis = z.infer<typeof valueAxisSchema>;

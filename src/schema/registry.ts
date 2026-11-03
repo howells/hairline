@@ -68,7 +68,7 @@ export const charts = {
   "hairline-area": entry({
     component: "HairlineArea",
     dataShape:
-      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date), format, dateFormat, ticks (value-axis ticks from 0), maxWidth, note. A null value is a gap.",
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date; null for none), format, dateFormat, domain ([low, high] value scale, shared across small multiples), valueAxis (right by default, left in a margin of its own, none to drop the numbers and their room), ticks (value-axis ticks from 0), maxWidth, note. A null value is a gap.",
     jobs: ["change-over-time", "magnitude"],
     kind: "hairline-area",
     limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },
@@ -81,7 +81,7 @@ export const charts = {
   "hairline-line": entry({
     component: "HairlineLine",
     dataShape:
-      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date), extreme (peak or trough, when no emphasis), format, dateFormat, note. A null value is a gap.",
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date; null for none), extreme (peak or trough, when no emphasis), format, dateFormat, domain ([low, high] value scale, shared across small multiples), valueAxis (right by default, left in a margin of its own, none to drop the numbers and their room), note. A null value is a gap.",
     jobs: ["change-over-time", "ranking"],
     kind: "hairline-line",
     limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },

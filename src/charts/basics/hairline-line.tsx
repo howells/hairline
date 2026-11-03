@@ -4,6 +4,7 @@ import { line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
 import { plural, dayTickLabels, fmtInt } from "../../lib/format";
+import type { ValueAxis } from "../../schema/daily";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
 import type { FontMetrics } from "../../schema/metrics";
@@ -38,7 +39,7 @@ import {
   valueAt,
 } from "./daily-readings";
 import type { Reading, Series } from "./daily-readings";
-import { VALUE_AXIS_ROOM, dailyFloor, isWeekend } from "./util-a";
+import { axisRoom, dailyFloor, isWeekend } from "./util-a";
 
 interface Frame {
   floor: number;
@@ -155,9 +156,11 @@ const Stems = ({ floor, frame, hero, live, readings }: StemsProps) => (
 );
 
 interface SvgProps {
+  axis: ValueAxis;
   clear: () => void;
   extreme: "peak" | "trough";
-  emphasis: string | undefined;
+  domain: [number, number] | undefined;
+  emphasis: string | null | undefined;
   fmtDate: (d: Date) => string;
   format: (v: number) => string;
   height: number;
@@ -223,8 +226,12 @@ const FLAT_SPAN = 1e-290;
 const valueScaleOf = (
   extent: { hi: number; lo: number },
   floor: number,
-  top: number
+  top: number,
+  domain: [number, number] | undefined
 ) => {
+  if (domain !== undefined) {
+    return scaleLinear().domain(domain).range([floor, top]);
+  }
   const span = extent.hi - extent.lo;
   return scaleLinear()
     .domain(
@@ -237,13 +244,16 @@ const valueScaleOf = (
 };
 
 /** Where a reading stands along the frame: by its date, so a gap leaves a gap. */
-const dayScaleOf = (readings: Reading[], x0: number, x1: number) => {
+const dayScaleOf = (
+  readings: Reading[],
+  edges: { end: number; x0: number; x1: number }
+) => {
   const start = readings[0].date.getTime();
   const dayAt = (i: number) =>
     Math.round((readings[i].date.getTime() - start) / DAY_MS);
   const xScale = scaleLinear()
     .domain([0, Math.max(1, dayAt(readings.length - 1))])
-    .range([x0 + 8, x1 - VALUE_AXIS_ROOM]);
+    .range([edges.x0 + 8, edges.x1 - edges.end]);
   return { dayAt, xScale };
 };
 
@@ -263,8 +273,38 @@ const valueLabelBoxes = (
     )
   );
 
+interface LineFrameArgs {
+  axis: ValueAxis;
+  domain: [number, number] | undefined;
+  extent: { hi: number; lo: number };
+  floor: number;
+  noted: boolean;
+  readings: Reading[];
+  width: number;
+}
+
+/** The frame's edges and scales; a left axis keeps its margin outside the grid. */
+const lineFrame = (a: LineFrameArgs) => {
+  const room = axisRoom(a.axis);
+  const frameW = Math.min(a.width - 16, 680 + room.left);
+  const x0 = Math.round((a.width - frameW) / 2) + room.left;
+  const x1 = x0 + frameW - room.left;
+  const y = valueScaleOf(a.extent, a.floor, a.noted ? NOTED_TOP : 40, a.domain);
+  const { dayAt, xScale } = dayScaleOf(a.readings, { end: room.right, x0, x1 });
+  const frame: Frame = {
+    floor: a.floor,
+    x: (i) => xScale(dayAt(i)),
+    x0,
+    x1,
+    y,
+  };
+  return { dayAt, frame, xScale };
+};
+
 const HairlineLineSvg = ({
+  axis,
   clear,
+  domain,
   emphasis,
   extreme,
   fmtDate,
@@ -296,18 +336,16 @@ const HairlineLineSvg = ({
   const last = live.at(-1) ?? 0;
   const [first] = live;
   const hero = heroOf(readings, live, emphasis, { peak, trough }[extreme]);
-  const frameW = Math.min(width - 16, 680);
-  const x0 = Math.round((width - frameW) / 2);
-  const x1 = x0 + frameW;
-  const y = valueScaleOf({ hi, lo }, floor, notes.length > 0 ? NOTED_TOP : 40);
-  const { dayAt, xScale } = dayScaleOf(readings, x0, x1);
-  const frame: Frame = {
+  const { dayAt, frame, xScale } = lineFrame({
+    axis,
+    domain,
+    extent: { hi, lo },
     floor,
-    x: (i) => xScale(dayAt(i)),
-    x0,
-    x1,
-    y,
-  };
+    noted: notes.length > 0,
+    readings,
+    width,
+  });
+  const { x0, x1, y } = frame;
   const path = linePath(readings, frame);
   const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[last].date)}: high ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}, latest ${format(valueAt(readings, last))}`;
 
@@ -330,6 +368,7 @@ const HairlineLineSvg = ({
       width={width}
     >
       <DailyGrid
+        axis={axis}
         clear={valueLabelBoxes(
           readings,
           frame,
@@ -428,7 +467,9 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
       {(width) => (
         <>
           <HairlineLineSvg
+            axis={props.valueAxis ?? "right"}
             clear={clear}
+            domain={props.domain}
             emphasis={props.emphasis}
             extreme={props.extreme ?? "peak"}
             fmtDate={fmtDate}

@@ -41,3 +41,39 @@ export const arcPath = (
   const [x1, y1] = clock(cx, cy, r, a1);
   return `M${x0},${y0}A${r},${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1},${y1}`;
 };
+
+/** The dial: its centre, hub radius and rim radius. */
+export interface Dial {
+  cx: number;
+  cy: number;
+  r0: number;
+  R: number;
+}
+
+/** Hours since midnight as 14:20. */
+export const hhmm = (hour: number) => {
+  const h = Math.floor(hour);
+  const m = Math.round((hour - h) * 60);
+  return `${String(h % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
+/** A wedge's clock angles (degrees) and reach. */
+export interface Span {
+  a0: number;
+  a1: number;
+  reach: number;
+}
+
+/** The wedge an event draws: its start, its end by duration, and its reach by size. */
+export const spanOf = (
+  dial: Dial,
+  event: { hour: number; minutes: number; size: number },
+  maxSize: number
+): Span => {
+  const a0 = event.hour * 15;
+  return {
+    a0,
+    a1: a0 + Math.max(4, event.minutes / 4),
+    reach: dial.r0 + ((dial.R - dial.r0) * event.size) / maxSize,
+  };
+};

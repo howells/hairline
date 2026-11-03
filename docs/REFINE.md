@@ -170,3 +170,8 @@ Repeat at `set viewport 390 900 2` for `<ID>-narrow.png`. Read every screenshot.
 3. Stroke sweep: remaining stroke widths in your folder and why each is allowed.
 4. Verification: "works" (hover/scrub paths you exercised) and "looks right" (screenshots you read), separately. Console errors, if any.
 5. Shared changes you need, if any. Lint and tsc status for your folder.
+
+## Amendment 5: craft details (facets and glyph keys)
+
+- **Words inside a chart, opt-out.** A glyph chart opens with an exemplar key: one real record drawn large with its parts named by thin leaders (`rule`) to halo labels, a title in `t-label` over what it encodes in `t-axis`. It is on by default and `glyphKey={false}` removes it. It replaces any text key; the labels name parts of the glyph, never sentences about the data. The key is one shared primitive (`GlyphKey`), and a chart passes its own glyph renderer.
+- **Small multiples.** `Facets` shares one value scale by default. A freed scale prints "Each panel on its own scale" under the grid, the one note small multiples may carry. Panel headers are HTML in the `t-label`/`t-value` weights and tones (`text-ink` for the hero, `text-muted` for the rest); gridline values print in the first column only.

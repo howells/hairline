@@ -7,13 +7,12 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
-import { RING_STEP } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { DotRing, DotScreen } from "../texture";
-import { HALFTONE_R, paint, useTextureIds } from "../texture-ids";
+import { DotScreen } from "../texture";
+import { HALFTONE_R, useTextureIds } from "../texture-ids";
 import { noteSpace, sansWidth, stagger, noteOf } from "../util";
 import {
   bubbleAlmanacDemo,
@@ -24,6 +23,8 @@ import type {
   AlmanacEvent,
   AlmanacNote,
 } from "./bubble-almanac.data";
+import { RING_GAP } from "./bubble-geometry";
+import { BubbleKey, BubbleMark } from "./bubble-mark";
 
 interface BubbleAlmanacProps extends NoteProps {
   data?: AlmanacCell[];
@@ -34,6 +35,8 @@ interface BubbleAlmanacProps extends NoteProps {
   /** Cells to print values on, as "Category-Year". */
   labelled?: string[];
   height?: number;
+  /** Draw one circle large above the chart, its parts named (default true). */
+  glyphKey?: boolean;
   format?: (v: number) => string;
   noun?: string;
 }
@@ -53,12 +56,6 @@ interface AlmanacLayout {
   years: number[];
 }
 
-/**
- * One tone at one opacity: the year's rule shows through every veil, and the
- * outline is the veil's own edge, one step lighter, so the grid reads as a
- * calm field and only the hero's ink outline stands out.
- */
-const VEIL = 0.18;
 /** Height a figure needs above a circle: its cap height plus air. */
 const LABEL_ROOM = 11;
 
@@ -72,9 +69,6 @@ const headTilt = (colPitch: number) => (colPitch < 50 ? -60 : -24);
 
 /** Gap between a circle's top and its figure's baseline. */
 const lift = (hero: boolean) => (hero ? 7 : 5);
-
-/** Air between a flagged circle and the dotted ring around it. */
-const RING_GAP = 3;
 
 /** Radius a cell draws at, counting the dotted ring of a flagged one. */
 const drawnR = (layout: AlmanacLayout, d: AlmanacCell) =>
@@ -239,34 +233,15 @@ const Blob = ({
       }}
     >
       <g className="pop" style={stagger(i, "dense")}>
-        <circle
-          className={hero ? "stroke-hero" : "fill-l4 stroke-l5"}
+        <BubbleMark
+          coreR={coreR}
           cx={cx}
           cy={cy}
-          fill={hero ? paint(screen) : undefined}
-          // One tone at one opacity (VEIL): the year rule shows through.
-          fillOpacity={hero ? 1 : VEIL}
+          flag={flag}
+          hero={hero}
           r={r}
-          strokeWidth={hero ? 2 : 1}
+          screen={screen}
         />
-        {flag ? (
-          // Dotted at pitch 3 means the crop fell on the year before.
-          <DotRing
-            cx={cx}
-            cy={cy}
-            r={r + RING_GAP}
-            step={RING_STEP.mark}
-            tone="fill-l4"
-          />
-        ) : null}
-        {coreR > 0 ? (
-          <circle
-            className={hero ? "fill-hero" : "fill-l3"}
-            cx={cx}
-            cy={cy}
-            r={coreR}
-          />
-        ) : null}
       </g>
       {labelled && labelAbove ? (
         <Label
@@ -327,39 +302,49 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
         const order = data.toSorted((a, b) => b.value - a.value);
         const heroId = order.length > 0 ? cellId(order[0]) : "";
         return (
-          <ChartSvg
-            height={height}
-            label={`${noun} by country and year, ${layout.years[0]} to ${layout.years.at(-1) ?? ""}`}
-            leave={hover.clear}
-            title={`Circles of ${noun} by country and year`}
-            width={width}
-          >
-            <defs>
-              <DotScreen id={screen} r={HALFTONE_R[1]} tone="fill-l3" />
-            </defs>
-            <Ledger layout={layout} />
-            {order.map((d, i) => (
-              <Blob
-                cell={d}
-                dim={hover.dim(cellId(d))}
+          <>
+            {props.glyphKey === false ? null : (
+              <BubbleKey
+                data={data}
                 format={format}
-                hero={cellId(d) === heroId}
-                i={i}
-                key={cellId(d)}
-                labelled={labelled.has(cellId(d)) || cellId(d) === heroId}
-                labelAbove={fitsAbove(
-                  layout,
-                  d,
-                  byId.get(cellId({ ...d, year: d.year - 1 })),
-                  cellId(d) === heroId
-                )}
-                layout={layout}
-                screen={screen}
-                onEnter={hover.showAt(cellId(d))}
+                noun={noun}
+                width={width}
               />
-            ))}
-            <FootNote height={height} text={noteOf(props)} width={width} />
-          </ChartSvg>
+            )}
+            <ChartSvg
+              height={height}
+              label={`${noun} by country and year, ${layout.years[0]} to ${layout.years.at(-1) ?? ""}`}
+              leave={hover.clear}
+              title={`Circles of ${noun} by country and year`}
+              width={width}
+            >
+              <defs>
+                <DotScreen id={screen} r={HALFTONE_R[1]} tone="fill-l3" />
+              </defs>
+              <Ledger layout={layout} />
+              {order.map((d, i) => (
+                <Blob
+                  cell={d}
+                  dim={hover.dim(cellId(d))}
+                  format={format}
+                  hero={cellId(d) === heroId}
+                  i={i}
+                  key={cellId(d)}
+                  labelled={labelled.has(cellId(d)) || cellId(d) === heroId}
+                  labelAbove={fitsAbove(
+                    layout,
+                    d,
+                    byId.get(cellId({ ...d, year: d.year - 1 })),
+                    cellId(d) === heroId
+                  )}
+                  layout={layout}
+                  screen={screen}
+                  onEnter={hover.showAt(cellId(d))}
+                />
+              ))}
+              <FootNote height={height} text={noteOf(props)} width={width} />
+            </ChartSvg>
+          </>
         );
       }}
     </Plot>
