@@ -13,7 +13,7 @@ import { paint, useTextureIds } from "../texture-ids";
 import { NOTE_LINE, hasText, noteLines, stagger, noteOf } from "../util";
 import { pairedRungsDemo } from "./paired-rungs.data";
 import type { PairDatum } from "./paired-rungs.data";
-import { rungPitch, rungY } from "./rung-geometry";
+import { RUNG, rungPitch, rungY } from "./rung-geometry";
 import { Rungs } from "./rungs";
 import { SeriesKey } from "./series-key";
 import { maxIndex } from "./util-b";
@@ -28,6 +28,10 @@ interface PairedRungsProps extends NoteProps {
   periods?: [string, string];
   /** Index of the category whose current ladder is drawn in the hero colour. */
   highlight?: number;
+  /** Responsive mode only: the width of the first render, before measuring. */
+  initialWidth?: number;
+  /** Fixed width in px. Giving it turns measuring off. */
+  width?: number;
 }
 
 interface PairProps {
@@ -130,11 +134,218 @@ const Pair = ({
   );
 };
 
+
+/** Below this width per category, the columns give way to rows. */
+const COLUMN_ROOM = 78;
+/** Height of one row in the narrow layout. */
+const ROW_H = 58;
+/** Height of a row's current rungs, and of its earlier bar. */
+const ROW_RUNG = 12;
+const ROW_BAR = 5;
+
+interface PairRowProps {
+  datum: PairDatum;
+  dim: boolean;
+  format: (v: number) => string;
+  hatch: string;
+  hero: boolean;
+  index: number;
+  onEnter: (x: number, y: number) => void;
+  /** Pixels per data unit along the track. */
+  scale: number;
+  top: number;
+  unit: number;
+  x0: number;
+  x1: number;
+}
+
+/**
+ * One category as a row, for a chart too narrow for columns: the name and
+ * both values on one line, then the current period as rungs along a track
+ * and the earlier period as a hatched bar beneath them, on one scale.
+ */
+const PairRow = ({
+  datum,
+  dim,
+  format,
+  hatch,
+  hero,
+  index,
+  onEnter,
+  scale,
+  top,
+  unit,
+  x0,
+  x1,
+}: PairRowProps) => {
+  const n = Math.round(datum.current / unit);
+  const pitch = unit * scale;
+  const base = top + 22 + ROW_RUNG;
+  const prevW = Math.round(datum.previous * scale);
+  const rungs = Array.from({ length: n }, (_, k) => ({
+    id: `${datum.label}-row-${k}`,
+    k,
+  }));
+  return (
+    <DimGroup
+      dim={dim}
+      onPointerEnter={() => {
+        onEnter(x0 + Math.max(0, n - 1) * pitch, base - ROW_RUNG - 6);
+      }}
+    >
+      <HitRect height={ROW_H} width={x1 - x0} x={x0} y={top} />
+      <Label muted voice="label" x={x0} y={top + 12}>
+        {datum.label}
+      </Label>
+      <Label
+        anchor="end"
+        className={hero ? "fill-hero" : ""}
+        order={index}
+        voice="value"
+        x={x1}
+        y={top + 12}
+      >
+        {format(datum.current)}
+        <tspan className="fill-muted" dx={6}>
+          {format(datum.previous)}
+        </tspan>
+      </Label>
+      <HRule kind="rule" x0={x0} x1={x1} y={base} />
+      {rungs.map((rung) => (
+        <rect
+          className={`grow-y ${hero ? "fill-hero" : "fill-l3"}`}
+          height={ROW_RUNG}
+          key={rung.id}
+          style={stagger(index * 3 + rung.k, "fine")}
+          width={RUNG}
+          x={Math.round(x0 + rung.k * pitch)}
+          y={base - ROW_RUNG}
+        />
+      ))}
+      {prevW > 0 ? (
+        <rect
+          className="stroke-l5 shape-crisp"
+          fill={paint(hatch)}
+          height={ROW_BAR}
+          strokeWidth={1}
+          width={prevW}
+          x={x0 + 0.5}
+          y={base + 3.5}
+        />
+      ) : null}
+    </DimGroup>
+  );
+};
+
+
+interface PairRowsProps {
+  curName: string;
+  data: PairDatum[];
+  format: (v: number) => string;
+  hasNote: boolean;
+  highlight?: number;
+  hover: ReturnType<typeof useHover<number>>;
+  ids: (name: string) => string;
+  label: string;
+  note: string | undefined;
+  prevName: string;
+  unit: number;
+  width: number;
+}
+
+/** The whole chart as rows, for a width the columns cannot stand in. */
+const PairRows = ({
+  curName,
+  data,
+  format,
+  hasNote,
+  highlight,
+  hover,
+  ids,
+  label,
+  note,
+  prevName,
+  unit,
+  width,
+}: PairRowsProps) => {
+  const x0 = 2;
+  const x1 = width - 2;
+  const max = Math.max(...data.flatMap((d) => [d.current, d.previous]));
+  const notes = noteLines(note, width - 24);
+  const rowsH =
+    40 +
+    data.length * ROW_H +
+    (hasNote ? 30 : 0) +
+    Math.max(0, notes.length - 1) * NOTE_LINE;
+  const hero = highlight ?? maxIndex(data.map((d) => d.current));
+  return (
+    <ChartSvg
+      height={rowsH}
+      label={label}
+      leave={hover.clear}
+      width={width}
+    >
+      <defs>
+        <Hatch id={ids("hatch")} tone="fill-l4" />
+        <Rules id={ids("rules")} tone="fill-l3" />
+      </defs>
+      <SeriesKey
+        items={[
+          { fill: paint(ids("rules")), name: curName },
+          { fill: paint(ids("hatch")), name: prevName },
+        ]}
+        x={x0}
+        y={16}
+      />
+      {data.map((d, i) => (
+        <PairRow
+          datum={d}
+          dim={hover.dim(i)}
+          format={format}
+          hatch={ids("hatch")}
+          hero={hero === i}
+          index={i}
+          key={d.label}
+          onEnter={hover.showAt(i)}
+          scale={(x1 - x0) / max}
+          top={40 + i * ROW_H}
+          unit={unit}
+          x0={x0}
+          x1={x1}
+        />
+      ))}
+      <FootNote
+        gutter={12}
+        height={rowsH}
+        text={note}
+        width={width}
+      />
+    </ChartSvg>
+  );
+};
+
+/** The chart's text for a screen reader: every category, both periods. */
+const pairsLabel = (
+  data: PairDatum[],
+  format: (v: number) => string,
+  prevName: string,
+  curName: string
+) =>
+  data
+    .map(
+      (d) =>
+        `${d.label}: ${curName} ${format(d.current)}, ${prevName} ${format(d.previous)}`
+    )
+    .join("; ");
+
 /**
  * F6 Getting to work. Per category, the earlier period is a quiet column of
  * hatch on paper inside a 1px rule, and the current period a stack of grey
  * 2px rungs (one per unit, every fifth darker). Only the leader's current
- * stack is in ink; a two-swatch key names the periods.
+ * stack is in ink; a two-swatch key names the periods. Narrower than the
+ * columns can stand, each category becomes a row: its values on one line,
+ * the current rungs along a track and the earlier period hatched beneath, so
+ * the chart grows taller instead of crowding.
  */
 export const PairedRungs = (props: PairedRungsProps) => {
   const data = props.data ?? pairedRungsDemo;
@@ -145,15 +356,12 @@ export const PairedRungs = (props: PairedRungsProps) => {
   const hasNote = hasText(noteOf(props));
   const hover = useHover<number>();
   const ids = useTextureIds("paired");
-  const label = data
-    .map(
-      (d) =>
-        `${d.label}: ${curName} ${format(d.current)}, ${prevName} ${format(d.previous)}`
-    )
-    .join("; ");
+  const label = pairsLabel(data, format, prevName, curName);
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
         hover.at === null ? null : (
           <Tooltip x={hover.at.x} y={hover.at.y}>
@@ -169,6 +377,24 @@ export const PairedRungs = (props: PairedRungsProps) => {
       }
     >
       {(width) => {
+        if (width - 32 < data.length * COLUMN_ROOM) {
+          return (
+            <PairRows
+              curName={curName}
+              data={data}
+              format={format}
+              hasNote={hasNote}
+              hover={hover}
+              ids={ids}
+              label={label}
+              note={noteOf(props)}
+              prevName={prevName}
+              highlight={props.highlight}
+              unit={unit}
+              width={width}
+            />
+          );
+        }
         const plotW = Math.min(width - 32, data.length * 130);
         const x0 = (width - plotW) / 2;
         const x = scaleBand()
