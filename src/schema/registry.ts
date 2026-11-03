@@ -7,6 +7,7 @@ import { dumbbellQueueSchema } from "./dumbbell-queue";
 import { hairlineAreaSchema } from "./hairline-area";
 import { hairlineLineSchema } from "./hairline-line";
 import { plumbScatterSchema } from "./plumb-scatter";
+import { rangeDotsSchema } from "./range-dots";
 import { rungBarsSchema } from "./rung-bars";
 import { slopeSchema } from "./slope";
 import { validate } from "./validate";
@@ -103,6 +104,19 @@ export const charts = {
       "More than about twenty points, several series, or when the reader needs to read y off a scale rather than from a stem and a name: the stems carry x, the height carries y.",
     whenToUse:
       "A dozen or so named things measured on two quantities, to show whether they move together and which stand apart.",
+  }),
+  "range-dots": entry({
+    component: "RangeDots",
+    dataShape:
+      "data: { label: string; estimate: number; low: number; high: number; id?: string }[], one row each, drawn in the order given; optional wide (an interval wider than this is too uncertain to rank: its dot is drawn open), coverage (0.9 for a 90% interval), domain ([low, high]), format and formatMargin, note.",
+    jobs: ["distribution", "ranking"],
+    kind: "range-dots",
+    limits: { categories: { max: 12, min: 1 }, series: { max: 1, min: 1 } },
+    schema: rangeDotsSchema,
+    whenNotToUse:
+      "Exact counts with no uncertainty (use bars), more than a dozen rows, or intervals that are not about the same quantity and cannot share one axis.",
+    whenToUse:
+      "Estimates from a sample or a model, such as survey shares or forecasts, where the reader must see how far each can be trusted and which are too uncertain to rank.",
   }),
   "rung-bars": entry({
     component: "RungBars",

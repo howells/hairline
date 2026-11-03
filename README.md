@@ -50,7 +50,7 @@ pnpm build:lib     # writes lib/
 
 and install it into the app from a path (`"@howells/hairline": "file:../hairline"`). A `file:` install is a copy, so rebuild and reinstall after any change. The host needs React 19.
 
-Every packaged chart is also its own subpath (`@howells/hairline/rung-bars`, `/hairline-line`, `/hairline-area`, `/dumbbell-queue`, `/plumb-scatter`, `/slope`), so a bundle takes only what it draws. The map charts are behind `@howells/hairline/maps`.
+Every packaged chart is also its own subpath (`@howells/hairline/rung-bars`, `/hairline-line`, `/hairline-area`, `/dumbbell-queue`, `/plumb-scatter`, `/range-dots`, `/slope`), so a bundle takes only what it draws. The map charts are behind `@howells/hairline/maps`.
 
 ```tsx
 import "@howells/hairline/hairline.css";
@@ -94,7 +94,7 @@ import { RungBars } from "@howells/hairline/rung-bars";
 - **Several roots on one page.** `idPrefix` leads every SVG id, so charts rendered in separate React roots do not collide.
 - **Fonts.** `deriveTheme`'s `font`, or `--hl-font`, sets the charts' face. Label widths are measured for Inter, so another face may crowd; pass `metrics` with its glyph widths.
 - **Emphasis.** The hero is chosen by a datum's key (`id`, else its label or date), never by index.
-- **Size.** One chart costs a host, minified and gzipped with React left out and every other dependency bundled: DumbbellQueue 52 KB, HairlineArea 55 KB, HairlineLine 55 KB, PlumbScatter 52 KB, RungBars 47 KB, Slope 51 KB (1 KB = 1,000 bytes). `tests/bundle-size.test.ts` bundles each subpath and fails a chart that outgrows its budget; raising one is a reviewed edit to the test and to this line.
+- **Size.** One chart costs a host, minified and gzipped with React left out and every other dependency bundled: DumbbellQueue 52 KB, HairlineArea 56 KB, HairlineLine 56 KB, PlumbScatter 52 KB, RangeDots 50 KB, RungBars 47 KB, Slope 51 KB (1 KB = 1,000 bytes). `tests/bundle-size.test.ts` bundles each subpath and fails a chart that outgrows its budget; raising one is a reviewed edit to the test and to this line.
 - **Types.** Each packaged chart exports its props and datum types by name (`RungBarsProps`, `RungDatum`); for the rest use `ComponentProps<typeof Chart>`.
 - **The kit.** `@howells/hairline/kit` exports the parts the charts are drawn from (`Plot`, `ChartSvg`, `Label`, the rules, marks and textures), for a new chart drawn in the same hand.
 - **The frame.** Charts draw only the plot and take no title or source. The host composes those, or sets `Frame` from `@howells/hairline/frame` round any chart: `<Frame name source footnote note>` is the gallery cell (the name, an (i) opening `note`, the chart, then the source and footnote). The in-plot unit key is the chart's `unitNote` prop; `note` is its deprecated old name.

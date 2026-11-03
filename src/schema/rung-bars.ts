@@ -16,6 +16,7 @@ import type { FormatInput } from "./format";
 import { keyOf } from "./key";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
+import { referencesShape } from "./references";
 
 /** The bars: a label, a value, and an optional key for when labels repeat. */
 export const rungDatumSchema = z.strictObject({
@@ -52,6 +53,7 @@ export const rungDatumSchema = z.strictObject({
 export const rungBarsSchema = z
   .strictObject({
     ...noteShape,
+    ...referencesShape,
     ...sharedShape,
     /** The bars, 1 to 24. */
     data: z

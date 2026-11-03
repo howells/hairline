@@ -42,6 +42,15 @@ export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
+export {
+  intervalPointSchema,
+  intervalSchema,
+  forecastSchema,
+  intervalsShape,
+  intervalLabel,
+  intervalIssues,
+} from "./schema/intervals";
+export type { IntervalPoint, Interval, Forecast } from "./schema/intervals";
 export { keyOf } from "./schema/key";
 export type { Keyed } from "./schema/key";
 export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";
@@ -63,6 +72,24 @@ export type {
   PlumbScatterData,
   PlumbScatterProps,
 } from "./schema/plumb-scatter";
+export { rangeDatumSchema, rangeDotsSchema } from "./schema/range-dots";
+export type {
+  RangeDatum,
+  RangeDotsData,
+  RangeDotsProps,
+} from "./schema/range-dots";
+export {
+  referenceLineSchema,
+  referenceBandSchema,
+  referencesSchema,
+  referencesShape,
+  isBand,
+} from "./schema/references";
+export type {
+  ReferenceLine,
+  ReferenceBand,
+  Reference,
+} from "./schema/references";
 export { charts, registry, getChart } from "./schema/registry";
 export type { Job, ChartEntry, ChartKind } from "./schema/registry";
 export { rungDatumSchema, rungBarsSchema } from "./schema/rung-bars";

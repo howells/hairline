@@ -65,6 +65,10 @@
       "types": "./lib/types/entries/plumb-scatter.d.ts",
       "default": "./lib/entries/plumb-scatter.js"
     },
+    "./range-dots": {
+      "types": "./lib/types/entries/range-dots.d.ts",
+      "default": "./lib/entries/range-dots.js"
+    },
     "./rung-bars": {
       "types": "./lib/types/entries/rung-bars.d.ts",
       "default": "./lib/entries/rung-bars.js"

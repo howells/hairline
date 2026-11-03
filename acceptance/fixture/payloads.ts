@@ -14,6 +14,7 @@ export const KIND_ORDER = [
   "hairline-line",
   "hairline-area",
   "plumb-scatter",
+  "range-dots",
   "slope",
   "dumbbell-queue",
 ] as const;
@@ -56,6 +57,17 @@ export const PAYLOADS = {
     emphasis: "Earth",
     xLabels: ["Near the Sun", "Far from the Sun"],
     yLabel: "Years per orbit",
+  },
+  "range-dots": {
+    coverage: 0.9,
+    data: [
+      { estimate: 42, high: 46, label: "Paint", low: 38 },
+      { estimate: 35, high: 41, label: "Tile", low: 29 },
+      { estimate: 31, high: 40, label: "Flooring", low: 22 },
+      { estimate: 19, high: 30, label: "Stone", low: 8 },
+    ],
+    domain: [0, 60],
+    wide: 15,
   },
   "rung-bars": {
     data: [

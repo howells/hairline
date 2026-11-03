@@ -94,13 +94,14 @@ export const buildLayout = (
   hasNote: boolean,
   labels: SideLabels,
   top: number,
-  metrics?: FontMetrics
+  metrics?: FontMetrics,
+  marked: readonly number[] = []
 ): Layout => {
   const longest = Math.max(0, ...data.map((d) => inkWidth(d.label, metrics)));
   // The row names end at `labelW`, the longest starting at the edge margin.
   const labelW = EDGE + Math.min(width * 0.32, Math.ceil(longest));
   const bottom = hasNote ? BOTTOM + 30 : BOTTOM;
-  const values = data.flatMap((d) => [d.before, d.after]);
+  const values = [...data.flatMap((d) => [d.before, d.after]), ...marked];
   const lo = Math.min(0, ...values) * 1.04;
   const hi = Math.max(0, ...values) * 1.04;
   const span = hi > lo ? hi - lo : 1;

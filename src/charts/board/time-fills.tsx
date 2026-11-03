@@ -4,11 +4,9 @@
 import { area } from "d3-shape";
 
 import type { Point } from "../../lib/data";
-import { OUTLINE } from "../roles";
-import { Label } from "../text";
+import { ReferenceBands, ReferenceOverlay } from "../references";
 import { DotScreen, Hatch, Rules, Stipple } from "../texture";
 import { HALFTONE_R, paint } from "../texture-ids";
-import { TICK_CHAR } from "./thin-ticks";
 import { curveOf } from "./time-frame";
 import type {
   Band,
@@ -39,7 +37,6 @@ export const Patterns = (props: { chart: TimeLinesProps; frame: Frame }) => {
       <ShadePattern id={tex("shade")} kind={props.chart.texture ?? "hatch"} />
       <Hatch angle="falling" id={tex("lead-1")} tone="fill-l3" />
       <Hatch id={tex("lead-2")} tone="fill-l4" />
-      <Stipple id={tex("season")} tone="fill-l4" />
     </defs>
   );
 };
@@ -89,61 +86,41 @@ const GapFill = (props: { chart: TimeLinesProps; frame: Frame }) => {
 /** Narrowest a band is drawn, px. */
 const MIN_BAND = 8;
 
-/** A band's name over its middle, held inside the plot so it clears the scale. */
-const BandLabel = (props: {
-  band: Band;
-  frame: Frame;
-  x0: number;
-  x1: number;
-}) => {
-  const { m, width } = props.frame;
-  const half = (props.band.label.length * TICK_CHAR) / 2;
-  const mid = (props.x0 + props.x1) / 2;
-  const left = m.left + half;
-  const right = width - m.right - half;
-  return (
-    <Label
-      anchor="middle"
-      voice="axis"
-      x={Math.max(left, Math.min(right, mid))}
-      y={m.top - 8}
-    >
-      {props.band.label}
-    </Label>
-  );
-};
-
+/**
+ * The season bands, as the shared reference bands along the time axis. A
+ * band too narrow to see is widened about its centre.
+ */
 export const SeasonBands = (props: { bands: Band[]; frame: Frame }) => {
-  const { m, plotBottom, tex, x } = props.frame;
-  return props.bands.map((band) => {
-    // A band too narrow to engrave is widened about its centre.
+  const { m, plotBottom, x } = props.frame;
+  const refs = props.bands.map((band) => {
     const mid = (x(band.from) + x(band.to)) / 2;
     const half = Math.max(
       MIN_BAND / 2,
       Math.abs(x(band.to) - x(band.from)) / 2
     );
-    const x0 = Math.round(mid - half);
-    const x1 = Math.round(mid + half);
-    return (
-      <g key={band.from.toISOString()}>
-        <rect
-          x={x0}
-          y={Math.round(m.top)}
-          width={x1 - x0}
-          height={Math.round(plotBottom) - Math.round(m.top)}
-          fill={paint(tex("season"))}
-        />
-        <rect
-          className={OUTLINE}
-          x={x0 + 0.5}
-          y={Math.round(m.top) + 0.5}
-          width={x1 - x0 - 1}
-          height={Math.round(plotBottom) - Math.round(m.top) - 1}
-        />
-        <BandLabel band={band} frame={props.frame} x0={x0} x1={x1} />
-      </g>
-    );
+    return {
+      from: x.invert(mid - half).getTime(),
+      label: band.label,
+      to: x.invert(mid + half).getTime(),
+    };
   });
+  const shared = {
+    along: "x" as const,
+    plane: {
+      x0: m.left,
+      x1: props.frame.width - m.right,
+      y0: m.top,
+      y1: plotBottom,
+    },
+    refs,
+    scale: (ms: number) => x(new Date(ms)),
+  };
+  return (
+    <>
+      <ReferenceBands {...shared} />
+      <ReferenceOverlay {...shared} />
+    </>
+  );
 };
 
 /** The shade: past the cursor it stops, unless nothing changes there. */

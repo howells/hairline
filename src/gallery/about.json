@@ -90,5 +90,11 @@
   "O6": "What the UK sold to its five largest export markets in 2025, by kind of goods.",
   "O7": "The mean daily maximum temperature in central England for each month of 2022.",
   "O8": "The daily maximum temperature in central England through 2022.",
-  "O9": "Church towers with bells hung for full-circle ringing, by country and county."
+  "O9": "Church towers with bells hung for full-circle ringing, by country and county.",
+  "R1": "Major earthquakes a year, with the years at or over fifteen kept in ink.",
+  "R2": "Made-up daily reservoir levels, to show a target line and a normal-range band.",
+  "R3": "Visits to five national museums in 2019 and 2025, with the museums over six million in 2025 kept in ink.",
+  "R4": "Apple orchards in twelve countries: yield against size, with a yield line and a band of sizes.",
+  "R5": "Made-up daily orders, four months seen and two forecast, with bands for half and nine in ten of outcomes.",
+  "R6": "Made-up shares of households buying each material, with 90% intervals; those too wide to rank are open."
 }

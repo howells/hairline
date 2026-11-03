@@ -8,6 +8,7 @@ import type { FormatInput } from "./format";
 import { keyOf } from "./key";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
+import { referencesShape } from "./references";
 
 /** One row: a label, the value before and the value after. */
 export const dumbbellDatumSchema = z.strictObject({
@@ -30,6 +31,7 @@ export const dumbbellDatumSchema = z.strictObject({
 export const dumbbellQueueSchema = z
   .strictObject({
     ...noteShape,
+    ...referencesShape,
     ...sharedShape,
     /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
     alert: z

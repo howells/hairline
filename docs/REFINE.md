@@ -175,3 +175,9 @@ Repeat at `set viewport 390 900 2` for `<ID>-narrow.png`. Read every screenshot.
 
 - **Words inside a chart, opt-out.** A glyph chart opens with an exemplar key: one real record drawn large with its parts named by thin leaders (`rule`) to halo labels, a title in `t-label` over what it encodes in `t-axis`. It is on by default and `glyphKey={false}` removes it. It replaces any text key; the labels name parts of the glyph, never sentences about the data. The key is one shared primitive (`GlyphKey`), and a chart passes its own glyph renderer.
 - **Small multiples.** `Facets` shares one value scale by default. A freed scale prints "Each panel on its own scale" under the grid, the one note small multiples may carry. Panel headers are HTML in the `t-label`/`t-value` weights and tones (`text-ink` for the hero, `text-muted` for the rest); gridline values print in the first column only.
+
+## Amendment 6: reference marks and intervals
+
+- **Reference lines and bands** (`references` on the typed charts): the line is the one dash, because it means a target; its name sits on it on a `t-halo`. A band is a solid quiet ramp tone (`l6`) behind the marks with 1px `l5` edges and its name inside it. A line can ask for ink (`emphasis: "above" | "below"`): the marks that clear it stay ink and the rest step back to `l5`. This is the approved exception of ink-for-clearing beside the single hero; it replaces the hero tone while a line asks.
+- **Intervals** (`intervals`, `forecast`): bands are solid ramp tones (`l6` for the widest, `l5` for the next), never opacity, each named at its end in words from its coverage. A forecast is a dashed line after a dotted rule; dashes are for forecasts and targets only.
+- **Open dots** in `RangeDots`: a row whose interval is too wide to rank is an open dot, whisker and labels in a quieter tone.

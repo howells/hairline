@@ -73,6 +73,7 @@ const CHARTS = [
   "hairline-line",
   "hairline-area",
   "plumb-scatter",
+  "range-dots",
   "dumbbell-queue",
   "slope",
 ];

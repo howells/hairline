@@ -9,6 +9,7 @@ import { HairlineLine } from "@howells/hairline/hairline-line";
 import { Chart } from "@howells/hairline/kit";
 import { USChoropleth } from "@howells/hairline/maps";
 import { PlumbScatter } from "@howells/hairline/plumb-scatter";
+import { RangeDots } from "@howells/hairline/range-dots";
 import { registry } from "@howells/hairline/schema";
 import { Slope } from "@howells/hairline/slope";
 import type { SlopeProps } from "@howells/hairline/slope";
@@ -20,6 +21,7 @@ export const parts = [
   HairlineArea,
   HairlineLine,
   PlumbScatter,
+  RangeDots,
   Slope,
   USChoropleth,
   Chart,

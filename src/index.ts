@@ -7,6 +7,7 @@ export { HairlineLine } from "./charts/basics/hairline-line";
 export { NestedTreemap } from "./charts/basics/nested-treemap";
 export { PairedRungs } from "./charts/basics/paired-rungs";
 export { PlumbScatter } from "./charts/basics/plumb-scatter";
+export { RangeDots } from "./charts/basics/range-dots";
 export { RungBars } from "./charts/basics/rung-bars";
 export { RungHistogram } from "./charts/basics/rung-histogram";
 export { RungWaterfall } from "./charts/basics/rung-waterfall";
@@ -86,6 +87,7 @@ export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
+export type { IntervalPoint, Interval, Forecast } from "./schema/intervals";
 export type { Keyed } from "./schema/key";
 export type { FontMetrics } from "./schema/metrics";
 export type { MotionCallbacks } from "./schema/motion";
@@ -96,6 +98,16 @@ export type {
   PlumbScatterData,
   PlumbScatterProps,
 } from "./schema/plumb-scatter";
+export type {
+  RangeDatum,
+  RangeDotsData,
+  RangeDotsProps,
+} from "./schema/range-dots";
+export type {
+  ReferenceLine,
+  ReferenceBand,
+  Reference,
+} from "./schema/references";
 export type {
   RungDatum,
   RungBarsData,

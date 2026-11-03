@@ -5,14 +5,18 @@ import { z } from "zod";
 import { dailyDatumSchema, valueAxisSchema } from "./daily";
 import { dateFormatSchema, formatSchema } from "./format";
 import type { DateFormatInput, FormatInput } from "./format";
+import { intervalIssues, intervalsShape } from "./intervals";
 import { keyOf } from "./key";
 import { NOTES_NAME_DATA, dailyNotesSchema, notesNameData } from "./notes";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
+import { referencesShape } from "./references";
 
 export const hairlineLineSchema = z
   .strictObject({
     ...noteShape,
+    ...intervalsShape,
+    ...referencesShape,
     ...sharedShape,
     /** Readings by date, in any order. A null value is a gap. */
     data: z
@@ -84,16 +88,26 @@ export const hairlineLineSchema = z
       .optional()
       .describe("Fixed width in px. Giving it turns measuring off."),
   })
-  .refine(
-    (props) =>
-      props.emphasis === undefined ||
-      props.emphasis === null ||
-      props.data.some((d) => keyOf(d) === props.emphasis),
-    {
-      message: "emphasis names no reading: it must equal a datum's id or date",
-      path: ["emphasis"],
+  .superRefine((props, ctx) => {
+    if (
+      props.emphasis !== undefined &&
+      props.emphasis !== null &&
+      !props.data.some((d) => keyOf(d) === props.emphasis)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "emphasis names no reading: it must equal a datum's id or date",
+        path: ["emphasis"],
+      });
     }
-  )
+    for (const issue of intervalIssues(
+      props.data.map((d) => d.date),
+      props.intervals
+    )) {
+      ctx.addIssue({ code: "custom", ...issue });
+    }
+  })
   .refine(notesNameData, NOTES_NAME_DATA);
 
 /** The validated payload. */
