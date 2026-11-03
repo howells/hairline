@@ -10,6 +10,7 @@ import { DumbbellQueue } from "./charts/basics/dumbbell-queue";
 import { HairlineArea } from "./charts/basics/hairline-area";
 import { HairlineLine } from "./charts/basics/hairline-line";
 import { PlumbScatter } from "./charts/basics/plumb-scatter";
+import { RangeDots } from "./charts/basics/range-dots";
 import { RungBars } from "./charts/basics/rung-bars";
 import { Slope } from "./charts/board/slope";
 import { charts } from "./schema/registry";
@@ -41,6 +42,7 @@ export const drawers = {
   "hairline-area": drawer(charts["hairline-area"], HairlineArea),
   "hairline-line": drawer(charts["hairline-line"], HairlineLine),
   "plumb-scatter": drawer(charts["plumb-scatter"], PlumbScatter),
+  "range-dots": drawer(charts["range-dots"], RangeDots),
   "rung-bars": drawer(charts["rung-bars"], RungBars),
   slope: drawer(charts.slope, Slope),
 };

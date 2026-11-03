@@ -10,6 +10,7 @@ import type { FormatInput } from "./format";
 import { keyOf } from "./key";
 import { noteShape, sharedShape } from "./options";
 import type { NoteProps, SharedCallbacks } from "./options";
+import { referencesSchema, referencesShape } from "./references";
 
 /** One point: a name, where it sits, and an optional key for when names repeat. */
 export const plumbDatumSchema = z.strictObject({
@@ -34,6 +35,7 @@ const domainSchema = z.tuple([z.number(), z.number()]);
 export const plumbScatterSchema = z
   .strictObject({
     ...noteShape,
+    ...referencesShape,
     ...sharedShape,
     /** The points, 1 to 20. */
     data: z
@@ -93,6 +95,12 @@ export const plumbScatterSchema = z
       .tuple([z.string(), z.string()])
       .optional()
       .describe("Names for the low and high ends of the x axis."),
+    /** Target lines and bands on the x axis. */
+    xReferences: referencesSchema
+      .optional()
+      .describe(
+        "Target lines ({ value, label?, at?, emphasis? }) and bands ({ from, to, label? }) on the x axis, up to 6."
+      ),
     /** The y axis range, [low, high]. */
     yDomain: domainSchema.optional().describe("The y axis range, [low, high]."),
     /** Name for the y direction, drawn up the left side. */

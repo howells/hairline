@@ -8,11 +8,12 @@ import type { Margin } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import type { Sync } from "../hooks";
-import { LABEL, MARK, OUTLINE, TICK } from "../roles";
+import { ReferenceOverlay } from "../references";
+import { LABEL, MARK, OUTLINE } from "../roles";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { Hatch, PlateLabel, Rules, Stipple } from "../texture";
+import { Hatch, Rules, Stipple } from "../texture";
 import { TEXTURE_PITCH, paint, useTextureIds } from "../texture-ids";
 import { stagger } from "../util";
 import { ValueGrid } from "../value-grid";
@@ -392,37 +393,21 @@ const Bars = (props: {
   });
 };
 
-/** The plan line, drawn behind the bars. */
+/** The plan as a target line across the plot, named at its start. */
 const PlanRule = (props: { plan: Plan; frame: Frame }) => {
-  const { m, width, y } = props.frame;
+  const { m, plotBottom, width, y } = props.frame;
+  const { label, value } = props.plan;
   return (
-    <HRule
-      className="fade"
-      kind="target"
-      x0={m.left}
-      x1={width - m.right}
-      y={y(props.plan.value)}
+    <ReferenceOverlay
+      along="y"
+      plane={{ x0: m.left, x1: width - m.right, y0: m.top, y1: plotBottom }}
+      refs={[
+        label === undefined || label === ""
+          ? { value }
+          : { at: "start", label, value },
+      ]}
+      scale={y}
     />
-  );
-};
-
-/** The plan's name on a plate at the left, over the bars that run past it. */
-const PlanLabel = (props: { plan: Plan; frame: Frame }) => {
-  const { m, y } = props.frame;
-  const text = props.plan.label;
-  if (text === undefined || text === "") {
-    return null;
-  }
-  return (
-    <g className="fade">
-      <PlateLabel
-        anchor="start"
-        className={TICK}
-        text={text}
-        x={m.left + 6}
-        y={y(props.plan.value) - 14}
-      />
-    </g>
   );
 };
 
@@ -589,14 +574,11 @@ const MonthlyBarsPlot = (props: {
           y={frame.y}
         />
       )}
-      {chart.plan !== undefined && <PlanRule plan={chart.plan} frame={frame} />}
       <Bars chart={chart} frame={frame} cursor={cursor} />
+      {chart.plan !== undefined && <PlanRule plan={chart.plan} frame={frame} />}
       <HRule x0={ruleX0} x1={ruleX1} y={baseY} />
       {!compact && (
         <Axes chart={chart} frame={frame} readout={readout} ticks={ticks} />
-      )}
-      {chart.plan !== undefined && (
-        <PlanLabel plan={chart.plan} frame={frame} />
       )}
       {readout === "value" && cursor !== Infinity && (
         <ValueReadout

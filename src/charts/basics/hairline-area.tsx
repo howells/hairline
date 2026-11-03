@@ -1,9 +1,7 @@
 import { scaleLinear } from "d3-scale";
-import type { ScaleLinear } from "d3-scale";
-import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { plural, fmtInt, monthTickLabels } from "../../lib/format";
+import { fmtInt } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
@@ -11,241 +9,148 @@ import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
-import { labelBox } from "../label-box";
 import { Dot } from "../markers";
-import { MARK_WEIGHT } from "../marks";
 import { NOTED_TOP } from "../note-layout";
 import { FootNote } from "../plot-note";
+import { clears, referenceRows, referenceValues } from "../reference-marks";
+import type { Spot } from "../reference-marks";
+import { ReferenceBands, ReferenceOverlay } from "../references";
+import type { Plane } from "../references";
 import { HRule } from "../rules";
 import { scoped, chartTable, plotOptions, pointerX } from "../shared-options";
 import { ChartSvg } from "../svg";
-import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
-import { sansWidth, stagger, noteOf } from "../util";
+import { stagger, noteOf } from "../util";
+import { DayStems, HeroMark, MonthAxis } from "./area-marks";
+import {
+  edgesOf,
+  heroLabelBox,
+  nearestOf,
+  shapesOf,
+  startOf,
+  valueScale,
+} from "./area-shapes";
+import type { Frame } from "./area-shapes";
+import { describeArea } from "./area-words";
 import { DailyEmpty } from "./daily-empty";
 import { DailyGrid, DailyLine } from "./daily-grid";
 import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
 import { foundNotes, notesDesc, withNotes } from "./daily-notes";
 import type { FoundNote } from "./daily-notes";
 import {
-  isLive,
   heroOf,
   seriesOf,
   readingRows,
-  reactKeyOf,
   readingsOf,
   valueAt,
 } from "./daily-readings";
 import type { Reading, Series } from "./daily-readings";
+import { ForecastRule, IntervalBands, IntervalNames } from "./interval-marks";
+import {
+  bandValues,
+  bandsOf,
+  forecastAt,
+  intervalFacts,
+  intervalTable,
+} from "./intervals";
+import type { Band } from "./intervals";
 import { axisRoom, dailyFloor } from "./util-a";
 
-interface Frame {
-  floor: number;
-  x: ScaleLinear<number, number>;
-  y: ScaleLinear<number, number>;
-}
-
-const stemClass = (hero: boolean, hovered: boolean) => {
-  if (hero) {
-    return "grow-y fill-hero";
-  }
-  if (hovered) {
-    return "grow-y fill-l2";
-  }
-  return "grow-y fill-l4";
-};
-
-/** Past this many days, stems stand monthly rather than weekly. */
-const WEEKLY_SPAN = 120;
-
-const DAY_MS = 86_400_000;
-
-/** Room kept between two month labels, px. */
-const MONTH_GAP = 6;
-
-/** Whether the readings span more than `WEEKLY_SPAN` days (not how many there are). */
-const isLongSpan = (readings: Reading[]) =>
-  readings.length > 1 &&
-  ((readings.at(-1)?.date.getTime() ?? 0) - readings[0].date.getTime()) /
-    DAY_MS >
-    WEEKLY_SPAN;
-
-/** Whether reading `i` is the first of its month. */
-const startsMonth = (readings: Reading[], i: number) =>
-  i === 0 ||
-  readings[i - 1].date.getUTCMonth() !== readings[i].date.getUTCMonth();
-
-/**
- * A stem stands on every Monday (on every first of the month over a long
- * span), on the hero and on the hovered day.
- */
-const hasStem = (
-  readings: Reading[],
-  i: number,
-  marks: { hero: number; hover: number | null; monthly: boolean }
-) =>
-  (marks.monthly
-    ? startsMonth(readings, i)
-    : readings[i].date.getUTCDay() === 1) ||
-  i === marks.hero ||
-  i === marks.hover;
-
-/** Weekly (or monthly) 2px stems, floor to value, on whole pixels. */
-interface DayStemsProps extends Series {
-  frame: Frame;
-  hero: number;
-  hover: number | null;
-}
-
-const DayStems = ({ frame, hero, hover, live, readings }: DayStemsProps) => (
-  <g>
-    {live.map((i) => {
-      const monthly = isLongSpan(readings);
-      if (!hasStem(readings, i, { hero, hover, monthly })) {
-        return null;
-      }
-      const top = Math.round(frame.y(valueAt(readings, i)));
-      const base = Math.round(frame.floor);
-      return (
-        <rect
-          className={`transition-tone ${stemClass(i === hero, i === hover)}`}
-          height={Math.max(0, base - top)}
-          key={reactKeyOf(readings[i], i)}
-          style={stagger(i, "fine")}
-          width={MARK_WEIGHT}
-          x={Math.round(frame.x(i)) - MARK_WEIGHT / 2}
-          y={top}
-        />
-      );
-    })}
-  </g>
-);
-
-/**
- * A label at each first of the month (each quarter over a long span); the
- * year on the first and where it changes.
- */
-const MonthAxis = ({
-  frame,
-  readings,
-}: {
-  frame: Frame;
-  readings: Reading[];
-}) => {
-  const every = isLongSpan(readings) ? 3 : 1;
-  // The first reading of each month, so weekly readings get month ticks too.
-  const months = readings.flatMap((r, i) =>
-    r.date.getUTCMonth() % every === 0 && startsMonth(readings, i) ? [i] : []
-  );
-  const axis = months.includes(0) ? months : [0, ...months];
-  const labels = monthTickLabels(axis.map((i) => readings[i].date));
-  // A narrow plot (a small multiple) drops a label that would touch the last.
-  const kept: { i: number; k: number }[] = [];
-  let end = -Infinity;
-  for (const [k, i] of axis.entries()) {
-    const width = sansWidth(labels[k]);
-    const left = k === 0 ? frame.x(i) - 6 : frame.x(i) - width / 2;
-    if (left >= end + MONTH_GAP) {
-      end = left + width;
-      kept.push({ i, k });
-    }
-  }
-  return (
-    <g>
-      {kept.map(({ i, k }) => (
-        <Label
-          anchor={k === 0 ? "start" : "middle"}
-          dx={k === 0 ? -6 : 0}
-          key={reactKeyOf(readings[i], i)}
-          voice="axis"
-          x={frame.x(i)}
-          y={frame.floor + 20}
-        >
-          {labels[k]}
-        </Label>
-      ))}
-    </g>
-  );
-};
-
-/**
- * The value scale: `domain` as given, else from zero (or the lowest value, if
- * below) up to the last of `ticks`, or to four nice steps over the peak.
- */
-const valueScale = (
-  extent: { hi: number; lo: number },
-  floor: number,
-  top: number,
-  scale: { domain?: [number, number]; ticks?: number[] }
-) => {
-  if (scale.domain !== undefined) {
-    return scaleLinear().domain(scale.domain).range([floor, top]);
-  }
-  const { ticks } = scale;
-  const last = ticks?.at(-1);
-  if (last !== undefined && last > 0) {
-    return scaleLinear().domain([0, last]).range([floor, top]);
-  }
-  const lo = Math.min(0, extent.lo);
-  const hi = Math.max(lo + 1, extent.hi);
-  return scaleLinear().domain([lo, hi]).nice(4).range([floor, top]);
-};
-
-/** The live index nearest a position along the index axis. */
-const nearestOf = (live: number[], at: number) => {
-  let [nearest] = live;
-  for (const k of live) {
-    if (Math.abs(k - at) < Math.abs(nearest - at)) {
-      nearest = k;
-    }
-  }
-  return nearest;
-};
-
-/** The hero: an ink dot on the line with its value above. */
-const HeroMark = ({
-  format,
-  frame,
-  value,
-  x,
-}: {
+interface LayersProps {
+  avoid: Spot[];
+  axis: ValueAxis;
+  axisTicks: number[];
+  bands: Band[];
+  clearing: (i: number) => boolean | undefined;
+  fill: string;
+  forecast: { at: number; label: string };
+  forecastPath: string;
+  forecasting: boolean;
   format: (v: number) => string;
   frame: Frame;
-  value: number;
-  x: number;
-}) => (
-  <>
-    <Dot
-      className="pop fill-hero"
-      cx={x}
-      cy={frame.y(value)}
-      size="md"
-      style={stagger(40, "fine")}
-    />
-    <Label
-      anchor="middle"
-      order={10}
-      voice="value"
-      x={x}
-      y={frame.y(value) - 13}
-    >
-      {format(value)}
-    </Label>
-  </>
-);
-
-/** The hovered day's dot, and the hero's dot with its value. */
-const Accents = (props: {
-  format: (v: number) => string;
-  frame: Frame;
+  height: number;
   hero: number;
   hover: number | null;
+  metrics: FontMetrics | undefined;
+  note: string | undefined;
+  notes: FoundNote[];
+  path: string;
+  plane: Plane;
   readings: Reading[];
-}) => {
-  const { frame, hero, hover, readings } = props;
+  references: HairlineAreaProps["references"];
+  series: Series;
+  stipple: string;
+  wholeNumbers: boolean;
+  width: number;
+  within: readonly [number, number];
+}
+
+/** Everything the plot draws, back to front. */
+const AreaLayers = (p: LayersProps) => {
+  const { bands, frame, hero, hover, readings, references } = p;
+  const { floor } = frame;
+  const { x0, x1 } = p.plane;
   return (
     <>
+      <defs>
+        <Stipple id={p.stipple} tone="fill-l3" />
+      </defs>
+      <DailyGrid
+        axis={p.axis}
+        clear={hero < 0 ? [] : [heroLabelBox(readings, frame, p.format, hero)]}
+        floor={floor}
+        format={p.format}
+        ticks={p.axisTicks}
+        wholeNumbers={p.wholeNumbers}
+        x0={x0}
+        x1={x1}
+        y={frame.y}
+      />
+      <ReferenceBands
+        along="y"
+        plane={p.plane}
+        refs={references}
+        scale={frame.y}
+        within={p.within}
+      />
+      <IntervalBands bands={bands} x={frame.x} y={frame.y} />
+      <path
+        className="fade"
+        d={p.fill}
+        fill={paint(p.stipple)}
+        style={stagger(2, "series")}
+      />
+      <DayStems
+        clearing={p.clearing}
+        forecast={p.forecast.at}
+        frame={frame}
+        hero={hero}
+        hover={hover}
+        {...p.series}
+      />
+      <HRule x0={x0} x1={x1} y={floor} />
+      <DailyLine d={p.path} style={stagger(4, "series")} />
+      {p.forecastPath === "" ? null : (
+        <path
+          className="fade dash-rule stroke-l3 stroke-medium fill-none"
+          d={p.forecastPath}
+        />
+      )}
+      {p.forecasting ? (
+        <ForecastRule
+          bottom={floor}
+          label={p.forecast.label}
+          top={p.plane.y0}
+          x={Math.round(frame.x(p.forecast.at - 1))}
+        />
+      ) : null}
+      <IntervalNames
+        bands={bands}
+        bounds={[p.plane.y0, floor]}
+        x={frame.x}
+        y={frame.y}
+      />
       {hover === null || hover === hero ? null : (
         <Dot
           className="fill-l2"
@@ -256,88 +161,49 @@ const Accents = (props: {
       )}
       {hero < 0 ? null : (
         <HeroMark
-          format={props.format}
+          format={p.format}
           frame={frame}
           value={valueAt(readings, hero)}
           x={frame.x(hero)}
         />
       )}
+      <ReferenceOverlay
+        along="y"
+        avoid={p.avoid}
+        plane={p.plane}
+        refs={references}
+        scale={frame.y}
+        within={p.within}
+      />
+      {p.notes.length === 0 ? null : (
+        <DailyNoteMarks
+          floor={floor}
+          frame={frame}
+          live={p.series.live}
+          notes={p.notes}
+          readings={readings}
+          width={p.width}
+          x0={x0}
+          x1={x1}
+        />
+      )}
+      <MonthAxis frame={frame} readings={readings} />
+      <FootNote
+        gutter={12}
+        height={p.height}
+        metrics={p.metrics}
+        text={p.note}
+        width={p.width}
+      />
     </>
   );
 };
 
-/** The line and the area under it, each broken where a reading is a gap. */
-const shapesOf = (readings: Reading[], frame: Frame) => ({
-  fill:
-    d3area<Reading>()
-      .defined(isLive)
-      .x((_, i) => frame.x(i))
-      .y0(Math.round(frame.floor))
-      .y1((r) => frame.y(r.value ?? 0))(readings) ?? "",
-  path:
-    d3line<Reading>()
-      .defined(isLive)
-      .x((_, i) => frame.x(i))
-      .y((r) => frame.y(r.value ?? 0))(readings) ?? "",
-});
-
-/** The grid's left and right edges, centred in `width`; a left axis keeps its margin outside the grid. */
-const edgesOf = (width: number, maxWidth: number, axis: ValueAxis) => {
-  const room = axisRoom(axis);
-  const frameW = Math.min(width - 16, maxWidth + room.left + room.right);
-  const x0 = Math.round((width - frameW) / 2);
-  return [x0 + room.left, x0 + frameW] as const;
-};
-
-/** Where the first day sits: clear of the hero's label when it is the first. */
-const startOf = (
-  readings: Reading[],
-  hero: number,
-  format: (v: number) => string
-) => {
-  const half =
-    hero < 0
-      ? 0
-      : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
-  return hero === 0 ? Math.max(8, half) : 8;
-};
-
-interface FrameArgs {
-  axis: ValueAxis;
-  domain: [number, number] | undefined;
-  floor: number;
-  format: (v: number) => string;
-  hero: number;
-  maxWidth: number;
-  notes: number;
-  readings: Reading[];
-  ticks: number[] | undefined;
-  values: number[];
-  width: number;
-}
-
-/** The frame's edges and scales; a chart with notes leaves room over its peak. */
-const frameOf = (a: FrameArgs) => {
-  const [x0, x1] = edgesOf(a.width, a.maxWidth, a.axis);
-  const start = startOf(a.readings, a.hero, a.format);
-  const frame: Frame = {
-    floor: a.floor,
-    x: scaleLinear()
-      .domain([0, Math.max(1, a.readings.length - 1)])
-      .range([x0 + start, x1 - axisRoom(a.axis).right]),
-    y: valueScale(
-      { hi: Math.max(...a.values), lo: Math.min(...a.values) },
-      a.floor,
-      a.notes > 0 ? NOTED_TOP : 40,
-      { domain: a.domain, ticks: a.ticks }
-    ),
-  };
-  return { frame, x0, x1 };
-};
-
 interface SvgProps {
   axis: ValueAxis;
+  bands: Band[];
   clear: () => void;
+  forecast: { at: number; label: string };
   /** Pattern id of the stipple under the line. */
   stipple: string;
   domain: [number, number] | undefined;
@@ -351,6 +217,7 @@ interface SvgProps {
   note: string | undefined;
   notes: FoundNote[];
   readings: Reading[];
+  references: HairlineAreaProps["references"];
   show: (i: number, x: number, y: number) => void;
   title: string | undefined;
   ticks: number[] | undefined;
@@ -359,27 +226,50 @@ interface SvgProps {
   width: number;
 }
 
-/** Where the hero's value label prints, over its dot. */
-const heroLabelBox = (
+/** The value axis over the reach, and the readings across the plot. */
+const frameOf = (
   readings: Reading[],
+  at: {
+    floor: number;
+    reach: { hi: number; lo: number };
+    domain: [number, number] | undefined;
+    span: [number, number];
+    ticks: number[] | undefined;
+    top: number;
+  }
+): Frame => ({
+  floor: at.floor,
+  x: scaleLinear()
+    .domain([0, Math.max(1, readings.length - 1)])
+    .range(at.span),
+  y: valueScale(at.reach, at.floor, at.top, {
+    domain: at.domain,
+    ticks: at.ticks,
+  }),
+});
+
+/** Where the marks sit, for labels to keep clear of. */
+const avoidOf = (
+  readings: Reading[],
+  live: number[],
   frame: Frame,
-  format: (v: number) => string,
   hero: number
-) =>
-  labelBox(
-    format(valueAt(readings, hero)),
-    frame.x(hero),
-    frame.y(valueAt(readings, hero)) - 13,
-    "middle"
-  );
+) => [
+  ...live.map((i) => ({ x: frame.x(i), y: frame.y(valueAt(readings, i)) })),
+  ...(hero < 0
+    ? []
+    : [{ x: frame.x(hero), y: frame.y(valueAt(readings, hero)) - 13 }]),
+];
 
 const HairlineAreaSvg = ({
   axis,
+  bands,
   clear,
   domain,
   stipple,
   emphasis,
   fmtDate,
+  forecast,
   format,
   height,
   hover,
@@ -388,6 +278,7 @@ const HairlineAreaSvg = ({
   note,
   notes,
   readings,
+  references,
   show,
   title,
   ticks,
@@ -404,27 +295,47 @@ const HairlineAreaSvg = ({
   }
   const values = live.map((i) => valueAt(readings, i));
   const max = Math.max(...values);
+  const reach = [...referenceValues(references), ...bandValues(bands)];
   const peak = live[values.indexOf(max)];
   const hero = heroOf(readings, live, emphasis, peak);
-  const { frame, x0, x1 } = frameOf({
-    axis,
+  const top = notes.length > 0 ? NOTED_TOP : 40;
+  const [x0, x1] = edgesOf(width, maxWidth, axis);
+  const start = startOf(readings, hero, format);
+  const frame = frameOf(readings, {
     domain,
     floor,
-    format,
-    hero,
-    maxWidth,
-    notes: notes.length,
-    readings,
+    reach: { hi: Math.max(max, ...reach), lo: Math.min(...values, ...reach) },
+    span: [x0 + start, x1 - axisRoom(axis).right],
     ticks,
-    values,
-    width,
+    top,
   });
-  const { fill, path } = shapesOf(readings, frame);
-  const peakAt = fmtDate(readings[peak].date);
-  const label = `Daily values, ${fmtDate(readings[live[0]].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
-  const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${peakAt}. The data table lists every reading.${notesDesc(notes, readings, fmtDate)}`;
+  const {
+    fill,
+    forecast: forecastPath,
+    path,
+  } = shapesOf(readings, frame, forecast.at);
+  const forecasting = forecast.at > 0 && forecast.at < readings.length;
+  const plane = { x0, x1, y0: top, y1: floor };
+  const within = [x0, x1 - axisRoom(axis).right] as const;
+  const clearing = (i: number) => clears(references, valueAt(readings, i));
+  const avoid = avoidOf(readings, live, frame, hero);
+  const axisTicks = ticks ?? frame.y.ticks(4);
+  const { desc, label } = describeArea({
+    bands,
+    fmtDate,
+    forecast,
+    forecasting,
+    format,
+    max,
+    peak,
+    readings,
+    references,
+  });
+
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
-    const near = nearestOf(live, frame.x.invert(pointerX(e, width)));
+    const px = pointerX(e, width);
+    const at = frame.x.invert(px);
+    const near = nearestOf(live, at);
     const lift = near === hero ? 16 : 10;
     show(near, frame.x(near), frame.y(valueAt(readings, near)) - lift);
   };
@@ -433,61 +344,39 @@ const HairlineAreaSvg = ({
     <ChartSvg
       className="touch-pan-y"
       height={height}
-      desc={desc}
+      desc={`${desc}${notesDesc(notes, readings, fmtDate)}`}
       label={title ?? label}
       leave={clear}
       onPointerMove={onMove}
       width={width}
     >
-      <defs>
-        <Stipple id={stipple} tone="fill-l3" />
-      </defs>
-      <DailyGrid
+      <AreaLayers
+        avoid={avoid}
         axis={axis}
-        clear={hero < 0 ? [] : [heroLabelBox(readings, frame, format, hero)]}
-        floor={floor}
-        format={format}
-        ticks={ticks ?? frame.y.ticks(4)}
-        wholeNumbers={wholeNumbers}
-        x0={x0}
-        x1={x1}
-        y={frame.y}
-      />
-      <path
-        className="fade"
-        d={fill}
-        fill={paint(stipple)}
-        style={stagger(2, "series")}
-      />
-      <DayStems frame={frame} hero={hero} hover={hover} {...series} />
-      <HRule x0={x0} x1={x1} y={floor} />
-      <DailyLine d={path} style={stagger(4, "series")} />
-      <Accents
+        axisTicks={axisTicks}
+        bands={bands}
+        clearing={clearing}
+        fill={fill}
+        forecast={forecast}
+        forecastPath={forecastPath}
+        forecasting={forecasting}
         format={format}
         frame={frame}
+        height={height}
         hero={hero}
         hover={hover}
-        readings={readings}
-      />
-      {notes.length === 0 ? null : (
-        <DailyNoteMarks
-          floor={floor}
-          frame={frame}
-          live={live}
-          notes={notes}
-          readings={readings}
-          width={width}
-          x0={x0}
-          x1={x1}
-        />
-      )}
-      <MonthAxis frame={frame} readings={readings} />
-      <FootNote
-        gutter={12}
-        height={height}
         metrics={metrics}
-        text={note}
+        note={note}
+        notes={notes}
+        path={path}
+        plane={plane}
+        readings={readings}
+        references={references}
+        series={series}
+        stipple={stipple}
+        wholeNumbers={wholeNumbers}
         width={width}
+        within={within}
       />
     </ChartSvg>
   );
@@ -501,10 +390,24 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
   const { at, clear, key: hover, show } = useHover<number>();
   const stipple = useTextureIds("daily")("stipple");
   const tip = at === null ? undefined : readings[at.key];
+  const bands = bandsOf(props.intervals, readings);
+  const forecast = {
+    at: forecastAt(readings, props.forecast),
+    label: props.forecast?.label ?? "Forecast",
+  };
+  const extra = intervalTable(
+    bands,
+    { at: forecast.at, shown: props.forecast !== undefined },
+    format
+  );
+
   const notes = foundNotes(props.notes, readings);
   const table = withNotes(
-    ["Date", "Value"],
-    readingRows(readings, fmtDate, format),
+    ["Date", "Value", ...extra.columns],
+    readingRows(readings, fmtDate, format).map((row, i) => [
+      ...row,
+      ...extra.cells(i),
+    ]),
     notes
   );
 
@@ -513,17 +416,24 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
       initialWidth={props.initialWidth}
       width={props.width}
       {...plotOptions(props)}
-      table={chartTable(
-        props,
-        props.title ?? "Daily values",
-        table.columns,
-        table.rows
-      )}
+      table={chartTable(props, props.title ?? "Daily values", table.columns, [
+        ...table.rows,
+        ...referenceRows(props.references, format, {
+          columns: table.columns.length,
+          values: [1],
+        }),
+      ])}
       overlay={
         at === null || tip === undefined ? null : (
           <Tooltip x={at.x} y={at.y}>
             <TipText
-              facts={[format(tip.value ?? 0)]}
+              facts={[
+                format(tip.value ?? 0),
+                ...(at.key >= forecast.at
+                  ? [forecast.label.toLowerCase()]
+                  : []),
+                ...intervalFacts(bands, at.key, format),
+              ]}
               lead={fmtDate(tip.date)}
             />
           </Tooltip>
@@ -534,8 +444,10 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
         <>
           <HairlineAreaSvg
             axis={props.valueAxis ?? "right"}
-            clear={clear}
             domain={props.domain}
+            bands={bands}
+            clear={clear}
+            forecast={forecast}
             emphasis={props.emphasis}
             stipple={stipple}
             fmtDate={fmtDate}
@@ -547,6 +459,7 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
             note={noteOf(props)}
             notes={notes}
             readings={readings}
+            references={props.references}
             show={show}
             title={props.title}
             ticks={props.ticks}

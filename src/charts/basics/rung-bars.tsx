@@ -9,6 +9,13 @@ import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
+import {
+  clears,
+  referenceDesc,
+  referenceRows,
+  referenceValues,
+} from "../reference-marks";
+import { ReferenceBands, ReferenceOverlay } from "../references";
 import { HRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
@@ -61,6 +68,8 @@ interface Ladder {
   /** Print `hidden` above a withheld column. */
   printHidden: boolean;
   hero: boolean;
+  /** Stepped back: a reference line asks for ink and this bar falls short. */
+  back: boolean;
   index: number;
   /** How far below the first line this bar's label sits: 0, or LABEL_STEP. */
   labelDrop: number;
@@ -106,6 +115,16 @@ const CastShadow = (props: {
   );
 };
 
+/** A bar's rung tones: ink for the hero, a step back when a reference line asks for ink, else grey. */
+const rungTone = (props: { back: boolean; hero: boolean }) => {
+  if (props.hero) {
+    return { accent: "fill-hero", rung: "fill-hero" };
+  }
+  return props.back
+    ? { accent: "fill-l4", rung: "fill-l5" }
+    : { accent: "fill-l2", rung: "fill-l4" };
+};
+
 /**
  * One bar: a carved column of 2px rungs, one per unit, every tenth long and
  * dark, with its engraved shadow behind and its value on top.
@@ -133,18 +152,20 @@ const LadderBar = (props: Ladder) => {
           y2={props.floor - 4.5}
         />
       ) : null}
-      <CastShadow
-        floor={props.floor}
-        hero={props.hero}
-        index={props.index}
-        right={right}
-        shadow={props.shadow}
-        tex={props.tex}
-        top={top}
-      />
+      {props.back ? null : (
+        <CastShadow
+          floor={props.floor}
+          hero={props.hero}
+          index={props.index}
+          right={right}
+          shadow={props.shadow}
+          tex={props.tex}
+          top={top}
+        />
+      )}
       <Rungs
-        accent={props.hero ? "fill-hero" : "fill-l2"}
-        className={props.hero ? "fill-hero" : "fill-l4"}
+        accent={rungTone(props).accent}
+        className={rungTone(props).rung}
         every={TENS}
         reach={TENS_REACH}
         floor={props.floor}
@@ -271,12 +292,164 @@ const bands = (
   return { alternate, plotWidth, x, x0 };
 };
 
+interface SvgProps {
+  data: RungDatum[];
+  format: (v: number) => string;
+  hidden: string;
+  hover: ReturnType<typeof useHover<number>>;
+  name: string;
+  props: RungBarsProps;
+  scale: {
+    fixedHeight: boolean;
+    height: number;
+    largest: number;
+    unit: number;
+    values: number[];
+  };
+  tex: ReturnType<typeof useTextureIds>;
+  width: number;
+}
+
+/** The ladder bars, their references and the floor they stand on. */
+const RungBarsSvg = ({
+  data,
+  format,
+  hidden,
+  hover,
+  name,
+  props,
+  scale,
+  tex,
+  width,
+}: SvgProps) => {
+  const { fixedHeight, height, largest, unit, values } = scale;
+  const margin = {
+    bottom: 30 + noteSpace(noteOf(props), width - 16, 20, props.metrics),
+    top: 28,
+  };
+  const { alternate, plotWidth, x, x0 } = bands(data, width, props.metrics);
+  // A shared max keeps room for a second line of labels either way,
+  // so charts set side by side keep one pitch and one floor.
+  const bottom =
+    margin.bottom + (alternate || props.max !== undefined ? LABEL_STEP : 0);
+  const max = largest / unit;
+  const pitch = rungPitch(height - bottom - margin.top, max);
+  // When the pitch reaches its cap the columns stop short of the
+  // room, so the plot closes up round them instead of leaving air;
+  // at its floor the tallest column needs more, so the plot grows.
+  // A fixed-size chart keeps exactly the height it was given.
+  const tallest = Math.round(max) * pitch;
+  const fitted = fixedHeight
+    ? height
+    : Math.max(
+        Math.min(height, margin.top + Math.ceil(max) * pitch + bottom),
+        margin.top + tallest + bottom
+      );
+  const floor = Math.round(fitted - bottom);
+  const shadow = Math.min(
+    SHADOW,
+    Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
+  );
+  const keys = reactKeys(data);
+  const plane = {
+    x0,
+    x1: x0 + plotWidth,
+    y0: margin.top,
+    y1: floor,
+  };
+  // A value's height: one pitch for each unit, up from the floor.
+  const valueY = (v: number) => floor - (v / unit) * pitch;
+  // Emphasis is by key (id, else label) so sorting never moves it;
+  // none given, the largest. A key that names no bar emphasises none.
+  const hero =
+    props.emphasis === undefined
+      ? maxIndex(values)
+      : data.findIndex((d) => keyOf(d) === props.emphasis);
+  // A reference line that asks for ink decides each bar's tone instead.
+  const standing = (index: number) =>
+    clears(props.references, data[index].value ?? Number.NaN);
+
+  return (
+    <ChartSvg
+      desc={[
+        describe(data, format, hidden),
+        referenceDesc(props.references, format),
+      ]
+        .filter((text) => text !== "")
+        .join(" ")}
+      height={fitted}
+      label={name}
+      leave={hover.clear}
+      width={width}
+    >
+      <defs>
+        <Hatch id={tex("shade")} tone="fill-l4" />
+        <CrossHatch id={tex("shade-hero")} tone="fill-l3" />
+      </defs>
+      <ReferenceBands
+        along="y"
+        plane={plane}
+        refs={props.references}
+        scale={valueY}
+      />
+      <HRule x0={Math.round(x0)} x1={Math.round(x0 + plotWidth)} y={floor} />
+      {data.map((datum, index) => {
+        const left = x(index) ?? 0;
+        const rungs = Math.max(0, Math.round((datum.value ?? 0) / unit));
+        return (
+          <LadderBar
+            key={keys[index]}
+            bandwidth={x.bandwidth()}
+            datum={datum}
+            dim={hover.dim(index)}
+            floor={floor}
+            format={format}
+            hidden={hidden}
+            printHidden={props.printHidden ?? true}
+            back={standing(index) === false}
+            hero={standing(index) ?? hero === index}
+            index={index}
+            labelDrop={alternate && index % 2 === 1 ? LABEL_STEP : 0}
+            left={left}
+            pitch={pitch}
+            rungs={rungs}
+            shadow={shadow}
+            tex={tex}
+            onEnter={hover.enter(
+              index,
+              left + x.bandwidth() / 2,
+              rungY(floor, rungs - 1, pitch) - 22
+            )}
+          />
+        );
+      })}
+      <ReferenceOverlay
+        along="y"
+        plane={plane}
+        refs={props.references}
+        scale={valueY}
+      />
+      <FootNote
+        height={fitted}
+        metrics={props.metrics}
+        text={noteOf(props)}
+        width={width}
+      />
+    </ChartSvg>
+  );
+};
+
 const RungBarsPlot = (props: RungBarsProps) => {
   const data = (props.data ?? []).filter(
     (d) => d.value === null || Number.isFinite(d.value)
   );
   const values = data.map((d) => d.value ?? 0);
-  const largest = Math.max(0, props.max ?? 0, ...values);
+  const largest = Math.max(
+    0,
+    props.max ?? 0,
+    ...values,
+    ...referenceValues(props.references)
+  );
   const unit = countingUnit(
     props.unit !== undefined && props.unit > 0 ? props.unit : 1,
     largest
@@ -297,107 +470,30 @@ const RungBarsPlot = (props: RungBarsProps) => {
         props,
         name,
         ["Label", "Value"],
-        data.map((d) => [d.label, printed(d, format, hidden)])
+        [
+          ...data.map((d) => [d.label, printed(d, format, hidden)]),
+          ...referenceRows(props.references, format, {
+            columns: 2,
+            values: [1],
+          }),
+        ]
       )}
       width={props.width}
       overlay={rungTip(hover.at, data, format, hidden)}
     >
-      {(width) => {
-        const margin = {
-          bottom: 30 + noteSpace(noteOf(props), width - 16, 20, props.metrics),
-          top: 28,
-        };
-        const { alternate, plotWidth, x, x0 } = bands(
-          data,
-          width,
-          props.metrics
-        );
-        // A shared max keeps room for a second line of labels either way,
-        // so charts set side by side keep one pitch and one floor.
-        const bottom =
-          margin.bottom +
-          (alternate || props.max !== undefined ? LABEL_STEP : 0);
-        const max = largest / unit;
-        const pitch = rungPitch(height - bottom - margin.top, max);
-        // When the pitch reaches its cap the columns stop short of the
-        // room, so the plot closes up round them instead of leaving air;
-        // at its floor the tallest column needs more, so the plot grows.
-        // A fixed-size chart keeps exactly the height it was given.
-        const tallest = Math.round(max) * pitch;
-        const fitted = fixedHeight
-          ? height
-          : Math.max(
-              Math.min(height, margin.top + Math.ceil(max) * pitch + bottom),
-              margin.top + tallest + bottom
-            );
-        const floor = Math.round(fitted - bottom);
-        const shadow = Math.min(
-          SHADOW,
-          Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
-        );
-        const keys = reactKeys(data);
-        // Emphasis is by key (id, else label) so sorting never moves it;
-        // none given, the largest. A key that names no bar emphasises none.
-        const hero =
-          props.emphasis === undefined
-            ? maxIndex(values)
-            : data.findIndex((d) => keyOf(d) === props.emphasis);
-
-        return (
-          <ChartSvg
-            desc={describe(data, format, hidden)}
-            height={fitted}
-            label={name}
-            leave={hover.clear}
-            width={width}
-          >
-            <defs>
-              <Hatch id={tex("shade")} tone="fill-l4" />
-              <CrossHatch id={tex("shade-hero")} tone="fill-l3" />
-            </defs>
-            <HRule
-              x0={Math.round(x0)}
-              x1={Math.round(x0 + plotWidth)}
-              y={floor}
-            />
-            {data.map((datum, index) => {
-              const left = x(index) ?? 0;
-              const rungs = Math.max(0, Math.round((datum.value ?? 0) / unit));
-              return (
-                <LadderBar
-                  key={keys[index]}
-                  bandwidth={x.bandwidth()}
-                  datum={datum}
-                  dim={hover.dim(index)}
-                  floor={floor}
-                  format={format}
-                  hidden={hidden}
-                  printHidden={props.printHidden ?? true}
-                  hero={hero === index}
-                  index={index}
-                  labelDrop={alternate && index % 2 === 1 ? LABEL_STEP : 0}
-                  left={left}
-                  pitch={pitch}
-                  rungs={rungs}
-                  shadow={shadow}
-                  tex={tex}
-                  onEnter={hover.enter(
-                    index,
-                    left + x.bandwidth() / 2,
-                    rungY(floor, rungs - 1, pitch) - 22
-                  )}
-                />
-              );
-            })}
-            <FootNote
-              height={fitted}
-              metrics={props.metrics}
-              text={noteOf(props)}
-              width={width}
-            />
-          </ChartSvg>
-        );
-      }}
+      {(width) => (
+        <RungBarsSvg
+          data={data}
+          format={format}
+          hidden={hidden}
+          hover={hover}
+          name={name}
+          props={props}
+          scale={{ fixedHeight, height, largest, unit, values }}
+          tex={tex}
+          width={width}
+        />
+      )}
     </Plot>
   );
 };

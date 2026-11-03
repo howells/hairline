@@ -167,6 +167,7 @@ describe("the registry", () => {
       "metrics",
       "note",
       "printHidden",
+      "references",
       "replayKey",
       "scale",
       "strokes",

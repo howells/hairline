@@ -11,6 +11,14 @@ import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
 import { FootNote } from "../plot-note";
+import {
+  clears,
+  clearsAll,
+  referenceDesc,
+  referenceRows,
+  referenceValues,
+} from "../reference-marks";
+import { ReferenceBands, ReferenceOverlay } from "../references";
 import { HRule, Stem } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
@@ -51,7 +59,13 @@ const Floor = ({ floor, highName, lowName, x0, x1, yLabel }: FloorProps) => (
   </g>
 );
 
-const dotClass = (hero: boolean) => (hero ? "pop fill-hero" : "pop fill-l3");
+/** A point's tone: by whether it clears the reference lines that ask for ink, else the hero's ink or grey. */
+const dotClass = (hero: boolean, clearing: boolean | undefined) => {
+  if (clearing !== undefined) {
+    return clearing ? "pop fill-hero" : "pop fill-l5";
+  }
+  return hero ? "pop fill-hero" : "pop fill-l3";
+};
 
 /** Where a point's name sits: centred above the dot, or beside it. */
 interface Placement {
@@ -123,7 +137,25 @@ const placeName = (
   );
 };
 
+/** Spots along a point's printed name, for reference labels to keep clear of. */
+const nameSpots = (
+  place: Placement | undefined,
+  self: { px: number; py: number; w: number }
+) => {
+  if (place === undefined) {
+    return [];
+  }
+  const [l, r] = extent(place, self.px, self.w);
+  const y = self.py + place.dy;
+  return Array.from({ length: Math.ceil((r - l) / 24) + 1 }, (_, k) => ({
+    x: Math.min(r, l + k * 24),
+    y,
+  }));
+};
+
 interface PointProps {
+  /** Whether the point clears the reference lines that ask for ink; undefined when none does. */
+  clearing: boolean | undefined;
   datum: PlumbDatum;
   dim: boolean;
   floor: number;
@@ -139,6 +171,7 @@ interface PointProps {
 
 /** One point on its stem to the floor (evenly dotted, solid ink for the hero), named when asked. */
 const Point = ({
+  clearing,
   datum,
   dim,
   floor,
@@ -183,7 +216,7 @@ const Point = ({
         </g>
       )}
       <Dot
-        className={dotClass(hero)}
+        className={dotClass(hero, clearing)}
         cx={crisp(px)}
         cy={py}
         size={hero ? "md" : "sm"}
@@ -253,14 +286,25 @@ const labelledIndices = (
 };
 
 /** What the points say, in words, from the data passed in. */
-const summary = (data: PlumbDatum[], format: (v: number) => string) => {
+const summary = (
+  data: PlumbDatum[],
+  formats: { x: (v: number) => string; y: (v: number) => string },
+  props: PlumbScatterProps
+) => {
   if (data.length === 0) {
     return "No data.";
   }
   const ys = data.map((d) => d.y);
   const high = data[ys.indexOf(Math.max(...ys))];
   const low = data[ys.indexOf(Math.min(...ys))];
-  return `${plural(data.length, "point")}. Highest: ${high.label}, ${format(high.y)}. Lowest: ${low.label}, ${format(low.y)}. The data table lists every point.`;
+  return [
+    `${plural(data.length, "point")}. Highest: ${high.label}, ${formats.y(high.y)}. Lowest: ${low.label}, ${formats.y(low.y)}.`,
+    referenceDesc(props.references, formats.y, "y"),
+    referenceDesc(props.xReferences, formats.x, "x"),
+    "The data table lists every point.",
+  ]
+    .filter((text) => text !== "")
+    .join(" ");
 };
 
 /** The svg's accessible name: every point read out, or "No data". */
@@ -288,6 +332,170 @@ const scatterTip = (
     </Tooltip>
   );
 
+interface NamesArgs {
+  format: (v: number) => string;
+  hero: number;
+  labelled: Set<number>;
+  metrics: PlumbScatterProps["metrics"];
+  width: number;
+  x: (v: number) => number;
+  y: (v: number) => number;
+}
+
+/** Where each labelled point prints its name, and the spots that keeps reference labels off. */
+const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
+  const { format, hero, labelled, metrics, width, x, y } = a;
+  const selves = data.map((d, i) => ({
+    px: x(d.x),
+    py: y(d.y),
+    w: sansWidth(`${d.label} · ${format(d.y)}`, hero === i ? 12 : 11, metrics),
+  }));
+  const places = selves.map((self, i) =>
+    labelled.has(i)
+      ? placeName(
+          self,
+          selves.map((o) => ({ px: o.px, py: o.py })),
+          width,
+          hero === i
+        )
+      : undefined
+  );
+  const avoid = [
+    ...data.map((d) => ({ x: x(d.x), y: y(d.y) })),
+    ...selves.flatMap((self, i) => nameSpots(places[i], self)),
+  ];
+  return { avoid, places };
+};
+
+interface SvgProps {
+  data: PlumbDatum[];
+  domains: { x: [number, number]; y: [number, number] };
+  format: (v: number) => string;
+  formatX: (v: number) => string;
+  height: number;
+  hero: number;
+  hover: ReturnType<typeof useHover<number>>;
+  keys: string[];
+  label: string;
+  labelled: Set<number>;
+  order: Map<number, number>;
+  props: PlumbScatterProps;
+  width: number;
+}
+
+/** The floor, the references and a stemmed point for each datum. */
+const PlumbScatterSvg = ({
+  data,
+  domains,
+  format,
+  formatX,
+  height,
+  hero,
+  hover,
+  keys,
+  label,
+  labelled,
+  order,
+  props,
+  width,
+}: SvgProps) => {
+  const [lowName, highName] = props.xLabels ?? ["Low", "High"];
+  const hasNote = hasText(noteOf(props));
+  const plotW = Math.min(width - EDGE * 2, 600);
+  const x0 = (width - plotW) / 2;
+  const notes = noteLines(noteOf(props), width - 24, props.metrics);
+  const floor =
+    Math.round(height) -
+    (hasNote ? 58 : 36) -
+    Math.max(0, notes.length - 1) * NOTE_LINE;
+  const x = scaleLinear()
+    .domain(domains.x)
+    .range([x0, x0 + plotW]);
+  const y = scaleLinear()
+    .domain(domains.y)
+    .range([floor - 14, 46]);
+  const plane = { x0, x1: x0 + plotW, y0: 30, y1: floor };
+  const { avoid, places } = namesOf(data, {
+    format,
+    hero,
+    labelled,
+    metrics: props.metrics,
+    width,
+    x,
+    y,
+  });
+  return (
+    <ChartSvg
+      desc={summary(data, { x: formatX, y: format }, props)}
+      height={height}
+      label={label}
+      leave={hover.clear}
+      width={width}
+    >
+      <Floor
+        floor={floor}
+        highName={highName}
+        lowName={lowName}
+        x0={x0}
+        x1={x0 + plotW}
+        yLabel={props.yLabel ?? "Higher ↑"}
+      />
+      <ReferenceBands
+        along="y"
+        plane={plane}
+        refs={props.references}
+        scale={y}
+      />
+      <ReferenceBands
+        along="x"
+        plane={plane}
+        refs={props.xReferences}
+        scale={x}
+      />
+      {data.map((d, i) => (
+        <Point
+          clearing={clearsAll([
+            clears(props.references, d.y),
+            clears(props.xReferences, d.x),
+          ])}
+          place={places[i]}
+          datum={d}
+          dim={hover.dim(i)}
+          floor={floor}
+          format={format}
+          hero={hero === i}
+          key={keys[i]}
+          onEnter={hover.showAt(i)}
+          order={order.get(i) ?? i}
+          x={x}
+          y={y}
+        />
+      ))}
+      <ReferenceOverlay
+        along="y"
+        avoid={avoid}
+        plane={plane}
+        refs={props.references}
+        scale={y}
+      />
+      <ReferenceOverlay
+        along="x"
+        avoid={avoid}
+        plane={plane}
+        refs={props.xReferences}
+        scale={x}
+      />
+      <FootNote
+        gutter={12}
+        height={height}
+        metrics={props.metrics}
+        text={noteOf(props)}
+        width={width}
+      />
+    </ChartSvg>
+  );
+};
+
 const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const data = (props.data ?? []).filter(
     (d) => Number.isFinite(d.x) && Number.isFinite(d.y)
@@ -298,8 +506,6 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
     props.formatX === undefined
       ? (v: number) => `${Math.round(v)}`
       : resolveFormat(props.formatX);
-  const [lowName, highName] = props.xLabels ?? ["Low", "High"];
-  const hasNote = hasText(noteOf(props));
   const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
@@ -314,8 +520,12 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
       ? highest
       : data.findIndex((d) => keyOf(d) === props.emphasis);
   const labelled = labelledIndices(data, props.labelled, [highest, lowest]);
-  const xDomain = props.xDomain ?? defaultXDomain(xs);
-  const yDomain = props.yDomain ?? defaultYDomain(ys);
+  const xDomain =
+    props.xDomain ??
+    defaultXDomain([...xs, ...referenceValues(props.xReferences)]);
+  const yDomain =
+    props.yDomain ??
+    defaultYDomain([...ys, ...referenceValues(props.references)]);
   const byX = data.map((d, i) => ({ i, x: d.x })).toSorted((a, b) => a.x - b.x);
   const order = new Map(byX.map((entry, r) => [entry.i, r]));
   const label = props.title ?? describe(data, formatX, format);
@@ -328,83 +538,40 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
         props,
         props.title ?? "Points",
         ["Label", "X", "Y"],
-        data.map((d) => [d.label, formatX(d.x), format(d.y)])
+        [
+          ...data.map((d) => [d.label, formatX(d.x), format(d.y)]),
+          ...referenceRows(props.references, format, {
+            axis: "y",
+            columns: 3,
+            values: [2],
+          }),
+          ...referenceRows(props.xReferences, formatX, {
+            axis: "x",
+            columns: 3,
+            values: [1],
+          }),
+        ]
       )}
       width={props.width}
       overlay={scatterTip(hover.at, data, formatX, format)}
     >
-      {(width) => {
-        const plotW = Math.min(width - EDGE * 2, 600);
-        const x0 = (width - plotW) / 2;
-        const notes = noteLines(noteOf(props), width - 24, props.metrics);
-        const floor =
-          Math.round(height) -
-          (hasNote ? 58 : 36) -
-          Math.max(0, notes.length - 1) * NOTE_LINE;
-        const x = scaleLinear()
-          .domain(xDomain)
-          .range([x0, x0 + plotW]);
-        const y = scaleLinear()
-          .domain(yDomain)
-          .range([floor - 14, 46]);
-        return (
-          <ChartSvg
-            desc={summary(data, format)}
-            height={height}
-            label={label}
-            leave={hover.clear}
-            width={width}
-          >
-            <Floor
-              floor={floor}
-              highName={highName}
-              lowName={lowName}
-              x0={x0}
-              x1={x0 + plotW}
-              yLabel={props.yLabel ?? "Higher ↑"}
-            />
-            {data.map((d, i) => (
-              <Point
-                place={
-                  labelled.has(i)
-                    ? placeName(
-                        {
-                          px: x(d.x),
-                          py: y(d.y),
-                          w: sansWidth(
-                            `${d.label} · ${format(d.y)}`,
-                            hero === i ? 12 : 11,
-                            props.metrics
-                          ),
-                        },
-                        data.map((o) => ({ px: x(o.x), py: y(o.y) })),
-                        width,
-                        hero === i
-                      )
-                    : undefined
-                }
-                datum={d}
-                dim={hover.dim(i)}
-                floor={floor}
-                format={format}
-                hero={hero === i}
-                key={keys[i]}
-                onEnter={hover.showAt(i)}
-                order={order.get(i) ?? i}
-                x={x}
-                y={y}
-              />
-            ))}
-            <FootNote
-              gutter={12}
-              height={height}
-              metrics={props.metrics}
-              text={noteOf(props)}
-              width={width}
-            />
-          </ChartSvg>
-        );
-      }}
+      {(width) => (
+        <PlumbScatterSvg
+          data={data}
+          domains={{ x: xDomain, y: yDomain }}
+          format={format}
+          formatX={formatX}
+          height={height}
+          hero={hero}
+          hover={hover}
+          keys={keys}
+          label={label}
+          labelled={labelled}
+          order={order}
+          props={props}
+          width={width}
+        />
+      )}
     </Plot>
   );
 };

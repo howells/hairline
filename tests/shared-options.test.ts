@@ -10,6 +10,7 @@ import {
   HairlineArea,
   HairlineLine,
   PlumbScatter,
+  RangeDots,
   RungBars,
   Slope,
 } from "@howells/hairline";
@@ -18,6 +19,7 @@ import type {
   HairlineAreaProps,
   HairlineLineProps,
   PlumbScatterProps,
+  RangeDotsProps,
   RungBarsProps,
   SlopeProps,
 } from "@howells/hairline";
@@ -72,6 +74,12 @@ const payloads = {
       { label: "Elm", x: 5, y: 6 },
     ],
   },
+  "range-dots": {
+    data: [
+      { estimate: 40, high: 46, label: "Oak", low: 34 },
+      { estimate: 20, high: 30, label: "Ash", low: 10 },
+    ],
+  },
   "rung-bars": {
     data: [
       { label: "Oak", value: 19 },
@@ -90,6 +98,7 @@ const payloads = {
   "hairline-area": HairlineAreaProps;
   "hairline-line": HairlineLineProps;
   "plumb-scatter": PlumbScatterProps;
+  "range-dots": RangeDotsProps;
   "rung-bars": RungBarsProps;
   slope: SlopeProps;
 };
@@ -100,6 +109,7 @@ const named = {
   "hairline-area": "5 Mar",
   "hairline-line": "5 Mar",
   "plumb-scatter": "Oak",
+  "range-dots": "Oak",
   "rung-bars": "Oak",
   slope: "Oak",
 } satisfies Record<ChartKind, string>;
@@ -109,6 +119,7 @@ const kinds = [
   "hairline-area",
   "hairline-line",
   "plumb-scatter",
+  "range-dots",
   "rung-bars",
   "slope",
 ] as const satisfies readonly ChartKind[];
@@ -126,6 +137,8 @@ const builders = {
     createElement(HairlineLine, { ...payloads["hairline-line"], ...own }),
   "plumb-scatter": (own: Own) =>
     createElement(PlumbScatter, { ...payloads["plumb-scatter"], ...own }),
+  "range-dots": (own: Own) =>
+    createElement(RangeDots, { ...payloads["range-dots"], ...own }),
   "rung-bars": (own: Own) =>
     createElement(RungBars, { ...payloads["rung-bars"], ...own }),
   slope: ({ unitNote: _note, ...own }: Own) =>

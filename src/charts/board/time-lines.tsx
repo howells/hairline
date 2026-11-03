@@ -10,8 +10,9 @@ import { EndLabels } from "../end-labels";
 import { useScrub } from "../hooks";
 import { endLabelRoom, placeEndLabels } from "../line-ends";
 import { Ring } from "../markers";
+import { ReferenceOverlay } from "../references";
 import { DOT, LINE, RULE_ZERO } from "../roles";
-import { Cursor, HGrid, HRule } from "../rules";
+import { Cursor, HGrid } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedPath } from "../texture";
@@ -201,25 +202,19 @@ const SeriesLayer = (props: {
   );
 };
 
+/** The threshold as a target line, named when it has a label. */
 const ThresholdRule = (props: { frame: Frame; threshold: Threshold }) => {
-  const { m, width, y } = props.frame;
-  const th = props.threshold;
-  const thY = y(th.value);
+  const { m, plotBottom, width, y } = props.frame;
+  const { label, value } = props.threshold;
   return (
-    <g className="fade">
-      <HRule kind="target" x0={m.left} x1={width - m.right} y={thY} />
-      {/* The label sits on the side the line keeps clear of. */}
-      {th.label !== undefined && th.label !== "" && (
-        <Label
-          anchor="end"
-          voice="axis"
-          x={width - m.right}
-          y={th.alert === "below" ? thY + 14 : thY - 6}
-        >
-          {th.label}
-        </Label>
-      )}
-    </g>
+    <ReferenceOverlay
+      along="y"
+      plane={{ x0: m.left, x1: width - m.right, y0: m.top, y1: plotBottom }}
+      refs={[
+        label === undefined || label === "" ? { value } : { label, value },
+      ]}
+      scale={y}
+    />
   );
 };
 

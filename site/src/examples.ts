@@ -70,6 +70,19 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
     yDomain: [0, 10],
     yLabel: "Hours of daylight, 21 December",
   },
+  "range-dots": {
+    // Rounded survey shares, with their 90% intervals.
+    coverage: 0.9,
+    data: [
+      { estimate: 42, high: 46, label: "Paint", low: 38 },
+      { estimate: 35, high: 41, label: "Tile", low: 29 },
+      { estimate: 31, high: 40, label: "Flooring", low: 22 },
+      { estimate: 19, high: 30, label: "Stone", low: 8 },
+    ],
+    domain: [0, 60],
+    unitNote: "Estimate and 90% interval",
+    wide: 15,
+  },
   "rung-bars": {
     data: [
       { label: "Everest", value: 8849 },

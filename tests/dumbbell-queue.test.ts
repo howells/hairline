@@ -134,6 +134,7 @@ describe("the registry", () => {
       "initialWidth",
       "metrics",
       "note",
+      "references",
       "replayKey",
       "scale",
       "strokes",

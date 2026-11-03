@@ -27,6 +27,7 @@ const SUBPATH_CHARTS = new Set([
   "HairlineArea",
   "HairlineLine",
   "PlumbScatter",
+  "RangeDots",
   "RungBars",
   "Slope",
 ]);

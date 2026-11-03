@@ -26,9 +26,10 @@ const manifest = Manifest.parse(
 /** Gzipped kilobytes (1 KB = 1,000 bytes) each chart may cost on its own. */
 const BUDGETS_KB = {
   "dumbbell-queue": 52,
-  "hairline-area": 55,
-  "hairline-line": 55,
+  "hairline-area": 58,
+  "hairline-line": 58,
   "plumb-scatter": 52,
+  "range-dots": 50,
   "rung-bars": 47,
   slope: 51,
 } satisfies Record<string, number>;

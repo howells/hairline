@@ -6,8 +6,9 @@ import { crisp } from "../axes";
 import { Chart } from "../core";
 import { useHover } from "../hooks";
 import { Dot, Ring } from "../markers";
+import { ReferenceOverlay } from "../references";
 import { OUTLINE, POINT, TICK, VALUE } from "../roles";
-import { Cursor, HGrid, HRule, VGrid } from "../rules";
+import { Cursor, HGrid, VGrid } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { PlateLabel, Stipple } from "../texture";
@@ -193,23 +194,21 @@ const LimitRule = (props: { frame: Frame; zone: string; limit: number }) => {
         width={zoneW - 1}
         height={zoneH - 1}
       />
-      <HRule
-        className="fade"
-        kind="target"
-        x0={m.left}
-        x1={width - m.right}
-        y={y(props.limit)}
+      <ReferenceOverlay
+        along="y"
+        plane={{
+          x0: m.left,
+          x1: width - m.right,
+          y0: m.top,
+          y1: props.frame.height - m.bottom,
+        }}
+        refs={[
+          axis.limitLabel === ""
+            ? { value: props.limit }
+            : { label: axis.limitLabel, value: props.limit },
+        ]}
+        scale={y}
       />
-      {axis.limitLabel !== "" && (
-        <Label
-          anchor="end"
-          voice="axis"
-          x={width - m.right - 8}
-          y={y(props.limit) + 16}
-        >
-          {axis.limitLabel}
-        </Label>
-      )}
     </>
   );
 };
