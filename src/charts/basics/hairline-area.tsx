@@ -3,13 +3,14 @@ import type { ScaleLinear } from "d3-scale";
 import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { axisFormat, plural, fmtInt, monthTickLabels } from "../../lib/format";
+import { plural, fmtInt, monthTickLabels } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
 import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
+import { labelBox } from "../label-box";
 import { Dot } from "../markers";
 import { MARK_WEIGHT } from "../marks";
 import { NOTED_TOP } from "../note-layout";
@@ -21,8 +22,8 @@ import { Label } from "../text";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { sansWidth, stagger, noteOf } from "../util";
-import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
+import { DailyGrid, DailyLine } from "./daily-grid";
 import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
 import { foundNotes, notesDesc, withNotes } from "./daily-notes";
 import type { FoundNote } from "./daily-notes";
@@ -317,6 +318,20 @@ interface SvgProps {
   width: number;
 }
 
+/** Where the hero's value label prints, over its dot. */
+const heroLabelBox = (
+  readings: Reading[],
+  frame: Frame,
+  format: (v: number) => string,
+  hero: number
+) =>
+  labelBox(
+    format(valueAt(readings, hero)),
+    frame.x(hero),
+    frame.y(valueAt(readings, hero)) - 13,
+    "middle"
+  );
+
 const HairlineAreaSvg = ({
   clear,
   stipple,
@@ -367,8 +382,11 @@ const HairlineAreaSvg = ({
     const px = pointerX(e, width);
     const at = frame.x.invert(px);
     const near = nearestOf(live, at);
-    const lift = near === hero ? 16 : 10;
-    show(near, frame.x(near), frame.y(valueAt(readings, near)) - lift);
+    show(
+      near,
+      frame.x(near),
+      frame.y(valueAt(readings, near)) - (near === hero ? 16 : 10)
+    );
   };
 
   return (
@@ -384,12 +402,12 @@ const HairlineAreaSvg = ({
       <defs>
         <Stipple id={stipple} tone="fill-l3" />
       </defs>
-      <ValueGrid
-        labelFloor
-        side="right"
+      <DailyGrid
+        clear={hero < 0 ? [] : [heroLabelBox(readings, frame, format, hero)]}
         floor={floor}
-        format={axisFormat(format, wholeNumbers, ticks ?? frame.y.ticks(4))}
+        format={format}
         ticks={ticks ?? frame.y.ticks(4)}
+        wholeNumbers={wholeNumbers}
         x0={x0}
         x1={x1}
         y={frame.y}
@@ -402,12 +420,7 @@ const HairlineAreaSvg = ({
       />
       <DayStems frame={frame} hero={hero} hover={hover} {...series} />
       <HRule x0={x0} x1={x1} y={floor} />
-      <path
-        className="draw stroke-l3 stroke-medium cap-round fill-none"
-        d={path}
-        pathLength={1}
-        style={stagger(4, "series")}
-      />
+      <DailyLine d={path} style={stagger(4, "series")} />
       <Accents
         format={format}
         frame={frame}

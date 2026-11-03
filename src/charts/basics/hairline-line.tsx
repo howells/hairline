@@ -3,7 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
-import { axisFormat, plural, dayTickLabels, fmtInt } from "../../lib/format";
+import { plural, dayTickLabels, fmtInt } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
 import type { FontMetrics } from "../../schema/metrics";
@@ -11,6 +11,7 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
+import { labelBox } from "../label-box";
 import { Dot, Ring } from "../markers";
 import type { DotSize } from "../marks";
 import { NOTED_TOP } from "../note-layout";
@@ -22,8 +23,8 @@ import { Label, XLabels } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
 import { stagger, noteOf } from "../util";
-import { ValueGrid } from "../value-grid";
 import { DailyEmpty } from "./daily-empty";
+import { DailyGrid, DailyLine } from "./daily-grid";
 import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
 import { foundNotes, notesDesc, withNotes } from "./daily-notes";
 import type { FoundNote } from "./daily-notes";
@@ -246,6 +247,22 @@ const dayScaleOf = (readings: Reading[], x0: number, x1: number) => {
   return { dayAt, xScale };
 };
 
+/** Where the hero's and the latest day's value labels print, over their dots. */
+const valueLabelBoxes = (
+  readings: Reading[],
+  frame: Frame,
+  format: (v: number) => string,
+  at: number[]
+) =>
+  at.map((i) =>
+    labelBox(
+      format(valueAt(readings, i)),
+      frame.x(i),
+      frame.y(valueAt(readings, i)) - 12,
+      "middle"
+    )
+  );
+
 const HairlineLineSvg = ({
   clear,
   emphasis,
@@ -312,12 +329,17 @@ const HairlineLineSvg = ({
       onPointerMove={onMove}
       width={width}
     >
-      <ValueGrid
-        labelFloor
-        side="right"
+      <DailyGrid
+        clear={valueLabelBoxes(
+          readings,
+          frame,
+          format,
+          hero === last || hero < 0 ? [last] : [hero, last]
+        )}
         floor={floor}
-        format={axisFormat(format, wholeNumbers, y.ticks(5))}
+        format={format}
         ticks={y.ticks(5)}
+        wholeNumbers={wholeNumbers}
         x0={x0}
         x1={x1}
         y={y}
@@ -332,11 +354,7 @@ const HairlineLineSvg = ({
           y1={crisp(floor)}
         />
       )}
-      <path
-        className="draw stroke-l3 stroke-medium cap-round fill-none"
-        d={path}
-        pathLength={1}
-      />
+      <DailyLine d={path} />
       <Dots
         format={format}
         frame={frame}
