@@ -29,6 +29,16 @@ const count = (html: string, pattern: RegExp) =>
 const rungs = (html: string) => count(html, /class="grow-x/gu);
 const heroRungs = (html: string) => count(html, /class="grow-x fill-hero"/gu);
 const noteLineCount = (html: string) => count(html, /class="t-axis"/gu);
+/** The y of the chart's floor rule, the first line it draws. */
+const floorOf = (html: string) =>
+  /<line[^>]*?\sy1="(?<y>[\d.]+)"/u.exec(html)?.groups?.y;
+/** The highest rung's top edge: a smaller y is a taller column. */
+const top = (html: string) =>
+  Math.min(
+    ...[...html.matchAll(/class="grow-x[^"]*"[^>]*?\sy="(?<y>[\d.]+)"/gu)].map(
+      (match) => Number(match.groups?.y)
+    )
+  );
 const hero = (data: RungDatum[], emphasis?: string) =>
   heroRungs(render({ data, emphasis, ...sized }));
 
@@ -150,10 +160,13 @@ describe("the registry", () => {
       "fit",
       "format",
       "height",
+      "hidden",
       "idPrefix",
       "initialWidth",
+      "max",
       "metrics",
       "note",
+      "printHidden",
       "replayKey",
       "scale",
       "strokes",
@@ -201,7 +214,7 @@ describe("formatters are data", () => {
 
 describe("emphasis", () => {
   it("follows its key when the data is sorted", () => {
-    const sorted = bars.toSorted((a, b) => a.value - b.value);
+    const sorted = bars.toSorted((a, b) => (a.value ?? 0) - (b.value ?? 0));
     expect([
       hero(bars, "2023"),
       hero(sorted, "2023"),
@@ -418,5 +431,61 @@ describe("text measurement is deterministic in fixed-size mode", () => {
     );
     expect(css).toContain("font-family: var(--hl-font, var(--font-sans))");
     expect(css).not.toMatch(/font-family: var\(--font-sans\);/u);
+  });
+});
+
+describe("RungBars withheld bars, details and a shared scale", () => {
+  const tiers: RungDatum[] = [
+    { detail: "One order in the year.", label: "Trial", value: 245 },
+    { label: "Elite", value: null },
+    { label: "Regular", value: 1417 },
+  ];
+
+  it("prints a withheld bar as Hidden, with no rungs, and keeps it in the table", () => {
+    const html = render({ data: tiers, ...sized });
+    expect(html).toContain(">Hidden<");
+    expect(html).toContain("Hidden: 1 bar.");
+    expect(render({ data: tiers, hidden: "Too few", ...sized })).toContain(
+      ">Too few<"
+    );
+  });
+
+  it("leaves the word off a withheld column when printHidden is false, but not its description", () => {
+    const printed = count(render({ data: tiers, ...sized }), />Hidden</gu);
+    const html = render({ data: tiers, printHidden: false, ...sized });
+    expect(count(html, />Hidden</gu)).toBe(printed - 1);
+    expect(html).toContain("Hidden: 1 bar.");
+  });
+
+  it("validates a null value and a detail line", () => {
+    expect(pointers({ data: tiers })).toStrictEqual([]);
+  });
+
+  it("emphasises no bar for a null emphasis", () => {
+    expect(hero(tiers)).toBeGreaterThan(0);
+    expect(heroRungs(render({ data: tiers, emphasis: null, ...sized }))).toBe(
+      0
+    );
+  });
+
+  it("keeps one floor for a shared max, whether or not labels stagger", () => {
+    const narrow = { height: 240, width: 200 };
+    const long = ["Occasional", "Frequent", "Regular", "Power"].map(
+      (label, index) => ({ label, value: 100 * (index + 1) })
+    );
+    const short = [
+      { label: "A", value: 50 },
+      { label: "B", value: 90 },
+    ];
+    expect(floorOf(render({ data: long, max: 400, ...narrow }))).toBe(
+      floorOf(render({ data: short, max: 400, ...narrow }))
+    );
+  });
+
+  it("draws shorter columns against a larger shared max", () => {
+    const own = top(render({ data: bars, ...sized }));
+    const shared = top(render({ data: bars, max: 190, ...sized }));
+    expect(Number.isFinite(own)).toBe(true);
+    expect(shared).toBeGreaterThan(own);
   });
 });
