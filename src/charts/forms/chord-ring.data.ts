@@ -15,8 +15,9 @@
  * and transport equipment, 5 Chemicals, 8 Miscellaneous manufactures, 6
  * Material manufactures, 3 Fuels; the names are shortened to Machinery,
  * Chemicals, Manufactures, Materials and Fuels. The matrix is symmetric: the
- * first five rows and columns are the partners, the last five the goods, and a
- * ribbon joins a partner to a kind of goods, never two partners or two goods.
+ * first five rows and columns are the kinds of goods, the last five the
+ * partners, and a ribbon runs from a kind of goods to the partner that bought
+ * it, never between two partners or two goods.
  * A group's total is therefore its trade within these five by five.
  */
 
@@ -27,30 +28,30 @@ export interface SharedWork {
   teams: string[];
 }
 
-/** UK goods exports in 2025, GBP million: five partners, five kinds of goods. */
+/** UK goods exports in 2025, GBP million: five kinds of goods, five partners. */
 export const sharedWorkDemo: SharedWork = {
   matrix: [
-    [0, 0, 0, 0, 0, 27_540, 13_915, 7521, 5129, 1211],
-    [0, 0, 0, 0, 0, 17_780, 4623, 3799, 3763, 1497],
-    [0, 0, 0, 0, 0, 7331, 3923, 2776, 1676, 9212],
-    [0, 0, 0, 0, 0, 5817, 4568, 2940, 2929, 3675],
-    [0, 0, 0, 0, 0, 10_206, 4361, 3215, 1783, 1122],
-    [27_540, 17_780, 7331, 5817, 10_206, 0, 0, 0, 0, 0],
-    [13_915, 4623, 3923, 4568, 4361, 0, 0, 0, 0, 0],
-    [7521, 3799, 2776, 2940, 3215, 0, 0, 0, 0, 0],
-    [5129, 3763, 1676, 2929, 1783, 0, 0, 0, 0, 0],
-    [1211, 1497, 9212, 3675, 1122, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 27_540, 17_780, 7331, 5817, 10_206],
+    [0, 0, 0, 0, 0, 13_915, 4623, 3923, 4568, 4361],
+    [0, 0, 0, 0, 0, 7521, 3799, 2776, 2940, 3215],
+    [0, 0, 0, 0, 0, 5129, 3763, 1676, 2929, 1783],
+    [0, 0, 0, 0, 0, 1211, 1497, 9212, 3675, 1122],
+    [27_540, 13_915, 7521, 5129, 1211, 0, 0, 0, 0, 0],
+    [17_780, 4623, 3799, 3763, 1497, 0, 0, 0, 0, 0],
+    [7331, 3923, 2776, 1676, 9212, 0, 0, 0, 0, 0],
+    [5817, 4568, 2940, 2929, 3675, 0, 0, 0, 0, 0],
+    [10_206, 4361, 3215, 1783, 1122, 0, 0, 0, 0, 0],
   ],
   teams: [
-    "United States",
-    "Germany",
-    "Netherlands",
-    "Ireland",
-    "France",
     "Machinery",
     "Chemicals",
     "Manufactures",
     "Materials",
     "Fuels",
+    "United States",
+    "Germany",
+    "Netherlands",
+    "Ireland",
+    "France",
   ],
 };

@@ -22,22 +22,22 @@ const render = (props: Partial<ComponentProps<typeof JitterStrip>>) =>
     })
   );
 
-describe("JitterStrip mark", () => {
+describe("JitterStrip hero", () => {
   it("draws the marked record solid, with its value, in every group", () => {
-    const html = render({ mark: "Bo" });
-    expect(html.match(/class="fill-ink stroke-paper"/gu)).toHaveLength(2);
+    const html = render({ hero: ["Bo"] });
+    expect(html.match(/class="fill-hero stroke-paper"/gu)).toHaveLength(2);
     expect(html).toContain(">75%<");
     expect(html).toContain(">9%<");
     expect(html).toContain("Paint, 3 records, median 40%, Bo 75%");
   });
 
   it("leaves the medians out when median is false", () => {
-    const html = render({ mark: "Bo", median: false });
+    const html = render({ hero: ["Bo"], median: false });
     expect(html).not.toContain("median");
     expect(html).toContain("Tile, 3 records, Bo 9%");
   });
 
   it("marks nothing for a name no group has", () => {
-    expect(render({ mark: "Dee" })).not.toContain("fill-ink stroke-paper");
+    expect(render({ hero: ["Dee"] })).not.toContain("fill-hero stroke-paper");
   });
 });

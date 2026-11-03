@@ -1,8 +1,19 @@
-import { useState } from "react";
-
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
-import { DimGroup, HitCircle, TipText } from "../hover";
+import { TipText } from "../hover";
+import { NetworkLive, NodeCaption } from "../network";
+import { FOCUS_RING, useNodeSelection } from "../network-select";
+import {
+  STEP_STROKE,
+  adjacencyOf,
+  linkStepOf,
+  pickNode,
+  reachText,
+  stepFade,
+  stepOf,
+  stepsFrom,
+} from "../network-steps";
+import type { Step } from "../network-steps";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -19,6 +30,8 @@ interface CircularGraphProps extends NoteProps {
   format?: (v: number) => string;
   /** Node id to draw in the hero colour. */
   highlight?: string;
+  /** Node id selected until the pointer or keys choose another; its links fade out from it. */
+  selected?: string;
 }
 
 interface Placed {
@@ -52,23 +65,26 @@ interface LinksProps {
   at: Map<string, Placed>;
   cx: number;
   cy: number;
-  focus: string | null;
+  /** Steps out from the selected node; null when none is selected. */
+  steps: ReadonlyMap<string, Step> | null;
   /** The hero link, in ink. */
   hero: string;
 }
 
-const linkTone = (hero: boolean, on: boolean) => {
-  if (hero) {
-    return "stroke-ink";
+/** At rest the hero link is ink and the rest l4; selected, every link is toned by its steps. */
+const linkTone = (steps: LinksProps["steps"], hero: boolean, l: CircleLink) => {
+  if (steps !== null) {
+    const step = linkStepOf(steps, l.source, l.target);
+    return `${STEP_STROKE[step]} ${stepFade(step)}`;
   }
-  return on ? "stroke-l2" : "stroke-l4";
+  return `transition-opacity ${hero ? "stroke-ink" : "stroke-l4"}`;
 };
 
 /**
  * Links bowed through the middle (control point halfway to the centre), each
  * engraved as a bundle of 1–4 hairlines by shared projects.
  */
-const RingLinks = ({ links, at, cx, cy, focus, hero }: LinksProps) => {
+const RingLinks = ({ links, at, cx, cy, steps, hero }: LinksProps) => {
   const maxLink = Math.max(...links.map((l) => l.value));
   return (
     <g>
@@ -78,11 +94,10 @@ const RingLinks = ({ links, at, cx, cy, focus, hero }: LinksProps) => {
         if (s === undefined || t === undefined) {
           return null;
         }
-        const on = focus !== null && touches(focus, l);
         return (
           <LinkBundle
             key={linkKey(l)}
-            className={`draw transition-tone ${linkTone(linkKey(l) === hero, on)} ${focus !== null && !on ? "opacity-30" : ""}`}
+            className={`draw transition-tone ${linkTone(steps, linkKey(l) === hero, l)}`}
             lines={bundleLines(l.value, maxLink)}
             q={{ x: ((s.x + t.x) / 2 + cx) / 2, y: ((s.y + t.y) / 2 + cy) / 2 }}
             s={s}
@@ -99,9 +114,17 @@ interface NodeProps {
   p: Placed;
   /** The one solid node; every other node is a hollow ring. */
   hero: boolean;
-  dim: boolean;
-  onEnter: () => void;
+  /** Steps from the selected node; null when none is selected. */
+  step: Step | null;
 }
+
+/** A node's look: at rest the hero is solid; selected, the node is solid and its steps tone the rings. */
+const nodeLook = (hero: boolean, step: Step | null) => {
+  if (step === null) {
+    return hero ? "fill-hero" : "fill-paper stroke-l3";
+  }
+  return step === 0 ? "fill-hero" : `fill-paper ${STEP_STROKE[step]}`;
+};
 
 /** Where a node's name starts (or ends, on the left half) and which side it sits. */
 const labelOf = (p: Placed) => {
@@ -112,21 +135,22 @@ const labelOf = (p: Placed) => {
   };
 };
 
-const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
+const RingNode = ({ p, hero, step }: NodeProps) => {
   const { right, x: lx } = labelOf(p);
+  const solid = step === null ? hero : step === 0;
   return (
-    <DimGroup dim={dim} onPointerEnter={onEnter}>
-      <HitCircle cx={p.x} cy={p.y} r={p.r + 8} />
+    <g className={step === null ? undefined : stepFade(step)}>
       <circle
-        className={`pop ${hero ? "fill-hero" : "fill-paper stroke-l3"}`}
+        className={`pop ${nodeLook(hero, step)}`}
         style={stagger(p.i, "mark")}
         cx={p.x}
         cy={p.y}
-        r={hero ? p.r : p.r - 0.75}
-        strokeWidth={hero ? undefined : 1.5}
+        r={solid ? p.r : p.r - 0.75}
+        strokeWidth={solid ? undefined : 1.5}
       />
       <Label
         anchor={right ? "start" : "end"}
+        className={step === 0 ? "opacity-0" : undefined}
         dy="0.35em"
         muted={!hero}
         order={p.i}
@@ -137,23 +161,57 @@ const RingNode = ({ p, hero, dim, onEnter }: NodeProps) => {
       >
         {p.node.id}
       </Label>
-    </DimGroup>
+    </g>
   );
 };
+
+interface ReadoutProps {
+  /** The node to read out: the tooltip waits until the pointer or keys choose one. */
+  focus: Placed | undefined;
+  format: (v: number) => string;
+  links: CircleLink[];
+  steps: ReadonlyMap<string, Step> | null;
+}
+
+/** The tooltip over the chosen node, and the selection said aloud. */
+const RingReadout = ({ focus, format, links, steps }: ReadoutProps) => (
+  <>
+    {focus === undefined ? null : (
+      <Tooltip x={focus.x} y={focus.y - focus.r - 4}>
+        <TipText
+          facts={[
+            format(focus.node.value),
+            `most with ${partnerOf(links, focus.node.id)}`,
+          ]}
+          lead={focus.node.id}
+        />
+      </Tooltip>
+    )}
+    <NetworkLive
+      text={
+        focus === undefined || steps === null
+          ? ""
+          : `${focus.node.id}: ${reachText(steps)}`
+      }
+    />
+  </>
+);
 
 /**
  * G6 Moving between regions. Up to a dozen nodes on a ring, area = size,
  * links bowed through the middle, each a bundle of 1–4 hairlines by the moves
- * between the pair. Hover a node to trace it. The biggest region is the one
- * solid node and its strongest link the one ink bundle; the rest are hollow
- * rings and l4 hairlines.
+ * between the pair. The biggest region is the one solid node and its strongest
+ * link the one ink bundle; the rest are hollow rings and l4 hairlines. Hover,
+ * tap or arrow to a node and everything fades out from it by links: it and its
+ * direct links in ink, two steps in a mid tone, the rest near the paper, with
+ * its name and reach beside it.
  */
 export const CircularGraph = (props: CircularGraphProps) => {
   const nodes = props.nodes ?? circularGraphDemo.nodes;
   const links = props.links ?? circularGraphDemo.links;
   const height = props.height ?? 460;
   const format = props.format ?? defaultFormat;
-  const [focus, setFocus] = useState<Placed | null>(null);
+  const sel = useNodeSelection(props.selected);
   const maxNode = Math.max(...nodes.map((n) => n.value));
   // The hero: the given node, else the biggest.
   const heroId =
@@ -162,30 +220,15 @@ export const CircularGraph = (props: CircularGraphProps) => {
   const [heroLink] = links
     .filter((l) => touches(heroId, l))
     .toSorted((a, b) => b.value - a.value);
-  const focusId = focus === null ? null : focus.node.id;
-  const neighbours = new Set(
-    links.flatMap((l) =>
-      focusId !== null && touches(focusId, l) ? [l.source, l.target] : []
-    )
-  );
+  const ids = nodes.map((n) => n.id);
+  const steps =
+    sel.selected === null
+      ? null
+      : stepsFrom(adjacencyOf(ids, links), sel.selected);
   const label = `Moves between ${nodes.length} regions: ${links.map((l) => `${l.source}–${l.target} ${format(l.value)}`).join(", ")}`;
 
   return (
-    <Plot
-      overlay={
-        focus === null ? null : (
-          <Tooltip x={focus.x} y={focus.y - focus.r - 4}>
-            <TipText
-              facts={[
-                format(focus.node.value),
-                `most with ${partnerOf(links, focus.node.id)}`,
-              ]}
-              lead={focus.node.id}
-            />
-          </Tooltip>
-        )
-      }
-    >
+    <Plot>
       {(width) => {
         const narrow = width < 460;
         const noteH = noteSpace(noteOf(props), width - 16, 16);
@@ -229,41 +272,61 @@ export const CircularGraph = (props: CircularGraphProps) => {
         const cx = width - (Math.min(...reach) + Math.max(...reach)) / 2;
         const placed = ring(cx, R, cy);
         const at = new Map(placed.map((p) => [p.node.id, p]));
+        const bound = sel.bind({
+          find: (x, y, within) =>
+            placed[pickNode(placed, x, y, within)]?.node.id ?? null,
+          height: svgH,
+          ids,
+          width,
+        });
+        const focus = sel.selected === null ? undefined : at.get(sel.selected);
 
         return (
-          <ChartSvg
-            height={svgH}
-            label={label}
-            leave={() => {
-              setFocus(null);
-            }}
-            width={width}
-          >
-            <RingLinks
-              links={links}
-              at={at}
-              cx={cx}
-              cy={cy}
-              focus={focusId}
-              hero={heroLink === undefined ? "" : linkKey(heroLink)}
-            />
-            {placed.map((p) => (
-              <RingNode
-                key={p.node.id}
-                p={p}
-                hero={p.node.id === heroId}
-                dim={
-                  focusId !== null &&
-                  focusId !== p.node.id &&
-                  !neighbours.has(p.node.id)
-                }
-                onEnter={() => {
-                  setFocus(p);
-                }}
+          <div className="relative">
+            <ChartSvg
+              className={`touch-pan-y ${FOCUS_RING}`}
+              desc="Arrow keys step through the regions; Escape clears."
+              height={svgH}
+              label={label}
+              leave={bound.leave}
+              width={width}
+              {...bound.svg}
+            >
+              <RingLinks
+                links={links}
+                at={at}
+                cx={cx}
+                cy={cy}
+                steps={steps}
+                hero={heroLink === undefined ? "" : linkKey(heroLink)}
               />
-            ))}
-            <FootNote height={svgH} text={noteOf(props)} width={width} />
-          </ChartSvg>
+              {placed.map((p) => (
+                <RingNode
+                  key={p.node.id}
+                  p={p}
+                  hero={p.node.id === heroId}
+                  step={steps === null ? null : stepOf(steps, p.node.id)}
+                />
+              ))}
+              {focus === undefined || steps === null ? null : (
+                <NodeCaption
+                  name={focus.node.id}
+                  note={reachText(steps)}
+                  r={focus.r}
+                  width={width}
+                  x={focus.x}
+                  y={focus.y}
+                />
+              )}
+              <FootNote height={svgH} text={noteOf(props)} width={width} />
+            </ChartSvg>
+            <RingReadout
+              focus={sel.chosen ? focus : undefined}
+              format={format}
+              links={links}
+              steps={steps}
+            />
+          </div>
         );
       }}
     </Plot>

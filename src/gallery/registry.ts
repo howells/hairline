@@ -1,6 +1,7 @@
 import { entries as basics } from "../charts/basics";
 import { entries as big } from "../charts/big";
 import { entries as board } from "../charts/board";
+import { entries as emphasis } from "../charts/emphasis";
 import { entries as forms } from "../charts/forms";
 import { entries as glance } from "../charts/glance";
 import { entries as lupi } from "../charts/lupi";
@@ -32,6 +33,7 @@ export const ALL_ENTRIES: GalleryEntry[] = [
   ...without(maps, "M2"),
   ...originals,
   ...forms,
+  ...emphasis,
   ...byId(maps, "M2"),
 ];
 

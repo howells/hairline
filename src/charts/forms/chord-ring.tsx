@@ -5,13 +5,13 @@ import { useMemo } from "react";
 import type { PointerEvent } from "react";
 
 import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
+import { FlowGradient } from "../flow";
+import { useHover, useSvgId } from "../hooks";
 import type { Hover } from "../hooks";
 import { DimGroup, TipText } from "../hover";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { Hatch } from "../texture";
-import { paint, TEXTURE_PITCH, useTextureIds } from "../texture-ids";
+import { paint, TEXTURE_PITCH } from "../texture-ids";
 import { sansWidth, stagger, sum } from "../util";
 import { sharedWorkDemo } from "./chord-ring.data";
 import type { SharedWork } from "./chord-ring.data";
@@ -169,6 +169,8 @@ const touches = (c: Chord, team: number) =>
 /** One pair as drawn: its ribbon and its bundle of threads, built once per size. */
 interface Pair {
   chord: Chord;
+  /** The middle of the source end and of the target end, where the ribbon meets the ring. */
+  ends: { source: { x: number; y: number }; target: { x: number; y: number } };
   key: string;
   ribbon: string;
   threads: { d: string; shift: number }[];
@@ -181,6 +183,10 @@ const geometryOf = (data: SharedWork, r: number) => {
   const most = Math.max(...chords.map((c) => c.source.value));
   const pairs = chords.map((c): Pair => ({
     chord: c,
+    ends: {
+      source: polar(middle(c.source), inner - GAP),
+      target: polar(middle(c.target), inner - GAP),
+    },
     key: `${data.teams[c.source.index]}-${data.teams[c.target.index]}`,
     ribbon: ribbonPath(c, inner - GAP),
     threads: shifts(threadCount(c.source.value, most)).map((shift) => ({
@@ -199,8 +205,8 @@ type Geometry = ReturnType<typeof geometryOf>;
 
 interface RingProps {
   data: SharedWork;
-  /** Id of the ink hatch the focused group's ribbons are engraved with. */
-  hatch: string;
+  /** The id each pair's gradient takes, by the pair's place in the layout. */
+  flowId: (k: number) => string;
   focus: number;
   geometry: Geometry;
   hovering: boolean;
@@ -208,7 +214,8 @@ interface RingProps {
 }
 
 /**
- * Threads first, the focused group's ribbons over them, then the ring and
+ * Threads first, the focused group's ribbons over them (each an ink
+ * gradient, dark at its source and fading to its target), then the ring and
  * names. Every pair keeps both its threads and its ribbon mounted; focus only
  * crossfades between them, so moving from group to group never redraws.
  */
@@ -234,8 +241,8 @@ const Ring = (props: RingProps) => (
         </g>
       ))}
     </DimGroup>
-    {/* The focused group's ribbons lead: ink hatch on paper, the one fill. */}
-    {props.geometry.pairs.map((p) => (
+    {/* The focused group's ribbons lead, dark where they start. */}
+    {props.geometry.pairs.map((p, k) => (
       <g
         className="ease-enter transition-opacity"
         key={p.key}
@@ -244,7 +251,7 @@ const Ring = (props: RingProps) => (
         <path
           className="fade stroke-l5"
           d={p.ribbon}
-          fill={paint(props.hatch)}
+          fill={paint(props.flowId(k))}
           strokeWidth={1}
         />
       </g>
@@ -297,7 +304,7 @@ const ChordSvg = (props: {
   width: number;
 }) => {
   const { data, hover, totals, width } = props;
-  const hatch = useTextureIds("exports")("hatch");
+  const flow = useSvgId("flow");
   const busiest = totals.indexOf(Math.max(...totals));
   const size = Math.min(width, 460);
   const r = size / 2 - LABEL_ROOM;
@@ -329,15 +336,22 @@ const ChordSvg = (props: {
       onPointerMove={onMove}
       width={width}
     >
-      <defs>
-        <Hatch id={hatch} tone="fill-hero" />
-      </defs>
       <g transform={`translate(${cx} ${cy})`}>
+        <defs>
+          {geometry.pairs.map((p, k) => (
+            <FlowGradient
+              id={`${flow}-${k}`}
+              key={p.key}
+              start={p.ends.source}
+              end={p.ends.target}
+            />
+          ))}
+        </defs>
         <Ring
           data={data}
+          flowId={(k) => `${flow}-${k}`}
           focus={hover.key ?? busiest}
           geometry={geometry}
-          hatch={hatch}
           hovering={hover.key !== null}
           r={r}
         />
@@ -350,9 +364,10 @@ const ChordSvg = (props: {
  * O6 Goods exports. Partners and kinds of goods on a thin ring; every pair that trades is
  * tied by a bundle of one to three hairlines through the centre, more
  * threads for more pounds, so the ring reads as an engraved web on paper.
- * The busiest group is the ink hero, its pairs drawn as ribbons in an ink
- * hatch on paper; hovering another group crossfades the hatch to its pairs
- * and dims the threads.
+ * The busiest group is the ink hero, its pairs drawn as ribbons filled with
+ * a gradient of the ink, dark at the source and fading to the target, so
+ * direction reads without arrows; hovering another group crossfades the
+ * ribbons to its pairs and dims the threads.
  */
 export const ChordRing = (props: { data?: SharedWork }) => {
   const data = props.data ?? sharedWorkDemo;

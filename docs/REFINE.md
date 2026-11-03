@@ -121,6 +121,14 @@ Every fill is one of the fills in `src/charts/fills.ts`, drawn in full on the Fi
 
 The owner approved mockups where ink is the data rather than the one emphasis. Two exceptions to "one hero per chart", both in the `forms` family only: in ArrowPlot every rising row is ink (`fill-hero`, 2px shaft) and every falling row the quiet `l3` at 1px, so direction is the encoding; in Bullet every row's measure bar and target tick are ink, over ranges in `l4`, `l5` and paper. Everything else holds: no alert colour, one ink for marks and `t-*` roles for text. Ridgeline's engraved hatch gives way to paper alone, with the hero's 2px ink outline over a flat `l5` tint, because nearer ridges must hide what is behind them and a texture under every ridge blurs the edge it hides.
 
+## Amendment 6: emphasis (overrides "Tone", "Texture" and Amendment 1's opacity rule where they conflict)
+
+Three exceptions, each for one job and nowhere else:
+
+- **Ribbon gradients.** A ribbon with a source and a target (ChordRing, AggregateSankey, HourglassStream) is filled with one gradient of the ink, `gradientUnits="userSpaceOnUse"`, from the middle of its source end to the middle of its target end, dark at the source. Never two hues. The flows that lead are drawn as they are; the rest sit at `opacity-40`. Ids come from `useSvgId`, one per ribbon, so no two charts on a page share one (`FlowGradient` in `src/charts/flow.tsx`). The gradient is the direction; there is no animated flow.
+- **Context in ink at low opacity.** A hero group against its context (`hero` and `context` on PlumbScatter, HairlineLine, JitterStrip and DotCascade): `context: "grey"` is a solid ramp tone (`l5`, `l4` for lines and rings), and `context: "opacity"` is the ink at `opacity-25`, so overlapping context builds density. The hero is `fill-hero` on a 1px paper ring, drawn above the context. One context tone per chart.
+- **Selection fades.** Choosing a node (hover, tap, arrow keys, or the `selected` prop) tones ForceGraph, ForceGalaxy and both CircularGraphs by links: the node and its direct links in ink, two steps in `l3`, the rest in `l5` at `opacity-40`. The change is a transition of opacity only, and none under reduced motion. The node is named in its caption with its reach, "2 direct, 5 at two steps", on a `t-halo` and in the label voice.
+
 ## Chrome and label type (overrides earlier type notes)
 
 All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; the wordmark differs by weight alone. Inside charts every label, value, tick and note is one size, 11px, told apart by weight and tone; the single big figure (`t-figure`) is the only exception. One 1px rule under the header; no bar above chart names.

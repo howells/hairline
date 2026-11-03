@@ -37,10 +37,14 @@ export const DailyGrid = (props: Props) => (
   />
 );
 
-/** The line through the readings, drawn in on entry. */
-export const DailyLine = (props: { d: string; style?: CSSProperties }) => (
+/** The line through the readings, drawn in on entry, in a stroke tone (the ramp's l3 by default). */
+export const DailyLine = (props: {
+  d: string;
+  style?: CSSProperties;
+  tone?: string;
+}) => (
   <path
-    className="draw stroke-l3 stroke-medium cap-round fill-none"
+    className={`draw ${props.tone ?? "stroke-l3"} stroke-medium cap-round fill-none`}
     d={props.d}
     pathLength={1}
     style={props.style}

@@ -1,15 +1,27 @@
 import { useMemo, useState } from "react";
-import type { PointerEvent } from "react";
 
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { TipText } from "../hover";
 import { RING_STEP } from "../marks";
+import { NetworkLive, PlacedCaption } from "../network";
+import { FOCUS_RING, useNodeSelection } from "../network-select";
+import {
+  STEP_FILL,
+  adjacencyOf,
+  linkStepOf,
+  pickNode,
+  reachText,
+  stepsFrom,
+} from "../network-steps";
+import type { Step } from "../network-steps";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DotRing } from "../texture";
 import { noteSpace, sansWidth, stagger, noteOf } from "../util";
+import { captionSpot } from "./caption-spot";
+import type { Cubic } from "./caption-spot";
 import { circularGraphDemo } from "./circular-graph.data";
 import type { RingData } from "./circular-graph.data";
 
@@ -23,6 +35,8 @@ interface CircularGraphProps extends NoteProps {
   linkUnit?: string;
   /** Unit after a node's size in the tooltip. */
   sizeUnit?: string;
+  /** Node id selected until the pointer or keys choose another; everything fades out from it by links. */
+  selected?: string;
 }
 
 /** A node placed on the ring. */
@@ -43,6 +57,7 @@ interface Bead {
 
 /** A link drawn as a chord-like curve inside the ring. */
 interface Chord {
+  curve: Cubic;
   d: string;
   id: string;
   source: string;
@@ -134,16 +149,27 @@ const hubIds = (data: RingData, highlight: string | string[] | undefined) => {
 };
 
 /** Cubic through two control points pulled toward the centre: near pairs loop deep, far pairs cross the middle. */
-const chordPath = (a: Bead, b: Bead, cx: number, cy: number, R: number) => {
+const chordCurve = (
+  a: Bead,
+  b: Bead,
+  cx: number,
+  cy: number,
+  R: number
+): Cubic => {
   let gap = Math.abs(a.angle - b.angle) % (Math.PI * 2);
   if (gap > Math.PI) {
     gap = Math.PI * 2 - gap;
   }
   const k = 0.18 + 0.32 * (1 - gap / Math.PI);
-  const c = (n: Bead) =>
-    `${(cx + R * k * Math.cos(n.angle)).toFixed(1)},${(cy + R * k * Math.sin(n.angle)).toFixed(1)}`;
-  return `M${a.x.toFixed(1)},${a.y.toFixed(1)}C${c(a)} ${c(b)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
+  const c = (n: Bead) => ({
+    x: cx + R * k * Math.cos(n.angle),
+    y: cy + R * k * Math.sin(n.angle),
+  });
+  return [a, c(a), c(b), b];
 };
+
+const pathOf = ([a, c1, c2, b]: Cubic) =>
+  `M${a.x.toFixed(1)},${a.y.toFixed(1)}C${c1.x.toFixed(1)},${c1.y.toFixed(1)} ${c2.x.toFixed(1)},${c2.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`;
 
 /** Clear space round a small ring: just its biggest bead, so the ink runs edge to edge. */
 const SMALL_MARGIN = 8;
@@ -274,8 +300,10 @@ const layoutRing = (
     const a = byId.get(l.source);
     const b = byId.get(l.target);
     if (a !== undefined && b !== undefined) {
+      const curve = chordCurve(a, b, cx, cy, R);
       chords.push({
-        d: chordPath(a, b, cx, cy, R),
+        curve,
+        d: pathOf(curve),
         id: `${l.source}~${l.target}`,
         source: l.source,
         target: l.target,
@@ -361,74 +389,116 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
           style={stagger(i, "fine")}
         />
       ))}
-      {/* Small plots name only the hero: there is no room round the ring for the rest. */}
-      <g className="fade" style={stagger(12)}>
-        {beads.flatMap((b) =>
-          b.hero || (b.hub && !props.small)
-            ? [<BeadLabel bead={b} bright={b.hero} key={b.id} />]
-            : []
-        )}
+      {/* Small plots name only the hero: there is no room round the ring for the rest. Selected, the names step aside for the focus layer's. */}
+      <g className="transition-opacity group-data-[focus=true]/ring:opacity-0">
+        <g className="fade" style={stagger(12)}>
+          {beads.flatMap((b) =>
+            b.hero || (b.hub && !props.small)
+              ? [<BeadLabel bead={b} bright={b.hero} key={b.id} />]
+              : []
+          )}
+        </g>
       </g>
     </g>
   );
 };
 
 /**
- * The hovered node, its chords and its neighbours, redrawn bright above the
- * dimmed ring. Small plots leave out the names other than the hero's (the
- * tooltip names the node): there is no room round the ring for them.
+ * The selected node and what it reaches, redrawn above the faded ring: its
+ * direct chords and neighbours in ink, what is two steps out in a mid tone,
+ * and its name and reach beside it. Small plots leave out the neighbours'
+ * names: there is no room round the ring for them.
  */
 const FocusLayer = (props: {
-  focus: string;
   layout: RingLayout;
   small: boolean;
+  steps: ReadonlyMap<string, Step>;
+  width: number;
 }) => {
-  const { byId, chords, neighbours } = props.layout;
-  const bead = byId.get(props.focus);
+  const { beads, byId, chords } = props.layout;
+  const { steps } = props;
+  const [bead] = [...steps].flatMap(([id, step]) =>
+    step === 0 ? (byId.get(id) ?? []) : []
+  );
   if (bead === undefined) {
     return null;
   }
-  const near = (neighbours.get(bead.id) ?? []).flatMap(
-    (id) => byId.get(id) ?? []
+  const inRange = [...steps].flatMap(([id, step]) => {
+    const b = byId.get(id);
+    return b === undefined ? [] : [{ b, step }];
+  });
+  const direct = inRange.filter((n) => n.step === 1);
+  const note = reachText(steps);
+  const spot = captionSpot(
+    props.layout,
+    { h: 28, w: Math.max(sansWidth(bead.id, 11), sansWidth(note, 11)) + 8 },
+    beads,
+    chords.map((c) => c.curve)
   );
+  const chordsAt = (step: Step) =>
+    chords.filter((c) => linkStepOf(steps, c.source, c.target) === step);
   return (
     <g className="pointer-events-none">
-      <g className="cap-round stroke-ink" fill="none" strokeWidth={1.5}>
-        {chords.flatMap((c) =>
-          touchesBead(c, bead.id) ? [<path d={c.d} key={c.id} />] : []
-        )}
+      <g className="cap-round" fill="none">
+        <g className="stroke-l3">
+          {chordsAt(2).map((c) => (
+            <path d={c.d} key={c.id} />
+          ))}
+        </g>
+        <g className="stroke-ink" strokeWidth={1.5}>
+          {chordsAt(1).map((c) => (
+            <path d={c.d} key={c.id} />
+          ))}
+        </g>
       </g>
-      {near.map((n) => (
-        <circle
-          className={n.hero ? "fill-hero" : n.fill}
-          cx={n.x}
-          cy={n.y}
-          key={n.id}
-          r={n.r}
-        />
-      ))}
-      <circle className="fill-hero" cx={bead.x} cy={bead.y} r={bead.r} />
+      {inRange
+        .toSorted((a, b) => b.step - a.step)
+        .map((n) => (
+          <circle
+            className={STEP_FILL[n.step]}
+            cx={n.b.x}
+            cy={n.b.y}
+            key={n.b.id}
+            r={n.b.r}
+          />
+        ))}
       {!props.small &&
-        near.map((n) => <BeadLabel bead={n} bright={false} key={n.id} />)}
-      {/* The hero's name always fits: the ring is framed round it. */}
-      {(!props.small || bead.hero) && <BeadLabel bead={bead} bright />}
+        direct.map((n) => <BeadLabel bead={n.b} bright={false} key={n.b.id} />)}
+      <PlacedCaption name={bead.id} note={note} {...spot} />
     </g>
   );
 };
 
+/** Upper-half nodes take the tip below them: inside the ring, clear of the caption and labels. */
+const tipOf = (bead: Bead): RingTip => {
+  const [cos, sin] = [Math.cos(bead.angle), Math.sin(bead.angle)];
+  const inward = bead.r + TIP_INSET + TIP_REACH * Math.abs(cos);
+  return {
+    below: sin < 0,
+    id: bead.id,
+    linked: bead.degree,
+    size: bead.size,
+    x: bead.x - inward * cos,
+    y: bead.y - inward * sin,
+  };
+};
+
 const RingSvg = (props: {
   data: RingData;
-  focus: string | null;
+  format: (v: number) => string;
   height: number;
   highlight?: string | string[];
+  linkUnit?: string;
   note?: string;
-  onFocus: (id: string | null, tip: RingTip | null) => void;
   onReplay: () => void;
+  selected?: string;
+  sizeUnit?: string;
   take: number;
   width: number;
 }) => {
-  const { data, focus, highlight, onFocus, take, width } = props;
+  const { data, highlight, take, width } = props;
   const small = width < 560;
+  const sel = useNodeSelection(props.selected);
   // Notes and ring shrink with the column: no empty bands on a phone.
   const noteH = noteSpace(props.note, width - 16, 18);
   const height = Math.min(props.height, width + (small ? 60 : 168) + noteH);
@@ -437,111 +507,101 @@ const RingSvg = (props: {
     () => layoutRing(data, width, plotH, highlight),
     [data, width, plotH, highlight]
   );
-  // Same element between renders, so hover only re-renders the focus layer. The key replays the entry.
+  // Same element between renders, so a selection only re-renders the focus layer. The key replays the entry.
   const base = useMemo(
     () => <RingBase key={take} layout={layout} small={small} />,
     [layout, small, take]
   );
   const label = `Land borders: ${data.nodes.length} countries on a ring, ${data.links.length} shared borders`;
-
-  const onMove = (e: PointerEvent<SVGGElement>) => {
-    const { target } = e;
-    const id = target instanceof SVGElement ? target.dataset.id : undefined;
-    const bead = id === undefined ? undefined : layout.byId.get(id);
-    if (bead === undefined || bead.id === focus) {
-      return;
-    }
-    // The tip sits inside the ring, clear of the labels round it: further in
-    // at the sides, where its width would reach across the neighbours' labels.
-    const [cos, sin] = [Math.cos(bead.angle), Math.sin(bead.angle)];
-    const inward = bead.r + TIP_INSET + TIP_REACH * Math.abs(cos);
-    const below = sin < 0;
-    onFocus(bead.id, {
-      below,
-      id: bead.id,
-      linked: bead.degree,
-      size: bead.size,
-      x: bead.x - inward * cos,
-      y: bead.y - inward * sin,
-    });
-  };
+  const ids = layout.beads.map((b) => b.id);
+  const bound = sel.bind({
+    find: (x, y, reach) =>
+      layout.beads[pickNode(layout.beads, x, y, reach)]?.id ?? null,
+    height,
+    ids,
+    onEmptyTap: props.onReplay,
+    width,
+  });
+  const focus =
+    sel.selected === null ? undefined : layout.byId.get(sel.selected);
+  const steps =
+    focus === undefined
+      ? null
+      : stepsFrom(adjacencyOf(ids, data.links), focus.id);
+  const tip = focus === undefined || !sel.chosen ? null : tipOf(focus);
 
   return (
-    <ChartSvg
-      className="group/ring cursor-pointer"
-      data-focus={focus !== null}
-      height={height}
-      label={label}
-      leave={() => {
-        onFocus(null, null);
-      }}
-      onPointerUp={props.onReplay}
-      width={width}
-    >
-      {base}
-      {focus !== null && (
-        <FocusLayer focus={focus} layout={layout} small={small} />
-      )}
-      <g className="fill-transparent" onPointerMove={onMove}>
-        {layout.beads.map((b) => (
-          <circle
-            cx={b.x}
-            cy={b.y}
-            data-id={b.id}
-            key={b.id}
-            r={Math.max(b.r + 3, layout.hitR)}
+    <div className="relative">
+      <ChartSvg
+        className={`group/ring cursor-pointer ${FOCUS_RING}`}
+        data-focus={steps !== null}
+        desc="Arrow keys step through the countries; Escape clears."
+        height={height}
+        label={label}
+        leave={bound.leave}
+        width={width}
+        {...bound.svg}
+      >
+        {base}
+        {steps === null ? null : (
+          <FocusLayer
+            layout={layout}
+            small={small}
+            steps={steps}
+            width={width}
           />
-        ))}
-      </g>
-      <FootNote height={height} text={props.note} width={width} />
-    </ChartSvg>
+        )}
+        <FootNote height={height} text={props.note} width={width} />
+      </ChartSvg>
+      {tip === null ? null : (
+        <Tooltip below={tip.below} x={tip.x} y={tip.y}>
+          <TipText
+            facts={[
+              `${props.format(tip.size)} ${props.sizeUnit ?? "land neighbours"}`,
+              `${tip.linked} ${props.linkUnit ?? "shown"}`,
+            ]}
+            lead={tip.id}
+          />
+        </Tooltip>
+      )}
+      <NetworkLive
+        text={
+          focus === undefined || steps === null
+            ? ""
+            : `${focus.id}: ${reachText(steps)}`
+        }
+      />
+    </div>
   );
 };
 
 /**
  * B1 Land borders (big). Countries sit on a ring grouped by continent, dot area =
- * land neighbours; links curve inside the ring like chords. Hover a node to light up its
- * neighbours; click anywhere to replay the entry.
+ * land neighbours; links curve inside the ring like chords. Hover, tap or
+ * arrow to a node and everything fades out from it by links: it and its direct
+ * borders in ink, two steps in a mid tone, the rest near the paper, with its
+ * name and reach beside it; click empty space to replay the entry.
  */
 export const CircularGraph = (props: CircularGraphProps) => {
   const data = props.data ?? circularGraphDemo;
   const format = props.format ?? String;
-  const [focus, setFocus] = useState<string | null>(null);
   const [take, setTake] = useState(0);
-  const [tip, setTip] = useState<RingTip | null>(null);
 
   return (
-    <Plot
-      overlay={
-        tip === null ? null : (
-          <Tooltip below={tip.below} x={tip.x} y={tip.y}>
-            <TipText
-              facts={[
-                `${format(tip.size)} ${props.sizeUnit ?? "land neighbours"}`,
-                `${tip.linked} ${props.linkUnit ?? "shown"}`,
-              ]}
-              lead={tip.id}
-            />
-          </Tooltip>
-        )
-      }
-    >
+    <Plot>
       {(width) => (
         <RingSvg
           data={data}
-          focus={focus}
+          format={format}
           height={props.height ?? 560}
           highlight={props.highlight}
+          linkUnit={props.linkUnit}
           note={noteOf(props)}
-          onFocus={(id, t) => {
-            setFocus(id);
-            setTip(t);
-          }}
           onReplay={() => {
-            setFocus(null);
-            setTip(null);
             setTake((t) => t + 1);
           }}
+          selected={props.selected}
+          sizeUnit={props.sizeUnit}
           take={take}
           width={width}
         />

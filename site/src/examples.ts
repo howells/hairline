@@ -63,7 +63,7 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
       { label: "Stockholm", x: 59.3, y: 6.1 },
       { label: "Reykjavik", x: 64.2, y: 4.1 },
     ],
-    emphasis: "London",
+    hero: ["London"],
     labelled: ["Athens", "London", "Reykjavik"],
     xDomain: [35, 65],
     xLabels: ["Further south", "Further north"],

@@ -77,6 +77,12 @@ const emphasis = oneof(
   label.map((name) => ({ emphasis: name }))
 );
 
+// The same for charts that take a hero group.
+const hero = oneof(
+  constant({}),
+  label.map((name) => ({ hero: [name] }))
+);
+
 const rungBars = upTo(
   oneof(
     label.chain((l) => value.map((v) => ({ label: l, value: v }))),
@@ -101,9 +107,7 @@ const plumbScatter = upTo(
     value.chain((x) => value.map((y) => ({ label: l, x, y })))
   ),
   22
-).chain((data) =>
-  size.chain((s) => emphasis.map((e) => ({ data, ...e, ...s })))
-);
+).chain((data) => size.chain((s) => hero.map((h) => ({ data, ...h, ...s }))));
 
 const YEARS: [string, string] = ["2023", "2024"];
 
@@ -123,11 +127,15 @@ const slope = upTo(
   )
 );
 
-const daily = upTo(
+const readings = upTo(
   date.chain((d) => reading.map((v) => ({ date: d, value: v }))),
   40
-).chain((data) =>
+);
+const dailyArea = readings.chain((data) =>
   size.chain((s) => emphasis.map((e) => ({ data, ...e, ...s })))
+);
+const dailyLine = readings.chain((data) =>
+  size.chain((s) => hero.map((h) => ({ data, ...h, ...s })))
 );
 
 const NOT_A_NUMBER = /NaN|Infinity/u;
@@ -173,13 +181,13 @@ describe("a server render survives any payload and prints no NaN or Infinity", (
 
   it("HairlineLine", () => {
     expect(() => {
-      holds(HairlineLine, daily);
+      holds(HairlineLine, dailyLine);
     }).not.toThrow();
   });
 
   it("HairlineArea", () => {
     expect(() => {
-      holds(HairlineArea, daily);
+      holds(HairlineArea, dailyArea);
     }).not.toThrow();
   });
 });

@@ -37,3 +37,7 @@ export const DOT = "transition-tone";
 export const POINT = "transition-radius";
 /** Bars recolour as the cursor passes them. */
 export const MARK = "transition-tone";
+
+/** A ribbon's class: as drawn when it leads, pushed back when it does not. */
+export const flowClass = (leads: boolean) =>
+  leads ? "transition-opacity" : "opacity-40 transition-opacity";

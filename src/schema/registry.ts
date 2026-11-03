@@ -82,7 +82,7 @@ export const charts = {
   "hairline-line": entry({
     component: "HairlineLine",
     dataShape:
-      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional emphasis (a reading's id or date; null for none), extreme (peak or trough, when no emphasis), format, dateFormat, domain ([low, high] value scale, shared across small multiples), valueAxis (right by default, left in a margin of its own, none to drop the numbers and their room), note. A null value is a gap.",
+      "data: { date: ISO string; value: number | null; id?: string }[], one reading a day; optional hero (readings' ids or dates, drawn in ink above the rest; defaults to the extreme, an empty list for none), context (grey or opacity: how the rest are drawn), extreme (peak or trough, when no hero), format, dateFormat, domain ([low, high] value scale, shared across small multiples), valueAxis (right by default, left in a margin of its own, none to drop the numbers and their room), note. A null value is a gap.",
     jobs: ["change-over-time", "ranking"],
     kind: "hairline-line",
     limits: { categories: { max: 731, min: 1 }, series: { max: 1, min: 1 } },
@@ -95,7 +95,7 @@ export const charts = {
   "plumb-scatter": entry({
     component: "PlumbScatter",
     dataShape:
-      "data: { label: string; x: number; y: number; id?: string }[], one point each; optional emphasis and labelled (points' ids or labels), format and formatX, xDomain, yDomain, xLabels [low, high], yLabel, note.",
+      "data: { label: string; x: number; y: number; id?: string }[], one point each; optional hero (points' ids or labels, drawn in ink above the rest; defaults to the highest), context (grey or opacity: how the rest are drawn), heroLabel (names the hero group on the chart), labelled (points' ids or labels), format and formatX, xDomain, yDomain, xLabels [low, high], yLabel, note.",
     jobs: ["correlation", "ranking"],
     kind: "plumb-scatter",
     limits: { categories: { max: 20, min: 1 }, series: { max: 1, min: 1 } },

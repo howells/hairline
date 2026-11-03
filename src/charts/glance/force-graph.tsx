@@ -17,11 +17,26 @@ import type { PointerEvent } from "react";
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useReducedMotion, useReveal } from "../hooks";
-import { DimGroup, HitCircle, TipText } from "../hover";
+import { HitCircle, TipText } from "../hover";
+import { NetworkLive, NodeCaption } from "../network";
+import { FOCUS_RING, useNodeSelection } from "../network-select";
+import {
+  REACH,
+  STEP_FILL,
+  STEP_STROKE,
+  adjacencyOf,
+  linkStepOf,
+  pickNode,
+  reachText,
+  stepFade,
+  stepOf,
+  stepsFrom,
+} from "../network-steps";
+import type { Step } from "../network-steps";
 import { FootNote } from "../plot-note";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { dimClass, noteSpace, noteOf } from "../util";
+import { noteSpace, noteOf } from "../util";
 import { forceGraphDemo } from "./force-graph.data";
 import type { ForceLink, ForceNode } from "./force-graph.data";
 import { LinkBundle } from "./link-bundle";
@@ -33,6 +48,8 @@ interface ForceGraphProps extends NoteProps {
   links?: ForceLink[];
   height?: number;
   format?: (v: number) => string;
+  /** Node id selected until the pointer or keys choose another; everything fades out from it by links. */
+  selected?: string;
 }
 
 interface SimNode extends SimulationNodeDatum {
@@ -154,6 +171,7 @@ const makeSimulation = (g: Graph, scale: number) => {
 };
 
 interface FieldProps {
+  selected?: string;
   width: number;
   height: number;
   nodes: ForceNode[];
@@ -199,15 +217,18 @@ const useForce = (
 
 interface LinksProps {
   graph: Graph;
-  focus: SimNode | null;
+  /** Steps out from the selected node; null when none is selected. */
+  steps: ReadonlyMap<string, Step> | null;
   at: (n: SimNode) => { x: number; y: number };
 }
 
-const linkTone = (on: boolean, hero: boolean) => {
-  if (hero) {
-    return "stroke-ink";
+/** At rest the hero link is ink and the rest l4; selected, every link is toned by its steps. */
+const linkTone = (steps: LinksProps["steps"], e: Edge, hero: boolean) => {
+  if (steps !== null) {
+    const step = linkStepOf(steps, e.s.datum.id, e.t.datum.id);
+    return `${STEP_STROKE[step]} ${stepFade(step)}`;
   }
-  return on ? "stroke-l2" : "stroke-l4";
+  return `transition-opacity ${hero ? "stroke-ink" : "stroke-l4"}`;
 };
 
 /** The hero link: the hub's strongest. */
@@ -215,22 +236,19 @@ const heroEdge = (graph: Graph) =>
   graph.edges.filter((e) => e.hub).toSorted((a, b) => b.value - a.value)[0];
 
 /** Each link engraved as a bundle of 1–4 hairlines by strength. */
-const ForceLinks = ({ graph, focus, at }: LinksProps) => {
+const ForceLinks = ({ graph, steps, at }: LinksProps) => {
   const hero = heroEdge(graph);
   return (
     <g>
-      {graph.edges.map((e) => {
-        const on = focus !== null && (e.s === focus || e.t === focus);
-        return (
-          <LinkBundle
-            key={e.id}
-            className={`${linkTone(on, e === hero)} ${dimClass(focus !== null && !on)}`}
-            lines={bundleLines(e.value, graph.maxLink)}
-            s={at(e.s)}
-            t={at(e.t)}
-          />
-        );
-      })}
+      {graph.edges.map((e) => (
+        <LinkBundle
+          key={e.id}
+          className={linkTone(steps, e, e === hero)}
+          lines={bundleLines(e.value, graph.maxLink)}
+          s={at(e.s)}
+          t={at(e.t)}
+        />
+      ))}
     </g>
   );
 };
@@ -241,9 +259,9 @@ interface DotProps {
   r: number;
   /** Label on the left (satellites left of the hub). */
   left: boolean;
-  dim: boolean;
+  /** Steps from the selected node; null when none is selected. */
+  step: Step | null;
   grabbing: boolean;
-  onPointerEnter: () => void;
   onPointerDown: (e: PointerEvent<SVGGElement>) => void;
   onPointerMove: (e: PointerEvent<SVGGElement>) => void;
   onPointerUp: (e: PointerEvent<SVGGElement>) => void;
@@ -263,42 +281,49 @@ const labelAnchor = (hub: boolean, left: boolean) => {
   return left ? "end" : "start";
 };
 
+/** Solid: the hub at rest, the selected node when one is selected. */
+const solid = (hub: boolean, step: Step | null) =>
+  step === null ? hub : step === 0;
+
+/** At rest the hub is solid and satellites hollow; selected, steps tone the rings. */
+const nodeLook = (hub: boolean, step: Step | null) => {
+  if (step === null) {
+    return hub ? "fill-hero" : "fill-paper stroke-l3";
+  }
+  return step === 0 ? STEP_FILL[0] : `fill-paper ${STEP_STROKE[step]}`;
+};
+
 const ForceDot = ({
   n,
   at,
   r,
   left,
-  dim,
+  step,
   grabbing,
-  onPointerEnter,
   onPointerDown,
   onPointerMove,
   onPointerUp,
 }: DotProps) => (
-  <DimGroup
-    className={grabbing ? "cursor-grabbing" : "cursor-grab"}
-    dim={dim}
-    onPointerEnter={onPointerEnter}
+  <g
+    className={`${grabbing ? "cursor-grabbing" : "cursor-grab"} ${step === null ? "" : stepFade(step)}`}
     onPointerDown={onPointerDown}
     onPointerMove={onPointerMove}
     onPointerUp={onPointerUp}
     onPointerCancel={onPointerUp}
   >
-    <HitCircle cx={at.x} cy={at.y} r={r + 6} />
+    <HitCircle cx={at.x} cy={at.y} r={Math.max(r + 6, REACH.touch)} />
     {/* The hub is the one solid node; satellites are hollow rings. */}
     <circle
-      className={n.hub ? "fill-hero" : "fill-paper stroke-l3"}
+      className={nodeLook(n.hub, step)}
       cx={at.x}
       cy={at.y}
-      r={n.hub ? r : r - 0.75}
-      strokeWidth={n.hub ? undefined : 1.5}
+      r={solid(n.hub, step) ? r : r - 0.75}
+      strokeWidth={solid(n.hub, step) ? undefined : 1.5}
     />
-    {/* The hub carries its name inside; satellites beside them. */}
+    {/* The hub carries its name inside; satellites beside them. The selected node's name is in its caption. */}
     <Label
       anchor={labelAnchor(n.hub, left)}
-      className={
-        n.hub ? "fill-paper pointer-events-none" : "pointer-events-none"
-      }
+      className={`pointer-events-none ${solid(n.hub, step) ? "fill-paper" : ""} ${step === 0 ? "opacity-0" : ""}`}
       dy="0.35em"
       halo={!n.hub}
       muted={!n.hub}
@@ -308,7 +333,7 @@ const ForceDot = ({
     >
       {n.datum.id}
     </Label>
-  </DimGroup>
+  </g>
 );
 
 /** How far a node and its name reach left and right of its centre. */
@@ -335,21 +360,59 @@ const centring = (
   return -(min + max) / 2;
 };
 
+/** The chart's accessible name: the hub and every satellite with its flow. */
+const describe = (graph: Graph, format: (v: number) => string) => {
+  const hub = graph.nodes.find((n) => n.hub);
+  const rest = graph.nodes.flatMap((n) =>
+    n.hub ? [] : [`${n.datum.id} ${format(n.datum.value)}`]
+  );
+  return `${hub?.datum.id ?? "Hub"} linked to ${graph.nodes.length - 1} tributaries: ${rest.join(", ")}. Drag a node to move it.`;
+};
+
+/** Steps out from a node, over the graph's links; null with no node. */
+const stepsAround = (graph: Graph, id: string | null) =>
+  id === null
+    ? null
+    : stepsFrom(
+        adjacencyOf(
+          graph.nodes.map((n) => n.datum.id),
+          graph.edges.map((e) => ({
+            source: e.s.datum.id,
+            target: e.t.datum.id,
+          }))
+        ),
+        id
+      );
+
+/** The node under a point, or within `within` px of its edge, as the graph is drawn. */
+const pickAt = (
+  graph: Graph,
+  place: (n: SimNode) => { x: number; y: number },
+  scale: number,
+  at: { within: number; x: number; y: number }
+) =>
+  graph.nodes[
+    pickNode(
+      graph.nodes.map((n) => ({ ...place(n), r: n.r * scale })),
+      at.x,
+      at.y,
+      at.within
+    )
+  ]?.datum.id ?? null;
+
 const ForceField = (props: FieldProps) => {
   const { width, height } = props;
   const wrap = useRef<HTMLDivElement>(null);
   const shown = useReveal(wrap);
   const reduced = useReducedMotion();
-  const [hover, setHover] = useState<SimNode | null>(null);
+  const sel = useNodeSelection(props.selected);
   const [dragging, setDragging] = useState<SimNode | null>(null);
-  const narrow = width < 460;
-  const scale = narrow ? 0.78 : 1;
+  const scale = width < 460 ? 0.78 : 1;
   const graph = useMemo(
     () => buildGraph(props.nodes, props.links),
     [props.nodes, props.links]
   );
   const { redraw, simRef } = useForce(graph, scale, shown, reduced);
-
   const cx = width / 2;
   const cy = height / 2 - noteSpace(props.note, width - 16, 16) / 2;
   const clampX = (n: SimNode, x: number) => {
@@ -374,36 +437,29 @@ const ForceField = (props: FieldProps) => {
     n.fx = clampX(n, e.clientX - box.left - cx - shift);
     n.fy = clampY(e.clientY - box.top - cy, n.r * scale);
   };
-
-  const focus = dragging ?? hover;
-  const near = new Set<SimNode>();
-  for (const e of graph.edges) {
-    if (focus !== null && (e.s === focus || e.t === focus)) {
-      near.add(e.s);
-      near.add(e.t);
-    }
-  }
-  const hub = graph.nodes.find((n) => n.hub);
-  const label = `${hub?.datum.id ?? "Hub"} linked to ${graph.nodes.length - 1} tributaries: ${graph.nodes
-    .flatMap((n) =>
-      n.hub ? [] : [`${n.datum.id} ${props.format(n.datum.value)}`]
-    )
-    .join(", ")}. Drag a node to move it.`;
+  const focusId = dragging === null ? sel.selected : dragging.datum.id;
+  const focus = graph.nodes.find((n) => n.datum.id === focusId) ?? null;
+  const steps = stepsAround(graph, focusId);
+  const bound = sel.bind({
+    find: (x, y, within) => pickAt(graph, place, scale, { within, x, y }),
+    height,
+    held: dragging === null ? null : dragging.datum.id,
+    ids: graph.nodes.map((n) => n.datum.id),
+    width,
+  });
 
   return (
     <div ref={wrap} className="relative">
       <ChartSvg
-        className="fade touch-none"
+        className={`fade touch-none ${FOCUS_RING}`}
+        desc="Arrow keys step through the nodes; Escape clears."
         height={height}
-        label={label}
-        leave={() => {
-          if (dragging === null) {
-            setHover(null);
-          }
-        }}
+        label={describe(graph, props.format)}
+        leave={bound.leave}
         width={width}
+        {...bound.svg}
       >
-        <ForceLinks graph={graph} focus={focus} at={place} />
+        <ForceLinks graph={graph} steps={steps} at={place} />
         {graph.nodes.map((n) => (
           <ForceDot
             key={n.datum.id}
@@ -411,13 +467,8 @@ const ForceField = (props: FieldProps) => {
             at={place(n)}
             r={n.r * scale}
             left={labelLeft(n)}
-            dim={focus !== null && focus !== n && !near.has(n)}
+            step={steps === null ? null : stepOf(steps, n.datum.id)}
             grabbing={dragging === n}
-            onPointerEnter={() => {
-              if (dragging === null) {
-                setHover(n);
-              }
-            }}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               setHeld(shift);
@@ -437,14 +488,23 @@ const ForceField = (props: FieldProps) => {
               n.fy = n.hub ? HUB_Y : null;
               setDragging(null);
               setHeld(null);
-              setHover(null);
               simRef.current?.alphaTarget(0);
             }}
           />
         ))}
+        {focus === null || steps === null ? null : (
+          <NodeCaption
+            name={focus.datum.id}
+            note={reachText(steps)}
+            r={focus.r * scale}
+            width={width}
+            x={place(focus).x}
+            y={place(focus).y}
+          />
+        )}
         <FootNote height={height} text={props.note} width={width} />
       </ChartSvg>
-      {focus === null ? null : (
+      {focus === null || !(sel.chosen || dragging !== null) ? null : (
         <Tooltip x={place(focus).x} y={place(focus).y - focus.r * scale - 4}>
           <TipText
             facts={[props.format(focus.datum.value)]}
@@ -452,6 +512,13 @@ const ForceField = (props: FieldProps) => {
           />
         </Tooltip>
       )}
+      <NetworkLive
+        text={
+          focus === null || steps === null
+            ? ""
+            : `${focus.datum.id}: ${reachText(steps)}`
+        }
+      />
     </div>
   );
 };
@@ -460,7 +527,9 @@ const ForceField = (props: FieldProps) => {
  * G11 Into the Thames. A hub and its satellites in a d3-force layout, node
  * area = flow, each link a bundle of 1–4 hairlines by strength. The hub is
  * the one solid node and its strongest link the one ink bundle; satellites
- * are hollow rings. Drag a node: the springs pull it back when you let go.
+ * are hollow rings. Hover, tap or arrow to a node and everything fades out
+ * from it by links, with its name and reach beside it. Drag a node: the
+ * springs pull it back when you let go.
  */
 export const ForceGraph = (props: ForceGraphProps) => {
   const height = props.height ?? 440;
@@ -471,6 +540,7 @@ export const ForceGraph = (props: ForceGraphProps) => {
     <Plot>
       {(width) => (
         <ForceField
+          selected={props.selected}
           width={width}
           // Narrow plots get a square field no taller than 360, so the graph fills it.
           height={width < 460 ? Math.min(width, 360) : height}

@@ -83,7 +83,7 @@ const charts = {
         { label: "Alder", x: 10, y: 30 },
         { label: "Birch", x: 40, y: 12 },
       ],
-      emphasis: "Birch",
+      hero: ["Birch"],
       ...sized,
     })
   ),

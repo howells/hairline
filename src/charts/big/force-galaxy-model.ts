@@ -82,6 +82,8 @@ export interface StarTip {
 
 /** DOM handles, so the simulation writes positions without a React render per frame. */
 export interface Handles {
+  /** The selected star's name and reach, under the key "root": it follows the star. */
+  caption: Map<"root", SVGGElement>;
   edges: Map<string, SVGLineElement>;
   /** The <svg> itself, under the key "root". */
   frame: Map<"root", SVGSVGElement>;
@@ -402,6 +404,24 @@ const drawEdge = (e: Edge, handles: Handles) => {
   line?.setAttribute("y2", fixed(e.b.y));
 };
 
+/** Where the selected star's caption sits: beside the star, turned left when it would overrun the plot. */
+export const placeCaption = (galaxy: Galaxy, handles: Handles) => {
+  const caption = handles.caption.get("root");
+  const star = galaxy.stars.find((s) => s.id === caption?.dataset.id);
+  if (caption === undefined || star === undefined) {
+    return;
+  }
+  const run = Number(caption.dataset.run);
+  const turn = (star.x ?? 0) + star.r + 6 + run > galaxy.width ? -1 : 1;
+  caption.setAttribute(
+    "transform",
+    `translate(${fixed((star.x ?? 0) + turn * (star.r + 6))} ${fixed(star.y)})`
+  );
+  for (const text of caption.querySelectorAll("text")) {
+    text.setAttribute("text-anchor", turn === 1 ? "start" : "end");
+  }
+};
+
 export const drawGalaxy = (galaxy: Galaxy, handles: Handles) => {
   for (const s of galaxy.stars) {
     drawStar(s, handles);
@@ -421,6 +441,7 @@ export const drawGalaxy = (galaxy: Galaxy, handles: Handles) => {
   for (const e of galaxy.edges) {
     drawEdge(e, handles);
   }
+  placeCaption(galaxy, handles);
 };
 
 /** Pull toward the centre: strong enough that no hub drifts to an edge. */

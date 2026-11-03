@@ -1,6 +1,8 @@
 import { fmtKInt } from "../../lib/format";
+import type { HeroContext } from "../../schema/hero";
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
+import { contextClass, heroKeys, heroLast } from "../hero";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -21,8 +23,10 @@ interface DotCascadeProps extends NoteProps {
   format?: (v: number) => string;
   /** Words after the value in the tooltip, e.g. "puzzles". */
   noun?: string;
-  /** Label of the column drawn in ink. Defaults to the last (largest). */
-  highlight?: string;
+  /** Labels of the columns drawn in ink, above the rest. Defaults to the last (largest). */
+  hero?: string[];
+  /** How the other columns are drawn: a pale `grey` (default), or `opacity`, the ink at low opacity. */
+  context?: HeroContext;
 }
 
 interface CascadeLayout {
@@ -82,6 +86,7 @@ const cascadeLayout = (
 };
 
 interface ColumnProps {
+  context: HeroContext | undefined;
   count: number;
   datum: DotCascadeDatum;
   dim: boolean;
@@ -93,6 +98,7 @@ interface ColumnProps {
 }
 
 const Column = ({
+  context,
   count,
   datum,
   dim,
@@ -122,7 +128,7 @@ const Column = ({
       />
       {units.map((r) => (
         <rect
-          className={`pop ${hero ? "fill-l3" : "fill-l5"}`}
+          className={`pop ${hero ? "fill-l3" : contextClass(context, "fill")}`}
           height={1}
           key={`${datum.label}-${r}`}
           style={stagger(i * 2 + r, "fine")}
@@ -132,7 +138,7 @@ const Column = ({
         />
       ))}
       <rect
-        className={`pop ${hero ? "fill-hero" : "fill-l3"}`}
+        className={`pop ${hero ? "fill-hero" : contextClass(context, "fill")}`}
         height={2}
         style={stagger(i * 2 + count, "fine")}
         width={capW}
@@ -176,7 +182,8 @@ export const DotCascade = (props: DotCascadeProps) => {
   const format = props.format ?? fmtKInt;
   const noun = props.noun ?? "puzzles";
   const hover = useHover<number>();
-  const hero = props.highlight ?? data.at(-1)?.label;
+  const last = data.at(-1)?.label;
+  const heroes = heroKeys(props.hero, last === undefined ? [] : [last]);
   const counts = data.map((d) => Math.max(1, Math.ceil(d.value / unit)));
 
   return (
@@ -218,19 +225,22 @@ export const DotCascade = (props: DotCascadeProps) => {
               y0={layout.floorY(fx0)}
               y1={layout.floorY(fx1)}
             />
-            {data.map((d, i) => (
-              <Column
-                count={counts[i]}
-                datum={d}
-                dim={hover.dim(i)}
-                format={format}
-                hero={hero === d.label}
-                i={i}
-                key={d.label}
-                layout={layout}
-                onEnter={hover.showAt(i)}
-              />
-            ))}
+            {heroLast([...data.keys()], (i) => heroes.has(data[i].label)).map(
+              (i) => (
+                <Column
+                  context={props.context}
+                  count={counts[i]}
+                  datum={data[i]}
+                  dim={hover.dim(i)}
+                  format={format}
+                  hero={heroes.has(data[i].label)}
+                  i={i}
+                  key={data[i].label}
+                  layout={layout}
+                  onEnter={hover.showAt(i)}
+                />
+              )
+            )}
             <FootNote
               height={layout.height}
               text={noteOf(props)}

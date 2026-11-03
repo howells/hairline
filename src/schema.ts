@@ -42,6 +42,8 @@ export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
+export { contextSchema, heroShape, heroLabelShape } from "./schema/hero";
+export type { HeroContext } from "./schema/hero";
 export {
   intervalPointSchema,
   intervalSchema,

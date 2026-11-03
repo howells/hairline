@@ -3,10 +3,13 @@ import type { ScaleLinear } from "d3-scale";
 
 import { plural } from "../../lib/format";
 import { resolveFormat } from "../../schema/format";
+import type { HeroContext } from "../../schema/hero";
 import { keyOf } from "../../schema/key";
 import type { PlumbDatum, PlumbScatterProps } from "../../schema/plumb-scatter";
 import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
+import { contextClass, heroKeys, heroLast } from "../hero";
+import { HeroDot, HeroLabel } from "../hero-marks";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot } from "../markers";
@@ -59,12 +62,15 @@ const Floor = ({ floor, highName, lowName, x0, x1, yLabel }: FloorProps) => (
   </g>
 );
 
-/** A point's tone: by whether it clears the reference lines that ask for ink, else the hero's ink or grey. */
-const dotClass = (hero: boolean, clearing: boolean | undefined) => {
+/** A point's tone: by whether it clears the reference lines that ask for ink, else the context's. */
+const dotClass = (
+  clearing: boolean | undefined,
+  context: HeroContext | undefined
+) => {
   if (clearing !== undefined) {
     return clearing ? "pop fill-hero" : "pop fill-l5";
   }
-  return hero ? "pop fill-hero" : "pop fill-l3";
+  return `pop ${contextClass(context, "fill")}`;
 };
 
 /** Where a point's name sits: centred above the dot, or beside it. */
@@ -156,6 +162,7 @@ const nameSpots = (
 interface PointProps {
   /** Whether the point clears the reference lines that ask for ink; undefined when none does. */
   clearing: boolean | undefined;
+  context: HeroContext | undefined;
   datum: PlumbDatum;
   dim: boolean;
   floor: number;
@@ -172,6 +179,7 @@ interface PointProps {
 /** One point on its stem to the floor (evenly dotted, solid ink for the hero), named when asked. */
 const Point = ({
   clearing,
+  context,
   datum,
   dim,
   floor,
@@ -207,7 +215,7 @@ const Point = ({
         <g className="fade" style={stagger(order, "mark")}>
           <DottedLine
             pitch={TEXTURE_PITCH.dense}
-            tone="fill-l3"
+            tone={contextClass(context, "fill")}
             x0={px}
             x1={px}
             y0={py + 4}
@@ -215,13 +223,22 @@ const Point = ({
           />
         </g>
       )}
-      <Dot
-        className={dotClass(hero, clearing)}
-        cx={crisp(px)}
-        cy={py}
-        size={hero ? "md" : "sm"}
-        style={stagger(order + 6, "mark")}
-      />
+      {hero && clearing === undefined ? (
+        <HeroDot
+          className="pop"
+          cx={crisp(px)}
+          cy={py}
+          style={stagger(order + 6, "mark")}
+        />
+      ) : (
+        <Dot
+          className={dotClass(clearing, context)}
+          cx={crisp(px)}
+          cy={py}
+          size={hero ? "md" : "sm"}
+          style={stagger(order + 6, "mark")}
+        />
+      )}
       {place === undefined ? null : (
         <Label
           anchor={place.anchor}
@@ -289,7 +306,8 @@ const labelledIndices = (
 const summary = (
   data: PlumbDatum[],
   formats: { x: (v: number) => string; y: (v: number) => string },
-  props: PlumbScatterProps
+  props: PlumbScatterProps,
+  heroCount: number
 ) => {
   if (data.length === 0) {
     return "No data.";
@@ -299,6 +317,9 @@ const summary = (
   const low = data[ys.indexOf(Math.min(...ys))];
   return [
     `${plural(data.length, "point")}. Highest: ${high.label}, ${formats.y(high.y)}. Lowest: ${low.label}, ${formats.y(low.y)}.`,
+    props.heroLabel === undefined
+      ? ""
+      : `${props.heroLabel}: ${plural(heroCount, "point")}.`,
     referenceDesc(props.references, formats.y, "y"),
     referenceDesc(props.xReferences, formats.x, "x"),
     "The data table lists every point.",
@@ -334,7 +355,7 @@ const scatterTip = (
 
 interface NamesArgs {
   format: (v: number) => string;
-  hero: number;
+  heroes: ReadonlySet<number>;
   labelled: Set<number>;
   metrics: PlumbScatterProps["metrics"];
   width: number;
@@ -344,11 +365,15 @@ interface NamesArgs {
 
 /** Where each labelled point prints its name, and the spots that keeps reference labels off. */
 const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
-  const { format, hero, labelled, metrics, width, x, y } = a;
+  const { format, heroes, labelled, metrics, width, x, y } = a;
   const selves = data.map((d, i) => ({
     px: x(d.x),
     py: y(d.y),
-    w: sansWidth(`${d.label} · ${format(d.y)}`, hero === i ? 12 : 11, metrics),
+    w: sansWidth(
+      `${d.label} · ${format(d.y)}`,
+      heroes.has(i) ? 12 : 11,
+      metrics
+    ),
   }));
   const places = selves.map((self, i) =>
     labelled.has(i)
@@ -356,7 +381,7 @@ const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
           self,
           selves.map((o) => ({ px: o.px, py: o.py })),
           width,
-          hero === i
+          heroes.has(i)
         )
       : undefined
   );
@@ -367,13 +392,21 @@ const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
   return { avoid, places };
 };
 
+/** The topmost of the given points on the page (the smallest y). */
+const topmost = (points: { x: number; y: number }[]) =>
+  points.toSorted((a, b) => a.y - b.y)[0];
+
+/** Whether a point clears the reference lines that ask for ink; undefined when none does. */
+const clearingOf = (props: PlumbScatterProps, d: PlumbDatum) =>
+  clearsAll([clears(props.references, d.y), clears(props.xReferences, d.x)]);
+
 interface SvgProps {
   data: PlumbDatum[];
   domains: { x: [number, number]; y: [number, number] };
   format: (v: number) => string;
   formatX: (v: number) => string;
   height: number;
-  hero: number;
+  heroes: ReadonlySet<number>;
   hover: ReturnType<typeof useHover<number>>;
   keys: string[];
   label: string;
@@ -390,7 +423,7 @@ const PlumbScatterSvg = ({
   format,
   formatX,
   height,
-  hero,
+  heroes,
   hover,
   keys,
   label,
@@ -417,7 +450,7 @@ const PlumbScatterSvg = ({
   const plane = { x0, x1: x0 + plotW, y0: 30, y1: floor };
   const { avoid, places } = namesOf(data, {
     format,
-    hero,
+    heroes,
     labelled,
     metrics: props.metrics,
     width,
@@ -426,7 +459,7 @@ const PlumbScatterSvg = ({
   });
   return (
     <ChartSvg
-      desc={summary(data, { x: formatX, y: format }, props)}
+      desc={summary(data, { x: formatX, y: format }, props, heroes.size)}
       height={height}
       label={label}
       leave={hover.clear}
@@ -452,18 +485,16 @@ const PlumbScatterSvg = ({
         refs={props.xReferences}
         scale={x}
       />
-      {data.map((d, i) => (
+      {heroLast([...data.keys()], (i) => heroes.has(i)).map((i) => (
         <Point
-          clearing={clearsAll([
-            clears(props.references, d.y),
-            clears(props.xReferences, d.x),
-          ])}
+          clearing={clearingOf(props, data[i])}
+          context={props.context}
           place={places[i]}
-          datum={d}
+          datum={data[i]}
           dim={hover.dim(i)}
           floor={floor}
           format={format}
-          hero={hero === i}
+          hero={heroes.has(i)}
           key={keys[i]}
           onEnter={hover.showAt(i)}
           order={order.get(i) ?? i}
@@ -471,6 +502,16 @@ const PlumbScatterSvg = ({
           y={y}
         />
       ))}
+      {props.heroLabel === undefined || heroes.size === 0 ? null : (
+        <HeroLabel
+          count={plural(heroes.size, "point")}
+          dot={topmost(
+            [...heroes].map((i) => ({ x: x(data[i].x), y: y(data[i].y) }))
+          )}
+          name={props.heroLabel}
+          width={width}
+        />
+      )}
       <ReferenceOverlay
         along="y"
         avoid={avoid}
@@ -513,13 +554,21 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const keys = reactKeys(data);
   const highest = ys.length === 0 ? -1 : ys.indexOf(Math.max(...ys));
   const lowest = ys.length === 0 ? -1 : ys.indexOf(Math.min(...ys));
-  // Emphasis and labels are by key so reordering never moves them; a key that
-  // names no point emphasises or names none.
-  const hero =
-    props.emphasis === undefined
-      ? highest
-      : data.findIndex((d) => keyOf(d) === props.emphasis);
-  const labelled = labelledIndices(data, props.labelled, [highest, lowest]);
+  // The hero and the labels are by key so reordering never moves them; a key
+  // that names no point draws none. The highest is the hero unless told.
+  const heroKeyed = heroKeys(
+    props.hero,
+    highest < 0 ? [] : [keyOf(data[highest])]
+  );
+  const heroes = new Set(
+    data.flatMap((d, i) => (heroKeyed.has(keyOf(d)) ? [i] : []))
+  );
+  // The hero group's label names it, so its points need no name of their own.
+  const labelled = new Set(
+    [...labelledIndices(data, props.labelled, [highest, lowest])].filter(
+      (i) => props.heroLabel === undefined || !heroes.has(i)
+    )
+  );
   const xDomain =
     props.xDomain ??
     defaultXDomain([...xs, ...referenceValues(props.xReferences)]);
@@ -529,29 +578,35 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const byX = data.map((d, i) => ({ i, x: d.x })).toSorted((a, b) => a.x - b.x);
   const order = new Map(byX.map((entry, r) => [entry.i, r]));
   const label = props.title ?? describe(data, formatX, format);
+  const columns =
+    props.heroLabel === undefined
+      ? ["Label", "X", "Y"]
+      : ["Label", "X", "Y", props.heroLabel];
 
   return (
     <Plot
       {...plotOptions(props)}
       initialWidth={props.initialWidth}
-      table={chartTable(
-        props,
-        props.title ?? "Points",
-        ["Label", "X", "Y"],
-        [
-          ...data.map((d) => [d.label, formatX(d.x), format(d.y)]),
-          ...referenceRows(props.references, format, {
-            axis: "y",
-            columns: 3,
-            values: [2],
-          }),
-          ...referenceRows(props.xReferences, formatX, {
-            axis: "x",
-            columns: 3,
-            values: [1],
-          }),
-        ]
-      )}
+      table={chartTable(props, props.title ?? "Points", columns, [
+        ...data.map((d, i) => [
+          d.label,
+          formatX(d.x),
+          format(d.y),
+          ...(props.heroLabel === undefined
+            ? []
+            : [heroes.has(i) ? "Yes" : "No"]),
+        ]),
+        ...referenceRows(props.references, format, {
+          axis: "y",
+          columns: columns.length,
+          values: [2],
+        }),
+        ...referenceRows(props.xReferences, formatX, {
+          axis: "x",
+          columns: columns.length,
+          values: [1],
+        }),
+      ])}
       width={props.width}
       overlay={scatterTip(hover.at, data, formatX, format)}
     >
@@ -562,7 +617,7 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
           format={format}
           formatX={formatX}
           height={height}
-          hero={hero}
+          heroes={heroes}
           hover={hover}
           keys={keys}
           label={label}
@@ -579,7 +634,9 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
 /**
  * F8 Stem scatter. Up to twenty points, each on a stem to the floor so x can
  * be read where the stem lands: dotted at pitch 3, solid ink for the hero.
- * The highest point is the hero; the highest and lowest are named.
+ * The highest point is the hero unless `hero` lists others; the highest and
+ * lowest are named. `context` sets how the rest are drawn, `heroLabel` names
+ * the hero group.
  *
  * Props are the `plumbScatterSchema` payload (src/schema/plumb-scatter.ts);
  * `data` is required and never defaults to demo data. Give `width` and
