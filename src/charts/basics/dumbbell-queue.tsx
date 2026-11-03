@@ -1,36 +1,23 @@
-import { scaleLinear } from "d3-scale";
-import type { ScaleLinear } from "d3-scale";
-
-import { plural } from "../../lib/format";
 import type {
   DumbbellDatum,
   DumbbellQueueProps,
 } from "../../schema/dumbbell-queue";
 import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
-import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
-import { DOT, MARK_WEIGHT } from "../marks";
-import type { DotSize } from "../marks";
+import { MARK_WEIGHT } from "../marks";
 import { FootNote } from "../plot-note";
 import { HRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { stagger, noteOf, countingUnit } from "../util";
-import { inkWidth, maxIndex } from "./util-b";
-
-interface Layout {
-  dotR: number;
-  dotSize: DotSize;
-  labelW: number;
-  pitch: number;
-  top: number;
-  x: ScaleLinear<number, number>;
-}
+import { buildLayout, describe, reactKeys, summary } from "./before-after";
+import type { Layout, SideLabels } from "./before-after";
+import { maxIndex } from "./util-b";
 
 interface RowProps {
   /** Which direction of change draws its rungs in the alert colour. */
@@ -46,67 +33,14 @@ interface RowProps {
   width: number;
 }
 
-/** Margin kept between the ink and the svg edge. */
-const EDGE = 2;
-
 /**
- * Width a row's value label takes to the right of its rightmost dot: the
- * before value when the row improved, else the after value.
+ * The text beside a row's dots: the before value to the right when the row
+ * improved, else the after value; the left holds the other.
  */
-const rightLabelW = (
-  d: DumbbellDatum,
-  format: (v: number) => string,
-  dotR: number,
-  metrics?: FontMetrics
-) => {
-  const text = d.after <= d.before ? format(d.before) : format(d.after);
-  return dotR + 2 + inkWidth(text, metrics);
-};
-
-const buildLayout = (
-  width: number,
-  height: number,
-  data: DumbbellDatum[],
-  hasNote: boolean,
-  format: (v: number) => string,
-  metrics?: FontMetrics
-): Layout => {
-  const longest = Math.max(0, ...data.map((d) => inkWidth(d.label, metrics)));
-  // The row names end at `labelW`, the longest starting at the edge margin.
-  const labelW = EDGE + Math.min(width * 0.32, Math.ceil(longest));
-  const top = 36;
-  const bottom = hasNote ? 74 : 44;
-  const values = data.flatMap((d) => [d.before, d.after]);
-  // The axis runs from zero, or below it when a value is negative.
-  const lo = Math.min(0, ...values) * 1.04;
-  const hi = Math.max(0, ...values) * 1.04;
-  const span = hi > lo ? hi - lo : 1;
-  const dotSize: DotSize = width < 420 ? "md" : "lg";
-  const dotR = DOT[dotSize];
-  const x0 = labelW + 12;
-  // Pull the track's right end in until every right-hand value label fits,
-  // but never behind its left end: a narrow chart keeps a track of no length.
-  const reach = Math.min(
-    width - EDGE,
-    ...data.map((d) => {
-      const t = (Math.max(d.before, d.after) - lo) / span;
-      return t > 0
-        ? x0 + (width - EDGE - rightLabelW(d, format, dotR, metrics) - x0) / t
-        : Infinity;
-    })
-  );
-  const x1 = Math.max(x0, reach);
-  return {
-    dotR,
-    dotSize,
-    labelW,
-    pitch: (height - top - bottom) / Math.max(1, data.length - 1),
-    top,
-    x: scaleLinear()
-      .domain([lo, lo + span])
-      .range([x0, x1]),
-  };
-};
+const sideLabels = (format: (v: number) => string): SideLabels => ({
+  left: () => "",
+  right: (d) => (d.after <= d.before ? format(d.before) : format(d.after)),
+});
 
 /** Height of a change rung. */
 const RUNG_H = 8;
@@ -238,31 +172,6 @@ const Row = (props: RowProps) => {
   );
 };
 
-const describe = (d: DumbbellDatum, format: (v: number) => string): string =>
-  d.after <= d.before
-    ? `${format(d.before - d.after)} less`
-    : `${format(d.after - d.before)} more`;
-
-/** What the rows say, in words, from the data passed in. */
-const summary = (data: DumbbellDatum[], format: (v: number) => string) => {
-  if (data.length === 0) {
-    return "No data.";
-  }
-  const big = data[maxIndex(data.map((d) => Math.abs(d.before - d.after)))];
-  return `${plural(data.length, "row")}. Biggest change: ${big.label}, ${format(big.before)} to ${format(big.after)}. The data table lists every row.`;
-};
-
-/** React keys: each datum's key, numbered when the key repeats. */
-const reactKeys = (data: DumbbellDatum[]) => {
-  const seen = new Map<string, number>();
-  return data.map((d) => {
-    const key = keyOf(d);
-    const nth = seen.get(key) ?? 0;
-    seen.set(key, nth + 1);
-    return `${key}#${nth}`;
-  });
-};
-
 const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
   const data = (props.data ?? []).filter(
     (d) => Number.isFinite(d.before) && Number.isFinite(d.after)
@@ -322,7 +231,8 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
           height,
           data,
           noteOf(props) !== undefined,
-          format,
+          sideLabels(format),
+          36,
           props.metrics
         );
         const endsY = height - (noteOf(props) === undefined ? 10 : 40);

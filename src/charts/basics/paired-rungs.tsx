@@ -134,7 +134,6 @@ const Pair = ({
   );
 };
 
-
 /** Below this width per category, the columns give way to rows. */
 const COLUMN_ROOM = 78;
 /** Height of one row in the narrow layout. */
@@ -237,7 +236,6 @@ const PairRow = ({
   );
 };
 
-
 interface PairRowsProps {
   curName: string;
   data: PairDatum[];
@@ -279,12 +277,7 @@ const PairRows = ({
     Math.max(0, notes.length - 1) * NOTE_LINE;
   const hero = highlight ?? maxIndex(data.map((d) => d.current));
   return (
-    <ChartSvg
-      height={rowsH}
-      label={label}
-      leave={hover.clear}
-      width={width}
-    >
+    <ChartSvg height={rowsH} label={label} leave={hover.clear} width={width}>
       <defs>
         <Hatch id={ids("hatch")} tone="fill-l4" />
         <Rules id={ids("rules")} tone="fill-l3" />
@@ -314,12 +307,7 @@ const PairRows = ({
           x1={x1}
         />
       ))}
-      <FootNote
-        gutter={12}
-        height={rowsH}
-        text={note}
-        width={width}
-      />
+      <FootNote gutter={12} height={rowsH} text={note} width={width} />
     </ChartSvg>
   );
 };

@@ -117,6 +117,10 @@ An art-director review found the set gorgeous in patches but not yet one system.
 
 Every fill is one of the fills in `src/charts/fills.ts`, drawn in full on the Fills sheet (P1): a family in a tone, or a step on the halftone or hatch-density ladder. Heroes are `fill-hero`, never `fill-ink` (ink is for text). No private dot scales, pitches or tones; if a chart needs something new, add it to `fills.ts` so the sheet shows it.
 
+## Amendment 5: ink for direction and measure (arrow plot, bullet, ridgeline)
+
+The owner approved mockups where ink is the data rather than the one emphasis. Two exceptions to "one hero per chart", both in the `forms` family only: in ArrowPlot every rising row is ink (`fill-hero`, 2px shaft) and every falling row the quiet `l3` at 1px, so direction is the encoding; in Bullet every row's measure bar and target tick are ink, over ranges in `l4`, `l5` and paper. Everything else holds: no alert colour, one ink for marks and `t-*` roles for text. Ridgeline's engraved hatch gives way to paper alone, with the hero's 2px ink outline over a flat `l5` tint, because nearer ridges must hide what is behind them and a texture under every ridge blurs the edge it hides.
+
 ## Chrome and label type (overrides earlier type notes)
 
 All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; the wordmark differs by weight alone. Inside charts every label, value, tick and note is one size, 11px, told apart by weight and tone; the single big figure (`t-figure`) is the only exception. One 1px rule under the header; no bar above chart names.
