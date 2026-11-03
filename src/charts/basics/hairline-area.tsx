@@ -9,7 +9,6 @@ import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
-import { labelBox } from "../label-box";
 import { Dot } from "../markers";
 import { NOTED_TOP } from "../note-layout";
 import { FootNote } from "../plot-note";
@@ -26,6 +25,7 @@ import { stagger, noteOf } from "../util";
 import { DayStems, HeroMark, MonthAxis } from "./area-marks";
 import {
   edgesOf,
+  heroLabelBox,
   nearestOf,
   shapesOf,
   startOf,
@@ -225,20 +225,6 @@ interface SvgProps {
   wholeNumbers: boolean;
   width: number;
 }
-
-/** Where the hero's value label prints, over its dot. */
-const heroLabelBox = (
-  readings: Reading[],
-  frame: Frame,
-  format: (v: number) => string,
-  hero: number
-) =>
-  labelBox(
-    format(valueAt(readings, hero)),
-    frame.x(hero),
-    frame.y(valueAt(readings, hero)) - 13,
-    "middle"
-  );
 
 /** The value axis over the reach, and the readings across the plot. */
 const frameOf = (

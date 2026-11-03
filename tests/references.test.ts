@@ -319,3 +319,47 @@ describe("a band's name", () => {
     expect(top).toBeGreaterThan(180);
   });
 });
+
+describe("references and intervals beside the daily charts' other props", () => {
+  const marks = {
+    data: days,
+    forecast: { from: "2024-03-08" },
+    intervals: [
+      {
+        coverage: 0.5,
+        points: [
+          { date: "2024-03-09", high: 18, low: 16 },
+          { date: "2024-03-10", high: 20, low: 14 },
+        ],
+      },
+    ],
+    references: [{ label: "Target 15", value: 15 }],
+    ...sized,
+  };
+
+  it.each(["left", "none", "right"] as const)(
+    "draw with the value axis %s",
+    (valueAxis) => {
+      const html = render(createElement(HairlineLine, { ...marks, valueAxis }));
+      expect(html).toContain("Target 15");
+      expect(html).toContain(">Half<");
+    }
+  );
+
+  it("keep the coverage names inside the plot, on plates", () => {
+    const html = render(createElement(HairlineLine, marks));
+    expect(html).toMatch(/fill-paper[^>]*><\/rect><text[^>]*>Half</u);
+  });
+
+  it("sit beside notes", () => {
+    const html = render(
+      createElement(HairlineArea, {
+        ...marks,
+        notes: [{ at: "2024-03-05", title: "Launch" }],
+      })
+    );
+    expect(html).toContain("Target 15");
+    expect(html).toContain(">Half<");
+    expect(html).toContain("Launch");
+  });
+});

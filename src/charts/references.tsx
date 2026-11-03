@@ -184,17 +184,19 @@ const BandName = (props: ReferenceProps & { band: ReferenceBand }) => {
     );
     return plateAt(plate, band.label, "t-axis");
   }
-  // An upright band names itself inside its top when it fits, else over the plane.
+  // An upright band names itself inside its top or bottom when it fits, else over the plane.
   const room = end - start;
-  const plate: Plate =
+  const left = (start + end) / 2 - width / 2;
+  const plates: Plate[] =
     width + MARGIN <= room
-      ? { h: PLATE_H, left: start + MARGIN, top: plane.y0 + 3, w: width }
-      : {
+      ? [plane.y0 + 3, plane.y1 - 3 - PLATE_H].map((top) => ({
           h: PLATE_H,
-          left: (start + end) / 2 - width / 2,
-          top: plane.y0 - 3 - PLATE_H,
+          left: start + MARGIN,
+          top,
           w: width,
-        };
+        }))
+      : [{ h: PLATE_H, left, top: plane.y0 - 3 - PLATE_H, w: width }];
+  const plate = clearest(plates, props.avoid);
   return plateAt(plate, band.label, "t-axis");
 };
 

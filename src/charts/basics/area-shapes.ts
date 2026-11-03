@@ -3,6 +3,7 @@ import type { ScaleLinear } from "d3-scale";
 import { area as d3area, line as d3line } from "d3-shape";
 
 import type { ValueAxis } from "../../schema/daily";
+import { labelBox } from "../label-box";
 import { sansWidth } from "../util";
 import { isLive, valueAt } from "./daily-readings";
 import type { Reading } from "./daily-readings";
@@ -149,3 +150,17 @@ export const startOf = (
       : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
   return hero === 0 ? Math.max(8, half) : 8;
 };
+
+/** Where the hero's value label prints, over its dot. */
+export const heroLabelBox = (
+  readings: Reading[],
+  frame: Frame,
+  format: (v: number) => string,
+  hero: number
+) =>
+  labelBox(
+    format(valueAt(readings, hero)),
+    frame.x(hero),
+    frame.y(valueAt(readings, hero)) - 13,
+    "middle"
+  );

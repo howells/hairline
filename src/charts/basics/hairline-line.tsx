@@ -1,5 +1,3 @@
-import { scaleLinear } from "d3-scale";
-import type { ScaleLinear } from "d3-scale";
 import type { PointerEvent } from "react";
 
 import { dayTickLabels, fmtInt } from "../../lib/format";
@@ -11,7 +9,6 @@ import { crisp } from "../axes";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
 import { TipText } from "../hover";
-import { labelBox } from "../label-box";
 import { Dot, Ring } from "../markers";
 import type { DotSize } from "../marks";
 import { NOTED_TOP } from "../note-layout";
@@ -48,23 +45,12 @@ import {
   forecastAt,
   intervalFacts,
   intervalTable,
-  pathBetween,
 } from "./intervals";
 import type { Band } from "./intervals";
+import { frameOf, linePaths, nearestDay, valueLabelBoxes } from "./line-frame";
+import type { Frame } from "./line-frame";
 import { describeLine } from "./line-words";
 import { axisRoom, dailyFloor, isWeekend } from "./util-a";
-
-interface Frame {
-  floor: number;
-  /** Where reading `i` stands: by its date, so a missing day leaves a gap. */
-  x: (i: number) => number;
-  /** The frame's left and right edges: gridlines and baseline span them. */
-  x0: number;
-  x1: number;
-  y: ScaleLinear<number, number>;
-}
-
-const DAY_MS = 86_400_000;
 
 /** A dot's tone: by whether it clears a reference line when one asks, else the hero's ink or grey. */
 const dotClass = (
@@ -249,39 +235,6 @@ const DayAxis = ({
   );
 };
 
-/**
- * The line through the live readings, broken at each gap: the observed one,
- * and the forecast one that picks up where it ends.
- */
-const linePaths = (readings: Reading[], frame: Frame, forecast: number) => {
-  const at = { x: (i: number) => crisp(frame.x(i)), y: frame.y };
-  const last = readings.length - 1;
-  const kept = Math.min(forecast, readings.length) - 1;
-  return {
-    forecast:
-      forecast >= readings.length
-        ? ""
-        : pathBetween(readings, { from: Math.max(0, kept), to: last }, at),
-    observed: pathBetween(readings, { from: 0, to: kept }, at),
-  };
-};
-
-/** The live reading whose day is nearest `day`, searching from `first`. */
-const nearestDay = (
-  live: number[],
-  first: number,
-  dayAt: (i: number) => number,
-  day: number
-) => {
-  let nearest = first;
-  for (const k of live) {
-    if (Math.abs(dayAt(k) - day) < Math.abs(dayAt(nearest) - day)) {
-      nearest = k;
-    }
-  }
-  return nearest;
-};
-
 interface LayersProps {
   avoid: Spot[];
   axis: ValueAxis;
@@ -415,72 +368,6 @@ const LineLayers = (p: LayersProps) => {
       />
     </>
   );
-};
-
-/** A range narrower than this is flat: below it d3 cannot count ticks (the step underflows). */
-const FLAT_SPAN = 1e-290;
-
-/** Where the hero's and the latest day's value labels print, over their dots. */
-const valueLabelBoxes = (
-  readings: Reading[],
-  frame: Frame,
-  format: (v: number) => string,
-  at: number[]
-) =>
-  at.map((i) =>
-    labelBox(
-      format(valueAt(readings, i)),
-      frame.x(i),
-      frame.y(valueAt(readings, i)) - 12,
-      "middle"
-    )
-  );
-
-/**
- * The frame: the value axis over the reach of the readings (and the marks
- * that need room), and the days across the plot, kept clear of the value
- * scale and of the bands' names at the right.
- */
-const frameOf = (
-  readings: Reading[],
-  at: {
-    axis: ValueAxis;
-    domain: [number, number] | undefined;
-    floor: number;
-    reach: [number, number];
-    top: number;
-    width: number;
-  }
-) => {
-  const room = axisRoom(at.axis);
-  const frameW = Math.min(at.width - 16, 680 + room.left);
-  const x0 = Math.round((at.width - frameW) / 2) + room.left;
-  const x1 = x0 + frameW - room.left;
-  const [lo, hi] = at.reach;
-  const span = hi - lo;
-  const y = scaleLinear()
-    .domain(
-      at.domain ??
-        (span < FLAT_SPAN ? [lo - 1, hi + 1] : [lo - span * 0.25, hi])
-    )
-    .range([at.floor, at.top]);
-  if (at.domain === undefined) {
-    y.nice(5);
-  }
-  const start = readings[0].date.getTime();
-  const dayAt = (i: number) =>
-    Math.round((readings[i].date.getTime() - start) / DAY_MS);
-  const xScale = scaleLinear()
-    .domain([0, Math.max(1, dayAt(readings.length - 1))])
-    .range([x0 + 8, x1 - room.right]);
-  const frame: Frame = {
-    floor: at.floor,
-    x: (i) => xScale(dayAt(i)),
-    x0,
-    x1,
-    y,
-  };
-  return { dayAt, frame, xScale };
 };
 
 const HairlineLineSvg = ({

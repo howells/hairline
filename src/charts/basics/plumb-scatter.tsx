@@ -137,6 +137,22 @@ const placeName = (
   );
 };
 
+/** Spots along a point's printed name, for reference labels to keep clear of. */
+const nameSpots = (
+  place: Placement | undefined,
+  self: { px: number; py: number; w: number }
+) => {
+  if (place === undefined) {
+    return [];
+  }
+  const [l, r] = extent(place, self.px, self.w);
+  const y = self.py + place.dy;
+  return Array.from({ length: Math.ceil((r - l) / 24) + 1 }, (_, k) => ({
+    x: Math.min(r, l + k * 24),
+    y,
+  }));
+};
+
 interface PointProps {
   /** Whether the point clears the reference lines that ask for ink; undefined when none does. */
   clearing: boolean | undefined;
@@ -316,6 +332,41 @@ const scatterTip = (
     </Tooltip>
   );
 
+interface NamesArgs {
+  format: (v: number) => string;
+  hero: number;
+  labelled: Set<number>;
+  metrics: PlumbScatterProps["metrics"];
+  width: number;
+  x: (v: number) => number;
+  y: (v: number) => number;
+}
+
+/** Where each labelled point prints its name, and the spots that keeps reference labels off. */
+const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
+  const { format, hero, labelled, metrics, width, x, y } = a;
+  const selves = data.map((d, i) => ({
+    px: x(d.x),
+    py: y(d.y),
+    w: sansWidth(`${d.label} · ${format(d.y)}`, hero === i ? 12 : 11, metrics),
+  }));
+  const places = selves.map((self, i) =>
+    labelled.has(i)
+      ? placeName(
+          self,
+          selves.map((o) => ({ px: o.px, py: o.py })),
+          width,
+          hero === i
+        )
+      : undefined
+  );
+  const avoid = [
+    ...data.map((d) => ({ x: x(d.x), y: y(d.y) })),
+    ...selves.flatMap((self, i) => nameSpots(places[i], self)),
+  ];
+  return { avoid, places };
+};
+
 interface SvgProps {
   data: PlumbDatum[];
   domains: { x: [number, number]; y: [number, number] };
@@ -364,7 +415,15 @@ const PlumbScatterSvg = ({
     .domain(domains.y)
     .range([floor - 14, 46]);
   const plane = { x0, x1: x0 + plotW, y0: 30, y1: floor };
-  const avoid = data.map((d) => ({ x: x(d.x), y: y(d.y) }));
+  const { avoid, places } = namesOf(data, {
+    format,
+    hero,
+    labelled,
+    metrics: props.metrics,
+    width,
+    x,
+    y,
+  });
   return (
     <ChartSvg
       desc={summary(data, { x: formatX, y: format }, props)}
@@ -399,24 +458,7 @@ const PlumbScatterSvg = ({
             clears(props.references, d.y),
             clears(props.xReferences, d.x),
           ])}
-          place={
-            labelled.has(i)
-              ? placeName(
-                  {
-                    px: x(d.x),
-                    py: y(d.y),
-                    w: sansWidth(
-                      `${d.label} · ${format(d.y)}`,
-                      hero === i ? 12 : 11,
-                      props.metrics
-                    ),
-                  },
-                  data.map((o) => ({ px: x(o.x), py: y(o.y) })),
-                  width,
-                  hero === i
-                )
-              : undefined
-          }
+          place={places[i]}
           datum={d}
           dim={hover.dim(i)}
           floor={floor}
