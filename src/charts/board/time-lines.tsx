@@ -10,7 +10,7 @@ import { EndLabels } from "../end-labels";
 import { useScrub } from "../hooks";
 import { endLabelRoom, placeEndLabels } from "../line-ends";
 import { Ring } from "../markers";
-import { CAPTION, DOT, LINE, RULE_ZERO } from "../roles";
+import { DOT, LINE, RULE_ZERO } from "../roles";
 import { Cursor, HGrid, HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -53,7 +53,7 @@ const topRoom = (props: TimeLinesProps, readout: Readout) => {
 };
 
 const plotMargin = (props: TimeLinesProps, readout: Readout): Margin => {
-  if (props.compact !== undefined) {
+  if (props.compact === true) {
     return { bottom: 4, left: 2, right: 2, top: 4, ...props.margin };
   }
   const right =
@@ -76,8 +76,8 @@ const chartTop = (
   readout: Readout,
   index: number
 ): ReactNode => {
-  if (props.compact !== undefined) {
-    return <div className={`${CAPTION} pb-2.5`}>{props.compact.title}</div>;
+  if (props.compact === true) {
+    return null;
   }
   if (readout === "legend") {
     return (
@@ -254,7 +254,7 @@ const ScrubCursor = (props: {
 }) => {
   const { chart, cx, frame, index, readout } = props;
   const { m, plotBottom, y } = frame;
-  const compact = chart.compact !== undefined;
+  const compact = chart.compact === true;
   const lift = readout === "value" ? 6 : 0;
   const red = inRun(props.run, index);
   return (
@@ -316,7 +316,7 @@ const ScrubCursor = (props: {
 const Grid = (props: { chart: TimeLinesProps; frame: Frame }) => {
   const { chart, frame } = props;
   const { m, plotBottom, width } = frame;
-  if (chart.compact !== undefined) {
+  if (chart.compact === true) {
     const ys = chart.zero === true ? [frame.y(0)] : [plotBottom];
     return (
       <HGrid ys={ys} x0={m.left} x1={width - m.right} className={RULE_ZERO} />
@@ -385,7 +385,7 @@ const TimeLinesPlot = (props: {
   const positions = dates.map((d) => frame.x(d));
   const cx = positions[scrub.index];
   const ticks = monthTicks(dates[0], dates.at(-1) ?? dates[0]);
-  const compact = chart.compact !== undefined;
+  const compact = chart.compact === true;
   const showCursor = scrub.isHovering || (chart.cursorAtRest ?? true);
   const dateX = chart.dateReadout === true && showCursor ? cx : null;
   const run = worstRun(chart.threshold, chart.series[0].data);
@@ -454,9 +454,9 @@ export const TimeLines = (props: TimeLinesProps) => {
   const scrub = useScrub(props.rest, dates, props.sync);
   const readout =
     props.readout ??
-    (props.compact === undefined && props.endLabels === undefined
-      ? "legend"
-      : "none");
+    (props.compact === true || props.endLabels !== undefined
+      ? "none"
+      : "legend");
 
   return (
     <Chart

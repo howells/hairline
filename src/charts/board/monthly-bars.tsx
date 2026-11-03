@@ -8,7 +8,7 @@ import type { Margin } from "../axes";
 import { Chart } from "../core";
 import { useScrub } from "../hooks";
 import type { Sync } from "../hooks";
-import { CAPTION, LABEL, MARK, OUTLINE, TICK } from "../roles";
+import { LABEL, MARK, OUTLINE, TICK } from "../roles";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -142,7 +142,8 @@ interface MonthlyBarsProps {
   /** Signed values around a zero rule: gains hatched, losses stippled. */
   diverging?: boolean;
   readout?: Readout;
-  compact?: { title: string };
+  /** Sparkline mode: no axes, one baseline; the caller prints the title. */
+  compact?: boolean;
   sync?: Sync;
   label: string;
   /** One bar per month, first of the month in UTC. Defaults to Jan 2023 – Dec 2024. */
@@ -186,7 +187,7 @@ const sideLabelled = (props: MonthlyBarsProps, readout: Readout) =>
   readout !== "legend" && props.stacks.some(hasLabel);
 
 const plotMargin = (props: MonthlyBarsProps, readout: Readout): Margin => {
-  if (props.compact !== undefined) {
+  if (props.compact === true) {
     return { bottom: 4, left: 2, right: 2, top: 4, ...props.margin };
   }
   const top = props.y.side === "right" ? 18 : 8;
@@ -205,8 +206,8 @@ const chartTop = (
   index: number,
   tex: (name: string) => string
 ): ReactNode => {
-  if (props.compact !== undefined) {
-    return <div className={`${CAPTION} pb-2.5`}>{props.compact.title}</div>;
+  if (props.compact === true) {
+    return null;
   }
   if (readout === "legend") {
     return (
@@ -526,7 +527,7 @@ const makeFrame = (
   const x = scaleBand<number>()
     .domain(months.map((_, i) => i))
     .range([m.left, width - m.right])
-    .paddingInner(chart.compact === undefined ? 0.38 : 0.3)
+    .paddingInner(chart.compact === true ? 0.3 : 0.38)
     .paddingOuter(0.2);
   return {
     center: (i: number) => (x(i) ?? 0) + x.bandwidth() / 2,
@@ -558,7 +559,7 @@ const MonthlyBarsPlot = (props: {
   const { center, m } = frame;
   const positions = months.map((_, i) => center(i));
   const ticks = monthTickIndices(months);
-  const compact = chart.compact !== undefined;
+  const compact = chart.compact === true;
   // Rules reach a little left of the first bar, unless the scale sits right.
   const ruleX0 = m.left - (compact || chart.y.side === "right" ? 0 : 4);
   const ruleX1 = gridEnd(chart.y, width, m.right);

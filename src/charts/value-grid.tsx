@@ -28,6 +28,8 @@ interface ValueGridProps {
    * sitting on its rule, next to the latest data.
    */
   side?: "left" | "right";
+  /** Print the values (default true); false keeps the rules, as the later columns of small multiples do. */
+  labels?: boolean;
   /** Tick values, usually `y.ticks(n)`. */
   ticks: readonly number[];
   x0: number;
@@ -45,7 +47,8 @@ export const ValueGrid = (props: ValueGridProps) => {
         const ruled = at < props.floor - 1;
         const text = props.format(v);
         const shown =
-          !right ||
+          props.labels !== false &&
+          (!right ||
           !(props.clear ?? []).some((b) =>
             touches(
               b,
@@ -57,7 +60,7 @@ export const ValueGrid = (props: ValueGridProps) => {
               ),
               CLEAR
             )
-          );
+          ));
         if (!ruled && props.labelFloor !== true) {
           return [];
         }

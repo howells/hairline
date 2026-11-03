@@ -831,5 +831,26 @@
     "title": "Mammal Diversity Database v2.5 (superorders)",
     "url": "https://doi.org/10.5281/zenodo.21654811",
     "licence": "CC BY 4.0"
+  },
+  {
+    "id": "F18",
+    "licence": "NESO Open Data Licence v1.0",
+    "publisher": "Supported by National Energy SO Open Data",
+    "title": "Historic Demand Data, 2023 and 2024",
+    "url": "https://www.neso.energy/data-portal/historic-demand-data"
+  },
+  {
+    "id": "F18",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
+  },
+  {
+    "id": "F19",
+    "licence": "Elexon BMRS open licence",
+    "publisher": "Contains BMRS data © Elexon Limited copyright and database right 2026",
+    "title": "Elexon Insights (BMRS), FUELHH half-hourly generation by fuel",
+    "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream"
   }
 ]

@@ -102,8 +102,8 @@ export interface TimeLinesProps {
   dateReadout?: boolean;
   cursorAtRest?: boolean;
   bottomLegend?: LegendItem[];
-  /** Sparkline mode: no axes, one baseline, a title. */
-  compact?: { title: string };
+  /** Sparkline mode: no axes, one baseline; the caller prints the title. */
+  compact?: boolean;
   sync?: Sync;
   label: string;
 }

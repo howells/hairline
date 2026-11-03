@@ -5,6 +5,7 @@ import type { PointerEvent } from "react";
 
 import { plural, fmtInt, monthTickLabels } from "../../lib/format";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
+import type { ValueAxis } from "../../schema/daily";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
 import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
@@ -37,7 +38,7 @@ import {
   valueAt,
 } from "./daily-readings";
 import type { Reading, Series } from "./daily-readings";
-import { VALUE_AXIS_ROOM, dailyFloor } from "./util-a";
+import { axisRoom, dailyFloor } from "./util-a";
 
 interface Frame {
   floor: number;
@@ -58,16 +59,35 @@ const stemClass = (hero: boolean, hovered: boolean) => {
 /** Past this many days, stems stand monthly rather than weekly. */
 const WEEKLY_SPAN = 120;
 
+const DAY_MS = 86_400_000;
+
+/** Room kept between two month labels, px. */
+const MONTH_GAP = 6;
+
+/** Whether the readings span more than `WEEKLY_SPAN` days (not how many there are). */
+const isLongSpan = (readings: Reading[]) =>
+  readings.length > 1 &&
+  ((readings.at(-1)?.date.getTime() ?? 0) - readings[0].date.getTime()) /
+    DAY_MS >
+    WEEKLY_SPAN;
+
+/** Whether reading `i` is the first of its month. */
+const startsMonth = (readings: Reading[], i: number) =>
+  i === 0 ||
+  readings[i - 1].date.getUTCMonth() !== readings[i].date.getUTCMonth();
+
 /**
  * A stem stands on every Monday (on every first of the month over a long
  * span), on the hero and on the hovered day.
  */
 const hasStem = (
-  d: Reading,
+  readings: Reading[],
   i: number,
   marks: { hero: number; hover: number | null; monthly: boolean }
 ) =>
-  (marks.monthly ? d.date.getUTCDate() === 1 : d.date.getUTCDay() === 1) ||
+  (marks.monthly
+    ? startsMonth(readings, i)
+    : readings[i].date.getUTCDay() === 1) ||
   i === marks.hero ||
   i === marks.hover;
 
@@ -81,8 +101,8 @@ interface DayStemsProps extends Series {
 const DayStems = ({ frame, hero, hover, live, readings }: DayStemsProps) => (
   <g>
     {live.map((i) => {
-      const monthly = readings.length > WEEKLY_SPAN;
-      if (!hasStem(readings[i], i, { hero, hover, monthly })) {
+      const monthly = isLongSpan(readings);
+      if (!hasStem(readings, i, { hero, hover, monthly })) {
         return null;
       }
       const top = Math.round(frame.y(valueAt(readings, i)));
@@ -113,15 +133,27 @@ const MonthAxis = ({
   frame: Frame;
   readings: Reading[];
 }) => {
-  const every = readings.length > WEEKLY_SPAN ? 3 : 1;
+  const every = isLongSpan(readings) ? 3 : 1;
+  // The first reading of each month, so weekly readings get month ticks too.
   const months = readings.flatMap((r, i) =>
-    r.date.getUTCDate() === 1 && r.date.getUTCMonth() % every === 0 ? [i] : []
+    r.date.getUTCMonth() % every === 0 && startsMonth(readings, i) ? [i] : []
   );
   const axis = months.includes(0) ? months : [0, ...months];
   const labels = monthTickLabels(axis.map((i) => readings[i].date));
+  // A narrow plot (a small multiple) drops a label that would touch the last.
+  const kept: { i: number; k: number }[] = [];
+  let end = -Infinity;
+  for (const [k, i] of axis.entries()) {
+    const width = sansWidth(labels[k]);
+    const left = k === 0 ? frame.x(i) - 6 : frame.x(i) - width / 2;
+    if (left >= end + MONTH_GAP) {
+      end = left + width;
+      kept.push({ i, k });
+    }
+  }
   return (
     <g>
-      {axis.map((i, k) => (
+      {kept.map(({ i, k }) => (
         <Label
           anchor={k === 0 ? "start" : "middle"}
           dx={k === 0 ? -6 : 0}
@@ -138,15 +170,19 @@ const MonthAxis = ({
 };
 
 /**
- * The value scale: from zero (or the lowest value, if below) up to the last
- * of `ticks`, or to four nice steps over the peak.
+ * The value scale: `domain` as given, else from zero (or the lowest value, if
+ * below) up to the last of `ticks`, or to four nice steps over the peak.
  */
 const valueScale = (
   extent: { hi: number; lo: number },
   floor: number,
   top: number,
-  ticks?: number[]
+  scale: { domain?: [number, number]; ticks?: number[] }
 ) => {
+  if (scale.domain !== undefined) {
+    return scaleLinear().domain(scale.domain).range([floor, top]);
+  }
+  const { ticks } = scale;
   const last = ticks?.at(-1);
   if (last !== undefined && last > 0) {
     return scaleLinear().domain([0, last]).range([floor, top]);
@@ -245,11 +281,12 @@ const shapesOf = (readings: Reading[], frame: Frame) => ({
       .y((r) => frame.y(r.value ?? 0))(readings) ?? "",
 });
 
-/** The plot's left and right edges, centred in `width`. */
-const edgesOf = (width: number, maxWidth: number) => {
-  const frameW = Math.min(width - 16, maxWidth + VALUE_AXIS_ROOM);
+/** The grid's left and right edges, centred in `width`; a left axis keeps its margin outside the grid. */
+const edgesOf = (width: number, maxWidth: number, axis: ValueAxis) => {
+  const room = axisRoom(axis);
+  const frameW = Math.min(width - 16, maxWidth + room.left + room.right);
   const x0 = Math.round((width - frameW) / 2);
-  return [x0, x0 + frameW] as const;
+  return [x0 + room.left, x0 + frameW] as const;
 };
 
 /** Where the first day sits: clear of the hero's label when it is the first. */
@@ -266,6 +303,8 @@ const startOf = (
 };
 
 interface FrameArgs {
+  axis: ValueAxis;
+  domain: [number, number] | undefined;
   floor: number;
   format: (v: number) => string;
   hero: number;
@@ -279,28 +318,30 @@ interface FrameArgs {
 
 /** The frame's edges and scales; a chart with notes leaves room over its peak. */
 const frameOf = (a: FrameArgs) => {
-  const [x0, x1] = edgesOf(a.width, a.maxWidth);
+  const [x0, x1] = edgesOf(a.width, a.maxWidth, a.axis);
   const start = startOf(a.readings, a.hero, a.format);
   const frame: Frame = {
     floor: a.floor,
     x: scaleLinear()
       .domain([0, Math.max(1, a.readings.length - 1)])
-      .range([x0 + start, x1 - VALUE_AXIS_ROOM]),
+      .range([x0 + start, x1 - axisRoom(a.axis).right]),
     y: valueScale(
       { hi: Math.max(...a.values), lo: Math.min(...a.values) },
       a.floor,
       a.notes > 0 ? NOTED_TOP : 40,
-      a.ticks
+      { domain: a.domain, ticks: a.ticks }
     ),
   };
   return { frame, x0, x1 };
 };
 
 interface SvgProps {
+  axis: ValueAxis;
   clear: () => void;
   /** Pattern id of the stipple under the line. */
   stipple: string;
-  emphasis: string | undefined;
+  domain: [number, number] | undefined;
+  emphasis: string | null | undefined;
   fmtDate: (d: Date) => string;
   format: (v: number) => string;
   height: number;
@@ -333,7 +374,9 @@ const heroLabelBox = (
   );
 
 const HairlineAreaSvg = ({
+  axis,
   clear,
+  domain,
   stipple,
   emphasis,
   fmtDate,
@@ -364,6 +407,8 @@ const HairlineAreaSvg = ({
   const peak = live[values.indexOf(max)];
   const hero = heroOf(readings, live, emphasis, peak);
   const { frame, x0, x1 } = frameOf({
+    axis,
+    domain,
     floor,
     format,
     hero,
@@ -403,6 +448,7 @@ const HairlineAreaSvg = ({
         <Stipple id={stipple} tone="fill-l3" />
       </defs>
       <DailyGrid
+        axis={axis}
         clear={hero < 0 ? [] : [heroLabelBox(readings, frame, format, hero)]}
         floor={floor}
         format={format}
@@ -492,7 +538,9 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
       {(width) => (
         <>
           <HairlineAreaSvg
+            axis={props.valueAxis ?? "right"}
             clear={clear}
+            domain={props.domain}
             emphasis={props.emphasis}
             stipple={stipple}
             fmtDate={fmtDate}

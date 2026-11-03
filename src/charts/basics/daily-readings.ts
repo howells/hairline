@@ -75,12 +75,16 @@ export const valueAt = (readings: Reading[], index: number) =>
 export const heroOf = (
   readings: Reading[],
   live: number[],
-  emphasis: string | undefined,
+  emphasis: string | null | undefined,
   fallback: number
-) =>
-  emphasis === undefined
-    ? fallback
+) => {
+  if (emphasis === undefined) {
+    return fallback;
+  }
+  return emphasis === null
+    ? -1
     : (live.find((i) => readings[i].key === emphasis) ?? -1);
+};
 
 /** A reading that has a value: the line and area break where it is false. */
 export const isLive = (reading: Reading) => reading.value !== null;

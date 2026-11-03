@@ -127,6 +127,7 @@ describe("the registry", () => {
       "animate",
       "data",
       "dateFormat",
+      "domain",
       "emphasis",
       "extreme",
       "fit",
@@ -143,6 +144,7 @@ describe("the registry", () => {
       "table",
       "title",
       "unitNote",
+      "valueLabels",
       "width",
     ]);
   });
