@@ -1,10 +1,12 @@
 import { scaleBand } from "d3-scale";
+import type { ScaleBand } from "d3-scale";
 
 import type { NoteProps } from "../../schema/options";
-import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
-import { DimGroup, HitRect, TipText } from "../hover";
+import { Plot } from "../core";
+import { DimGroup } from "../hover";
 import { FootNote } from "../plot-note";
+import { Pointer } from "../pointer";
+import type { Stop } from "../pointer";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -46,7 +48,6 @@ interface PairProps {
   hero: boolean;
   index: number;
   left: number;
-  onEnter: (x: number, y: number) => void;
   pitch: number;
   unit: number;
 }
@@ -63,23 +64,15 @@ const Pair = ({
   hero,
   index,
   left,
-  onEnter,
   pitch,
   unit,
 }: PairProps) => {
   const nPrev = Math.round(datum.previous / unit);
   const nCur = Math.round(datum.current / unit);
-  const top = rungY(floor, Math.max(nPrev, nCur) - 1, pitch) - 26;
   const band = bw * 2 + gap;
   const prevTop = rungY(floor, nPrev - 1, pitch);
   return (
-    <DimGroup
-      dim={dim}
-      onPointerEnter={() => {
-        onEnter(left + band / 2, top);
-      }}
-    >
-      <HitRect height={floor - top} width={band + 12} x={left - 6} y={top} />
+    <DimGroup dim={dim}>
       {nPrev > 0 ? (
         <rect
           className="grow-y stroke-l5 shape-crisp"
@@ -149,7 +142,6 @@ interface PairRowProps {
   hatch: string;
   hero: boolean;
   index: number;
-  onEnter: (x: number, y: number) => void;
   /** Pixels per data unit along the track. */
   scale: number;
   top: number;
@@ -170,7 +162,6 @@ const PairRow = ({
   hatch,
   hero,
   index,
-  onEnter,
   scale,
   top,
   unit,
@@ -186,13 +177,7 @@ const PairRow = ({
     k,
   }));
   return (
-    <DimGroup
-      dim={dim}
-      onPointerEnter={() => {
-        onEnter(x0 + Math.max(0, n - 1) * pitch, base - ROW_RUNG - 6);
-      }}
-    >
-      <HitRect height={ROW_H} width={x1 - x0} x={x0} y={top} />
+    <DimGroup dim={dim}>
       <Label muted voice="label" x={x0} y={top + 12}>
         {datum.label}
       </Label>
@@ -236,13 +221,66 @@ const PairRow = ({
   );
 };
 
+/** A category's tip rows: the current period first, then the earlier. */
+const pairRows = (
+  d: PairDatum,
+  names: {
+    curName: string;
+    format: (v: number) => string;
+    hero: boolean;
+    prevName: string;
+  }
+) => [
+  {
+    name: names.curName,
+    swatch: names.hero ? "bg-hero" : "bg-l3",
+    value: names.format(d.current),
+  },
+  { name: names.prevName, swatch: "bg-l4", value: names.format(d.previous) },
+];
+
+interface ColumnStopOptions {
+  band: number;
+  curName: string;
+  floor: number;
+  format: (v: number) => string;
+  hero: number;
+  pitch: number;
+  prevName: string;
+  unit: number;
+  x: ScaleBand<string>;
+}
+
+/** Where the pointer lands on each pair of columns, and what its tip says. */
+const columnStops = (data: PairDatum[], o: ColumnStopOptions): Stop<number>[] =>
+  data.map((d, i) => ({
+    above: 28,
+    clear: o.band / 2 + 6,
+    key: i,
+    lead: d.label,
+    rows: pairRows(d, {
+      curName: o.curName,
+      format: o.format,
+      hero: o.hero === i,
+      prevName: o.prevName,
+    }),
+    x: (o.x(d.label) ?? 0) + o.band / 2,
+    y: rungY(
+      o.floor,
+      Math.max(
+        Math.round(d.previous / o.unit),
+        Math.round(d.current / o.unit)
+      ) - 1,
+      o.pitch
+    ),
+  }));
+
 interface PairRowsProps {
   curName: string;
   data: PairDatum[];
   format: (v: number) => string;
   hasNote: boolean;
   highlight?: number;
-  hover: ReturnType<typeof useHover<number>>;
   ids: (name: string) => string;
   label: string;
   note: string | undefined;
@@ -258,7 +296,6 @@ const PairRows = ({
   format,
   hasNote,
   highlight,
-  hover,
   ids,
   label,
   note,
@@ -276,39 +313,50 @@ const PairRows = ({
     (hasNote ? 30 : 0) +
     Math.max(0, notes.length - 1) * NOTE_LINE;
   const hero = highlight ?? maxIndex(data.map((d) => d.current));
+  const stops: Stop<number>[] = data.map((d, i) => ({
+    avoid: () => [[40 + i * ROW_H, 40 + (i + 1) * ROW_H]],
+    key: i,
+    lead: d.label,
+    rows: pairRows(d, { curName, format, hero: hero === i, prevName }),
+    x: x0 + Math.round(d.current / unit) * unit * ((x1 - x0) / max),
+    y: 40 + i * ROW_H + ROW_H / 2,
+  }));
   return (
-    <ChartSvg height={rowsH} label={label} leave={hover.clear} width={width}>
-      <defs>
-        <Hatch id={ids("hatch")} tone="fill-l4" />
-        <Rules id={ids("rules")} tone="fill-l3" />
-      </defs>
-      <SeriesKey
-        items={[
-          { fill: paint(ids("rules")), name: curName },
-          { fill: paint(ids("hatch")), name: prevName },
-        ]}
-        x={x0}
-        y={16}
-      />
-      {data.map((d, i) => (
-        <PairRow
-          datum={d}
-          dim={hover.dim(i)}
-          format={format}
-          hatch={ids("hatch")}
-          hero={hero === i}
-          index={i}
-          key={d.label}
-          onEnter={hover.showAt(i)}
-          scale={(x1 - x0) / max}
-          top={40 + i * ROW_H}
-          unit={unit}
-          x0={x0}
-          x1={x1}
-        />
-      ))}
-      <FootNote gutter={12} height={rowsH} text={note} width={width} />
-    </ChartSvg>
+    <Pointer axis="y" height={rowsH} reach={ROW_H} stops={stops} width={width}>
+      {(pointer) => (
+        <ChartSvg height={rowsH} label={label} width={width} {...pointer.svg}>
+          <defs>
+            <Hatch id={ids("hatch")} tone="fill-l4" />
+            <Rules id={ids("rules")} tone="fill-l3" />
+          </defs>
+          <SeriesKey
+            items={[
+              { fill: paint(ids("rules")), name: curName },
+              { fill: paint(ids("hatch")), name: prevName },
+            ]}
+            x={x0}
+            y={16}
+          />
+          {data.map((d, i) => (
+            <PairRow
+              datum={d}
+              dim={pointer.key !== null && pointer.key !== i}
+              format={format}
+              hatch={ids("hatch")}
+              hero={hero === i}
+              index={i}
+              key={d.label}
+              scale={(x1 - x0) / max}
+              top={40 + i * ROW_H}
+              unit={unit}
+              x0={x0}
+              x1={x1}
+            />
+          ))}
+          <FootNote gutter={12} height={rowsH} text={note} width={width} />
+        </ChartSvg>
+      )}
+    </Pointer>
   );
 };
 
@@ -326,6 +374,28 @@ const pairsLabel = (
     )
     .join("; ");
 
+/** The columns' bands across the width, the gap between a pair, and the tallest in rungs. */
+const columnsOf = (data: PairDatum[], width: number, unit: number) => {
+  const plotW = Math.min(width - 32, data.length * 130);
+  const x0 = (width - plotW) / 2;
+  const x = scaleBand()
+    .domain(data.map((d) => d.label))
+    .range([x0, x0 + plotW])
+    .paddingInner(0.34)
+    .paddingOuter(0.2);
+  const band = x.bandwidth();
+  return {
+    band,
+    gap: Math.max(4, Math.round(band * 0.1)),
+    max: Math.max(
+      ...data.flatMap((d) => [d.current / unit, d.previous / unit])
+    ),
+    plotW,
+    x,
+    x0,
+  };
+};
+
 /**
  * F6 Getting to work. Per category, the earlier period is a quiet column of
  * hatch on paper inside a 1px rule, and the current period a stack of grey
@@ -342,28 +412,11 @@ export const PairedRungs = (props: PairedRungsProps) => {
   const format = props.format ?? String;
   const [prevName, curName] = props.periods ?? ["2011", "2021"];
   const hasNote = hasText(noteOf(props));
-  const hover = useHover<number>();
   const ids = useTextureIds("paired");
   const label = pairsLabel(data, format, prevName, curName);
 
   return (
-    <Plot
-      initialWidth={props.initialWidth}
-      width={props.width}
-      overlay={
-        hover.at === null ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
-            <TipText
-              facts={[
-                `${curName} ${format(data[hover.at.key].current)}`,
-                `${prevName} ${format(data[hover.at.key].previous)}`,
-              ]}
-              lead={data[hover.at.key].label}
-            />
-          </Tooltip>
-        )
-      }
-    >
+    <Plot initialWidth={props.initialWidth} width={props.width}>
       {(width) => {
         if (width - 32 < data.length * COLUMN_ROOM) {
           return (
@@ -372,7 +425,6 @@ export const PairedRungs = (props: PairedRungsProps) => {
               data={data}
               format={format}
               hasNote={hasNote}
-              hover={hover}
               ids={ids}
               label={label}
               note={noteOf(props)}
@@ -383,18 +435,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
             />
           );
         }
-        const plotW = Math.min(width - 32, data.length * 130);
-        const x0 = (width - plotW) / 2;
-        const x = scaleBand()
-          .domain(data.map((d) => d.label))
-          .range([x0, x0 + plotW])
-          .paddingInner(0.34)
-          .paddingOuter(0.2);
-        const band = x.bandwidth();
-        const gap = Math.max(4, Math.round(band * 0.1));
-        const max = Math.max(
-          ...data.flatMap((d) => [d.current / unit, d.previous / unit])
-        );
+        const { band, gap, max, plotW, x, x0 } = columnsOf(data, width, unit);
         const notes = noteLines(noteOf(props), width - 24);
         const floor = Math.round(
           height -
@@ -403,52 +444,76 @@ export const PairedRungs = (props: PairedRungsProps) => {
         );
         const pitch = rungPitch(floor - 32, max);
         const hero = props.highlight ?? maxIndex(data.map((d) => d.current));
+        const stops = columnStops(data, {
+          band,
+          curName,
+          floor,
+          format,
+          hero,
+          pitch,
+          prevName,
+          unit,
+          x,
+        });
         return (
-          <ChartSvg
+          <Pointer
+            axis="x"
             height={height}
-            label={label}
-            leave={hover.clear}
+            reach={x.step()}
+            stops={stops}
             width={width}
           >
-            <defs>
-              <Hatch id={ids("hatch")} tone="fill-l4" />
-              <Rules id={ids("rules")} tone="fill-l3" />
-            </defs>
-            <SeriesKey
-              align="end"
-              items={[
-                { fill: paint(ids("hatch")), name: prevName },
-                { fill: paint(ids("rules")), name: curName },
-              ]}
-              x={Math.round(x0 + plotW)}
-              y={16}
-            />
-            <HRule x0={Math.round(x0)} x1={Math.round(x0 + plotW)} y={floor} />
-            {data.map((d, i) => (
-              <Pair
-                bw={(band - gap) / 2}
-                hatch={ids("hatch")}
-                datum={d}
-                dim={hover.dim(i)}
-                floor={floor}
-                format={format}
-                gap={gap}
-                hero={hero === i}
-                index={i}
-                key={d.label}
-                left={x(d.label) ?? 0}
-                onEnter={hover.showAt(i)}
-                pitch={pitch}
-                unit={unit}
-              />
-            ))}
-            <FootNote
-              gutter={12}
-              height={height}
-              text={noteOf(props)}
-              width={width}
-            />
-          </ChartSvg>
+            {(pointer) => (
+              <ChartSvg
+                height={height}
+                label={label}
+                width={width}
+                {...pointer.svg}
+              >
+                <defs>
+                  <Hatch id={ids("hatch")} tone="fill-l4" />
+                  <Rules id={ids("rules")} tone="fill-l3" />
+                </defs>
+                <SeriesKey
+                  align="end"
+                  items={[
+                    { fill: paint(ids("hatch")), name: prevName },
+                    { fill: paint(ids("rules")), name: curName },
+                  ]}
+                  x={Math.round(x0 + plotW)}
+                  y={16}
+                />
+                <HRule
+                  x0={Math.round(x0)}
+                  x1={Math.round(x0 + plotW)}
+                  y={floor}
+                />
+                {data.map((d, i) => (
+                  <Pair
+                    bw={(band - gap) / 2}
+                    hatch={ids("hatch")}
+                    datum={d}
+                    dim={pointer.key !== null && pointer.key !== i}
+                    floor={floor}
+                    format={format}
+                    gap={gap}
+                    hero={hero === i}
+                    index={i}
+                    key={d.label}
+                    left={x(d.label) ?? 0}
+                    pitch={pitch}
+                    unit={unit}
+                  />
+                ))}
+                <FootNote
+                  gutter={12}
+                  height={height}
+                  text={noteOf(props)}
+                  width={width}
+                />
+              </ChartSvg>
+            )}
+          </Pointer>
         );
       }}
     </Plot>

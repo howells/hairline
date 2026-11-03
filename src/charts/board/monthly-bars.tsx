@@ -559,7 +559,7 @@ const MonthlyBarsPlot = (props: {
       height={chart.height}
       label={chart.label}
       width={width}
-      {...scrub.bind(positions)}
+      {...scrub.bind(positions, { height: chart.height, width })}
     >
       <BarPatterns tex={props.tex} />
       {!compact && (

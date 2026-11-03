@@ -7,13 +7,14 @@ import type { HeroContext } from "../../schema/hero";
 import { keyOf } from "../../schema/key";
 import type { PlumbDatum, PlumbScatterProps } from "../../schema/plumb-scatter";
 import { crisp } from "../axes";
-import { Plot, Tooltip } from "../core";
+import { Plot } from "../core";
 import { contextClass, heroKeys, heroLast } from "../hero";
 import { HeroDot, HeroLabel } from "../hero-marks";
-import { useHover } from "../hooks";
-import { DimGroup, HitRect, TipText } from "../hover";
+import { DimGroup } from "../hover";
 import { Dot } from "../markers";
 import { FootNote } from "../plot-note";
+import { Pointer } from "../pointer";
+import type { Stop } from "../pointer";
 import {
   clears,
   clearsAll,
@@ -168,7 +169,6 @@ interface PointProps {
   floor: number;
   format: (v: number) => string;
   hero: boolean;
-  onEnter: (x: number, y: number) => void;
   order: number;
   /** Where the name sits; undefined when the point is not named. */
   place: Placement | undefined;
@@ -185,7 +185,6 @@ const Point = ({
   floor,
   format,
   hero,
-  onEnter,
   order,
   place,
   x,
@@ -193,15 +192,8 @@ const Point = ({
 }: PointProps) => {
   const px = x(datum.x);
   const py = y(datum.y);
-  const named = place !== undefined;
   return (
-    <DimGroup
-      dim={dim}
-      onPointerEnter={() => {
-        onEnter(px, py - (named ? 28 : 10));
-      }}
-    >
-      <HitRect height={floor - py + 10} width={18} x={px - 9} y={py - 10} />
+    <DimGroup dim={dim}>
       {hero ? (
         <Stem
           className="grow-y stroke-hero"
@@ -338,20 +330,37 @@ const describe = (
     ? "No data"
     : data.map((d) => `${d.label}: ${formatX(d.x)}, ${format(d.y)}`).join("; ");
 
-const scatterTip = (
-  at: { key: number; x: number; y: number } | null,
+/** Where the pointer lands on a point, and what its tip says. */
+const pointStop = (
+  d: PlumbDatum,
+  key: number,
+  o: {
+    format: (v: number) => string;
+    formatX: (v: number) => string;
+    x: ScaleLinear<number, number>;
+    y: ScaleLinear<number, number>;
+  }
+): Stop<number> => ({
+  clear: 8,
+  key,
+  lead: d.label,
+  rows: [
+    { name: "X", value: o.formatX(d.x) },
+    { name: "Y", value: o.format(d.y) },
+  ],
+  x: o.x(d.x),
+  y: o.y(d.y),
+});
+
+/** The stops left to right, so the keys step the way the points lie. */
+const stopsOf = (
   data: PlumbDatum[],
-  formatX: (v: number) => string,
-  format: (v: number) => string
+  order: Map<number, number>,
+  o: Parameters<typeof pointStop>[2]
 ) =>
-  at === null ? null : (
-    <Tooltip x={at.x} y={at.y}>
-      <TipText
-        facts={[formatX(data[at.key].x), format(data[at.key].y)]}
-        lead={data[at.key].label}
-      />
-    </Tooltip>
-  );
+  data
+    .map((d, i) => pointStop(d, i, o))
+    .toSorted((p, q) => (order.get(p.key) ?? 0) - (order.get(q.key) ?? 0));
 
 interface NamesArgs {
   format: (v: number) => string;
@@ -407,7 +416,6 @@ interface SvgProps {
   formatX: (v: number) => string;
   height: number;
   heroes: ReadonlySet<number>;
-  hover: ReturnType<typeof useHover<number>>;
   keys: string[];
   label: string;
   labelled: Set<number>;
@@ -415,6 +423,19 @@ interface SvgProps {
   props: PlumbScatterProps;
   width: number;
 }
+
+/** Where the floor stands: above the footnote, whatever lines it takes. */
+const floorOf = (
+  props: PlumbScatterProps,
+  size: { height: number; width: number }
+) =>
+  Math.round(size.height) -
+  (hasText(noteOf(props)) ? 58 : 36) -
+  Math.max(
+    0,
+    noteLines(noteOf(props), size.width - 24, props.metrics).length - 1
+  ) *
+    NOTE_LINE;
 
 /** The floor, the references and a stemmed point for each datum. */
 const PlumbScatterSvg = ({
@@ -424,7 +445,6 @@ const PlumbScatterSvg = ({
   formatX,
   height,
   heroes,
-  hover,
   keys,
   label,
   labelled,
@@ -433,14 +453,9 @@ const PlumbScatterSvg = ({
   width,
 }: SvgProps) => {
   const [lowName, highName] = props.xLabels ?? ["Low", "High"];
-  const hasNote = hasText(noteOf(props));
   const plotW = Math.min(width - EDGE * 2, 600);
   const x0 = (width - plotW) / 2;
-  const notes = noteLines(noteOf(props), width - 24, props.metrics);
-  const floor =
-    Math.round(height) -
-    (hasNote ? 58 : 36) -
-    Math.max(0, notes.length - 1) * NOTE_LINE;
+  const floor = floorOf(props, { height, width });
   const x = scaleLinear()
     .domain(domains.x)
     .range([x0, x0 + plotW]);
@@ -457,83 +472,87 @@ const PlumbScatterSvg = ({
     x,
     y,
   });
+  const stops = stopsOf(data, order, { format, formatX, x, y });
   return (
-    <ChartSvg
-      desc={summary(data, { x: formatX, y: format }, props, heroes.size)}
-      height={height}
-      label={label}
-      leave={hover.clear}
-      width={width}
-    >
-      <Floor
-        floor={floor}
-        highName={highName}
-        lowName={lowName}
-        x0={x0}
-        x1={x0 + plotW}
-        yLabel={props.yLabel ?? "Higher ↑"}
-      />
-      <ReferenceBands
-        along="y"
-        plane={plane}
-        refs={props.references}
-        scale={y}
-      />
-      <ReferenceBands
-        along="x"
-        plane={plane}
-        refs={props.xReferences}
-        scale={x}
-      />
-      {heroLast([...data.keys()], (i) => heroes.has(i)).map((i) => (
-        <Point
-          clearing={clearingOf(props, data[i])}
-          context={props.context}
-          place={places[i]}
-          datum={data[i]}
-          dim={hover.dim(i)}
-          floor={floor}
-          format={format}
-          hero={heroes.has(i)}
-          key={keys[i]}
-          onEnter={hover.showAt(i)}
-          order={order.get(i) ?? i}
-          x={x}
-          y={y}
-        />
-      ))}
-      {props.heroLabel === undefined || heroes.size === 0 ? null : (
-        <HeroLabel
-          count={plural(heroes.size, "point")}
-          dot={topmost(
-            [...heroes].map((i) => ({ x: x(data[i].x), y: y(data[i].y) }))
-          )}
-          name={props.heroLabel}
+    <Pointer axis="xy" height={height} stops={stops} width={width}>
+      {(pointer) => (
+        <ChartSvg
+          desc={summary(data, { x: formatX, y: format }, props, heroes.size)}
+          height={height}
+          label={label}
           width={width}
-        />
+          {...pointer.svg}
+        >
+          <Floor
+            floor={floor}
+            highName={highName}
+            lowName={lowName}
+            x0={x0}
+            x1={x0 + plotW}
+            yLabel={props.yLabel ?? "Higher ↑"}
+          />
+          <ReferenceBands
+            along="y"
+            plane={plane}
+            refs={props.references}
+            scale={y}
+          />
+          <ReferenceBands
+            along="x"
+            plane={plane}
+            refs={props.xReferences}
+            scale={x}
+          />
+          {heroLast([...data.keys()], (i) => heroes.has(i)).map((i) => (
+            <Point
+              clearing={clearingOf(props, data[i])}
+              context={props.context}
+              place={places[i]}
+              datum={data[i]}
+              dim={pointer.key !== null && pointer.key !== i}
+              floor={floor}
+              format={format}
+              hero={heroes.has(i)}
+              key={keys[i]}
+              order={order.get(i) ?? i}
+              x={x}
+              y={y}
+            />
+          ))}
+          {props.heroLabel === undefined || heroes.size === 0 ? null : (
+            <HeroLabel
+              count={plural(heroes.size, "point")}
+              dot={topmost(
+                [...heroes].map((i) => ({ x: x(data[i].x), y: y(data[i].y) }))
+              )}
+              name={props.heroLabel}
+              width={width}
+            />
+          )}
+          <ReferenceOverlay
+            along="y"
+            avoid={avoid}
+            plane={plane}
+            refs={props.references}
+            scale={y}
+          />
+          <ReferenceOverlay
+            along="x"
+            avoid={avoid}
+            plane={plane}
+            refs={props.xReferences}
+            scale={x}
+          />
+          <FootNote
+            gutter={12}
+            height={height}
+            metrics={props.metrics}
+            text={noteOf(props)}
+            width={width}
+          />
+        </ChartSvg>
       )}
-      <ReferenceOverlay
-        along="y"
-        avoid={avoid}
-        plane={plane}
-        refs={props.references}
-        scale={y}
-      />
-      <ReferenceOverlay
-        along="x"
-        avoid={avoid}
-        plane={plane}
-        refs={props.xReferences}
-        scale={x}
-      />
-      <FootNote
-        gutter={12}
-        height={height}
-        metrics={props.metrics}
-        text={noteOf(props)}
-        width={width}
-      />
-    </ChartSvg>
+    </Pointer>
   );
 };
 
@@ -547,7 +566,6 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
     props.formatX === undefined
       ? (v: number) => `${Math.round(v)}`
       : resolveFormat(props.formatX);
-  const hover = useHover<number>();
 
   const ys = data.map((d) => d.y);
   const xs = data.map((d) => d.x);
@@ -608,7 +626,6 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
         }),
       ])}
       width={props.width}
-      overlay={scatterTip(hover.at, data, formatX, format)}
     >
       {(width) => (
         <PlumbScatterSvg
@@ -618,7 +635,6 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
           formatX={formatX}
           height={height}
           heroes={heroes}
-          hover={hover}
           keys={keys}
           label={label}
           labelled={labelled}

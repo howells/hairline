@@ -5,7 +5,7 @@ import type { ScaleOptions } from "../schema/scale";
 import { useEntry, useMeasure, useReveal } from "./hooks";
 import type { Animate } from "./hooks";
 import { PANEL } from "./roles";
-import { ScaleContext } from "./scale-context";
+import { ScaleContext, magnification } from "./scale-context";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
 /** A plot with nothing to animate carries neither class: it is simply drawn. */
@@ -105,7 +105,7 @@ export const Plot = (props: PlotProps) => {
     <div
       ref={ref}
       data-hl-ready={entry.ready ? "true" : "false"}
-      className={`[&_svg:focus-visible]:outline-muted relative min-w-0 [&_svg]:block [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-solid ${phaseClass(entry.phase)} ${props.className ?? ""}`}
+      className={`[&_svg:focus-visible]:outline-ink relative min-w-0 [&_svg]:block [&_svg]:select-none [&_svg:focus]:outline-none [&_svg:focus-visible]:outline-1 [&_svg:focus-visible]:outline-offset-4 [&_svg:focus-visible]:outline-solid ${phaseClass(entry.phase)} ${props.className ?? ""}`}
       style={props.style}
     >
       <ScaleContext.Provider value={props.scaling ?? NO_SCALE}>
@@ -126,13 +126,6 @@ interface TooltipProps {
 
 /** Gap kept between a tooltip and the edge of its chart. */
 const TIP_INSET = 4;
-
-/**
- * How much larger than its drawing the svg is shown: `scale`, unless `fit`
- * (which draws at the container's width, so nothing is magnified).
- */
-const magnification = ({ fit, scale }: ScaleOptions) =>
-  fit === true ? 1 : (scale ?? 1);
 
 /** Dark pill tooltip, anchored at (x, y) inside the nearest Plot. */
 export const Tooltip = (props: TooltipProps) => {

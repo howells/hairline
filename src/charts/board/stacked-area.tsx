@@ -273,7 +273,7 @@ export const StackedArea = (props: StackedAreaProps) => {
             height={h}
             label={props.label}
             width={width}
-            {...scrub.bind(positions)}
+            {...scrub.bind(positions, { height: h, width })}
           >
             <LayerPatterns tex={tex} />
             <defs>

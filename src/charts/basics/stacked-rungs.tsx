@@ -1,10 +1,10 @@
 import { scaleBand } from "d3-scale";
 
 import type { NoteProps } from "../../schema/options";
-import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
-import { DimGroup, HitRect, TipText } from "../hover";
+import { Plot } from "../core";
+import { DimGroup } from "../hover";
 import { FootNote } from "../plot-note";
+import { Pointer } from "../pointer";
 import { HRule } from "../rules";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
@@ -39,6 +39,8 @@ const RUNG_CLASSES = ["fill-l2", "fill-l4", ""];
 const ACCENT_CLASSES = ["fill-l2", "fill-l3"];
 /** Whole px a count-off rung reaches past its column on each side. */
 const ACCENT_REACH = 2;
+/** Tip swatches of the three engravings, bottom first. */
+const SWATCHES = ["bg-l2", "bg-l4", "bg-l3"];
 const pick = (list: string[], k: number) => list[Math.min(k, list.length - 1)];
 
 /** Key swatches that read as each segment's engraving: dark rules, light rules, dots. */
@@ -52,6 +54,20 @@ const KEY_LOOKS = [
 const slotsOf = (d: StackDatum, unit: number) =>
   d.parts.reduce((a, p) => a + Math.round(p / unit), 0) +
   Math.max(0, d.parts.length - 1);
+
+/** A stack's tip rows: each segment under its series' name, then the total. */
+const tipRows = (
+  d: StackDatum,
+  partName: (k: number) => string,
+  format: (v: number) => string
+) => [
+  ...d.parts.map((p, k) => ({
+    name: partName(k),
+    swatch: pick(SWATCHES, k),
+    value: format(p),
+  })),
+  { name: "Total", value: format(sum(d.parts)) },
+];
 
 interface Segment {
   id: string;
@@ -82,9 +98,7 @@ interface ColumnProps {
   format: (v: number) => string;
   hero: boolean;
   index: number;
-  labelRoom: number;
   left: number;
-  onEnter: (x: number, y: number) => void;
   pitch: number;
   unit: number;
 }
@@ -99,27 +113,14 @@ const Column = ({
   format,
   hero,
   index,
-  labelRoom,
   left,
-  onEnter,
   pitch,
   unit,
 }: ColumnProps) => {
   const top = rungY(floor, slotsOf(datum, unit) - 1, pitch);
   const segments = segmentsOf(datum, unit);
   return (
-    <DimGroup
-      dim={dim}
-      onPointerEnter={() => {
-        onEnter(left + bw / 2, top - 30);
-      }}
-    >
-      <HitRect
-        height={floor - top + 30}
-        width={bw + labelRoom + 16}
-        x={left - 8}
-        y={top - 30}
-      />
+    <DimGroup dim={dim}>
       {segments.map((seg) => (
         <g key={seg.id}>
           <Rungs
@@ -187,7 +188,6 @@ export const StackedRungs = (props: StackedRungsProps) => {
   const height = props.height ?? 440;
   const format = props.format ?? String;
   const hasNote = hasText(noteOf(props));
-  const hover = useHover<number>();
   const ids = useTextureIds("stack");
   const partName = (k: number) => series.at(k) ?? `#${k + 1}`;
   const breakdown = (d: StackDatum) =>
@@ -197,21 +197,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
     .join("; ");
 
   return (
-    <Plot
-      overlay={
-        hover.at === null ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
-            <TipText
-              facts={[
-                format(sum(data[hover.at.key].parts)),
-                breakdown(data[hover.at.key]),
-              ]}
-              lead={data[hover.at.key].label}
-            />
-          </Tooltip>
-        )
-      }
-    >
+    <Plot>
       {(width) => {
         const plotW = Math.min(width - 32, data.length * 135);
         const x0 = (width - plotW) / 2;
@@ -235,59 +221,80 @@ export const StackedRungs = (props: StackedRungsProps) => {
           10
         );
         const hero = props.highlight ?? maxIndex(data.map((d) => sum(d.parts)));
+        const stops = data.map((d, i) => ({
+          above: 28,
+          clear: (bw + labelRoom) / 2,
+          key: i,
+          lead: d.label,
+          rows: tipRows(d, partName, format),
+          x: (x(d.label) ?? 0) + band / 2,
+          y: rungY(floor, slotsOf(d, unit) - 1, pitch),
+        }));
         return (
-          <ChartSvg
+          <Pointer
+            axis="x"
             height={height}
-            label={label}
-            leave={hover.clear}
+            reach={x.step()}
+            stops={stops}
             width={width}
           >
-            <defs>
-              <Beads id={ids("beads")} tone="fill-l3" />
-              {KEY_LOOKS.map((look) => (
-                <look.Pattern
-                  id={ids(look.name)}
-                  key={look.name}
-                  pitch={TEXTURE_PITCH.dense}
-                  tone={look.tone}
+            {(pointer) => (
+              <ChartSvg
+                height={height}
+                label={label}
+                width={width}
+                {...pointer.svg}
+              >
+                <defs>
+                  <Beads id={ids("beads")} tone="fill-l3" />
+                  {KEY_LOOKS.map((look) => (
+                    <look.Pattern
+                      id={ids(look.name)}
+                      key={look.name}
+                      pitch={TEXTURE_PITCH.dense}
+                      tone={look.tone}
+                    />
+                  ))}
+                </defs>
+                <SeriesKey
+                  align="end"
+                  items={series.slice(0, KEY_LOOKS.length).map((name, k) => ({
+                    fill: paint(ids(KEY_LOOKS[k].name)),
+                    name,
+                  }))}
+                  x={Math.round(x0 + plotW)}
+                  y={16}
                 />
-              ))}
-            </defs>
-            <SeriesKey
-              align="end"
-              items={series.slice(0, KEY_LOOKS.length).map((name, k) => ({
-                fill: paint(ids(KEY_LOOKS[k].name)),
-                name,
-              }))}
-              x={Math.round(x0 + plotW)}
-              y={16}
-            />
-            <HRule x0={Math.round(x0)} x1={Math.round(x0 + plotW)} y={floor} />
-            {data.map((d, i) => (
-              <Column
-                beads={ids("beads")}
-                bw={bw}
-                datum={d}
-                dim={hover.dim(i)}
-                floor={floor}
-                format={format}
-                hero={hero === i}
-                index={i}
-                key={d.label}
-                labelRoom={labelRoom}
-                left={(x(d.label) ?? 0) + band / 2 - (bw + labelRoom) / 2}
-                onEnter={hover.showAt(i)}
-                pitch={pitch}
-                unit={unit}
-              />
-            ))}
-            <FootNote
-              gutter={12}
-              height={height}
-              text={noteOf(props)}
-              width={width}
-            />
-          </ChartSvg>
+                <HRule
+                  x0={Math.round(x0)}
+                  x1={Math.round(x0 + plotW)}
+                  y={floor}
+                />
+                {data.map((d, i) => (
+                  <Column
+                    beads={ids("beads")}
+                    bw={bw}
+                    datum={d}
+                    dim={pointer.key !== null && pointer.key !== i}
+                    floor={floor}
+                    format={format}
+                    hero={hero === i}
+                    index={i}
+                    key={d.label}
+                    left={(x(d.label) ?? 0) + band / 2 - (bw + labelRoom) / 2}
+                    pitch={pitch}
+                    unit={unit}
+                  />
+                ))}
+                <FootNote
+                  gutter={12}
+                  height={height}
+                  text={noteOf(props)}
+                  width={width}
+                />
+              </ChartSvg>
+            )}
+          </Pointer>
         );
       }}
     </Plot>

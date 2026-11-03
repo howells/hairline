@@ -42,22 +42,6 @@ export const linePaths = (
   };
 };
 
-/** The live reading whose day is nearest `day`, searching from `first`. */
-export const nearestDay = (
-  live: number[],
-  first: number,
-  dayAt: (i: number) => number,
-  day: number
-) => {
-  let nearest = first;
-  for (const k of live) {
-    if (Math.abs(dayAt(k) - day) < Math.abs(dayAt(nearest) - day)) {
-      nearest = k;
-    }
-  }
-  return nearest;
-};
-
 /** A range narrower than this is flat: below it d3 cannot count ticks (the step underflows). */
 export const FLAT_SPAN = 1e-290;
 

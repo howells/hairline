@@ -85,17 +85,6 @@ export const valueScale = (
   return scaleLinear().domain([lo, hi]).nice(4).range([floor, top]);
 };
 
-/** The live index nearest a position along the index axis. */
-export const nearestOf = (live: number[], at: number) => {
-  let [nearest] = live;
-  for (const k of live) {
-    if (Math.abs(k - at) < Math.abs(nearest - at)) {
-      nearest = k;
-    }
-  }
-  return nearest;
-};
-
 /**
  * The area under the observed readings, and the line through them, each
  * broken where a reading is a gap; and the forecast line that picks up where

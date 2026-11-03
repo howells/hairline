@@ -1,23 +1,21 @@
 import { scaleLinear } from "d3-scale";
-import type { PointerEvent } from "react";
 
 import { fmtInt } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
 import type { FontMetrics } from "../../schema/metrics";
-import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
-import { TipText } from "../hover";
+import { Plot } from "../core";
 import { Dot } from "../markers";
 import { NOTED_TOP } from "../note-layout";
 import { FootNote } from "../plot-note";
+import { Pointer } from "../pointer";
 import { clears, referenceRows, referenceValues } from "../reference-marks";
 import type { Spot } from "../reference-marks";
+import type { Plane } from "../reference-plates";
 import { ReferenceBands, ReferenceOverlay } from "../references";
-import type { Plane } from "../references";
 import { HRule } from "../rules";
-import { scoped, chartTable, plotOptions, pointerX } from "../shared-options";
+import { scoped, chartTable, plotOptions } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Stipple } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
@@ -26,7 +24,6 @@ import { DayStems, HeroMark, MonthAxis } from "./area-marks";
 import {
   edgesOf,
   heroLabelBox,
-  nearestOf,
   shapesOf,
   startOf,
   valueScale,
@@ -35,6 +32,7 @@ import type { Frame } from "./area-shapes";
 import { describeArea } from "./area-words";
 import { DailyEmpty } from "./daily-empty";
 import { DailyGrid, DailyLine } from "./daily-grid";
+import { dailyFacts, dailyKeepOff } from "./daily-keep-off";
 import { DailyNoteList, DailyNoteMarks } from "./daily-note-marks";
 import { foundNotes, notesDesc, withNotes } from "./daily-notes";
 import type { FoundNote } from "./daily-notes";
@@ -42,18 +40,13 @@ import {
   heroOf,
   seriesOf,
   readingRows,
+  readingStops,
   readingsOf,
   valueAt,
 } from "./daily-readings";
 import type { Reading, Series } from "./daily-readings";
 import { ForecastRule, IntervalBands, IntervalNames } from "./interval-marks";
-import {
-  bandValues,
-  bandsOf,
-  forecastAt,
-  intervalFacts,
-  intervalTable,
-} from "./intervals";
+import { bandValues, bandsOf, forecastAt, intervalTable } from "./intervals";
 import type { Band } from "./intervals";
 import { axisRoom, dailyFloor } from "./util-a";
 
@@ -199,10 +192,75 @@ const AreaLayers = (p: LayersProps) => {
   );
 };
 
+interface PointerProps extends Omit<LayersProps, "hover"> {
+  desc: string;
+  fmtDate: (d: Date) => string;
+  label: string;
+}
+
+/** The plot with its one pointer: the stops, the tip and the crosshair. */
+const AreaPointer = (p: PointerProps) => {
+  const { forecast, frame, hero, plane, readings, series } = p;
+  const labels =
+    hero < 0 ? [] : [heroLabelBox(readings, frame, p.format, hero)];
+  const stops = readingStops(series, {
+    facts: dailyFacts({ bands: p.bands, forecast }, p.format),
+    fmtDate: p.fmtDate,
+    format: p.format,
+    heroes: new Set(hero < 0 ? [] : [hero]),
+    keepOff: dailyKeepOff({
+      bands: p.bands,
+      forecast,
+      forecasting: p.forecasting,
+      notes: {
+        floor: frame.floor,
+        frame,
+        live: series.live,
+        notes: p.notes,
+        readings,
+        width: p.width,
+        x0: plane.x0,
+        x1: plane.x1,
+      },
+      references: {
+        avoid: p.avoid,
+        plane,
+        refs: p.references,
+        scale: frame.y,
+        within: p.within,
+      },
+    }),
+    labels,
+    x: frame.x,
+    y: frame.y,
+  });
+  return (
+    <Pointer
+      axis="x"
+      crosshair={{ bottom: Math.round(frame.floor), top: plane.y0 }}
+      height={p.height}
+      stops={stops}
+      width={p.width}
+    >
+      {(pointer) => (
+        <ChartSvg
+          desc={p.desc}
+          height={p.height}
+          label={p.label}
+          width={p.width}
+          {...pointer.svg}
+        >
+          <AreaLayers {...p} hover={pointer.key} />
+          {pointer.marks}
+        </ChartSvg>
+      )}
+    </Pointer>
+  );
+};
+
 interface SvgProps {
   axis: ValueAxis;
   bands: Band[];
-  clear: () => void;
   forecast: { at: number; label: string };
   /** Pattern id of the stipple under the line. */
   stipple: string;
@@ -211,14 +269,12 @@ interface SvgProps {
   fmtDate: (d: Date) => string;
   format: (v: number) => string;
   height: number;
-  hover: number | null;
   maxWidth: number;
   metrics: FontMetrics | undefined;
   note: string | undefined;
   notes: FoundNote[];
   readings: Reading[];
   references: HairlineAreaProps["references"];
-  show: (i: number, x: number, y: number) => void;
   title: string | undefined;
   ticks: number[] | undefined;
   /** The format is the default whole number, which the axis may refine. */
@@ -264,7 +320,6 @@ const avoidOf = (
 const HairlineAreaSvg = ({
   axis,
   bands,
-  clear,
   domain,
   stipple,
   emphasis,
@@ -272,14 +327,12 @@ const HairlineAreaSvg = ({
   forecast,
   format,
   height,
-  hover,
   maxWidth,
   metrics,
   note,
   notes,
   readings,
   references,
-  show,
   title,
   ticks,
   wholeNumbers,
@@ -332,53 +385,37 @@ const HairlineAreaSvg = ({
     references,
   });
 
-  const onMove = (e: PointerEvent<SVGSVGElement>) => {
-    const px = pointerX(e, width);
-    const at = frame.x.invert(px);
-    const near = nearestOf(live, at);
-    const lift = near === hero ? 16 : 10;
-    show(near, frame.x(near), frame.y(valueAt(readings, near)) - lift);
-  };
-
   return (
-    <ChartSvg
-      className="touch-pan-y"
-      height={height}
+    <AreaPointer
+      avoid={avoid}
+      axis={axis}
+      axisTicks={axisTicks}
+      bands={bands}
+      clearing={clearing}
       desc={`${desc}${notesDesc(notes, readings, fmtDate)}`}
+      fill={fill}
+      fmtDate={fmtDate}
+      forecast={forecast}
+      forecastPath={forecastPath}
+      forecasting={forecasting}
+      format={format}
+      frame={frame}
+      height={height}
+      hero={hero}
       label={title ?? label}
-      leave={clear}
-      onPointerMove={onMove}
+      metrics={metrics}
+      note={note}
+      notes={notes}
+      path={path}
+      plane={plane}
+      readings={readings}
+      references={references}
+      series={series}
+      stipple={stipple}
+      wholeNumbers={wholeNumbers}
       width={width}
-    >
-      <AreaLayers
-        avoid={avoid}
-        axis={axis}
-        axisTicks={axisTicks}
-        bands={bands}
-        clearing={clearing}
-        fill={fill}
-        forecast={forecast}
-        forecastPath={forecastPath}
-        forecasting={forecasting}
-        format={format}
-        frame={frame}
-        height={height}
-        hero={hero}
-        hover={hover}
-        metrics={metrics}
-        note={note}
-        notes={notes}
-        path={path}
-        plane={plane}
-        readings={readings}
-        references={references}
-        series={series}
-        stipple={stipple}
-        wholeNumbers={wholeNumbers}
-        width={width}
-        within={within}
-      />
-    </ChartSvg>
+      within={within}
+    />
   );
 };
 
@@ -387,9 +424,7 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
   const format =
     props.format === undefined ? fmtInt : resolveFormat(props.format);
   const fmtDate = resolveDateFormat(props.dateFormat);
-  const { at, clear, key: hover, show } = useHover<number>();
   const stipple = useTextureIds("daily")("stipple");
-  const tip = at === null ? undefined : readings[at.key];
   const bands = bandsOf(props.intervals, readings);
   const forecast = {
     at: forecastAt(readings, props.forecast),
@@ -423,22 +458,6 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
           values: [1],
         }),
       ])}
-      overlay={
-        at === null || tip === undefined ? null : (
-          <Tooltip x={at.x} y={at.y}>
-            <TipText
-              facts={[
-                format(tip.value ?? 0),
-                ...(at.key >= forecast.at
-                  ? [forecast.label.toLowerCase()]
-                  : []),
-                ...intervalFacts(bands, at.key, format),
-              ]}
-              lead={fmtDate(tip.date)}
-            />
-          </Tooltip>
-        )
-      }
     >
       {(width) => (
         <>
@@ -446,21 +465,18 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
             axis={props.valueAxis ?? "right"}
             domain={props.domain}
             bands={bands}
-            clear={clear}
             forecast={forecast}
             emphasis={props.emphasis}
             stipple={stipple}
             fmtDate={fmtDate}
             format={format}
             height={props.height ?? 440}
-            hover={hover}
             maxWidth={props.maxWidth ?? 640}
             metrics={props.metrics}
             note={noteOf(props)}
             notes={notes}
             readings={readings}
             references={props.references}
-            show={show}
             title={props.title}
             ticks={props.ticks}
             wholeNumbers={props.format === undefined}

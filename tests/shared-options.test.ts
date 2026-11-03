@@ -380,11 +380,14 @@ const tipStyle = (scaling: { fit?: boolean; scale?: number }) => {
   return /<output[^>]*style="(?<style>[^"]*)"/u.exec(html)?.groups?.style;
 };
 
-/** Where a daily chart anchors its tooltip after the pointer moves to `clientX`. */
+/**
+ * Where a daily chart anchors its tip: the pointer sweeps the drawing, a
+ * pixel step at a time (in screen pixels, `scale` times as many), until it
+ * is near enough a reading to show one.
+ */
 const tipLeft = async (
   kind: "hairline-area" | "hairline-line",
-  scale: number,
-  clientX: number
+  scale: number
 ) => {
   const { done, host } = await mount(kind, { animate: "off", scale });
   const svg = host.querySelector("svg");
@@ -392,13 +395,20 @@ const tipLeft = async (
     throw new Error("the chart drew no svg");
   }
   svg.getBoundingClientRect = () => new DOMRect(0, 0, 480 * scale, 320 * scale);
-  await act(async () => {
-    svg.dispatchEvent(
-      new MouseEvent("pointermove", { bubbles: true, clientX })
-    );
-    await Promise.resolve();
-  });
-  const style = host.querySelector("output")?.getAttribute("style") ?? "";
+  const sweep = async (x: number): Promise<void> => {
+    await act(async () => {
+      svg.dispatchEvent(
+        new MouseEvent("pointermove", { bubbles: true, clientX: x * scale })
+      );
+      await Promise.resolve();
+    });
+    if (host.querySelector("[data-hl-tip]") === null && x < 480) {
+      await sweep(x + 4);
+    }
+  };
+  await sweep(0);
+  const style =
+    host.querySelector("[data-hl-tip]")?.getAttribute("style") ?? "";
   await done();
   return Number(/left:\s*(?<px>[\d.]+)px/u.exec(style)?.groups?.px);
 };
@@ -422,10 +432,11 @@ describe("tooltips sit on their marks when scaled", () => {
   it.each(["hairline-line", "hairline-area"] as const)(
     "%s finds the nearest reading from a scaled pointer and anchors on it",
     async (kind) => {
-      const unscaled = await tipLeft(kind, 1, 240);
-      const scaled = await tipLeft(kind, 2, 480);
+      const unscaled = await tipLeft(kind, 1);
+      const scaled = await tipLeft(kind, 2);
       expect(unscaled).toBeGreaterThan(0);
-      expect(scaled).toBeCloseTo(unscaled * 2, 5);
+      // The tip stands a fixed 12px off its mark; the mark itself moves with the scale.
+      expect(scaled - 12).toBeCloseTo((unscaled - 12) * 2, 5);
     }
   );
 });

@@ -201,6 +201,16 @@ describe("the precompiled stylesheet stays inside the Hairline root", () => {
     expect(bare).not.toContain("--font-sans");
   });
 
+  it("eases the tip between stops only where motion is welcome, and only after it has first painted", () => {
+    expect(bare).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\)\s*\{\s*\.hl-root \.transition-tip\[data-settled="true"\]\s*\{[^}]*transition-property:\s*left, top/u
+    );
+    // Outside that query the tip carries no transition at all.
+    expect(
+      bare.replaceAll(/@media[^{]*\{[^{}]*\{[^}]*\}\s*\}/gu, "")
+    ).not.toContain("transition-tip");
+  });
+
   it("never hides a plot under reduced motion: the first paint is the drawn chart", () => {
     expect(bare).not.toMatch(
       /prefers-reduced-motion: reduce\)\s*\{[^@]*is-hidden/u
