@@ -24,6 +24,16 @@ interface AggregateSankeyProps extends NoteProps {
   unit?: string;
   /** Source label to keep in the hero colour. */
   highlight?: string;
+  /**
+   * Print each node's total beside its name and in its tooltip. Default
+   * true. Set false when the flows drawn are not all the flows, as when small
+   * ones are withheld, so a node's sum would be a total nobody measured.
+   */
+  totals?: boolean;
+  /** Responsive mode only: the width of the first render, before measuring. */
+  initialWidth?: number;
+  /** Fixed width in px. Giving it turns measuring off. */
+  width?: number;
 }
 
 interface NodeExtra {
@@ -87,11 +97,15 @@ const labelMargins = (
   const room = cap - LABEL_GAP - LABEL_EDGE;
   const sourceLines = new Map(
     data.sources.map((name) => {
-      const full = `${name} · ${valueOf(name)}`;
+      const value = valueOf(name);
+      const full = value === "" ? name : `${name} · ${value}`;
       const lines =
         labelWidth(full) <= room
           ? [full]
-          : [...wrapWords(name, room, labelWidth), valueOf(name)];
+          : [
+              ...wrapWords(name, room, labelWidth),
+              ...(value === "" ? [] : [value]),
+            ];
       return [name, lines] as const;
     })
   );
@@ -102,7 +116,9 @@ const labelMargins = (
   // Target labels carry their total inline: "Free 55".
   const widestTarget = Math.max(
     0,
-    ...data.targets.map((t) => labelWidth(`${t} ${valueOf(t)}`) + 6)
+    ...data.targets.map(
+      (t) => labelWidth(valueOf(t) === "" ? t : `${t} ${valueOf(t)}`) + 6
+    )
   );
   // Each side needs its labels; any spare room is split so the ink is centred.
   const needLeft = Math.ceil(widest) + LABEL_GAP + LABEL_EDGE;
@@ -288,7 +304,9 @@ const SourceLabel = (p: SourceLabelProps) => {
     return (
       <Label anchor="end" dy="0.36em" voice="label" x={p.x} y={p.y}>
         {p.name}
-        <tspan className="fill-muted"> · {p.valueText}</tspan>
+        {p.valueText === "" ? null : (
+          <tspan className="fill-muted"> · {p.valueText}</tspan>
+        )}
       </Label>
     );
   }
@@ -300,7 +318,11 @@ const SourceLabel = (p: SourceLabelProps) => {
     >
       {p.lines.map((line, k) => (
         <tspan
-          className={k === p.lines.length - 1 ? "fill-muted" : undefined}
+          className={
+            p.valueText !== "" && k === p.lines.length - 1
+              ? "fill-muted"
+              : undefined
+          }
           dy={k === 0 ? "0.36em" : LABEL_LINE}
           key={`${p.name}-${line}`}
           x={p.x}
@@ -353,9 +375,11 @@ const NodeMark = (p: NodeProps) => {
       ) : (
         <Label dy="0.36em" voice="label" x={x1 + LABEL_GAP} y={mid}>
           {p.node.name}
-          <tspan className="t-value" dx={6}>
-            {p.valueText}
-          </tspan>
+          {p.valueText === "" ? null : (
+            <tspan className="t-value" dx={6}>
+              {p.valueText}
+            </tspan>
+          )}
         </Label>
       )}
     </DimGroup>
@@ -388,6 +412,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
   const height = props.height ?? 420;
   const format = props.format ?? round;
   const unit = props.unit ?? "MPs";
+  const totals = props.totals ?? true;
   const [focus, setFocus] = useState<Focus | null>(null);
   const srcRank = ranks(
     data.sources.map((s) =>
@@ -417,12 +442,16 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
 
   return (
     <Plot
+      initialWidth={props.initialWidth}
+      width={props.width}
       overlay={
         focus === null ? null : (
           <Tooltip x={focus.x} y={focus.y}>
             {focus.flow === null ? (
               <TipText
-                facts={[`${format(total(focus.node ?? ""))} ${unit}`]}
+                facts={
+                  totals ? [`${format(total(focus.node ?? ""))} ${unit}`] : []
+                }
                 lead={focus.node ?? ""}
               />
             ) : (
@@ -439,7 +468,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
         const narrow = width < 480;
         const bottom = 8 + noteSpace(noteOf(props), width - 16, 32);
         const margins = labelMargins(data, width, narrow, (name) =>
-          format(total(name))
+          totals ? format(total(name)) : ""
         );
         const graph = layoutGraph(data, width, height, narrow, bottom, margins);
 
@@ -476,7 +505,7 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
                 lit={nodeLit(focus, data, n.name)}
                 node={n}
                 onEnter={setFocus}
-                valueText={format(n.value ?? 0)}
+                valueText={totals ? format(n.value ?? 0) : ""}
               />
             ))}
             <FootNote height={height} text={noteOf(props)} width={width} />
