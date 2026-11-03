@@ -33,12 +33,12 @@ export const dumbbellQueueSchema = z
     ...noteShape,
     ...referencesShape,
     ...sharedShape,
-    /** Which direction of change is drawn in the alert colour. Defaults to a rise. */
+    /** Which direction of change is drawn in the alert colour, or none. Defaults to a rise. */
     alert: z
-      .enum(["fall", "rise"])
+      .enum(["fall", "none", "rise"])
       .optional()
       .describe(
-        "Which direction of change is drawn in the alert colour. Defaults to a rise."
+        "Which direction of change is drawn in the alert colour, or none. Defaults to a rise."
       ),
     /** The rows, 1 to 12. */
     data: z

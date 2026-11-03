@@ -56,7 +56,7 @@ export const charts = {
   "dumbbell-queue": entry({
     component: "DumbbellQueue",
     dataShape:
-      'data: { label: string; before: number; after: number; id?: string }[], one row each; optional emphasis (a row\'s id or label), alert ("rise" or "fall": the direction drawn in the alert colour), unit (change per rung), ends (two axis labels), format, note.',
+      'data: { label: string; before: number; after: number; id?: string }[], one row each; optional emphasis (a row\'s id or label), alert ("rise", "fall" or "none": the direction drawn in the alert colour), unit (change per rung), ends (two axis labels), format, note.',
     jobs: ["deviation", "change-over-time"],
     kind: "dumbbell-queue",
     limits: { categories: { max: 12, min: 1 }, series: { max: 2, min: 2 } },

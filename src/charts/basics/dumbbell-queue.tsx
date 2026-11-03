@@ -28,7 +28,7 @@ import { maxIndex } from "./util-b";
 
 interface RowProps {
   /** Which direction of change draws its rungs in the alert colour. */
-  alert: "fall" | "rise";
+  alert: "fall" | "none" | "rise";
   /** Whether the after value clears the reference line that asks for ink; undefined when none does. */
   clearing: boolean | undefined;
   datum: DumbbellDatum;
@@ -59,7 +59,7 @@ const RUNG_H = 8;
  * dots (so none hide under a dot), on whole pixels.
  */
 const ChangeRungs = (props: {
-  alert: "fall" | "rise";
+  alert: "fall" | "none" | "rise";
   datum: DumbbellDatum;
   index: number;
   layout: Layout;
@@ -74,9 +74,8 @@ const ChangeRungs = (props: {
   const gap1 = xa - dir * (layout.dotR + 3);
   const count = Math.round(Math.abs(datum.before - datum.after) / props.unit);
   const worse =
-    props.alert === "rise"
-      ? datum.after > datum.before
-      : datum.after < datum.before;
+    (props.alert === "rise" && datum.after > datum.before) ||
+    (props.alert === "fall" && datum.after < datum.before);
   const rungs = Array.from({ length: count }, (_, k) => ({
     id: `${datum.label}-rung-${k}`,
     k,
@@ -416,7 +415,7 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
  *
  * F12 Before and after. Hollow dot = before, solid dot = after, and the gap
  * between them holds one 2px rung per unit of change, so it can be counted.
- * The biggest change is in ink; a row that changed the alert way (a rise by default) rungs in the alert colour.
+ * The biggest change is in ink; a row that changed the alert way (a rise by default; `none` for no alert) rungs in the alert colour.
  */
 export const DumbbellQueue = (props: DumbbellQueueProps) =>
   scoped(props.idPrefix, <DumbbellQueuePlot {...props} />);
