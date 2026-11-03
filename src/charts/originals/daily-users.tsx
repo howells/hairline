@@ -243,7 +243,10 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
         height={height}
         label={label}
         width={width}
-        {...scrub.bind(data.map((_, i) => frame.x(i)))}
+        {...scrub.bind(
+          data.map((_, i) => frame.x(i)),
+          { height, width }
+        )}
       >
         <Axes data={data} frame={frame} width={width} />
         <Excursions frame={frame} mean={mean} tex={tex} values={values} />

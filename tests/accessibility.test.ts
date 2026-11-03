@@ -5,9 +5,10 @@
 import { RungBars } from "@howells/hairline";
 import type { RungBarsProps } from "@howells/hairline";
 import axe from "axe-core";
-import { createElement } from "react";
+import { act, createElement } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const props: RungBarsProps = {
   data: [
@@ -117,5 +118,54 @@ describe("the accessibility checker", () => {
     await expect(violations(render({ table: true }))).resolves.toStrictEqual(
       []
     );
+  });
+});
+
+describe("the chart can be read without a mouse", () => {
+  it("the svg takes focus, and a polite live region waits beside it", () => {
+    const html = render();
+    expect(tag(html, "svg")).toContain('tabindex="0"');
+    expect(html).toMatch(/<output[^>]*aria-live="polite"[^>]*><\/output>/u);
+    expect(html).not.toContain("data-hl-tip");
+  });
+
+  it("reports nothing with a tip showing and pinned, and the tip is hidden from the reader", async () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.stubGlobal("matchMedia", (media: string) => ({
+      addEventListener: vi.fn<() => void>(),
+      matches: false,
+      media,
+      removeEventListener: vi.fn<() => void>(),
+    }));
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    await act(async () => {
+      root.render(createElement(RungBars, props));
+      await Promise.resolve();
+    });
+    const svg = host.querySelector("svg");
+    expect(svg).not.toBeNull();
+    for (const name of ["ArrowRight", "Enter"]) {
+      // oxlint-disable-next-line no-await-in-loop -- the keys are pressed in order
+      await act(async () => {
+        svg?.dispatchEvent(
+          new KeyboardEvent("keydown", { bubbles: true, key: name })
+        );
+        await Promise.resolve();
+      });
+    }
+    const tip = host.querySelector("[data-hl-tip]");
+    expect(tip?.getAttribute("aria-hidden")).toBe("true");
+    expect(host.querySelector("output[aria-live]")?.textContent).toContain(
+      "Pinned"
+    );
+    document.body.innerHTML = `<main>${host.innerHTML}</main>`;
+    const result = await axe.run(document.body);
+    expect(result.violations.map((v) => v.id)).toStrictEqual([]);
+    await act(async () => {
+      root.unmount();
+      await Promise.resolve();
+    });
   });
 });

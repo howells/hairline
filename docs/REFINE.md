@@ -139,6 +139,18 @@ All surrounding UI (wordmark, mode switcher, chart names) is one size, 13.5px; t
 - **Line-end labels.** A set of lines is named where the lines end, not in a key: the hero in ink with its value, then the highest and lowest, the rest folded into one quiet group label ("7 other regions"). Labels are nudged apart (never closer than 15px, inside the plot) and a nudged label carries a short 1px `rule` leader back to its line. Room on the right is reserved only when the labels are shown, and the key they replace is removed.
 - **Annotations.** The one exception to "no prose inside charts": an opt-in `notes` prop (off by default) on the daily charts. Each note is tied to one reading, has a short title (32 characters) and an optional second line (60), and is drawn beside its point: title in `t-label` ink, second line in `t-axis`, on a halo, with a 1px `rule` leader, on the side and at the end that keep clear of the line, the other notes and the plot's edges. At most eight. Below 520px wide the notes become small numbered ink discs (radius 8, the one radius outside the dot scale) by their points, and the words are listed as HTML under the chart. Notes are also a column of the data table and part of the chart's description.
 
+## Pointer and tip (one model, one tip)
+
+A chart that reads values off its marks does it through `Pointer` (`src/charts/pointer.tsx`, the model in `use-pointer.ts`), never with its own hover code.
+
+- **Snap, pool.** The pointer snaps to the nearest stop (x-dominant, 40px reach; the plane for a scatter; the column for rows), and one tip pools every series at it: the lead in bold, then a row per series (swatch, name, tabular value), hero first. The crosshair is the existing `Cursor` rule; each series gets a paper-ringed dot.
+- **Placement.** Preferred side, flipped when it would clip or would cover what the chart prints (the line, value labels, notes, reference and interval names), never past the chart. Corners are `rounded-sm` (the radius scale). The column's band is left off a day that has a printed label.
+- **Pin.** A click, tap, Enter or Space pins the tip (ink outline, a quiet "Pinned · Esc"); Esc, a second click or a press outside lets go. The tip is hoverable and stays a moment after the pointer leaves.
+- **Keyboard.** The chart's svg is focusable (the ring shows for keyboard focus only, via `data-hl-input`): arrows step, Home and End jump, and handled keys never scroll the page. Keys and pins are announced politely; a passing mouse is not.
+- **Touch.** Press and hold to scrub. A swipe that starts moving first belongs to the page, so a chart never takes over scrolling.
+- **Motion.** The tip eases between stops only under `prefers-reduced-motion: no-preference`, using the hover duration; no new durations or curves.
+- **Tip chrome.** The tip is the one place a chart shows a bordered paper card with words; its "Pinned · Esc" note is the only prose, and it appears only while pinned. Board time charts keep their own cursor readouts (figure, value, tags, legend) but take the same model.
+
 ## Per chart: what to do
 
 For each chart you own:

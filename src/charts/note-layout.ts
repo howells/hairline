@@ -42,7 +42,7 @@ export interface PlacedNote extends NotePoint {
 }
 
 /** A rectangle a note takes up. */
-interface Box {
+export interface Box {
   x0: number;
   x1: number;
   y0: number;
@@ -188,6 +188,20 @@ export const placeNotes = (points: readonly NotePoint[], room: NoteRoom) => {
     return { ...p, ...best.placed, n: k + 1 };
   });
 };
+
+/** The boxes the placed notes take up (words and leader), for what else must keep off them. */
+export const noteBoxes = (placed: readonly PlacedNote[]): Box[] =>
+  placed.map((n) => {
+    const w = widthOf(n);
+    const x0 = n.anchor === "start" ? n.x : n.x - w;
+    const y0 = n.titleY - (TITLE_H - 3);
+    return {
+      x0: Math.min(x0, n.x - 1),
+      x1: Math.max(x0 + w, n.x + 1),
+      y0: Math.min(y0, n.leader.y0),
+      y1: Math.max(y0 + textHeight(n), n.leader.y1),
+    };
+  });
 
 /** A numbered disc's place: above or below its point. */
 export interface PlacedDisc extends NotePoint {

@@ -46,11 +46,14 @@ const KIT = [
   "marks",
   "motion",
   "plot-note",
+  "pointer",
+  "pointer-model",
   "rules",
   "svg",
   "text",
   "texture",
   "texture-ids",
+  "use-pointer",
 ];
 
 interface ChartFile {

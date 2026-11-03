@@ -392,7 +392,7 @@ const TimeLinesPlot = (props: {
       height={chart.height}
       label={chart.label}
       width={width}
-      {...scrub.bind(positions)}
+      {...scrub.bind(positions, { height: chart.height, width })}
     >
       <SplitClips id={frame.id} x={cx} width={width} height={chart.height} />
       <Patterns chart={chart} frame={frame} />

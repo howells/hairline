@@ -2,6 +2,10 @@ import { line as d3line } from "d3-shape";
 
 import { intervalLabel } from "../../schema/intervals";
 import type { Forecast, Interval } from "../../schema/intervals";
+import { labelBox } from "../label-box";
+import type { Box } from "../label-box";
+import { plateWidth, PLATE_H } from "../reference-marks";
+import { relax } from "../spread";
 import { isLive, valueAt } from "./daily-readings";
 import type { Reading } from "./daily-readings";
 
@@ -122,3 +126,58 @@ export const intervalDesc = (
   ];
   return parts.length === 0 ? "" : `${parts.join(". ")}.`;
 };
+
+/** Room between the forecast rule and its name, px. */
+export const END_GAP = 6;
+
+/** The box the forecast's name takes beside its rule, for a tip to keep off. */
+export const forecastNameBox = (label: string, x: number, top: number): Box =>
+  labelBox(label, x + END_GAP, top - 4, "start");
+
+/** Room between a name's plate and the band's end, clear of the end value's label, px. */
+const NAME_GAP = 14;
+/** The step between two names that would otherwise stand on each other, px. */
+const NAME_STEP = 17;
+/** Room between a band's upper edge and its name, px. */
+const NAME_LIFT = 12;
+
+/** Where each band's name ends (its right edge x) and stands (its middle y), spread apart. */
+export const nameSlots = (
+  bands: readonly Band[],
+  at: {
+    bounds: readonly [number, number];
+    x: (i: number) => number;
+    y: (v: number) => number;
+  }
+) => {
+  const ends = bands.flatMap((band) => {
+    const end = band.points.at(-1);
+    return end === undefined ? [] : [{ band, end }];
+  });
+  if (ends.length === 0) {
+    return [];
+  }
+  const heights = relax(
+    ends.map(({ end }) => at.y(end.high) - NAME_LIFT),
+    NAME_STEP,
+    at.bounds[0] + NAME_STEP / 2,
+    at.bounds[1]
+  );
+  return ends.map(({ band, end }, k) => ({
+    band,
+    x: at.x(end.i) - NAME_GAP,
+    y: heights[k],
+  }));
+};
+
+/** The plates the names stand on, for a tip to keep off. */
+export const intervalNameBoxes = (
+  bands: readonly Band[],
+  at: Parameters<typeof nameSlots>[1]
+): Box[] =>
+  nameSlots(bands, at).map((n) => ({
+    x0: n.x - plateWidth(n.band.label),
+    x1: n.x,
+    y0: n.y - PLATE_H / 2,
+    y1: n.y + PLATE_H / 2,
+  }));

@@ -54,6 +54,25 @@ export type { DotSize, RingWeight, TickSize } from "./charts/marks";
 export { easeTravel, DURATION } from "./charts/motion";
 export type { StaggerTier } from "./charts/motion";
 export { PlotNote, FootNote } from "./charts/plot-note";
+export { Pointer } from "./charts/pointer";
+export type { TipRow, Stop, PointerViewProps } from "./charts/pointer";
+export {
+  TIP_INSET,
+  TIP_GAP,
+  nearest,
+  STEP_KEYS,
+  stepTo,
+  placeTip,
+  spoken,
+} from "./charts/pointer-model";
+export type {
+  Axis,
+  Spot,
+  Placement,
+  Range,
+  Avoid,
+  PlaceOptions,
+} from "./charts/pointer-model";
 export { HRule, VRule, Stem, Tick, HGrid, VGrid, Cursor } from "./charts/rules";
 export type { RuleKind } from "./charts/rules";
 export { ChartSvg } from "./charts/svg";
@@ -80,3 +99,11 @@ export {
   paint,
   useTextureIds,
 } from "./charts/texture-ids";
+export { usePointer } from "./charts/use-pointer";
+export type {
+  PointerStop,
+  Via,
+  PointerLink,
+  BindOptions,
+  PointerState,
+} from "./charts/use-pointer";

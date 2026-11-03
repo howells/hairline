@@ -443,3 +443,19 @@
 svg[data-hl-strokes="device"] * {
   vector-effect: non-scaling-stroke;
 }
+
+/* The tip glides between stops; under reduced motion it simply moves. */
+@utility transition-tip {
+  @media (prefers-reduced-motion: no-preference) {
+    &[data-settled="true"] {
+      transition-property: left, top;
+      transition-timing-function: var(--hl-ease-tone);
+      transition-duration: var(--hl-duration-hover);
+    }
+  }
+}
+
+/* A click or tap focuses a chart without asking for its ring; the keyboard does. */
+svg[data-hl-input="pointer"]:focus-visible {
+  outline: none;
+}

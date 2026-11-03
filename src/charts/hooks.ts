@@ -10,13 +10,9 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type {
-  CSSProperties,
-  ReactNode,
-  KeyboardEvent,
-  PointerEvent,
-  RefObject,
-} from "react";
+import type { ReactNode, RefObject } from "react";
+
+import { usePointer } from "./use-pointer";
 
 /** A computed length, always resolved to "<n>px", as a number. */
 const px = (length: string) => Number(length.slice(0, -2));
@@ -278,63 +274,35 @@ export interface Sync {
   time: number | null;
 }
 
-const SCRUB_KEYS = new Set(["ArrowLeft", "ArrowRight", "End", "Home"]);
-
 /**
- * One cursor index per chart. Hover or arrow keys move it; leaving restores
- * the resting index. Marks left of the cursor read as "past", right as "future".
+ * One cursor index per chart, from the shared pointer model: hover, arrow
+ * keys, a pin or a press-and-hold move it; leaving restores the resting
+ * index. Marks left of the cursor read as "past", right as "future". Bind it
+ * to the svg with the x of each index and the drawing's size.
  */
 export const useScrub = (restIndex: number, dates: Date[], sync?: Sync) => {
-  const [local, setLocal] = useState<number | null>(null);
   const times = dates.map((d) => d.getTime());
-  const syncedTime = sync?.time ?? null;
-  const syncedIndex =
-    syncedTime === null ? null : bisectCenter(times, syncedTime);
-  const hover = sync === undefined ? local : syncedIndex;
-  const setHover = (i: number | null) => {
-    if (sync === undefined) {
-      setLocal(i);
-    } else {
-      sync.setTime(i === null ? null : times[i]);
-    }
-  };
-  const index = hover ?? restIndex;
-
-  const bind = (positions: number[]) => {
-    const last = positions.length - 1;
-    const target = (key: string) => {
-      if (key === "Home") {
-        return 0;
-      }
-      if (key === "End") {
-        return last;
-      }
-      return key === "ArrowLeft" ? index - 1 : index + 1;
-    };
-    return {
-      onBlur: () => {
-        setHover(null);
-      },
-      onKeyDown: (e: KeyboardEvent<SVGSVGElement>) => {
-        if (!SCRUB_KEYS.has(e.key)) {
-          return;
+  const pointer = usePointer<number>(
+    sync === undefined
+      ? undefined
+      : {
+          set: (i) => {
+            sync.setTime(i === null ? null : times[i]);
+          },
+          value: sync.time === null ? null : bisectCenter(times, sync.time),
         }
-        e.preventDefault();
-        setHover(Math.max(0, Math.min(last, target(e.key))));
-      },
-      onPointerLeave: () => {
-        setHover(null);
-      },
-      onPointerMove: (e: PointerEvent<SVGSVGElement>) => {
-        const x = e.clientX - e.currentTarget.getBoundingClientRect().left;
-        setHover(bisectCenter(positions, x));
-      },
-      style: { touchAction: "pan-y" } satisfies CSSProperties,
-      tabIndex: 0,
-    };
+  );
+  return {
+    bind: (positions: number[], size: { height: number; width: number }) =>
+      pointer.bind({
+        axis: "x",
+        ...size,
+        reach: Infinity,
+        stops: positions.map((x, key) => ({ key, x, y: 0 })),
+      }),
+    index: pointer.key ?? restIndex,
+    isHovering: pointer.key !== null,
   };
-
-  return { bind, index, isHovering: hover !== null };
 };
 
 /** The hovered record and where its tooltip is anchored. */

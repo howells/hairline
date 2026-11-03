@@ -5,11 +5,12 @@ import { plural } from "../../lib/format";
 import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
 import type { RangeDatum, RangeDotsProps } from "../../schema/range-dots";
-import { Plot, Tooltip } from "../core";
-import { useHover } from "../hooks";
-import { DimGroup, HitRect, TipText } from "../hover";
+import { Plot } from "../core";
+import { DimGroup } from "../hover";
 import { Dot, Ring } from "../markers";
 import { FootNote } from "../plot-note";
+import { Pointer } from "../pointer";
+import type { Stop } from "../pointer";
 import { HRule, VGrid, VRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
@@ -92,36 +93,19 @@ interface RowProps {
   format: Format;
   index: number;
   layout: Layout;
-  onEnter: () => void;
   open: boolean;
   text: string;
-  width: number;
 }
 
 /** One row: its name, the whisker with caps across the interval, the dot at the estimate and the value. */
-const Row = ({
-  datum,
-  dim,
-  index,
-  layout,
-  onEnter,
-  open,
-  text,
-  width,
-}: RowProps) => {
+const Row = ({ datum, dim, index, layout, open, text }: RowProps) => {
   const { x } = layout;
   const y = Math.round(TOP + layout.pitch * (index + 0.5));
   const lo = x(datum.low);
   const hi = x(datum.high);
   const tone = open ? "stroke-l4" : "stroke-l2";
   return (
-    <DimGroup dim={dim} onPointerEnter={onEnter}>
-      <HitRect
-        height={layout.pitch}
-        width={width}
-        x={0}
-        y={y - layout.pitch / 2}
-      />
+    <DimGroup dim={dim}>
       <Label
         anchor="end"
         middle
@@ -220,7 +204,6 @@ interface SvgProps {
   data: RangeDatum[];
   format: (v: number) => string;
   height: number;
-  hover: ReturnType<typeof useHover<number>>;
   keys: string[];
   name: string;
   props: RangeDotsProps;
@@ -233,7 +216,6 @@ const RangeSvg = ({
   data,
   format,
   height,
-  hover,
   keys,
   name,
   props,
@@ -242,56 +224,80 @@ const RangeSvg = ({
 }: SvgProps) => {
   const layout = layoutOf(props, data, texts, { height, width });
   const ticks = layout.x.ticks(4);
+  const stops = data.map((d, i): Stop<number> => {
+    const y = Math.round(TOP + layout.pitch * (i + 0.5));
+    return {
+      avoid: () => [[y - layout.pitch / 2, y + layout.pitch / 2]],
+      key: i,
+      lead: d.label,
+      rows: [
+        { value: texts[i] },
+        ...(isOpen(d, props.wide)
+          ? [{ muted: true, value: "too wide to rank" }]
+          : []),
+      ],
+      x: layout.x(d.estimate),
+      y,
+    };
+  });
   return (
-    <ChartSvg
-      desc={data.length === 0 ? "No data." : describe(data, props, format)}
+    <Pointer
+      axis="y"
       height={height}
-      label={name}
-      leave={hover.clear}
+      reach={layout.pitch}
+      stops={stops}
       width={width}
     >
-      <VGrid xs={ticks.map((t) => layout.x(t))} y0={TOP} y1={layout.axisY} />
-      <HRule
-        x0={layout.x.range()[0]}
-        x1={layout.x.range()[1]}
-        y={layout.axisY}
-      />
-      {ticks.map((t) => (
-        <Label
-          anchor="middle"
-          key={t}
-          voice="axis"
-          x={layout.x(t)}
-          y={layout.axisY + 18}
-        >
-          {format(t)}
-        </Label>
-      ))}
-      {data.map((d, i) => (
-        <Row
-          datum={d}
-          dim={hover.dim(i)}
-          format={format}
-          index={i}
-          key={keys[i]}
-          layout={layout}
-          onEnter={hover.enter(
-            i,
-            layout.x(d.estimate),
-            Math.round(TOP + layout.pitch * (i + 0.5)) - 16
-          )}
-          open={isOpen(d, props.wide)}
-          text={texts[i]}
+      {(pointer) => (
+        <ChartSvg
+          desc={data.length === 0 ? "No data." : describe(data, props, format)}
+          height={height}
+          label={name}
           width={width}
-        />
-      ))}
-      <FootNote
-        height={height}
-        metrics={props.metrics}
-        text={noteOf(props)}
-        width={width}
-      />
-    </ChartSvg>
+          {...pointer.svg}
+        >
+          <VGrid
+            xs={ticks.map((t) => layout.x(t))}
+            y0={TOP}
+            y1={layout.axisY}
+          />
+          <HRule
+            x0={layout.x.range()[0]}
+            x1={layout.x.range()[1]}
+            y={layout.axisY}
+          />
+          {ticks.map((t) => (
+            <Label
+              anchor="middle"
+              key={t}
+              voice="axis"
+              x={layout.x(t)}
+              y={layout.axisY + 18}
+            >
+              {format(t)}
+            </Label>
+          ))}
+          {data.map((d, i) => (
+            <Row
+              datum={d}
+              dim={pointer.key !== null && pointer.key !== i}
+              format={format}
+              index={i}
+              key={keys[i]}
+              layout={layout}
+              open={isOpen(d, props.wide)}
+              text={texts[i]}
+            />
+          ))}
+          <FootNote
+            height={height}
+            metrics={props.metrics}
+            text={noteOf(props)}
+            width={width}
+          />
+        </ChartSvg>
+      )}
+    </Pointer>
   );
 };
 
@@ -309,7 +315,6 @@ const RangeDotsPlot = (props: RangeDotsProps) => {
       : resolveFormat(props.formatMargin);
   const texts = data.map((d) => printed(d, format, margin));
   const keys = reactKeys(data);
-  const hover = useHover<number>();
   const height =
     props.height ??
     TOP +
@@ -349,28 +354,12 @@ const RangeDotsPlot = (props: RangeDotsProps) => {
         ])
       )}
       width={props.width}
-      overlay={
-        hover.at === null ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
-            <TipText
-              facts={[
-                texts[hover.at.key],
-                ...(isOpen(data[hover.at.key], props.wide)
-                  ? ["too wide to rank"]
-                  : []),
-              ]}
-              lead={data[hover.at.key].label}
-            />
-          </Tooltip>
-        )
-      }
     >
       {(width) => (
         <RangeSvg
           data={data}
           format={format}
           height={height}
-          hover={hover}
           keys={keys}
           name={name}
           props={props}
