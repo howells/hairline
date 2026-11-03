@@ -4,8 +4,8 @@ import { area as d3area, line as d3line } from "d3-shape";
 import type { PointerEvent } from "react";
 
 import { plural, fmtInt, monthTickLabels } from "../../lib/format";
-import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { ValueAxis } from "../../schema/daily";
+import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
 import type { FontMetrics } from "../../schema/metrics";
 import { Plot, Tooltip } from "../core";
@@ -424,14 +424,9 @@ const HairlineAreaSvg = ({
   const label = `Daily values, ${fmtDate(readings[live[0]].date)} to ${fmtDate(readings[live.at(-1) ?? 0].date)}: peak ${format(max)} on ${peakAt}`;
   const desc = `${plural(live.length, "reading")}. Peak ${format(max)} on ${peakAt}. The data table lists every reading.${notesDesc(notes, readings, fmtDate)}`;
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
-    const px = pointerX(e, width);
-    const at = frame.x.invert(px);
-    const near = nearestOf(live, at);
-    show(
-      near,
-      frame.x(near),
-      frame.y(valueAt(readings, near)) - (near === hero ? 16 : 10)
-    );
+    const near = nearestOf(live, frame.x.invert(pointerX(e, width)));
+    const lift = near === hero ? 16 : 10;
+    show(near, frame.x(near), frame.y(valueAt(readings, near)) - lift);
   };
 
   return (

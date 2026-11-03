@@ -144,7 +144,7 @@ describe("the registry", () => {
       "table",
       "title",
       "unitNote",
-      "valueLabels",
+      "valueAxis",
       "width",
     ]);
   });

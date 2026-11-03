@@ -55,11 +55,16 @@ describe("the facet grid takes its columns from the width", () => {
     expect(facetWidth(358, 1)).toBe(358);
   });
 
+  it("takes the axis gutter out of the row first, so every plot is as wide", () => {
+    expect(facetWidth(800, 3, 24, 40)).toBe(237);
+    expect(facetWidth(358, 1, 24, 40)).toBe(318);
+  });
+
   it.each([
     [358, 1],
     [800, 3],
   ])("lays the panels out at %ipx in %i grid columns", (width, columns) => {
-    expect(grid(width)).toContain(`repeat(${columns}, minmax(0, 1fr))`);
+    expect(grid(width)).toContain(`px repeat(${columns - 1}, `);
   });
 });
 
@@ -110,18 +115,41 @@ describe("one hero, the rest on the ramp", () => {
     expect(heroes(null)).toStrictEqual([]);
   });
 
-  it("marks only the first column, so gridline values print once per row", () => {
-    const firsts: boolean[] = [];
+  it("gives the axis to the first column only, in a gutter that leaves every plot as wide", () => {
+    const seen: { axis: string; width: number }[] = [];
     facets({
+      axis: true,
       children: (cell) => {
-        firsts.push(cell.first);
+        seen.push({ axis: cell.axis, width: cell.width });
         return null;
       },
       label: "Regions",
       panels: [...panels, ...panels],
       width: 520,
     });
-    expect(firsts).toStrictEqual([true, false, true, false, true, false]);
+    expect(seen.map((s) => s.axis)).toStrictEqual([
+      "left",
+      "none",
+      "left",
+      "none",
+      "left",
+      "none",
+    ]);
+    expect(seen[0].width - 40).toBe(seen[1].width);
+  });
+
+  it("has no axis unless asked", () => {
+    const axes: string[] = [];
+    facets({
+      children: (cell) => {
+        axes.push(cell.axis);
+        return null;
+      },
+      label: "Regions",
+      panels,
+      width: 520,
+    });
+    expect(axes).toStrictEqual(["none", "none", "none"]);
   });
 });
 
@@ -130,7 +158,8 @@ const gridYs = (html: string) =>
   [...html.matchAll(/class="grid-line"[^>]*?\sy1="(?<y>[\d.]+)"/gu)].map(
     (m) => m.groups?.y
   );
-const labels = (html: string) => (html.match(/class="t-axis"/gu) ?? []).length;
+const labels = (html: string) =>
+  (html.match(/class="t-axis t-halo"/gu) ?? []).length;
 
 /** The line's path, `d`. */
 const path = (html: string) =>
@@ -167,17 +196,38 @@ describe("a shared domain is really shared by the charts", () => {
   });
 });
 
+/** The width of the first gridline, px. */
+const gridWidth = (html: string) => {
+  const m =
+    /class="grid-line"[^>]*?\sx1="(?<a>[\d.]+)"[^>]*?\sx2="(?<b>[\d.]+)"/u.exec(
+      html
+    );
+  return Number(m?.groups?.b) - Number(m?.groups?.a);
+};
+
 describe("a panel after the first drops the axis values and the hero", () => {
-  it("valueLabels false keeps the area's gridlines and drops their values", () => {
-    const without = area({ domain, valueLabels: false });
+  it("valueAxis none keeps the area's gridlines and drops their values", () => {
+    const without = area({ domain, valueAxis: "none" });
     expect(gridYs(without)).toStrictEqual(gridYs(area({ domain })));
     expect(labels(without)).toBeLessThan(labels(area({ domain })));
   });
 
-  it("valueLabels false keeps the line's gridlines and drops their values", () => {
-    const without = line({ domain, valueLabels: false });
+  it("valueAxis none keeps the line's gridlines and drops their values", () => {
+    const without = line({ domain, valueAxis: "none" });
     expect(gridYs(without)).toStrictEqual(gridYs(line({ domain })));
     expect(labels(without)).toBeLessThan(labels(line({ domain })));
+  });
+
+  it("a left axis sits in a margin, so the grid is as wide as a panel with none", () => {
+    expect(gridWidth(area({ domain, valueAxis: "left", width: 360 }))).toBe(
+      gridWidth(area({ domain, valueAxis: "none", width: 320 }))
+    );
+    expect(gridWidth(line({ domain, valueAxis: "left", width: 360 }))).toBe(
+      gridWidth(line({ domain, valueAxis: "none", width: 320 }))
+    );
+    expect(labels(area({ domain, valueAxis: "left" }))).toBeGreaterThan(
+      labels(area({ domain, valueAxis: "none" }))
+    );
   });
 
   it("emphasis null leaves the panel without a hero", () => {

@@ -72,7 +72,7 @@ export { DailyUsers } from "./charts/originals/daily-users";
 export { FeatureRank } from "./charts/originals/feature-rank";
 export { ResponseTime } from "./charts/originals/response-time";
 export { RevenueByPlan } from "./charts/originals/revenue-by-plan";
-export type { DailyDatum } from "./schema/daily";
+export type { DailyDatum, ValueAxis } from "./schema/daily";
 export type {
   DumbbellDatum,
   DumbbellQueueData,

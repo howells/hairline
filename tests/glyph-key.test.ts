@@ -7,12 +7,14 @@ import { signupMonthsDemo } from "../src/charts/forms/radial-year.data";
 import { YearKey } from "../src/charts/forms/year-key";
 import { glyphBox } from "../src/charts/glyph-box";
 import { GlyphKey } from "../src/charts/glyph-key";
+import { leaderOrder } from "../src/charts/glyph-leaders";
 import { ArcKey } from "../src/charts/lupi/arc-key";
 import { arcMatrixDemo } from "../src/charts/lupi/arc-matrix.data";
 import { barcodeLollipopDemo } from "../src/charts/lupi/barcode-lollipop.data";
 import { bubbleAlmanacDemo } from "../src/charts/lupi/bubble-almanac.data";
 import { BubbleKey } from "../src/charts/lupi/bubble-mark";
 import { FlareKey } from "../src/charts/lupi/flare-key";
+import { zoomFlare } from "../src/charts/lupi/flare-zoom";
 import { radialPatchworkDemo } from "../src/charts/lupi/radial-patchwork.data";
 import { TideKey } from "../src/charts/lupi/tide-key";
 import { sansWidth } from "../src/charts/util";
@@ -155,4 +157,81 @@ describe("the key fits a 390px phone", () => {
       expect(Math.max(...ends)).toBeLessThanOrEqual(PHONE);
     }
   );
+});
+
+const side = (o: number[], a: number[], b: number[]) =>
+  (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+
+/** Whether any two leaders, anchor to label end, cross. */
+const anyCross = (
+  anchors: [number, number][],
+  ends: [number, number][],
+  order: number[]
+) =>
+  order.some((a, row) =>
+    order.some((b, other) => {
+      const [p1, p2, q1, q2] = [anchors[a], ends[row], anchors[b], ends[other]];
+      return (
+        other > row &&
+        side(p1, p2, q1) * side(p1, p2, q2) < 0 &&
+        side(q1, q2, p1) * side(q1, q2, p2) < 0
+      );
+    })
+  );
+
+describe("leaders never cross", () => {
+  it("even where sorting the anchors by y alone would cross them", () => {
+    // Sorted by y, the nearer anchor takes the top label and its leader cuts the other's.
+    const anchors: [number, number][] = [
+      [100, 60],
+      [20, 62],
+    ];
+    const ends: [number, number][] = [
+      [200, 20],
+      [200, 40],
+    ];
+    expect(anyCross(anchors, ends, [0, 1])).toBe(true);
+    expect(anyCross(anchors, ends, leaderOrder(anchors, ends))).toBe(false);
+  });
+
+  it("whatever the order the parts come in", () => {
+    const ends: [number, number][] = [
+      [200, 30],
+      [200, 70],
+      [200, 110],
+      [200, 150],
+    ];
+    const anchors: [number, number][] = [
+      [90, 120],
+      [30, 40],
+      [60, 140],
+      [120, 80],
+    ];
+    expect(anyCross(anchors, ends, leaderOrder(anchors, ends))).toBe(false);
+  });
+
+  it("refuses more parts than it can set", () => {
+    const seven: [number, number][] = Array.from({ length: 7 }, (_, k) => [
+      k,
+      k,
+    ]);
+    expect(() => leaderOrder(seven, seven)).toThrow("at most");
+  });
+});
+
+describe("the flare key zooms to the flare", () => {
+  const flare = { hour: 14.33, minutes: 40, size: 2 };
+
+  it("fills the box, however small the flare is beside the biggest", () => {
+    const { dial, span } = zoomFlare(box, flare, 100);
+    const wide = box.size;
+    expect(dial.R).toBeGreaterThan(wide / 2);
+    expect(span.reach - dial.r0).toBeGreaterThan(wide / 4);
+  });
+
+  it("keeps the flare's own angles and its reach as a share of the dial", () => {
+    const { dial, span } = zoomFlare(box, flare, 100);
+    expect(span.a0).toBeCloseTo(14.33 * 15);
+    expect((span.reach - dial.r0) / (dial.R - dial.r0)).toBeCloseTo(0.02);
+  });
 });

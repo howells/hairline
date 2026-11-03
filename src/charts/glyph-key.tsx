@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { DataTable } from "./data-table";
 import { GLYPH_KEY_HEIGHT, GLYPH_KEY_PAD } from "./glyph-box";
 import type { GlyphBox, GlyphPart } from "./glyph-box";
+import { leaderOrder } from "./glyph-leaders";
 import { HRule } from "./rules";
 import { ChartSvg } from "./svg";
 import { Label } from "./text";
@@ -16,7 +17,7 @@ interface GlyphKeyProps {
   defs?: ReactNode;
   /** Names the exemplar for screen readers: "How to read one flare: M6.4 at 14:20 UTC". */
   label: string;
-  /** The labelled parts, each a point on the glyph. */
+  /** The labelled parts, each a point on the glyph, in any order: the key sets them so no leader crosses another. */
   parts: GlyphPart[];
   /** Which record the glyph draws, in the chart's own words: "Brazil, 2019". */
   record: string;
@@ -42,13 +43,18 @@ const LEADER_DROP = -4;
 export const GlyphKey = (props: GlyphKeyProps) => {
   const { box } = props;
   const labelX = Math.round(box.cx + box.size / 2 + LABEL_GAP);
-  // Top to bottom by where each part sits, so leaders do not cross.
-  const parts = props.parts.toSorted((a, b) => a.at[1] - b.at[1]);
-  const row = (GLYPH_KEY_HEIGHT - GLYPH_KEY_PAD * 2) / parts.length;
-  const rows = parts.map((part, k) => ({
-    part,
-    y: Math.round(GLYPH_KEY_PAD + row * k + row / 2),
-  }));
+  const count = props.parts.length;
+  const row = (GLYPH_KEY_HEIGHT - GLYPH_KEY_PAD * 2) / count;
+  const ys = props.parts.map((_, k) =>
+    Math.round(GLYPH_KEY_PAD + row * k + row / 2)
+  );
+  // The order of the labels that lets no two leaders cross.
+  const order = leaderOrder(
+    props.parts.map((p) => p.at),
+    ys.map((y) => [labelX - 8, y + LEADER_DROP])
+  );
+  const rows = order.map((a, k) => ({ part: props.parts[a], y: ys[k] }));
+  const parts = rows.map((r) => r.part);
   const meanings = parts.map((p) => `${p.name}: ${p.detail}`);
   return (
     <div>

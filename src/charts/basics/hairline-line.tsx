@@ -273,6 +273,34 @@ const valueLabelBoxes = (
     )
   );
 
+interface LineFrameArgs {
+  axis: ValueAxis;
+  domain: [number, number] | undefined;
+  extent: { hi: number; lo: number };
+  floor: number;
+  noted: boolean;
+  readings: Reading[];
+  width: number;
+}
+
+/** The frame's edges and scales; a left axis keeps its margin outside the grid. */
+const lineFrame = (a: LineFrameArgs) => {
+  const room = axisRoom(a.axis);
+  const frameW = Math.min(a.width - 16, 680 + room.left);
+  const x0 = Math.round((a.width - frameW) / 2) + room.left;
+  const x1 = x0 + frameW - room.left;
+  const y = valueScaleOf(a.extent, a.floor, a.noted ? NOTED_TOP : 40, a.domain);
+  const { dayAt, xScale } = dayScaleOf(a.readings, { end: room.right, x0, x1 });
+  const frame: Frame = {
+    floor: a.floor,
+    x: (i) => xScale(dayAt(i)),
+    x0,
+    x1,
+    y,
+  };
+  return { dayAt, frame, xScale };
+};
+
 const HairlineLineSvg = ({
   axis,
   clear,
@@ -308,28 +336,16 @@ const HairlineLineSvg = ({
   const last = live.at(-1) ?? 0;
   const [first] = live;
   const hero = heroOf(readings, live, emphasis, { peak, trough }[extreme]);
-  const room = axisRoom(axis);
-  const frameW = Math.min(width - 16, 680 + room.left);
-  const x0 = Math.round((width - frameW) / 2) + room.left;
-  const x1 = x0 + frameW - room.left;
-  const y = valueScaleOf(
-    { hi, lo },
+  const { dayAt, frame, xScale } = lineFrame({
+    axis,
+    domain,
+    extent: { hi, lo },
     floor,
-    notes.length > 0 ? NOTED_TOP : 40,
-    domain
-  );
-  const { dayAt, xScale } = dayScaleOf(readings, {
-    end: room.right,
-    x0,
-    x1,
+    noted: notes.length > 0,
+    readings,
+    width,
   });
-  const frame: Frame = {
-    floor,
-    x: (i) => xScale(dayAt(i)),
-    x0,
-    x1,
-    y,
-  };
+  const { x0, x1, y } = frame;
   const path = linePath(readings, frame);
   const label = `Daily values, ${fmtDate(readings[first].date)} to ${fmtDate(readings[last].date)}: high ${format(hi)} on ${fmtDate(readings[peak].date)}, low ${format(lo)} on ${fmtDate(readings[trough].date)}, latest ${format(valueAt(readings, last))}`;
 

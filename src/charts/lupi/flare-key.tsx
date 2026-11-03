@@ -3,9 +3,9 @@ import { GlyphKey } from "../glyph-key";
 import { CrossHatch } from "../texture";
 import { paint, useTextureIds } from "../texture-ids";
 import { FlareWedge } from "./flare-wedge";
+import { zoomFlare } from "./flare-zoom";
 import type { PatchworkEvent } from "./radial-patchwork.data";
-import { clock, hhmm, spanOf } from "./util-a";
-import type { Dial } from "./util-a";
+import { clock, hhmm } from "./util-a";
 
 interface FlareKeyProps {
   data: PatchworkEvent[];
@@ -26,7 +26,20 @@ const exemplarOf = (data: PatchworkEvent[]) => {
   return best;
 };
 
-/** One real flare drawn large on its own dial, its start, width, reach and hatch named. */
+/** An arc of the inner ring between two clock angles. */
+const ringPath = (
+  dial: { cx: number; cy: number; r0: number },
+  [a0, a1]: readonly [number, number]
+) => {
+  const [x0, y0] = clock(dial.cx, dial.cy, dial.r0, a0);
+  const [x1, y1] = clock(dial.cx, dial.cy, dial.r0, a1);
+  return `M${x0} ${y0}A${dial.r0} ${dial.r0} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1} ${y1}`;
+};
+
+/**
+ * One real flare drawn to fill the key's box (the dial zoomed to the flare,
+ * not at the chart's scale), its start, width, reach and hatch named.
+ */
 export const FlareKey = (props: FlareKeyProps) => {
   const hero = useTextureIds("flare-key")("hero");
   const flare = exemplarOf(props.data);
@@ -34,15 +47,13 @@ export const FlareKey = (props: FlareKeyProps) => {
     return null;
   }
   const box = glyphBox(props.width);
-  // The chart's own proportions, drawn to fill the box.
-  const R = box.size / 2 - 4;
-  const dial: Dial = { R, cx: box.cx, cy: box.cy, r0: R * 0.12 };
-  const span = spanOf(
-    dial,
+  const { dial, ring, span } = zoomFlare(
+    box,
     flare,
     Math.max(1, ...props.data.map((d) => d.size))
   );
   const mid = (span.a0 + span.a1) / 2;
+  const middle = (dial.r0 + span.reach) / 2;
   const meaning = `${props.outlined.charAt(0).toUpperCase()}${props.outlined.slice(1)}`;
   return (
     <GlyphKey
@@ -51,17 +62,17 @@ export const FlareKey = (props: FlareKeyProps) => {
       label={`How to read one flare: ${flare.label} at ${hhmm(flare.hour)} UTC`}
       parts={[
         {
-          at: clock(dial.cx, dial.cy, dial.R, span.a0),
+          at: clock(dial.cx, dial.cy, middle, span.a0),
           detail: `${hhmm(flare.hour)} UTC`,
           name: "Start time",
         },
         {
-          at: clock(dial.cx, dial.cy, (span.reach + dial.r0) / 2, span.a1),
+          at: clock(dial.cx, dial.cy, span.reach, mid),
           detail: `${flare.minutes} minutes`,
           name: "Width",
         },
         {
-          at: clock(dial.cx, dial.cy, span.reach, mid),
+          at: clock(dial.cx, dial.cy, middle, span.a1),
           detail: `Peak ${flare.label}`,
           name: "Reach",
         },
@@ -71,7 +82,7 @@ export const FlareKey = (props: FlareKeyProps) => {
                 at: clock(
                   dial.cx,
                   dial.cy,
-                  dial.r0 + (span.reach - dial.r0) * 0.25,
+                  dial.r0 + (span.reach - dial.r0) * 0.3,
                   mid
                 ),
                 detail: meaning,
@@ -83,18 +94,7 @@ export const FlareKey = (props: FlareKeyProps) => {
       record={`${flare.label}, ${hhmm(flare.hour)} UTC`}
       width={props.width}
     >
-      <circle
-        className="rule shape-smooth fill-none"
-        cx={dial.cx}
-        cy={dial.cy}
-        r={dial.R}
-      />
-      <circle
-        className="rule shape-smooth fill-none"
-        cx={dial.cx}
-        cy={dial.cy}
-        r={dial.r0}
-      />
+      <path className="rule shape-smooth fill-none" d={ringPath(dial, ring)} />
       <FlareWedge dial={dial} fill={paint(hero)} span={span} />
     </GlyphKey>
   );
