@@ -1,5 +1,17 @@
 # @howells/hairline
 
+## 0.5.0
+
+### Minor Changes
+
+- 47a0248: Narrow charts no longer stagger labels onto two lines, where a label reads as its neighbour's. RungBars shortens a run of years the broadsheet way (2016, ’17, ’18) and, failing that, prints every other label, always keeping the hero's. Column headers in the matrix and rank strip wrap over their own column, breaking after a dash ("1996–" over "2010") or hyphenating a word too wide for it. The thread triptych sets each narrow heading's name over its count, leaning the middle ones away from each other. DumbbellQueue's rungs count in a round multiple of the unit when a narrow width would pack them solid, and a gap too short to space its rungs draws none. New in the kit: `fitBandLabels` and `headerLines` (`src/charts/band-labels.ts`).
+- 48d2b10: Every chart's hover now shows the one tip: the same paper card the pointer charts use, wrapped at a readable measure instead of one long dark pill. Tooltips are placed by the pointer model, so they never clip the chart. A tip that has no room above its mark stands beside it, and row charts (arrow plot, bullet, pyramid, bar race) put the tip beside their row's end instead of over the row above. `Tooltip` swaps its `below` boolean for `place` ("above", "below" or "beside") and gains `clear`. `placeTip` gains a `below` option.
+
+### Patch Changes
+
+- 3a8e3b7: A reference line's name that would sit on a mark at both ends of its line now looks along the line for a clear stretch, and RungBars counts its bars' bodies as marks to keep clear of, so "15 a year" no longer prints over a bar. CircularBeadGraph rings the selected bead a gap off its edge, so the selection reads apart from its ink neighbours. In the gallery, the coffee grid's column names slant shallow only where neighbours have two lines of air and its heads keep clear of the key at 390, the lighthouse owners' names stand at least 15px apart, and "From Germany" follows the page's palette instead of always going dark.
+- ff67a66: Numbers that read as round: a change that rounds to nothing prints "0%", never "−0%" (`fmtSignedPct`); the ridgeline's temperatures all carry one decimal so a column of them aligns; the calendar's tip groups thousands ("1,933 births"). PlumbScatter's tip drops its "X" and "Y" names (its values carry their units) and keeps off the names the chart prints, so it no longer sits on the hero's name plate.
+
 ## 0.4.1
 
 ### Patch Changes
