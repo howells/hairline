@@ -144,7 +144,7 @@ const Tip = (props: TipProps) => {
   return (
     <div
       aria-hidden="true"
-      className={`bg-paper text-ink text-tick/normal absolute z-10 rounded-sm border px-3 py-2 whitespace-nowrap tabular-nums [&_b]:font-semibold ${pinned ? "border-ink" : "border-l5"} transition-tip`}
+      className={`bg-paper text-ink text-tick/normal absolute z-10 w-max max-w-72 rounded-sm border px-3 py-2 text-pretty tabular-nums [&_b]:font-semibold ${pinned ? "border-ink" : "border-l5"} transition-tip`}
       data-hl-pointer={props.id}
       data-settled="false"
       data-hl-tip={pinned ? "pinned" : "hover"}
@@ -169,7 +169,7 @@ const Tip = (props: TipProps) => {
             <span className="text-muted">{row.name}</span>
           )}
           <span
-            className={`font-semibold ${row.name === undefined ? "" : "ml-auto pl-4"}`}
+            className={`${row.muted === true ? "" : "font-semibold"} ${row.name === undefined ? "" : "ml-auto pl-4"}`}
           >
             {row.value}
           </span>
