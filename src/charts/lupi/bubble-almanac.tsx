@@ -64,8 +64,17 @@ const twoDecimals = d3Format(".2f");
 const cellId = (d: { category: string; year: number }) =>
   `${d.category}-${d.year}`;
 
-/** Slant of the column names, in degrees: steeper when columns are tight. */
-const headTilt = (colPitch: number) => (colPitch < 50 ? -60 : -24);
+/** How far above the first row a slanted head starts, px. */
+const HEAD_DROP = 14;
+/** Room across their slant between two neighbouring column names, px: two lines. */
+const HEAD_AIR = 26;
+const SHALLOW = 24;
+/**
+ * Slant of the column names, in degrees: shallow only where neighbours stand
+ * two lines apart across it, so a long name never runs on over the next.
+ */
+const headTilt = (colPitch: number) =>
+  colPitch * Math.sin((SHALLOW * Math.PI) / 180) >= HEAD_AIR ? -SHALLOW : -60;
 
 /** Gap between a circle's top and its figure's baseline. */
 const lift = (hero: boolean) => (hero ? 7 : 5);
@@ -123,7 +132,13 @@ const almanacLayout = (
   }
   const gridW = colPitch * categories.length;
   const x0 = left + Math.max(0, (width - left - rightFor(colPitch)) / 2);
-  const top = 72;
+  // The slanted heads stand above the first row; the room above it is the
+  // tallest head's rise, so the longest name never reaches the key.
+  const rise = Math.sin((-headTilt(colPitch) * Math.PI) / 180);
+  const top = Math.max(
+    72,
+    Math.ceil(HEAD_DROP + 6 + Math.max(...nameW) * rise)
+  );
   const rowPitch = Math.max(20, (height - top - 8 - noteH) / years.length);
   // The largest bubble fits its cell with a clear gap to every neighbour,
   // counting the hero's 2px outline, so no two bubbles ever touch.
@@ -181,7 +196,7 @@ const Ledger = (props: { layout: AlmanacLayout }) => {
           muted
           order={k}
           tier="mark"
-          transform={`translate(${colX(category) - colPitch * 0.2},${rowY(years[0]) - rowPitch * 0.5 - 14}) rotate(${headTilt(colPitch)})`}
+          transform={`translate(${colX(category) - colPitch * 0.2},${rowY(years[0]) - rowPitch * 0.5 - HEAD_DROP}) rotate(${headTilt(colPitch)})`}
           voice="label"
         >
           {category}

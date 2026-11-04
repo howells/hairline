@@ -7,6 +7,7 @@ import { HitRect, TipText } from "../hover";
 import { Ring } from "../markers";
 import { DOT } from "../marks";
 import { FootNote } from "../plot-note";
+import { relax } from "../spread";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { CrossHatch, Hatch } from "../texture";
@@ -57,6 +58,8 @@ interface Layout {
   /** Each light's row, grouped by keeper (whole px). */
   yItem: (i: number) => number;
   yOwner: (o: string) => number;
+  /** Where an owner's label stands: its node's y, nudged clear of its neighbours. */
+  yOwnerLabel: (o: string) => number;
   rOf: (c: number) => number;
   /** Height the stacks, fans and any footnote need. */
   height: number;
@@ -66,6 +69,8 @@ interface Layout {
 
 /** Leading of a wrapped owner label; node to label gap; margin at the edge. */
 const OWNER_LINE = 12;
+/** The least distance between two owners' labels, px (the house line-end rule). */
+const LABEL_MIN_GAP = 15;
 const OWNER_GAP = 10;
 const OWNER_EDGE = 4;
 /** Empty rows between two owners' stacks; radius of one light's hollow dot. */
@@ -173,9 +178,15 @@ const layoutFor = (
       ),
     ])
   );
+  const height2 = Math.round(top + pitch * (rows - 1) + 12 + noteH);
+  // Small owners sit a pitch apart; their labels are nudged to the house
+  // 15px, never closer, inside the plot.
+  const nodeYs = owners.map((o) => ownerY.get(o.owner) ?? top);
+  const labelYs = relax(nodeYs, LABEL_MIN_GAP, top, height2 - noteH - 6);
+  const labelY = new Map(owners.map((o, k) => [o.owner, labelYs[k]]));
   return {
     blockW,
-    height: Math.round(top + pitch * (rows - 1) + 12 + noteH),
+    height: height2,
     left,
     ownerLines,
     pitch,
@@ -188,6 +199,7 @@ const layoutFor = (
     xTick1: left + DOT_R * 2 + 2,
     yItem,
     yOwner: (o) => ownerY.get(o) ?? top,
+    yOwnerLabel: (o) => labelY.get(o) ?? ownerY.get(o) ?? top,
   };
 };
 
@@ -354,7 +366,7 @@ const Owners = ({
             owner={o.owner}
             rank={o.rank}
             x={at.xOwner + r + OWNER_GAP}
-            y={y}
+            y={at.yOwnerLabel(o.owner)}
           />
         </g>
       );
