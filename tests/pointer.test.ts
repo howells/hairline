@@ -471,12 +471,16 @@ describe("the pointer on real charts", () => {
       expect(text.indexOf("Returns")).toBeLessThan(text.indexOf("Total"));
     });
 
-    it("PlumbScatter: the point's name, then its x and y", async () => {
+    it("PlumbScatter: the point's name, then its x and y as bare values", async () => {
       const { host, svg } = await mount(points);
       await key(svg, "Home");
-      expect(tipOf(host)?.querySelector("b")?.textContent).toBe("Oak");
-      expect(tipText(host)).toContain("X");
-      expect(tipText(host)).toContain("Y");
+      const tip = tipOf(host);
+      expect(tip?.querySelector("b")?.textContent).toBe("Oak");
+      // Two value rows, no "X" and "Y" names: the values carry their units.
+      expect(tip?.querySelectorAll(":scope > div.mt-1")).toHaveLength(2);
+      expect(
+        tip?.querySelectorAll(":scope > div.mt-1 .text-muted")
+      ).toHaveLength(0);
     });
 
     it("HairlineLine: the date, then the value, with a crosshair and a ringed dot on the day", async () => {

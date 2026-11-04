@@ -89,6 +89,27 @@ export type Range = readonly [number, number];
 /** The y-ranges to keep off under an x-extent: the line, its labels, the notes, or the row. */
 export type Avoid = (x0: number, x1: number) => readonly Range[];
 
+/** A box the chart prints, in the tip's pixels. */
+export interface Box {
+  bottom: number;
+  left: number;
+  right: number;
+  top: number;
+}
+
+/** What to avoid made from printed boxes: the y-range of each box under the tip's x-extent. */
+export const avoidBoxes =
+  (boxes: readonly Box[]): Avoid =>
+  (x0, x1) => {
+    const ranges: Range[] = [];
+    for (const b of boxes) {
+      if (b.right >= x0 && b.left <= x1) {
+        ranges.push([b.top, b.bottom]);
+      }
+    }
+    return ranges;
+  };
+
 export interface PlaceOptions {
   /**
    * Stand above the mark, centred on it, this far over its anchor (a column

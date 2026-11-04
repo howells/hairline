@@ -103,7 +103,7 @@ const facets: GalleryEntry[] = [
   },
 ];
 
-const percent = (v: number) => `${v}%`;
+const percent = (v: number) => `${Math.round(v)}%`;
 
 /** The reference marks and the interval marks: a target, a band, a fan, error bars. */
 const marks: GalleryEntry[] = [
@@ -142,7 +142,8 @@ const marks: GalleryEntry[] = [
       <DumbbellQueue
         alert="none"
         data={dumbbellQueueDemo}
-        format={(v) => `${v}m`}
+        ends={["0m", "10m"]}
+        format={(v) => `${v.toFixed(1)}m`}
         references={[{ emphasis: "above", label: "6m", value: 6 }]}
         unit={0.25}
       />

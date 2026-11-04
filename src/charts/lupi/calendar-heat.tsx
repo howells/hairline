@@ -1,7 +1,7 @@
 import { utcFormat } from "d3-time-format";
 import type { PointerEvent } from "react";
 
-import { monthTickLabels } from "../../lib/format";
+import { fmtInt, monthTickLabels } from "../../lib/format";
 import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { useHover } from "../hooks";
@@ -394,7 +394,7 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
                 y={cellY(g, hovered) - 4}
               >
                 <TipText
-                  facts={[`${hovered.value} ${unit}`]}
+                  facts={[`${fmtInt(hovered.value)} ${unit}`]}
                   lead={dayLabel(new Date(hovered.t))}
                 />
               </Tooltip>

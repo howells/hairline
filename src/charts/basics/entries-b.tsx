@@ -30,7 +30,7 @@ export const entries: GalleryEntry[] = [
     name: "Museum visits",
     render: () => (
       <DumbbellQueue
-        alert="fall"
+        alert="none"
         data={dumbbellQueueDemo}
         ends={["0", "Millions of visits"]}
         format={(v) => v.toFixed(1)}

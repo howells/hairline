@@ -62,6 +62,7 @@ export {
   nearest,
   STEP_KEYS,
   stepTo,
+  avoidBoxes,
   placeTip,
   spoken,
 } from "./charts/pointer-model";
@@ -71,6 +72,7 @@ export type {
   Placement,
   Range,
   Avoid,
+  Box,
   PlaceOptions,
 } from "./charts/pointer-model";
 export { HRule, VRule, Stem, Tick, HGrid, VGrid, Cursor } from "./charts/rules";
