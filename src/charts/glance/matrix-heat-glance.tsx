@@ -2,6 +2,7 @@ import { scaleQuantize } from "d3-scale";
 import { useState } from "react";
 
 import type { NoteProps } from "../../schema/options";
+import { HEAD_LINE, headerLines } from "../band-labels";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
 import { KEY } from "../marks";
@@ -272,10 +273,12 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
         const x0 = Math.round(
           (width - names - labelGap - gridW) / 2 + names + labelGap
         );
-        // Names wider than a tile alternate between two heights.
-        const crowded =
-          Math.max(...data.columns.map((c) => textWidth(c, "t-label"))) > cell;
-        const top = crowded ? 40 : 26;
+        // Names wider than their column wrap over it, never onto a neighbour's line.
+        const heads = data.columns.map((c) =>
+          headerLines(c, cell + gap - 4, (t) => textWidth(t, "t-label"))
+        );
+        const top =
+          26 + (Math.max(...heads.map((h) => h.length)) - 1) * HEAD_LINE;
         const pitch = snapTile(Math.min(cell * 0.86, 76));
         const keyY = top + nR * pitch + gap * (nR - 1) + 18;
         const height =
@@ -296,18 +299,20 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
                 <DotScreen key={r} id={tex(`s${k}`)} r={r} tone="fill-l3" />
               ))}
             </defs>
-            {data.columns.map((c, j) => (
-              <Label
-                anchor="middle"
-                key={c}
-                muted
-                voice="label"
-                x={x0 + j * (cell + gap) + cell / 2}
-                y={top - 12 - (crowded && j % 2 === 0 ? 14 : 0)}
-              >
-                {c}
-              </Label>
-            ))}
+            {data.columns.map((c, j) =>
+              heads[j].map((line, k) => (
+                <Label
+                  anchor="middle"
+                  key={`${c}-${line}`}
+                  muted
+                  voice="label"
+                  x={x0 + j * (cell + gap) + cell / 2}
+                  y={top - 12 - (heads[j].length - 1 - k) * HEAD_LINE}
+                >
+                  {line}
+                </Label>
+              ))
+            )}
             <TileRows
               cell={cell}
               data={data}

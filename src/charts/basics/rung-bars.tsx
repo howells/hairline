@@ -6,6 +6,7 @@ import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
 import type { FontMetrics } from "../../schema/metrics";
 import type { RungBarsProps, RungDatum } from "../../schema/rung-bars";
+import { fitBandLabels } from "../band-labels";
 import { Plot } from "../core";
 import { DimGroup } from "../hover";
 import { FootNote } from "../plot-note";
@@ -43,23 +44,6 @@ const TENS_REACH = 3;
 const LABEL_ROOM = 8;
 /** How far above a column's top its tip stands: clear of the value on top, px. */
 const LABEL_ROOM_ABOVE = 28;
-/** How far the second line of bar labels sits below the first, px. */
-const LABEL_STEP = 14;
-
-/**
- * True when two neighbouring labels, each centred on its bar, would touch:
- * then every other label drops to a second line, as a narrow chart needs.
- */
-const labelsCollide = (
-  labels: readonly string[],
-  step: number,
-  metrics: FontMetrics | undefined
-) => {
-  const widths = labels.map((label) => sansWidth(label, undefined, metrics));
-  return widths
-    .slice(1)
-    .some((width, i) => (widths[i] + width) / 2 + LABEL_ROOM > step);
-};
 
 interface Ladder {
   bandwidth: number;
@@ -75,8 +59,8 @@ interface Ladder {
   /** Stepped back: a reference line asks for ink and this bar falls short. */
   back: boolean;
   index: number;
-  /** How far below the first line this bar's label sits: 0, or LABEL_STEP. */
-  labelDrop: number;
+  /** The label printed under the bar; null when a narrow chart thins it out. */
+  shown: string | null;
   left: number;
   pitch: number;
   rungs: number;
@@ -187,15 +171,17 @@ const LadderBar = (props: Ladder) => {
             : props.format(props.datum.value)}
         </Label>
       )}
-      <Label
-        anchor="middle"
-        muted
-        voice="label"
-        x={centre}
-        y={props.floor + 18 + props.labelDrop}
-      >
-        {props.datum.label}
-      </Label>
+      {props.shown === null ? null : (
+        <Label
+          anchor="middle"
+          muted
+          voice="label"
+          x={centre}
+          y={props.floor + 18}
+        >
+          {props.shown}
+        </Label>
+      )}
     </DimGroup>
   );
 };
@@ -278,12 +264,14 @@ const SIDE = 16;
 
 /**
  * The bars' bands across the width, centred and at most 120px a bar, and
- * whether their labels need two lines to clear each other.
+ * the labels that fit under them: shortened years or every other one when
+ * a narrow chart has no room for all (the hero's always prints).
  */
 const bands = (
   data: RungDatum[],
   width: number,
-  metrics: FontMetrics | undefined
+  metrics: FontMetrics | undefined,
+  keep: readonly number[]
 ) => {
   const plotWidth = Math.min(width - SIDE * 2, data.length * 120);
   const x0 = (width - plotWidth) / 2;
@@ -292,12 +280,16 @@ const bands = (
     .range([x0, x0 + plotWidth])
     .paddingInner(0.42)
     .paddingOuter(0.3);
-  const alternate = labelsCollide(
+  const shown = fitBandLabels(
     data.map((d) => d.label),
-    x.step(),
-    metrics
+    {
+      keep,
+      measure: (label) => sansWidth(label, undefined, metrics),
+      room: LABEL_ROOM,
+      step: x.step(),
+    }
   );
-  return { alternate, plotWidth, x, x0 };
+  return { plotWidth, shown, x, x0 };
 };
 
 interface LayoutOptions {
@@ -308,8 +300,8 @@ interface LayoutOptions {
   max: number;
   metrics: FontMetrics | undefined;
   note: string | undefined;
-  /** The chart shares its max with others, so it keeps one pitch and one floor. */
-  sharedMax: boolean;
+  /** Bars whose labels must print, like the hero's. */
+  keep: readonly number[];
   width: number;
 }
 
@@ -319,10 +311,8 @@ const layout = (o: LayoutOptions) => {
     bottom: 30 + noteSpace(o.note, o.width - 16, 20, o.metrics),
     top: 28,
   };
-  const { alternate, plotWidth, x, x0 } = bands(o.data, o.width, o.metrics);
-  // A shared max keeps room for a second line of labels either way,
-  // so charts set side by side keep one pitch and one floor.
-  const bottom = margin.bottom + (alternate || o.sharedMax ? LABEL_STEP : 0);
+  const { plotWidth, shown, x, x0 } = bands(o.data, o.width, o.metrics, o.keep);
+  const { bottom } = margin;
   const pitch = rungPitch(o.height - bottom - margin.top, o.max);
   // When the pitch reaches its cap the columns stop short of the
   // room, so the plot closes up round them instead of leaving air;
@@ -340,12 +330,12 @@ const layout = (o: LayoutOptions) => {
     Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
   );
   return {
-    alternate,
     fitted,
     floor: Math.round(fitted - bottom),
     pitch,
     plotWidth,
     shadow,
+    shown,
     x,
     x0,
   };
@@ -400,14 +390,20 @@ const RungBarsSvg = ({
   width,
 }: SvgProps) => {
   const { fixedHeight, height, largest, unit, values } = scale;
-  const { alternate, fitted, floor, pitch, plotWidth, shadow, x, x0 } = layout({
+  // Emphasis is by key (id, else label) so sorting never moves it;
+  // none given, the largest. A key that names no bar emphasises none.
+  const hero =
+    props.emphasis === undefined
+      ? maxIndex(values)
+      : data.findIndex((d) => keyOf(d) === props.emphasis);
+  const { fitted, floor, pitch, plotWidth, shadow, shown, x, x0 } = layout({
     data,
     fixedHeight,
     height,
+    keep: hero >= 0 ? [hero] : [],
     max: largest / unit,
     metrics: props.metrics,
     note: noteOf(props),
-    sharedMax: props.max !== undefined,
     width,
   });
   const keys = reactKeys(data);
@@ -419,12 +415,6 @@ const RungBarsSvg = ({
   };
   // A value's height: one pitch for each unit, up from the floor.
   const valueY = (v: number) => floor - (v / unit) * pitch;
-  // Emphasis is by key (id, else label) so sorting never moves it;
-  // none given, the largest. A key that names no bar emphasises none.
-  const hero =
-    props.emphasis === undefined
-      ? maxIndex(values)
-      : data.findIndex((d) => keyOf(d) === props.emphasis);
   const valueSpots = valueSpotsOf(data, { floor, pitch, unit, x });
   // A reference line that asks for ink decides each bar's tone instead.
   const standing = (index: number) =>
@@ -489,7 +479,7 @@ const RungBarsSvg = ({
               back={standing(index) === false}
               hero={standing(index) ?? hero === index}
               index={index}
-              labelDrop={alternate && index % 2 === 1 ? LABEL_STEP : 0}
+              shown={shown[index] ?? null}
               left={x(index) ?? 0}
               pitch={pitch}
               rungs={Math.max(0, Math.round((datum.value ?? 0) / unit))}

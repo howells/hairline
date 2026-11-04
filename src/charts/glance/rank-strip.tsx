@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import type { NoteProps } from "../../schema/options";
 import { crisp } from "../axes";
+import { HEAD_LINE, headerLines } from "../band-labels";
 import { Plot, Tooltip } from "../core";
 import { DimGroup, TipText } from "../hover";
 import { FootNote } from "../plot-note";
@@ -262,11 +263,13 @@ export const RankStrip = (props: RankStripProps) => {
           ring: rowGap / 2,
           x0: labelW + Math.max(0, (width - labelW - deltaW - gridW) / 2),
         };
-        // Period names wider than a tile alternate between two heights.
-        const crowded =
-          Math.max(...header.map((h) => textWidth(h.part, "t-label"))) + 4 >
-          cell + gap;
-        const top = (hasYears ? 46 : 28) + (crowded ? 14 : 0);
+        // Period names wider than their column wrap over it ("1996–" over
+        // "2010"), never onto a neighbour's line.
+        const heads = header.map((h) =>
+          headerLines(h.part, cell + gap - 4, (t) => textWidth(t, "t-label"))
+        );
+        const extra = (Math.max(...heads.map((l) => l.length)) - 1) * HEAD_LINE;
+        const top = (hasYears ? 46 : 28) + extra;
         const height =
           props.height ??
           top +
@@ -292,20 +295,23 @@ export const RankStrip = (props: RankStripProps) => {
                     anchor="middle"
                     voice="axis"
                     x={geo.x0 + j * (cell + gap) + cell / 2}
-                    y={top - 30}
+                    y={top - 30 - extra}
                   >
                     {h.year}
                   </Label>
                 )}
-                <Label
-                  anchor="middle"
-                  muted
-                  voice="label"
-                  x={geo.x0 + j * (cell + gap) + cell / 2}
-                  y={top - 12 - (crowded && j % 2 === 0 ? 14 : 0)}
-                >
-                  {h.part}
-                </Label>
+                {heads[j].map((line, k) => (
+                  <Label
+                    anchor="middle"
+                    key={line}
+                    muted
+                    voice="label"
+                    x={geo.x0 + j * (cell + gap) + cell / 2}
+                    y={top - 12 - (heads[j].length - 1 - k) * HEAD_LINE}
+                  >
+                    {line}
+                  </Label>
+                ))}
               </g>
             ))}
             {rows.map((s, i) => (
