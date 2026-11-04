@@ -53,6 +53,42 @@ const sideLabels = (format: (v: number) => string): SideLabels => ({
 
 /** Height of a change rung. */
 const RUNG_H = 8;
+/** The least distance between two rungs' starts: a 2px rung and 3px of air. */
+const RUNG_PITCH = 5;
+
+/**
+ * The unit a gap's rungs count in: the given one, or the first round multiple
+ * of it (2, 5, 10, 20…) whose rungs stand at least RUNG_PITCH apart.
+ */
+/** The room one unit's rung gets in the gap of the row that changed most, px. */
+const widestRoom = (data: DumbbellDatum[], layout: Layout, unit: number) => {
+  let widest: DumbbellDatum | undefined;
+  for (const d of data) {
+    if (
+      widest === undefined ||
+      Math.abs(d.before - d.after) > Math.abs(widest.before - widest.after)
+    ) {
+      widest = d;
+    }
+  }
+  if (widest === undefined) {
+    return Infinity;
+  }
+  const units = Math.abs(widest.before - widest.after) / unit;
+  const room =
+    Math.abs(layout.x(widest.after) - layout.x(widest.before)) -
+    2 * (layout.dotR + 3);
+  return units > 0 ? room / units : Infinity;
+};
+
+const roomyUnit = (unit: number, perUnit: number) => {
+  for (const scale of [1, 2, 5, 10, 20, 50, 100]) {
+    if (perUnit * scale >= RUNG_PITCH) {
+      return unit * scale;
+    }
+  }
+  return unit * 100;
+};
 
 /**
  * One 2px rung per unit of change, spaced evenly in the gap between the two
@@ -72,7 +108,9 @@ const ChangeRungs = (props: {
   const dir = Math.sign(xa - xb);
   const gap0 = xb + dir * (layout.dotR + 3);
   const gap1 = xa - dir * (layout.dotR + 3);
-  const count = Math.round(Math.abs(datum.before - datum.after) / props.unit);
+  const units = Math.round(Math.abs(datum.before - datum.after) / props.unit);
+  // A gap too short to space its rungs draws none: the two dots say it.
+  const count = Math.abs(gap1 - gap0) / units >= RUNG_PITCH ? units : 0;
   const worse =
     (props.alert === "rise" && datum.after > datum.before) ||
     (props.alert === "fall" && datum.after < datum.before);
@@ -256,6 +294,10 @@ const DumbbellSvg = ({
   const [lowEnd, highEnd] = layout.x.domain();
   const ends = props.ends ?? [format(lowEnd), format(highEnd)];
   const endsY = height - (noteOf(props) === undefined ? 10 : 40);
+  // At a narrow width a rung per unit would pack the gaps solid, so the
+  // rungs count in the next round multiple that gives the biggest change's
+  // rungs air; a gap too short for its rungs then draws none.
+  const rungUnit = roomyUnit(unit, widestRoom(data, layout, unit));
   return (
     <ChartSvg
       desc={[summary(data, format), referenceDesc(props.references, format)]
@@ -284,7 +326,7 @@ const DumbbellSvg = ({
           key={keys[i]}
           layout={layout}
           onHover={hover.showAt(i)}
-          unit={unit}
+          unit={rungUnit}
           width={width}
         />
       ))}
@@ -307,7 +349,7 @@ const DumbbellSvg = ({
           key={keys[i]}
           layout={layout}
           onHover={hover.showAt(i)}
-          unit={unit}
+          unit={rungUnit}
           width={width}
         />
       ))}

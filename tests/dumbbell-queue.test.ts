@@ -73,6 +73,31 @@ describe("a consumer renders DumbbellQueue through the registry", () => {
     expect(html).not.toContain("9.204m");
   });
 
+  it("at a narrow width rungs keep air between them, never packing a gap solid", () => {
+    const museums: DumbbellDatum[] = [
+      { after: 8.85, before: 5.99, label: "Tate" },
+      { after: 5.19, before: 4.16, label: "Science" },
+    ];
+    for (const width of [300, 480, 900]) {
+      const html = render({ data: museums, height: 240, unit: 0.25, width });
+      const byRow = new Map<string, number[]>();
+      for (const m of html.matchAll(
+        /<rect class="grow-y[^"]*"[^>]*x="(?<x>[\d.-]+)" y="(?<y>[\d.-]+)"/gu
+      )) {
+        const y = m.groups?.y ?? "";
+        byRow.set(y, [...(byRow.get(y) ?? []), Number(m.groups?.x)]);
+      }
+      expect(byRow.size).toBeGreaterThan(0);
+      for (const xs of byRow.values()) {
+        const sorted = xs.toSorted((p, q) => p - q);
+        for (const [i, x] of sorted.slice(1).entries()) {
+          expect(x - sorted[i]).toBeGreaterThanOrEqual(5);
+        }
+      }
+      expect(rungs(html)).toBeGreaterThan(0);
+    }
+  });
+
   it("an invalid payload returns path-specific issues", () => {
     const bad = chart.validate({
       data: [{ after: "12", before: 1, label: "a" }, { label: "b" }],

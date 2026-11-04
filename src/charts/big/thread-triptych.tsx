@@ -57,8 +57,8 @@ interface Triptych {
 }
 
 const HEADER_Y = 12;
-/** A second heading row, for middle columns too close to share one. */
-const HEADER_Y2 = 29;
+/** The count's row under a narrow plot's heading names. */
+const HEADER_Y2 = 26;
 /** Smallest vertical gap between middle-column labels at rest. */
 const LABEL_GAP = 18;
 const TOP = 46;
@@ -383,21 +383,38 @@ const Heading = (props: {
   anchor: "end" | "middle" | "start";
   count: number;
   label: string;
+  /** Name over count, as a narrow plot sets every heading. */
+  stacked: boolean;
   x: number;
   y: number;
-}) => (
-  <Label
-    anchor={props.anchor}
-    className="fade"
-    muted
-    voice="label"
-    x={props.x}
-    y={props.y}
-  >
-    <tspan>{props.label}</tspan>{" "}
-    <tspan className="t-value">{props.count}</tspan>
-  </Label>
-);
+}) =>
+  props.stacked ? (
+    <g className="fade">
+      <Label anchor={props.anchor} muted voice="label" x={props.x} y={props.y}>
+        {props.label}
+      </Label>
+      <Label
+        anchor={props.anchor}
+        voice="value"
+        x={props.x}
+        y={props.y + HEADER_Y2 - HEADER_Y}
+      >
+        {props.count}
+      </Label>
+    </g>
+  ) : (
+    <Label
+      anchor={props.anchor}
+      className="fade"
+      muted
+      voice="label"
+      x={props.x}
+      y={props.y}
+    >
+      <tspan>{props.label}</tspan>{" "}
+      <tspan className="t-value">{props.count}</tspan>
+    </Label>
+  );
 
 const Headings = (props: {
   headings: string[];
@@ -408,9 +425,9 @@ const Headings = (props: {
   const { wide, xs } = props.triptych;
   const last = xs.length - 1;
   // Each heading sits on its column's label edge; narrow plots hide middle
-  // labels, so those headings centre on their ticks, alternating between two
-  // rows so neighbours never collide. The last slides left when it would run
-  // past the plot's edge.
+  // labels, so those headings stand on their ticks, leaning outward, and
+  // every heading sets its name over its count so neighbours never collide.
+  // The last slides left when it would run past the plot's edge.
   const place = (c: number, label: string) => {
     const x = xs[c] ?? 0;
     if (c === 0) {
@@ -420,12 +437,19 @@ const Headings = (props: {
       return wide
         ? { anchor: "start" as const, x: x + 9, y: HEADER_Y }
         : {
-            anchor: "middle" as const,
+            // Narrow: the middle headings lean away from each other, the
+            // first half ending on its tick and the rest starting on it.
+            anchor: c * 2 < last + 1 ? ("end" as const) : ("start" as const),
             x,
-            y: c % 2 === 0 ? HEADER_Y2 : HEADER_Y,
+            y: HEADER_Y,
           };
     }
-    const w = Math.ceil(sansWidth(`${label} ${countOf(props.paths, c)}`, 12));
+    const count = String(countOf(props.paths, c));
+    const w = Math.ceil(
+      wide
+        ? sansWidth(`${label} ${count}`, 12)
+        : Math.max(sansWidth(label, 12), sansWidth(count, 12))
+    );
     return {
       anchor: "start" as const,
       x: Math.min(x + LABEL_INSET, props.width - w - 2),
@@ -441,6 +465,7 @@ const Headings = (props: {
             count={countOf(props.paths, c)}
             key={label}
             label={label}
+            stacked={!wide}
             {...place(c, label)}
           />
         );
