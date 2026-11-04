@@ -5,9 +5,12 @@ import type {
 } from "../schema/references";
 import type { Box } from "./label-box";
 import {
+  CLEAR,
   MARGIN,
   PLATE_H,
+  alongLinePlates,
   bandsOf,
+  clearance,
   clearest,
   levelBandPlates,
   levelLinePlates,
@@ -131,7 +134,18 @@ export const linePlate = (props: ReferenceProps, line: ReferenceLine) => {
     along === "y"
       ? levelLinePlates(width, Math.round(at), across, line.at)
       : uprightPlates(width, Math.round(at), plane, line.at);
-  return { at, plate: clearest(plates, props.avoid) };
+  const plate = clearest(plates, props.avoid);
+  // A name that would sit on a mark at both ends of a level line, and has no
+  // end of its own, looks along the line for a clear stretch.
+  if (
+    along === "y" &&
+    line.at === undefined &&
+    clearance(plate, props.avoid) < CLEAR
+  ) {
+    const along8 = alongLinePlates(width, Math.round(at), across);
+    return { at, plate: clearest([plate, ...along8], props.avoid) };
+  }
+  return { at, plate };
 };
 
 /** The boxes the names stand on, as the overlay draws them: what a tip keeps off. */

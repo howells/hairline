@@ -45,7 +45,6 @@ export const entries: GalleryEntry[] = [
     render: () => <ForceGraph selected="Wey" />,
   },
   {
-    dark: true,
     family: "big",
     id: "B4",
     name: "From Germany",

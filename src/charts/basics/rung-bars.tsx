@@ -42,6 +42,8 @@ const TENS = 10;
 const TENS_REACH = 3;
 /** Room kept between two neighbouring bar labels, px. */
 const LABEL_ROOM = 8;
+/** Spacing of the points a reference name keeps off over a bar, px. */
+const SPOT_STEP = 6;
 /** How far above a column's top its tip stands: clear of the value on top, px. */
 const LABEL_ROOM_ABOVE = 28;
 
@@ -358,6 +360,29 @@ interface SvgProps {
   width: number;
 }
 
+/** Points over each bar's body, a few px apart, so a reference name keeps off the bars. */
+const barSpotsOf = (
+  data: readonly { value?: number | null }[],
+  o: {
+    floor: number;
+    pitch: number;
+    unit: number;
+    x: { (index: number): number | undefined; bandwidth: () => number };
+  }
+) =>
+  data.flatMap((datum, index) => {
+    const left = o.x(index) ?? 0;
+    const rungs = Math.max(0, Math.round((datum.value ?? 0) / o.unit));
+    const top = rungY(o.floor, rungs - 1, o.pitch);
+    const spots = [];
+    for (let y = top; y <= o.floor; y += SPOT_STEP) {
+      for (let x = left; x <= left + o.x.bandwidth(); x += SPOT_STEP) {
+        spots.push({ x, y });
+      }
+    }
+    return rungs === 0 ? [] : spots;
+  });
+
 /** Where each bar's printed value sits, so a reference name keeps clear of it. */
 const valueSpotsOf = (
   data: readonly { value?: number | null }[],
@@ -415,7 +440,10 @@ const RungBarsSvg = ({
   };
   // A value's height: one pitch for each unit, up from the floor.
   const valueY = (v: number) => floor - (v / unit) * pitch;
-  const valueSpots = valueSpotsOf(data, { floor, pitch, unit, x });
+  const valueSpots = [
+    ...valueSpotsOf(data, { floor, pitch, unit, x }),
+    ...barSpotsOf(data, { floor, pitch, unit, x }),
+  ];
   // A reference line that asks for ink decides each bar's tone instead.
   const standing = (index: number) =>
     clears(props.references, data[index].value ?? Number.NaN);

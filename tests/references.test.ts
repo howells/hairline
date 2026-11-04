@@ -148,6 +148,25 @@ describe("references on every typed chart", () => {
     expect(html).toContain("Reference band on x: X band");
   });
 
+  it("a target name both of whose ends sit on bars looks along the line for a clear stretch", () => {
+    const short = ["A", "B", "C", "D", "E", "F"].map((label, i) => ({
+      label,
+      value: i === 2 || i === 3 ? 4 : 20,
+    }));
+    const html = render(
+      createElement(RungBars, {
+        data: short,
+        references: [{ label: "Target 10", value: 10 }],
+        unit: 1,
+        ...sized,
+      })
+    );
+    const xOf = (pattern: RegExp) => Number(pattern.exec(html)?.groups?.x);
+    const name = xOf(/x="(?<x>[\d.]+)"[^>]*>Target 10</u);
+    expect(name).toBeGreaterThan(xOf(/x="(?<x>[\d.]+)"[^>]*>C</u));
+    expect(name).toBeLessThan(xOf(/x="(?<x>[\d.]+)"[^>]*>D</u));
+  });
+
   it("a reference outside an explicit axis is not drawn but stays in the table", () => {
     const html = render(
       createElement(PlumbScatter, {

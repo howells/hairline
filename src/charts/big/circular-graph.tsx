@@ -4,7 +4,7 @@ import type { NoteProps } from "../../schema/options";
 import { Plot, Tooltip } from "../core";
 import { TipText } from "../hover";
 import { RING_STEP } from "../marks";
-import { NetworkLive, PlacedCaption } from "../network";
+import { NetworkLive, PlacedCaption, SelectedRing } from "../network";
 import { FOCUS_RING, useNodeSelection } from "../network-select";
 import {
   STEP_FILL,
@@ -462,6 +462,7 @@ const FocusLayer = (props: {
             r={n.b.r}
           />
         ))}
+      <SelectedRing cx={bead.x} cy={bead.y} r={bead.r} />
       {!props.small &&
         direct.map((n) => <BeadLabel bead={n.b} bright={false} key={n.b.id} />)}
       <PlacedCaption name={bead.id} note={note} {...spot} />

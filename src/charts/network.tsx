@@ -16,6 +16,9 @@ interface CaptionProps {
 }
 
 /** The selected node's name and reach, on a halo beside it. */
+/** Paper between a selected node and its ring, px. */
+const SELECTED_GAP = 4;
+
 export const NodeCaption = ({
   name,
   note,
@@ -72,4 +75,18 @@ export const NetworkLive = (props: { text: string }) => (
   <span aria-live="polite" className="sr-only">
     {props.text}
   </span>
+);
+
+/**
+ * The selected node's outline: a 2px ink ring with paper between it and the
+ * node, so the selection reads apart from its ink neighbours.
+ */
+export const SelectedRing = (props: { cx: number; cy: number; r: number }) => (
+  <circle
+    className="stroke-ink fill-none"
+    cx={props.cx}
+    cy={props.cy}
+    r={props.r + SELECTED_GAP}
+    strokeWidth={2}
+  />
 );

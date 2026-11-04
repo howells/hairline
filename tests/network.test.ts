@@ -223,6 +223,14 @@ describe(CircularBeadGraph, () => {
     })),
   };
 
+  /** How many ringed beads the chart draws. */
+  const ringed = async (selected?: string) => {
+    const host = await mount(
+      createElement(CircularBeadGraph, { data, selected })
+    );
+    return svgOf(host).querySelectorAll("circle.fill-none.stroke-ink").length;
+  };
+
   it("a preselected node's direct borders are ink, two steps mid, and its reach is named", async () => {
     const host = await mount(
       createElement(CircularBeadGraph, { data, selected: "c" })
@@ -232,6 +240,11 @@ describe(CircularBeadGraph, () => {
     expect(focus?.querySelectorAll("g.stroke-ink path")).toHaveLength(2);
     expect(focus?.querySelectorAll("g.stroke-l3 path")).toHaveLength(2);
     expect(svgOf(host).dataset.focus).toBe("true");
+  });
+
+  it("the selected bead wears a ring a gap off its edge, and nothing else does", async () => {
+    await expect(ringed("c")).resolves.toBe(1);
+    await expect(ringed()).resolves.toBe(0);
   });
 
   it("a hover reaches a bead a few pixels wide from beside it", async () => {

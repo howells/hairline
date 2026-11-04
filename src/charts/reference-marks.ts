@@ -112,6 +112,13 @@ export const gapTo = (plate: Plate, spot: Spot) =>
     Math.max(plate.top - spot.y, 0, spot.y - (plate.top + plate.h))
   );
 
+/** How far a plate stands from the nearest spot to avoid, px; Infinity with none. */
+export const clearance = (plate: Plate, avoid: readonly Spot[] | undefined) =>
+  Math.min(Infinity, ...(avoid ?? []).map((spot) => gapTo(plate, spot)));
+
+/** The clearance a name needs to count as clear of the marks, px. */
+export const CLEAR = 3;
+
 /**
  * The candidate plate that stands farthest from every spot to avoid; the
  * first of equals, so the order of `candidates` is the order of preference.
@@ -120,8 +127,7 @@ export const clearest = <T extends Plate>(
   candidates: readonly T[],
   avoid: readonly Spot[] | undefined
 ): T => {
-  const score = (plate: T) =>
-    Math.min(Infinity, ...(avoid ?? []).map((spot) => gapTo(plate, spot)));
+  const score = (plate: T) => clearance(plate, avoid);
   let [best] = candidates;
   for (const plate of candidates) {
     if (score(plate) > score(best)) {
@@ -139,6 +145,26 @@ export const PLATE_PAD = 8;
 
 export const plateWidth = (text: string) =>
   Math.ceil(sansWidth(text, 11)) + PLATE_PAD;
+
+/** Candidate plates along a level line, above and below it, at eighths of its length. */
+export const alongLinePlates = (
+  width: number,
+  y: number,
+  across: { hi: number; lo: number }
+): Plate[] => {
+  const room = across.hi - across.lo - 2 * MARGIN - width;
+  if (room <= 0) {
+    return [];
+  }
+  return [y - 3 - PLATE_H, y + 3].flatMap((top) =>
+    Array.from({ length: 9 }, (_, k) => ({
+      h: PLATE_H,
+      left: Math.round(across.lo + MARGIN + (room * k) / 8),
+      top,
+      w: width,
+    }))
+  );
+};
 
 /** Candidate plates for a band's name along a level axis: inside the band, at its ends. */
 export const levelBandPlates = (
