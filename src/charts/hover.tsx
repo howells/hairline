@@ -41,8 +41,8 @@ export const HitPath = ({
 );
 
 /**
- * The tooltip's one sentence: the record's name in bold, then its facts,
- * each after a middle dot.
+ * A tip's one sentence: the record's name in bold, then its facts, each
+ * after a middle dot. The card wraps it when it runs long.
  */
 export const TipText = (props: { facts?: readonly string[]; lead: string }) => (
   <>

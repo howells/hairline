@@ -61,7 +61,7 @@ const Row = (props: RowProps) => {
     <DimGroup
       dim={props.dim}
       onPointerEnter={() => {
-        props.onHover(x(datum.value), top - 6);
+        props.onHover(x(datum.value), top + BAND);
       }}
     >
       <HitRect
@@ -158,7 +158,7 @@ export const Bullet = (props: BulletProps) => {
       width={props.width}
       overlay={
         hover.at === null || hovered === undefined ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
+          <Tooltip place="below" x={hover.at.x} y={hover.at.y}>
             <TipText
               facts={[
                 `${format(hovered.value)} of ${format(hovered.target)}`,

@@ -81,7 +81,7 @@ const Row = ({
     <DimGroup
       dim={dim}
       onPointerEnter={() => {
-        onHover((xa + xb) / 2, y - 16);
+        onHover(Math.max(xa, xb), y);
       }}
     >
       <HitRect
@@ -166,7 +166,7 @@ export const ArrowPlot = (props: ArrowPlotProps) => {
       width={props.width}
       overlay={
         hover.at === null || hovered === undefined ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
+          <Tooltip clear={40} place="beside" x={hover.at.x} y={hover.at.y}>
             <TipText
               facts={[
                 `${format(hovered.before)} → ${format(hovered.after)}`,

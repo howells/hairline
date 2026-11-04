@@ -6,6 +6,7 @@ import { placeTip, spoken } from "./pointer-model";
 import type { Avoid } from "./pointer-model";
 import { Cursor } from "./rules";
 import { ScaleContext, magnification } from "./scale-context";
+import { tipCard } from "./tip-card";
 import { usePointer } from "./use-pointer";
 import type { BindOptions, PointerStop } from "./use-pointer";
 
@@ -144,7 +145,7 @@ const Tip = (props: TipProps) => {
   return (
     <div
       aria-hidden="true"
-      className={`bg-paper text-ink text-tick/normal pointer-events-none absolute z-10 w-max max-w-72 rounded-sm border px-3 py-2 text-pretty tabular-nums [&_b]:font-semibold ${pinned ? "border-ink" : "border-l5"} transition-tip`}
+      className={`${tipCard(pinned)} transition-tip`}
       data-hl-pointer={props.id}
       data-settled="false"
       data-hl-tip={pinned ? "pinned" : "hover"}
