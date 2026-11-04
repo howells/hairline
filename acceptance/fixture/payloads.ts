@@ -54,7 +54,7 @@ export const PAYLOADS = {
       { label: "Jupiter", x: 5.2, y: 11.86 },
       { label: "Saturn", x: 9.58, y: 29.45 },
     ],
-    emphasis: "Earth",
+    hero: ["Earth"],
     xLabels: ["Near the Sun", "Far from the Sun"],
     yLabel: "Years per orbit",
   },
