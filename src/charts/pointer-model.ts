@@ -98,6 +98,12 @@ export interface PlaceOptions {
   /** The mark's anchor. */
   at: Spot;
   /**
+   * Stand below the mark, centred on it, this far under its anchor (a mark
+   * near the chart's top edge). Tried before `above`; with room for neither,
+   * the tip stands beside it.
+   */
+  below?: number;
+  /**
    * What the tip keeps off where it can, asked for under the tip's own
    * x-extent once its side is chosen: the hero's line, or the row.
    */
@@ -168,12 +174,9 @@ const vertical = (o: PlaceOptions, left: number) => {
   return { overlap: covered(top, h, ranges), top };
 };
 
-const overhead = (o: PlaceOptions): Placement | null => {
-  if (o.above === undefined) {
-    return null;
-  }
-  const top = o.at.y - o.above - o.tip.h;
-  if (top < TIP_INSET) {
+/** Centred over or under the mark at `top`, or null when that clips. */
+const centred = (o: PlaceOptions, top: number): Placement | null => {
+  if (top < TIP_INSET || top + o.tip.h > o.bounds.h - TIP_INSET) {
     return null;
   }
   const max = Math.max(TIP_INSET, o.bounds.w - o.tip.w - TIP_INSET);
@@ -181,16 +184,22 @@ const overhead = (o: PlaceOptions): Placement | null => {
   return { left, side: o.side ?? "right", top };
 };
 
+const overhead = (o: PlaceOptions) =>
+  o.above === undefined ? null : centred(o, o.at.y - o.above - o.tip.h);
+
+const underneath = (o: PlaceOptions) =>
+  o.below === undefined ? null : centred(o, o.at.y + o.below);
+
 /**
- * Where a tip stands: above a column when it asked and there is room;
- * otherwise beside the mark on its preferred side, flipped only when that
- * side would clip or would cover what the chart asked it to keep off while
- * the other would not; never past the chart's bounds.
+ * Where a tip stands: under or above the mark when it asked and there is
+ * room (under first); otherwise beside the mark on its preferred side,
+ * flipped only when that side would clip or would cover what the chart asked
+ * it to keep off while the other would not; never past the chart's bounds.
  */
 export const placeTip = (o: PlaceOptions): Placement => {
-  const above = overhead(o);
-  if (above !== null) {
-    return above;
+  const stacked = underneath(o) ?? overhead(o);
+  if (stacked !== null) {
+    return stacked;
   }
   const wanted = o.side ?? "right";
   const sides = [wanted, wanted === "right" ? "left" : "right"] as const;

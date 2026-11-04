@@ -245,7 +245,7 @@ const Racer = (p: RacerProps) => (
     dim={p.dimmed}
     style={{ transform: `translateY(${Math.round(p.y)}px)` }}
     onPointerEnter={() => {
-      p.onEnter(p.labelX + p.w / 2, p.y - p.barH / 2 - 4);
+      p.onEnter(p.labelX + p.w, p.y);
     }}
   >
     <HitRect x={0} y={-p.pitch / 2} width={p.width} height={p.pitch} />
@@ -368,7 +368,7 @@ export const BarRace = (props: BarRaceProps) => {
       <Plot
         overlay={
           hover.at === null ? null : (
-            <Tooltip x={hover.at.x} y={hover.at.y}>
+            <Tooltip clear={40} place="beside" x={hover.at.x} y={hover.at.y}>
               <TipText
                 facts={[
                   format(values[hover.at.key]),

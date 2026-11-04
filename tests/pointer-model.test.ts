@@ -101,6 +101,33 @@ describe("placeTip: where the tip stands", () => {
     expect(placed.left).toBe(112);
   });
 
+  it("a tip asked to stand below does, centred, before trying above", () => {
+    const placed = placeTip({
+      above: 12,
+      at: { x: 100, y: 150 },
+      below: 12,
+      bounds,
+      tip,
+    });
+    expect(placed).toStrictEqual({ left: 40, side: "right", top: 162 });
+  });
+
+  it("with no room below, it stands above; with room for neither, beside", () => {
+    const low = { x: 100, y: 260 };
+    expect(placeTip({ above: 12, at: low, below: 12, bounds, tip }).top).toBe(
+      168
+    );
+    const squat = { h: 150, w: 400 };
+    const placed = placeTip({
+      above: 12,
+      at: { x: 100, y: 60 },
+      below: 12,
+      bounds: squat,
+      tip,
+    });
+    expect(placed.left).toBe(112);
+  });
+
   it("asks for what to avoid under the tip's own extent, once its side is chosen", () => {
     const asked: number[][] = [];
     placeTip({

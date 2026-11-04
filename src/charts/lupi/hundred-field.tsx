@@ -390,7 +390,7 @@ export const HundredField = (props: HundredFieldProps) => {
             {tip !== undefined && tipAt !== undefined && (
               <Tooltip
                 // Off the head: under a lower label, over an upper one.
-                below={tipAt.lower}
+                place={tipAt.lower ? "below" : "above"}
                 x={tipAt.x}
                 y={tipAt.lower ? tipAt.y + 18 : tipAt.y - 12}
               >

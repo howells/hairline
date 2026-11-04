@@ -137,7 +137,7 @@ export const Pyramid = (props: PyramidProps) => {
       width={props.width}
       overlay={
         hover.at === null || hovered === undefined ? null : (
-          <Tooltip x={hover.at.x} y={hover.at.y}>
+          <Tooltip clear={40} place="beside" x={hover.at.x} y={hover.at.y}>
             <TipText
               facts={[
                 `${sides[0]} ${format(hovered.left)}`,
@@ -197,7 +197,7 @@ export const Pyramid = (props: PyramidProps) => {
                   hatch={tex("hatch")}
                   index={i}
                   key={d.label}
-                  handleHover={hover.enter(i, cx, cy - barH / 2 - 4)}
+                  handleHover={hover.enter(i, edgeR + x(d.right), cy)}
                   pitch={pitch}
                   width={width}
                   x={x}

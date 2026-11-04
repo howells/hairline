@@ -554,7 +554,7 @@ const RingSvg = (props: {
         <FootNote height={height} text={props.note} width={width} />
       </ChartSvg>
       {tip === null ? null : (
-        <Tooltip below={tip.below} x={tip.x} y={tip.y}>
+        <Tooltip place={tip.below ? "below" : "above"} x={tip.x} y={tip.y}>
           <TipText
             facts={[
               `${props.format(tip.size)} ${props.sizeUnit ?? "land neighbours"}`,

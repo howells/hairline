@@ -375,9 +375,46 @@ const plotProps = (scaling: {
   width: 480,
 });
 
-const tipStyle = (scaling: { fit?: boolean; scale?: number }) => {
-  const html = renderToString(createElement(Plot, plotProps(scaling)));
-  return /<output[^>]*style="(?<style>[^"]*)"/u.exec(html)?.groups?.style;
+/**
+ * Where a Tooltip is placed once mounted: jsdom lays nothing out, so the
+ * Plot is given a 1000 by 600 box and the tip no size of its own.
+ */
+const tipStyle = async (scaling: { fit?: boolean; scale?: number }) => {
+  const proto = HTMLElement.prototype;
+  const saved = ["clientHeight", "clientWidth", "offsetParent"].map(
+    (key) => [key, Object.getOwnPropertyDescriptor(proto, key)] as const
+  );
+  Object.defineProperty(proto, "clientHeight", {
+    configurable: true,
+    get: () => 600,
+  });
+  Object.defineProperty(proto, "clientWidth", {
+    configurable: true,
+    get: () => 1000,
+  });
+  Object.defineProperty(proto, "offsetParent", {
+    configurable: true,
+    get(this: HTMLElement) {
+      return this.parentElement;
+    },
+  });
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => {
+    root.render(createElement(Plot, plotProps(scaling)));
+    await Promise.resolve();
+  });
+  const style = host.querySelector("output")?.getAttribute("style") ?? "";
+  act(() => {
+    root.unmount();
+  });
+  for (const [key, descriptor] of saved) {
+    if (descriptor !== undefined) {
+      Object.defineProperty(proto, key, descriptor);
+    }
+  }
+  return style.replaceAll(" ", "");
 };
 
 /**
@@ -418,14 +455,17 @@ describe("tooltips sit on their marks when scaled", () => {
     document.body.innerHTML = "";
   });
 
-  it("an overlay anchor given in chart pixels is placed scale times further", () => {
-    expect(tipStyle({})).toContain("left:100px;top:40px");
-    expect(tipStyle({ scale: 2.5 })).toContain("left:250px;top:100px");
+  it("an overlay anchor given in chart pixels is placed scale times further", async () => {
+    // Centred over the anchor, a 12px gap above it.
+    await expect(tipStyle({})).resolves.toContain("left:100px;top:28px");
+    await expect(tipStyle({ scale: 2.5 })).resolves.toContain(
+      "left:250px;top:88px"
+    );
   });
 
-  it("fit already draws at the container's size, so nothing moves", () => {
-    expect(tipStyle({ fit: true, scale: 2.5 })).toContain(
-      "left:100px;top:40px"
+  it("fit already draws at the container's size, so nothing moves", async () => {
+    await expect(tipStyle({ fit: true, scale: 2.5 })).resolves.toContain(
+      "left:100px;top:28px"
     );
   });
 

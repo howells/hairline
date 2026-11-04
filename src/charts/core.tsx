@@ -1,11 +1,13 @@
-import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import type { ScaleOptions } from "../schema/scale";
 import { useEntry, useMeasure, useReveal } from "./hooks";
 import type { Animate } from "./hooks";
+import { placeTip, TIP_GAP } from "./pointer-model";
 import { PANEL } from "./roles";
 import { ScaleContext, magnification } from "./scale-context";
+import { tipCard } from "./tip-card";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
 /** A plot with nothing to animate carries neither class: it is simply drawn. */
@@ -118,44 +120,59 @@ export const Plot = (props: PlotProps) => {
 };
 
 interface TooltipProps {
-  below?: boolean;
   children: ReactNode;
+  /** Room the mark takes either side of x, so a tip beside it stands clear, px. */
+  clear?: number;
+  /**
+   * Where the tip tries first: centred above the anchor (the default, for a
+   * column or a point), below it (a mark near the top edge), or beside it (a
+   * row, whose neighbours sit above and below). With no room, it stands beside.
+   */
+  place?: "above" | "below" | "beside";
   x: number;
   y: number;
 }
 
-/** Gap kept between a tooltip and the edge of its chart. */
-const TIP_INSET = 4;
-
-/** Dark pill tooltip, anchored at (x, y) inside the nearest Plot. */
+/**
+ * A mark's tip, anchored at (x, y) inside the nearest Plot: the one tip card,
+ * placed by the pointer model so it never clips the chart and stands off the
+ * mark it speaks for.
+ */
 export const Tooltip = (props: TooltipProps) => {
   // Anchors are given in the chart's drawing pixels; the svg may be shown larger.
   const zoom = magnification(useContext(ScaleContext));
-  const x = props.x * zoom;
-  const y = props.y * zoom;
   const ref = useRef<HTMLOutputElement>(null);
-  // Horizontal shift that keeps the tooltip inside its chart near the edges.
-  const [shift, setShift] = useState(0);
+  const place = props.place ?? "above";
+  // The tip's size is only known once drawn, so it is placed by hand after
+  // layout, before paint: the first placement is never seen moving.
   useLayoutEffect(() => {
     const el = ref.current;
     const box = el?.offsetParent;
     if (el === null || !(box instanceof HTMLElement)) {
       return;
     }
-    const half = el.offsetWidth / 2;
-    const shown = box.querySelector("svg")?.getBoundingClientRect().width ?? 0;
-    const inside = Math.min(
-      Math.max(x, half + TIP_INSET),
-      Math.max(box.clientWidth, shown) - half - TIP_INSET
-    );
-    setShift(inside - x);
-    // Re-measure when the anchor moves; content changes travel with it.
-  }, [x]);
+    const frame = box.getBoundingClientRect();
+    const svg = box.querySelector("svg")?.getBoundingClientRect();
+    const spot = placeTip({
+      above: place === "beside" ? undefined : TIP_GAP,
+      at: { x: props.x * zoom, y: props.y * zoom },
+      below: place === "below" ? TIP_GAP : undefined,
+      bounds: {
+        h: Math.max(box.clientHeight, (svg?.bottom ?? 0) - frame.top),
+        w: Math.max(box.clientWidth, svg?.width ?? 0),
+      },
+      clear: (props.clear ?? 0) * zoom,
+      tip: { h: el.offsetHeight, w: el.offsetWidth },
+    });
+    el.style.left = `${spot.left}px`;
+    el.style.top = `${spot.top}px`;
+    el.style.visibility = "visible";
+  });
   return (
     <output
       ref={ref}
-      className={`rounded-tip bg-ink text-paper text-tick/normal pointer-events-none absolute z-10 px-2.5 py-1.75 whitespace-nowrap tabular-nums [&_b]:font-semibold ${props.below === true ? "-translate-x-1/2 translate-y-3" : "-mt-2.5 -translate-x-1/2 -translate-y-full"}`}
-      style={{ left: x + shift, top: y }}
+      className={tipCard(false)}
+      style={{ visibility: "hidden" }}
     >
       {props.children}
     </output>
