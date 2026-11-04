@@ -1,7 +1,13 @@
 // Seam 1: the pointer model's arithmetic, through the built package: which
 // stop a pointer snaps to, where a key goes, where the tip stands, and what a
 // screen reader is told. Pure numbers, no page.
-import { nearest, placeTip, spoken, stepTo } from "@howells/hairline/kit";
+import {
+  avoidBoxes,
+  nearest,
+  placeTip,
+  spoken,
+  stepTo,
+} from "@howells/hairline/kit";
 import { describe, expect, it } from "vitest";
 
 describe("nearest: which stop the pointer snaps to", () => {
@@ -191,5 +197,24 @@ describe("spoken: what a screen reader is told", () => {
 
   it("says when the tip is pinned", () => {
     expect(spoken(stop, true)).toBe("19 Sep: Orders 44k, weekend. Pinned");
+  });
+});
+
+describe("avoidBoxes: printed boxes the tip keeps off", () => {
+  const avoid = avoidBoxes([
+    { bottom: 24, left: 10, right: 60, top: 12 },
+    { bottom: 90, left: 200, right: 260, top: 78 },
+  ]);
+
+  it("gives the y-range of each box under the tip's x-extent", () => {
+    expect(avoid(0, 100)).toStrictEqual([[12, 24]]);
+    expect(avoid(50, 210)).toStrictEqual([
+      [12, 24],
+      [78, 90],
+    ]);
+  });
+
+  it("gives nothing where no box stands", () => {
+    expect(avoid(100, 190)).toStrictEqual([]);
   });
 });

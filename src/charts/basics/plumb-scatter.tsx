@@ -15,6 +15,7 @@ import { Dot } from "../markers";
 import { FootNote } from "../plot-note";
 import { Pointer } from "../pointer";
 import type { Stop } from "../pointer";
+import type { Avoid } from "../pointer-model";
 import {
   clears,
   clearsAll,
@@ -29,14 +30,9 @@ import { ChartSvg } from "../svg";
 import { Label } from "../text";
 import { DottedLine } from "../texture";
 import { TEXTURE_PITCH } from "../texture-ids";
-import {
-  NOTE_LINE,
-  hasText,
-  noteLines,
-  sansWidth,
-  stagger,
-  noteOf,
-} from "../util";
+import { NOTE_LINE, hasText, noteLines, stagger, noteOf } from "../util";
+import { EDGE, namesOf } from "./plumb-names";
+import type { Placement } from "./plumb-names";
 
 interface FloorProps {
   floor: number;
@@ -72,92 +68,6 @@ const dotClass = (
     return clearing ? "pop fill-hero" : "pop fill-l5";
   }
   return `pop ${contextClass(context, "fill")}`;
-};
-
-/** Where a point's name sits: centred above the dot, or beside it. */
-interface Placement {
-  anchor: "end" | "middle" | "start";
-  dx: number;
-  dy: number;
-}
-
-/** Margin kept between a name and the svg edge. */
-const EDGE = 2;
-
-const ABOVE: Placement = { anchor: "middle", dx: 0, dy: -12 };
-const PLACEMENTS: Placement[] = [
-  ABOVE,
-  { anchor: "start", dx: 10, dy: 4 },
-  { anchor: "end", dx: -10, dy: 4 },
-];
-
-/** Horizontal extent of a name set with `place` at `px`. */
-const extent = (place: Placement, px: number, w: number) => {
-  if (place.anchor === "middle") {
-    return [px - w / 2, px + w / 2];
-  }
-  return place.anchor === "start"
-    ? [px + place.dx, px + place.dx + w]
-    : [px + place.dx - w, px + place.dx];
-};
-
-/**
- * The first placement whose name stays inside the svg and crosses no other
- * point's stem: a stem runs from its dot down to the floor, so a name set low
- * beside a tall stem would cut it. Failing that, the hero's name takes the
- * first that stays inside, or sits above slid in from the edge; any other
- * name is left to the tooltip.
- */
-const placeName = (
-  self: { px: number; py: number; w: number },
-  stems: { px: number; py: number }[],
-  width: number,
-  hero: boolean
-): Placement | undefined => {
-  const inside = (place: Placement) => {
-    const [l, r] = extent(place, self.px, self.w);
-    return l >= EDGE && r <= width - EDGE && self.py + place.dy - 10 > 0;
-  };
-  const clear = (place: Placement) => {
-    const [l, r] = extent(place, self.px, self.w);
-    return stems.every(
-      (st) =>
-        st.px === self.px ||
-        st.px < l - 4 ||
-        st.px > r + 4 ||
-        st.py > self.py + place.dy + 2
-    );
-  };
-  const clean = PLACEMENTS.find((place) => inside(place) && clear(place));
-  if (clean !== undefined || !hero) {
-    return clean;
-  }
-  const half = self.w / 2;
-  return (
-    PLACEMENTS.find(inside) ?? {
-      ...ABOVE,
-      dx: Math.max(
-        EDGE + half - self.px,
-        Math.min(0, width - EDGE - half - self.px)
-      ),
-    }
-  );
-};
-
-/** Spots along a point's printed name, for reference labels to keep clear of. */
-const nameSpots = (
-  place: Placement | undefined,
-  self: { px: number; py: number; w: number }
-) => {
-  if (place === undefined) {
-    return [];
-  }
-  const [l, r] = extent(place, self.px, self.w);
-  const y = self.py + place.dy;
-  return Array.from({ length: Math.ceil((r - l) / 24) + 1 }, (_, k) => ({
-    x: Math.min(r, l + k * 24),
-    y,
-  }));
 };
 
 interface PointProps {
@@ -337,17 +247,18 @@ const pointStop = (
   o: {
     format: (v: number) => string;
     formatX: (v: number) => string;
+    /** The printed names the tip keeps off. */
+    names: Avoid;
     x: ScaleLinear<number, number>;
     y: ScaleLinear<number, number>;
   }
 ): Stop<number> => ({
+  avoid: o.names,
   clear: 8,
   key,
   lead: d.label,
-  rows: [
-    { name: "X", value: o.formatX(d.x) },
-    { name: "Y", value: o.format(d.y) },
-  ],
+  // The values carry their units, so the rows need no names.
+  rows: [{ value: o.formatX(d.x) }, { value: o.format(d.y) }],
   x: o.x(d.x),
   y: o.y(d.y),
 });
@@ -361,45 +272,6 @@ const stopsOf = (
   data
     .map((d, i) => pointStop(d, i, o))
     .toSorted((p, q) => (order.get(p.key) ?? 0) - (order.get(q.key) ?? 0));
-
-interface NamesArgs {
-  format: (v: number) => string;
-  heroes: ReadonlySet<number>;
-  labelled: Set<number>;
-  metrics: PlumbScatterProps["metrics"];
-  width: number;
-  x: (v: number) => number;
-  y: (v: number) => number;
-}
-
-/** Where each labelled point prints its name, and the spots that keeps reference labels off. */
-const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
-  const { format, heroes, labelled, metrics, width, x, y } = a;
-  const selves = data.map((d, i) => ({
-    px: x(d.x),
-    py: y(d.y),
-    w: sansWidth(
-      `${d.label} · ${format(d.y)}`,
-      heroes.has(i) ? 12 : 11,
-      metrics
-    ),
-  }));
-  const places = selves.map((self, i) =>
-    labelled.has(i)
-      ? placeName(
-          self,
-          selves.map((o) => ({ px: o.px, py: o.py })),
-          width,
-          heroes.has(i)
-        )
-      : undefined
-  );
-  const avoid = [
-    ...data.map((d) => ({ x: x(d.x), y: y(d.y) })),
-    ...selves.flatMap((self, i) => nameSpots(places[i], self)),
-  ];
-  return { avoid, places };
-};
 
 /** The topmost of the given points on the page (the smallest y). */
 const topmost = (points: { x: number; y: number }[]) =>
@@ -463,7 +335,7 @@ const PlumbScatterSvg = ({
     .domain(domains.y)
     .range([floor - 14, 46]);
   const plane = { x0, x1: x0 + plotW, y0: 30, y1: floor };
-  const { avoid, places } = namesOf(data, {
+  const { avoid, names, places } = namesOf(data, {
     format,
     heroes,
     labelled,
@@ -472,7 +344,7 @@ const PlumbScatterSvg = ({
     x,
     y,
   });
-  const stops = stopsOf(data, order, { format, formatX, x, y });
+  const stops = stopsOf(data, order, { format, formatX, names, x, y });
   return (
     <Pointer axis="xy" height={height} stops={stops} width={width}>
       {(pointer) => (

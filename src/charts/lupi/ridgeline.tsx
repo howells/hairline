@@ -53,9 +53,8 @@ interface Ridge {
 
 const SAMPLES = 120;
 
-/** Daily temperatures in °C: whole degrees need no decimal, zero no unit. */
-const fmtTemperature = (v: number) =>
-  v === 0 ? "0" : fmtDegC(v).replace(".0 °C", " °C");
+/** Daily temperatures in °C, all to one decimal so a column of them aligns; zero has no unit. */
+const fmtTemperature = (v: number) => (v === 0 ? "0" : fmtDegC(v));
 
 /** Gaussian kernel density on an even grid, plus the peak and median. */
 const toRidge = (s: RidgeSeries, d0: number, d1: number, bw: number): Ridge => {

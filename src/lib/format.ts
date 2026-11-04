@@ -63,8 +63,14 @@ export const fmtPrice = (v: number) =>
   `${v < 0 ? "−" : ""}$${Math.abs(v).toFixed(2)}`;
 
 /** Signed percent with a true minus sign: +4%, −10%, 0%. */
-export const fmtSignedPct = (v: number, digits = 0) =>
-  v === 0 ? "0%" : `${v > 0 ? "+" : "−"}${Math.abs(v).toFixed(digits)}%`;
+export const fmtSignedPct = (v: number, digits = 0) => {
+  const t = Math.abs(v).toFixed(digits);
+  // A change that rounds to nothing is no change: "0%", never "−0%".
+  if (Number(t) === 0) {
+    return `${(0).toFixed(digits)}%`;
+  }
+  return `${v > 0 ? "+" : "−"}${t}%`;
+};
 
 /** Signed delta with a true minus sign: +31 ms, −41 ms. */
 export const fmtSignedMs = (v: number) =>
