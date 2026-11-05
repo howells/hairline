@@ -1,6 +1,6 @@
 # API design and developer experience for modern React charting libraries (as of 2026), and what Hairline needs
 
-Scope note: about 15 tool calls. Several fetches failed (tanstack.com blocked, observablehq.com returned 429), so some claims rest on search snippets and are marked. Hairline facts come from reading /Users/danielhowells/Sites/charts (README.md, src/index.ts, src/kit.ts, src/charts/axes.ts). Code blocks under "Inferences" are proposals, not findings.
+Scope note: about 15 tool calls. Several fetches failed (tanstack.com blocked, observablehq.com returned 429), so some claims rest on search snippets and are marked. Hairline facts come from reading /Users/danielhowells/Sites/hairline (README.md, src/index.ts, src/kit.ts, src/charts/axes.ts). Code blocks under "Inferences" are proposals, not findings.
 
 ## 1. Component-per-chart vs composable primitives vs grammar of graphics vs copy-paste
 

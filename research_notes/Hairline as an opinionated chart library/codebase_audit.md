@@ -1,6 +1,6 @@
 # Hairline codebase audit (read-only, 2026-11-01)
 
-Saved by the coordinator from the auditing agent's returned text (the agent could not write files). Paths relative to /Users/danielhowells/Sites/charts. Code-reading conclusions; edge cases not executed. `tsc -b` passes; `npm pack --dry-run` run.
+Saved by the coordinator from the auditing agent's returned text (the agent could not write files). Paths relative to /Users/danielhowells/Sites/hairline. Code-reading conclusions; edge cases not executed. `tsc -b` passes; `npm pack --dry-run` run.
 
 ## 1. Inventory: general-purpose vs bespoke
 

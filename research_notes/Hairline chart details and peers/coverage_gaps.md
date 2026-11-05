@@ -1,6 +1,6 @@
 # Hairline chart coverage gaps against the leading taxonomies and libraries
 
-Method note. Hairline facts come from the repo at /Users/danielhowells/Sites/charts (src/index.ts, src/charts/*, src/gallery/about.json, src/schema/registry.ts, README.md), read 2026-11-03, not modified. Peer-library facts come from the fetched pages cited inline. Several peer sites refused or returned only navigation (Datawrapper marketing pages, Observable Plot docs site 429, Flourish, RAWGraphs home, visx gallery); where so, I used secondary pages or GitHub directory listings and say so. Rankings of "how often needed" are my inference, not measured; no source gives usage frequency for chart types.
+Method note. Hairline facts come from the repo at /Users/danielhowells/Sites/hairline (src/index.ts, src/charts/*, src/gallery/about.json, src/schema/registry.ts, README.md), read 2026-11-03, not modified. Peer-library facts come from the fetched pages cited inline. Several peer sites refused or returned only navigation (Datawrapper marketing pages, Observable Plot docs site 429, Flourish, RAWGraphs home, visx gallery); where so, I used secondary pages or GitHub directory listings and say so. Rankings of "how often needed" are my inference, not measured; no source gives usage frequency for chart types.
 
 ## 1. Which chart types do the leading taxonomies and libraries cover (the union)?
 

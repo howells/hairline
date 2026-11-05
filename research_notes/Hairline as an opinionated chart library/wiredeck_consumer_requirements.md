@@ -1,6 +1,6 @@
 # Wiredeck as Hairline's first outside consumer: requirements verified against the code and against incumbent chart libraries
 
-Scope and method. Code evidence is cited as file:line against /Users/danielhowells/Sites/charts at commit f5444ab (read-only; one empirical SSR probe was run from /tmp against the built `lib/`). Incumbent evidence comes from web searches run 2026-11-01. "Inferences" sections hold my recommended designs (c) and effort/risk (d); they are design proposals, not sourced facts. Code paths are linked as file URLs.
+Scope and method. Code evidence is cited as file:line against /Users/danielhowells/Sites/hairline at commit f5444ab (read-only; one empirical SSR probe was run from /tmp against the built `lib/`). Incumbent evidence comes from web searches run 2026-11-01. "Inferences" sections hold my recommended designs (c) and effort/risk (d); they are design proposals, not sourced facts. Code paths are linked as file URLs.
 
 Cross-cutting facts found while reading the code (they affect several items):
 
