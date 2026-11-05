@@ -1,15 +1,24 @@
-# Agents
+# Hairline
 
-## Agent skills
+An engraved chart library for React (`@howells/hairline`): ninety charts, pixel-snapped hairlines, one ink hero per chart, banknote textures. `README.md` has the design intent; `site/` is the docs site (blume).
 
-### Issue tracker
+Issues live in Linear, team Hairline (`HAI`), via the `linear-howells` MCP tools. Not GitHub Issues.
 
-Issues live in Linear, team Hairline (`HAI`), via the `linear-howells` MCP tools. See `docs/agents/issue-tracker.md`.
+## Commands
 
-### Triage labels
+```sh
+pnpm dev          # gallery, http://localhost:5173
+pnpm typecheck
+pnpm lint         # @howells/lint; lint:fix to autofix
+pnpm test         # builds the library, typechecks tests, runs vitest
+pnpm build        # app + docs site (build:lib builds the package)
+pnpm e2e          # visual acceptance suite, needs Docker; see acceptance/README.md
+```
 
-The five default labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), created on team HAI. See `docs/agents/triage-labels.md`.
+Never regenerate `acceptance/baselines/` from macOS; use `pnpm generate:baselines` (Docker).
 
-### Domain docs
+## Releases
 
-Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root, created lazily. See `docs/agents/domain.md`.
+Versioning uses changesets. For a user-visible change, run `pnpm changeset` and commit the generated file with the change. Merging to `main` makes `.github/workflows/release.yml` open a "Version packages" PR; merging that publishes to npm. The workflow is dormant until the first manual publish is done and the `HAIRLINE_FIRST_PUBLISH_DONE` repo variable is `true`.
+
+Don't overwrite others' uncommitted work.
