@@ -21,7 +21,7 @@ The libraries people actually adopt in 2026 either (a) are composition-first wit
 - visx is "low-level visualization primitives for React": d3 does the math, React owns the DOM, no built-in animation, modular packages (`@visx/shape`, `@visx/scale`, `@visx/group`), and it is "largely unopinionated" and intended as a base for teams to build their own chart library hiding d3. — [visx README/docs](https://github.com/airbnb/visx); [airbnb.tech visx](https://airbnb.tech/opensource/visx/)
 - Tremor (acquired by Vercel, announced 22 Jan 2025) went free and open source, split into the older npm package `@tremor/react` and "Tremor Raw", a copy-paste version built on Tailwind, Radix and Recharts. — [Vercel blog](https://vercel.com/blog/vercel-acquires-tremor); [tremorlabs/tremor](https://github.com/tremorlabs/tremor)
 - Nivo is described as config-heavy ("fights React habits"); ECharts' React wrapper exposes everything through a single `option` object that sits awkwardly in React. — [Querio/LogRocket-style roundups via search](https://blog.logrocket.com/best-react-chart-libraries-2026/) (secondary sources, low rigor)
-- Hairline today: `src/index.ts` is a generated flat list of ~90 `export { X } from "./charts/<group>/<kebab>"` lines; `src/kit.ts` exports `Chart, Plot, Tooltip, SplitClips`, hooks (`useMeasure`, `useReveal`, `useHover`, `useScrub`, ...), rules (`HRule, VRule, Stem, Tick, HGrid, VGrid, Cursor`), marks (`Dot, Ring, Bar`), textures, and `ChartSvg, Label, XLabels`. Two exports are named `CircularGraph` and `CircularBeadGraph` (an alias to disambiguate two different charts). — repo files `/Users/danielhowells/Sites/charts/src/index.ts`, `/Users/danielhowells/Sites/charts/src/kit.ts`
+- Hairline today: `src/index.ts` is a generated flat list of ~90 `export { X } from "./charts/<group>/<kebab>"` lines; `src/kit.ts` exports `Chart, Plot, Tooltip, SplitClips`, hooks (`useMeasure`, `useReveal`, `useHover`, `useScrub`, ...), rules (`HRule, VRule, Stem, Tick, HGrid, VGrid, Cursor`), marks (`Dot, Ring, Bar`), textures, and `ChartSvg, Label, XLabels`. Two exports are named `CircularGraph` and `CircularBeadGraph` (an alias to disambiguate two different charts). — repo files `/Users/danielhowells/Sites/hairline/src/index.ts`, `/Users/danielhowells/Sites/hairline/src/kit.ts`
 
 ### Inferences
 
@@ -64,7 +64,7 @@ Best practice is tidy row arrays plus field selectors that accept either a key o
 - Recharts uses `dataKey` string props per series (shadcn's `<Bar dataKey="desktop" fill="var(--color-desktop)"/>`), with colour carried in config keyed by the same names. — [shadcn/ui Chart](https://ui.shadcn.com/docs/components/base/chart)
 - Recharts 3 changed missing-data semantics: with `connectNulls`, null points on Area are treated as 0 (a behavioural trap). — [Recharts 3.0 migration guide](https://github.com/recharts/recharts/wiki/3.0-migration-guide)
 - Recharts 3 also: ErrorBar nullish values ignored for Y domain; new `symlog` scale; YAxis `width="auto"`. — [Recharts 3.0 migration guide](https://github.com/recharts/recharts/wiki/3.0-migration-guide)
-- Hairline's documented usage: `<PairedRungs data={rows} format={(v) => \`${v}%\`} periods={["Before","After"]} />`; the README states data is bespoke per chart (task brief) and prop types are not exported ("use `ComponentProps<typeof PairedRungs>`"). — `/Users/danielhowells/Sites/charts/README.md`
+- Hairline's documented usage: `<PairedRungs data={rows} format={(v) => \`${v}%\`} periods={["Before","After"]} />`; the README states data is bespoke per chart (task brief) and prop types are not exported ("use `ComponentProps<typeof PairedRungs>`"). — `/Users/danielhowells/Sites/hairline/README.md`
 
 ### Inferences
 
@@ -102,7 +102,7 @@ Exporting named prop types is table stakes; the incumbents' DX is a `satisfies`-
 - A real-world cost of untyped/internal-prop coupling: copying shadcn's old chart.tsx onto Recharts v3 threw errors because it referred "heavily to internal props of Recharts, which have now been removed". — [shadcn-ui/ui #7669](https://github.com/shadcn-ui/ui/issues/7669)
 - Plot issue #2453: the Mark `initialize` method is missing from the TypeScript types and docs, i.e. even a mature grammar library has extension points that the types do not describe. — [Plot issue #2453](https://github.com/observablehq/plot/issues/2453)
 - Roundup sources only rate TS support as "has types"/"solid"; none discussed generics. — [LogRocket 2026](https://blog.logrocket.com/best-react-chart-libraries-2026/)
-- Hairline: prop types not exported by name; the README directs users to `ComponentProps<typeof PairedRungs>`; `src/kit.ts` exports some types (`Margin`, `TickMark`, `LegendItem`, `FillTone`, `FillFamily`, `Voice`, `RuleKind`, `Sync`, `HoverAt`, `Hover`, `DotSize`, `RingWeight`, `TickSize`, `StaggerTier`) but the main index exports none. — `/Users/danielhowells/Sites/charts/README.md`, `/Users/danielhowells/Sites/charts/src/kit.ts`
+- Hairline: prop types not exported by name; the README directs users to `ComponentProps<typeof PairedRungs>`; `src/kit.ts` exports some types (`Margin`, `TickMark`, `LegendItem`, `FillTone`, `FillFamily`, `Voice`, `RuleKind`, `Sync`, `HoverAt`, `Hover`, `DotSize`, `RingWeight`, `TickSize`, `StaggerTier`) but the main index exports none. — `/Users/danielhowells/Sites/hairline/README.md`, `/Users/danielhowells/Sites/hairline/src/kit.ts`
 
 ### Inferences
 
@@ -138,7 +138,7 @@ Incumbent contracts are thin: a config/series map for colour and labels, a toolt
 - shadcn requires a height/min-h/aspect on the container so responsive measurement works on first render, else the plot is 0px tall. — [shadcn/ui Chart](https://ui.shadcn.com/docs/components/base/chart)
 - Recharts 3: `accessibilityLayer` defaults to true (aria labels, roles, keyboard arrow navigation); Tooltip gained `portal` and `axisId`; Legend gained `itemSorter`. — [Recharts 3.0 migration guide](https://github.com/recharts/recharts/wiki/3.0-migration-guide); [Recharts accessibility wiki](https://github.com/recharts/recharts/wiki/Recharts-and-accessibility)
 - Recharts ships `ResponsiveContainer`; v2.7.0 added `initialDimension`. — [recharts PR #3596](https://github.com/recharts/recharts/pull/3596)
-- Hairline already has shared plumbing in the kit: `useMeasure`, `useReveal`, `useMotionPreference`, `useReducedMotion`, `useHover`, `useScrub`, `Tooltip`, `LegendItem`, tone/fill ladders (`FillTone`, `toneClass`), and "every chart in the same frame". — `/Users/danielhowells/Sites/charts/src/kit.ts`, `/Users/danielhowells/Sites/charts/README.md`
+- Hairline already has shared plumbing in the kit: `useMeasure`, `useReveal`, `useMotionPreference`, `useReducedMotion`, `useHover`, `useScrub`, `Tooltip`, `LegendItem`, tone/fill ladders (`FillTone`, `toneClass`), and "every chart in the same frame". — `/Users/danielhowells/Sites/hairline/src/kit.ts`, `/Users/danielhowells/Sites/hairline/README.md`
 
 ### Inferences
 
@@ -183,7 +183,7 @@ CSS variables are the consensus (shadcn, Hairline already). The liability is req
 - shadcn on Tailwind v4: chart tokens moved from `hsl(var(--chart-1))` to `var(--chart-1)`; dark colours via `theme: { light, dark }` in config or `.dark` token overrides. — [shadcn Tailwind v4 notes via Chart docs](https://ui.shadcn.com/docs/components/base/chart); [Tailwind v4 - shadcn/ui](https://ui.shadcn.com/docs/tailwind-v4)
 - Tremor Raw requires Tailwind v4+, Radix, Recharts (third-party skill page, not official docs); official Tremor Next.js guide says to upgrade to Tailwind v4, while Vite/Remix guides were still on v3 when indexed, so the docs disagreed. — [Tremor docs, Next.js](https://tremor.so/docs/getting-started/installation/next); [Tremor docs, Vite](https://tremor.so/docs/getting-started/installation/vite)
 - Tremor shares copy-paste utilities (`cx`, `focusRing`, `chartUtils.ts` with `chartColors`) tagged "Tremor Raw [vX.X.X]". — [Tremor docs, Next.js](https://tremor.so/docs/getting-started/installation/next)
-- Hairline: the host must import `tailwindcss`, then `@howells/hairline/tokens.css` and `theme.css`, then override `--paper`, `--hero`; `.surface-dark` and `[data-palette]` remap; three modes (Pink default, Paper, Dark); text roles `t-axis`, `t-label`, `t-value`, `t-figure`; font from host `--font-sans`; label widths measured for Inter. — `/Users/danielhowells/Sites/charts/README.md`
+- Hairline: the host must import `tailwindcss`, then `@howells/hairline/tokens.css` and `theme.css`, then override `--paper`, `--hero`; `.surface-dark` and `[data-palette]` remap; three modes (Pink default, Paper, Dark); text roles `t-axis`, `t-label`, `t-value`, `t-figure`; font from host `--font-sans`; label widths measured for Inter. — `/Users/danielhowells/Sites/hairline/README.md`
 
 ### Inferences
 
@@ -214,7 +214,7 @@ SVG-based libraries can render server HTML, but everything stays behind "use cli
 - LogRocket (2026) recommends Recharts, MUI X Charts, Victory or static visx for App Router SSR because SVG libraries have the strongest SSR story; Nivo does server rendering for some chart variants but in App Router should be wrapped in Client Components. — [LogRocket 2026](https://blog.logrocket.com/best-react-chart-libraries-2026/)
 - TanStack Charts' migration guide (as reported in a search snippet) maps ResponsiveContainer to `height`/`aspectRatio` plus `initialWidth` for SSR. — [TanStack Charts: Coming from Recharts](https://tanstack.com/charts/latest/docs/guides/coming-from-recharts) (page could not be fetched; snippet only)
 - shadcn requires a size class on ChartContainer so ResponsiveContainer can measure on first render. — [shadcn/ui Chart](https://ui.shadcn.com/docs/components/base/chart)
-- Hairline today: every module is "use client"; charts measure width in the browser; the first render assumes reduced motion so server and client agree; README tells users to wrap charts that take a formatter function in their own client component because functions cannot cross the boundary. — `/Users/danielhowells/Sites/charts/README.md`
+- Hairline today: every module is "use client"; charts measure width in the browser; the first render assumes reduced motion so server and client agree; README tells users to wrap charts that take a formatter function in their own client component because functions cannot cross the boundary. — `/Users/danielhowells/Sites/hairline/README.md`
 
 ### Inferences
 
@@ -283,7 +283,7 @@ By 2026 the shadcn registry is cheap to publish, supports namespaces and (since 
 - Community directory registry.directory expects a public `/r/registry.json`. — [registry.directory](https://github.com/codedthemes/registry.directory)
 - Copy-paste has a maintenance cost seen in practice: old shadcn chart.tsx broke on Recharts 3 because it depended on Recharts internals. — [shadcn-ui/ui #7669](https://github.com/shadcn-ui/ui/issues/7669)
 - Tremor shipped both models (npm `@tremor/react` and copy-paste Tremor Raw), with Raw described as the actively developed path. — [Vercel blog](https://vercel.com/blog/vercel-acquires-tremor); third-party skill page via search
-- Hairline today: a private package installed via `file:` path, rebuild-and-reinstall after changes. — `/Users/danielhowells/Sites/charts/README.md`
+- Hairline today: a private package installed via `file:` path, rebuild-and-reinstall after changes. — `/Users/danielhowells/Sites/hairline/README.md`
 
 ### Inferences
 

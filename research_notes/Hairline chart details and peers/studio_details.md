@@ -1,6 +1,6 @@
 # Bespoke dataviz studio craft details: catalogue for Hairline
 
-Scope note: the cited findings below come only from pages fetched or searched in this session. Anything from general knowledge or my own judgement is placed under Inferences or Gaps and marked "uncited". Studio sites for Pentagram, Accurat, Fathom, Density Design, Interactive Things and Truth & Beauty (other than the OECD page) gave little or nothing, so coverage is uneven: it is strongest for Nadieh Bremer / Visual Cinnamon, then Shirley Wu, Moritz Stefaner and Dear Data. Hairline chart names refer to files in /Users/danielhowells/Sites/charts/src/charts (lupi, forms, big, glance), which I only skimmed by filename and doc comments.
+Scope note: the cited findings below come only from pages fetched or searched in this session. Anything from general knowledge or my own judgement is placed under Inferences or Gaps and marked "uncited". Studio sites for Pentagram, Accurat, Fathom, Density Design, Interactive Things and Truth & Beauty (other than the OECD page) gave little or nothing, so coverage is uneven: it is strongest for Nadieh Bremer / Visual Cinnamon, then Shirley Wu, Moritz Stefaner and Dear Data. Hairline chart names refer to files in /Users/danielhowells/Sites/hairline/src/charts (lupi, forms, big, glance), which I only skimmed by filename and doc comments.
 
 ## 1. What signature details do these designers and studios use, and how does each work as a reproducible detail?
 

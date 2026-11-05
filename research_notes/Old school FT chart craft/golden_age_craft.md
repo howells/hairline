@@ -221,7 +221,7 @@ The 1915 Joint Committee wrote most of these down as rules.
 
 ### Example catalogue (saved images)
 
-All files are in `/Users/danielhowells/Sites/charts/research_notes/Old school FT chart craft/examples/`.
+All files are in `/Users/danielhowells/Sites/hairline/research_notes/Old school FT chart craft/examples/`.
 
 - Downloaded 2026-10-13 from Wikimedia Commons at 1800 px wide, or at native size where smaller.
 - All are under 1.8 MB.

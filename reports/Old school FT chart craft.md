@@ -78,7 +78,7 @@ Two items need a judgement call. A serif title (Newsreader or Source Serif 4 at 
 
 ## Sixteen public-domain plates, and the lesson in each
 
-All files are in `/Users/danielhowells/Sites/charts/research_notes/Old school FT chart craft/examples/`. They were downloaded from Wikimedia Commons at up to 1800px and are public domain by date or as US federal or Library of Congress "no known restrictions" works. Observations come from direct inspection of the scans, and scan colour fidelity is unknown. Treat paper tone as a mood, not a sample: much of the warmth is age-toning and scanner white balance.
+All files are in `/Users/danielhowells/Sites/hairline/research_notes/Old school FT chart craft/examples/`. They were downloaded from Wikimedia Commons at up to 1800px and are public domain by date or as US federal or Library of Congress "no known restrictions" works. Observations come from direct inspection of the scans, and scan colour fidelity is unknown. Treat paper tone as a mood, not a sample: much of the warmth is age-toning and scanner white balance.
 
 | File | Work | What it teaches Hairline |
 | --- | --- | --- |
