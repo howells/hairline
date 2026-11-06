@@ -2,8 +2,6 @@
 
 An engraved chart library for React (`@howells/hairline`): ninety charts, pixel-snapped hairlines, one ink hero per chart, banknote textures. `README.md` has the design intent; `site/` is the docs site (blume).
 
-Issues live in Linear, team Hairline (`HAI`), via the `linear-howells` MCP tools. Not GitHub Issues.
-
 ## Commands
 
 ```sh
@@ -22,3 +20,17 @@ Never regenerate `acceptance/baselines/` from macOS; use `pnpm generate:baseline
 Versioning uses changesets. For a user-visible change, run `pnpm changeset` and commit the generated file with the change. Merging to `main` makes `.github/workflows/release.yml` open a "Version packages" PR; merging that publishes to npm. The workflow is dormant until the first manual publish is done and the `HAIRLINE_FIRST_PUBLISH_DONE` repo variable is `true`.
 
 Don't overwrite others' uncommitted work.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in Linear (howells, HAI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default triage labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. See `docs/agents/domain.md`.
