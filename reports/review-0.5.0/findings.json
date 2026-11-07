@@ -1,0 +1,1991 @@
+[
+  {
+    "id": "L1",
+    "name": "Spring arrivals",
+    "verdict": "The fan has a clear hero, but the tip and dense narrow ticks need more room.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink and dark 1280 tip",
+        "note": "The Whitethroat tip covers part of Mar 2025 at the fan's origin. Place it in the open centre of the fan, clear of the month label and arrival dots."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "Daily rungs crowd the neighbouring spokes near the arrival dots. Keep month rungs prominent and thin the minor ticks at this width."
+      }
+    ],
+    "sheet": "https://stow.sh/2vy0nntqr5tx579qa49vxh2zbm/L1.jpg"
+  },
+  {
+    "id": "L2",
+    "name": "Named mates",
+    "verdict": "The hierarchy works, but the diagonal composition makes a simple ranking laborious to read.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The vertical mate names force repeated head-turning, especially at 390. Use a consistent shallow angle or staggered horizontal labels."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 1280",
+        "note": "The sloping baseline pushes the marks into the lower-right and leaves a large empty upper-left. Flatten the baseline so stem lengths compare from one level and the chart fills its frame."
+      }
+    ],
+    "sheet": "https://stow.sh/pt7j0dx972z3v97jdaq7eh1hdb/L2.jpg"
+  },
+  {
+    "id": "L3",
+    "name": "Autumn tides",
+    "verdict": "The tidal rhythm is clear, but heights cannot be read without hovering.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "There is no numeric height scale or zero reference for either end of the stems. Add a quiet metre scale and a zero rule so high and low water can both be read."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The exemplar consumes about a third of the card before the data begins. Compress its vertical spacing while retaining the high-water and low-water leaders."
+      }
+    ],
+    "sheet": "https://stow.sh/2mde3d9v8myvpg7grd78rjq5fm/L3.jpg"
+  },
+  {
+    "id": "L4",
+    "name": "New woodland",
+    "verdict": "The mobile labels now clear the key, but the key is wordy and the tip still covers it.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink and dark 1280 tip",
+        "note": "The Wales tip hides the end of the Row explanation in the exemplar. Reserve a clear tip position outside the key's text bounds."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The key contains prose such as 'The largest cell is inked' and 'Scotland, bowed like a horizon'. Replace these with short encoding labels such as Largest value and Scotland."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 390",
+        "note": "Twelve slanted season labels dominate the small bubble plot. Print alternate seasons at this width and retain every season in the tip."
+      }
+    ],
+    "sheet": "https://stow.sh/wt19r6qr8pe98gnb3yv8t416tw/L4.jpg"
+  },
+  {
+    "id": "L5",
+    "name": "Named storms",
+    "verdict": "The seasonal groups and hero read well; label placement needs finishing.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink and dark 1280 tip",
+        "note": "The Dudley tip covers the printed 2021/22 season label. Flip it into the open centre or above the ring with clearance from all season labels."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "Five season labels split over two lines while 2023/24 stays on one, and 2022/23 sits close to the ring. Use the same two-line treatment and radial clearance for all six."
+      }
+    ],
+    "sheet": "https://stow.sh/np2x5swf3a9mzvt2m5vb61z39f/L5.jpg"
+  },
+  {
+    "id": "L6",
+    "name": "Grape families",
+    "verdict": "The hero is clear, but its detached caption suggests the wrong family.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Heunisch weiss · 10 sits far below its hub; at 390 it reads as the caption for the nearby Muscat blanc cluster. Move it beside its own hub and attach a short leader."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The Savagnin blanc caption masks the two descending connections, breaking their continuity. Put the caption outside that connector corridor and lead it back to the hub."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 1280",
+        "note": "The hero's long spokes and the other families' tiny clusters leave an uneven, sparse composition. Tighten the hero's footprint and give the satellite clusters more consistent space."
+      }
+    ],
+    "sheet": "https://stow.sh/jbacd3xgtgs07xpmx4k66tfpra/L6.jpg"
+  },
+  {
+    "id": "L7",
+    "name": "Four summits",
+    "verdict": "The comparison is orderly, but the rails lack readable measures.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The rails have ticks but no numeric values or units, so Low/High and Minor/Prominent cannot quantify the differences. Name each measure and label its scale; identify normalized percentages if that is the intended reading."
+      },
+      {
+        "severity": "rough",
+        "where": "all, strongest at 390",
+        "note": "The hatch strip sits behind the open comparison dots, particularly on the Low col and Western rows, and swallows their outlines. Draw paper-filled open dots above the strip with a clear paper ring."
+      }
+    ],
+    "sheet": "https://stow.sh/h1f804etn1pkpph8dqg69whxtj/L7.jpg"
+  },
+  {
+    "id": "L8",
+    "name": "Years gained",
+    "verdict": "The stacked planes are striking, but the data encoding is hidden until hover.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Nothing identifies the periods, their reading order or the dot-area scale. Add a compact exemplar with first and last periods, a size key in years gained, and the comparison baseline."
+      },
+      {
+        "severity": "rough",
+        "where": "pink and paper, both widths",
+        "note": "Wales is so pale that its smaller dots nearly disappear into the stipple plane. Use a darker quiet tone and reduce the competing background stipple."
+      },
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The Scotland tip covers several dots on its plane. Put the readout in a reserved margin beside the stack and connect it to the selected dot."
+      }
+    ],
+    "sheet": "https://stow.sh/49zyq1n3qweknds64jg826ngrc/L8.jpg"
+  },
+  {
+    "id": "L9",
+    "name": "Coffee growers",
+    "verdict": "The old key collision is fixed, but the hover card introduces a new label collision.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink and dark 1280 tip",
+        "note": "The Uganda tip covers the tops of the Indonesia, Ethiopia and Uganda column names. Place it above the column-label band or beside the matrix without covering those names."
+      },
+      {
+        "severity": "rough",
+        "where": "dark, both widths",
+        "note": "The non-hero bubble outlines and decline rings are too dim to distinguish reliably, especially for the small producers. Raise their outline and dotted-ring tones while retaining one bright hero."
+      }
+    ],
+    "sheet": "https://stow.sh/war8w3pbq2y4md0cagt9yrww8y/L9.jpg"
+  },
+  {
+    "id": "L10",
+    "name": "Solar flares",
+    "verdict": "The engraved wedges have character, but two equal ink wedges compete for the lead.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Two M-class wedges have the same dark crosshatch and outline, so neither is the single hero. Keep the class texture on both but reserve the ink tone and strongest outline for one leading flare."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The minor clock ticks are faint fragments that look like stray marks. Give them a consistent visible length or remove them and retain the four labelled time ticks."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 390",
+        "note": "The key and large empty clock perimeter leave the flare marks small. Compact the exemplar and bring the time labels inward so the wedges can grow."
+      }
+    ],
+    "sheet": "https://stow.sh/jjr1mp4vv8jd1z6mpkqp0asadr/L10.jpg"
+  },
+  {
+    "id": "L11",
+    "name": "Sea areas",
+    "verdict": "The chronology is clean, but the lifecycle symbols need a key.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Open circles and Tay's pale, shortened stem have no visible explanation. Add a compact key for added, renamed/redrawn and retired, and label Tay's 1949 endpoint."
+      }
+    ],
+    "sheet": "https://stow.sh/k0dh2y34mnf4tgd87tkgkr5wp7/L11.jpg"
+  },
+  {
+    "id": "L12",
+    "name": "Lights by keeper",
+    "verdict": "The fans establish a strong leader; the small groups and tip need quieter, clearer spacing.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The Ramsgate tip covers several source dots and the upper part of the Harbours fan. Place it in the gap between groups, clear of the source column."
+      },
+      {
+        "severity": "rough",
+        "where": "dark, both widths",
+        "note": "The Councils, Trust and Defence endpoints and threads nearly disappear. Raise their quiet stroke tone so the small groups remain visible."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The three small groups are compressed into the bottom edge beneath two expansive fans. Give them a consistent minimum row gap so each reads as a deliberate group."
+      }
+    ],
+    "sheet": "https://stow.sh/hgexbgvyrpat193qaxm4hcpc9k/L12.jpg"
+  },
+  {
+    "id": "L13",
+    "name": "Library earnings",
+    "verdict": "The funnel is tidy, but its percentages have an unexplained denominator.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The left percentages float between stages without saying that they compare with the preceding stage, while the tip uses a share of the first stage. Label the left measure 'Of previous band' and anchor each percentage to its transition."
+      },
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The £1,000 tip covers the incoming thread bundle and part of the left connector. Move it into a clear gutter beside the stage."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The £5,000 stage is the ink hero but is only a few tiny ticks, while all stage labels compete equally. Strengthen that stage's label and value and quiet the others without changing the encoded widths."
+      }
+    ],
+    "sheet": "https://stow.sh/4ccj5g48n2s0ant7010sx7exz9/L13.jpg"
+  },
+  {
+    "id": "L14",
+    "name": "A hundred donors",
+    "verdict": "The count is readable, but marks on sector boundaries make individual donors ambiguous.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Open donor circles sit on sector dividers, including the O negative boundary and the lone AB negative mark. Keep every donor centre clear of its sector edges so category membership is unambiguous."
+      },
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The A positive tip is now inside the card, but it masks the printed A positive label and repeats its count. Place it clear of the bottom label or use one shared readout there."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Large hero dots, tiny quiet dots, rings and crosses give equal donors very different visual weight. Keep a common donor size and let fill or texture distinguish the groups."
+      }
+    ],
+    "sheet": "https://stow.sh/c9pfgtmh0k2qtdfd7c0mfaj7bx/L14.jpg"
+  },
+  {
+    "id": "L15",
+    "name": "Days out",
+    "verdict": "The tally is easy to compare, but its unit and engraved rhythm need attention.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The printed 44, 41, 41 and 30 have no unit; only the tip explains 'of 100'. Print percentages on the values or add one compact per-100 key."
+      },
+      {
+        "severity": "rough",
+        "where": "dark, both widths",
+        "note": "The non-hero activity names are much dimmer than their tally marks. Raise the label tone so each row can be identified as readily as its value."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The tally tops vary in height without encoding another measure, giving the rows a jittered edge. Use one exact tick height and even pitch."
+      }
+    ],
+    "sheet": "https://stow.sh/081f45bhafn56ynhkmz3x0w7j5/L15.jpg"
+  },
+  {
+    "id": "L16",
+    "name": "Letter pairs",
+    "verdict": "The matrix remains readable on mobile, but the tip hides its most important cell.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink and dark 1280 tip",
+        "note": "The N then N tip sits over the I→N hero cell, hiding 25 and neighbouring values. Place the tip outside the matrix and point it back to the selected cell."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The row and column letters do not identify which is the first letter and which follows it. Add short First/Next axis labels so the direction is readable without hovering."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Single-letter column headings are rotated despite having ample room. Set them horizontally over their columns for a calmer grid."
+      }
+    ],
+    "sheet": "https://stow.sh/qbgk4tqvkypqxj3h48basxcbqp/L16.jpg"
+  },
+  {
+    "id": "L17",
+    "name": "A year of births",
+    "verdict": "The calendar structure works, but the texture scale and peak need to be readable without hover.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "No legend maps the dot densities to birth counts. Add a small shared texture key with numeric thresholds and the births unit."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The tiny cells turn the dot screens into similar four-lobed blobs, reducing the visible difference between counts. Use fewer, clearer density steps at this cell size or give the calendar more width."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The crosshatched peak is a tiny unlabelled exception inside hundreds of cells. Name its date and birth count in the adjacent margin with a short leader."
+      }
+    ],
+    "sheet": "https://stow.sh/h1x6dk3v03p6y7cac25b9kbkez/L17.jpg"
+  },
+  {
+    "id": "L19",
+    "name": "January by decade",
+    "verdict": "The ridges and corrected temperature formatting read well; the readout still interrupts the curves.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The 1970s tip lies over the 1920s and 1970s peaks. Move it into the open upper margin or outside the ridges with a leader to the selected curve."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The right-hand temperatures have no metric label, although the tip distinguishes peak from median. Label that column Peak, and put °C once on the horizontal scale to reduce repeated units."
+      }
+    ],
+    "sheet": "https://stow.sh/s0qjec244fhe0k1sjebzsk92xj/L19.jpg"
+  },
+  {
+    "id": "L20",
+    "name": "Twelve cheeses",
+    "verdict": "The hero is easy to follow, but the nutritional basis and context lines need clearer presentation.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The values are per 100 g, but neither the plot nor the tip states that basis. Add a compact 'Per 100 g' unit label and retain it in the readout."
+      },
+      {
+        "severity": "rough",
+        "where": "all, strongest in dark",
+        "note": "The broad hatch band and stippled envelope compete with twelve crossing lines. Keep one quiet envelope and remove the interior hatch so the individual paths are easier to trace."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Only Roquefort is named, leaving the eleven comparison paths anonymous. Add separated endpoint labels for the highest and lowest context paths and a quiet grouped label for the remainder."
+      }
+    ],
+    "sheet": "https://stow.sh/mqer5n1e1nqeym5vwy4n5mwwa5/L20.jpg"
+  },
+  {
+    "id": "F1",
+    "name": "Major earthquakes",
+    "verdict": "The mobile dates are fixed and the hero reads clearly; the repeated dark rungs add unnecessary emphasis.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The darker rung at ten repeats across the context bars and creates a second horizontal rhythm. Give those rungs the same quiet tone as their neighbours."
+      },
+      {
+        "severity": "idea",
+        "where": "tip",
+        "note": "The card repeats the printed 9 without naming the measure. Show '9 earthquakes' so the detached readout carries its unit."
+      }
+    ],
+    "sheet": "https://stow.sh/hrzecam8hja904kxchynwtm4ac/F1.jpg"
+  },
+  {
+    "id": "F2",
+    "name": "Sterling in September",
+    "verdict": "The low point and mobile annotations now read cleanly; precision and date coverage need tightening.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The month's high is $1.1701 while the low and latest value use two decimals. Use one displayed precision for these annotations and reserve extra precision for the tip."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The first date tick is 12 Sep, leaving the opening third of the month undated. Add an opening September tick and retain the later weekly ticks."
+      }
+    ],
+    "sheet": "https://stow.sh/t9sztbcrvkd01e0yy475sbtwp0/F2.jpg"
+  },
+  {
+    "id": "F3",
+    "name": "Daylight in Tromsø",
+    "verdict": "The annotation reflow works, but the area texture and detached tip distract from the seasonal silhouette.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The solid vertical dividers dominate the fine dot screen and resemble extra data stems. Quiet them to the grid tone or remove them, retaining only the hero stem."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The 14 Jul / 24h card sits halfway down the plot while its point is on the top plateau. Anchor it beside that point in the clear space above or alongside the plateau."
+      }
+    ],
+    "sheet": "https://stow.sh/b5ryj7b1j73vva0ne3qy6ea54c/F3.jpg"
+  },
+  {
+    "id": "F4",
+    "name": "Where the bill goes",
+    "verdict": "A clear ring at both widths, spoiled by a tip that cuts through the hero.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "tip",
+        "note": "The Wholesale card hides several strokes of the Wholesale arc and repeats the adjacent 41% label. Move it outside the ring into clear space, preserving the arc and its printed label."
+      }
+    ],
+    "sheet": "https://stow.sh/66s9yhrpe21ngzeq0ymty366xp/F4.jpg"
+  },
+  {
+    "id": "F5",
+    "name": "Birds counted",
+    "verdict": "The tally rows remain clear across palettes and widths; the tip adds no information.",
+    "items": [
+      {
+        "severity": "idea",
+        "where": "tip",
+        "note": "The Blackbird card repeats the name and rounded 0.60m already printed on the row. Show the exact count in the card to make the interaction useful."
+      }
+    ],
+    "sheet": "https://stow.sh/a0vea1ckqev721fwjhbd7j1ag3/F5.jpg"
+  },
+  {
+    "id": "F6",
+    "name": "Getting to work",
+    "verdict": "The comparison survives the mobile layout, but the key changes order and stops matching the marks.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The 2021 swatch shows horizontal rules while its bars use upright ticks. Match the key's texture orientation to the marks after reflow."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The key runs 2011 then 2021 at 1280 and reverses at 390. Keep one year order across widths and use it for both the marks and the printed values."
+      }
+    ],
+    "sheet": "https://stow.sh/wn4w88t7c8qcas7zray4rrg1vs/F6.jpg"
+  },
+  {
+    "id": "F7",
+    "name": "Medals by Games",
+    "verdict": "The stacked counts read well, but the hover card hides Paris and the two ruled medal textures are too similar.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "tip",
+        "note": "The Tokyo card covers the Paris 2024 total of 65 and the top of its Bronze segment. Place it in clear space above the stacks or to their side."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "Gold and Silver share nearly the same ruled texture and tone, including in the small key. Give one a distinct shared fill family so the segments separate without reading each number."
+      }
+    ],
+    "sheet": "https://stow.sh/9p0xbm1e0q7qqg2wdc9w9haery/F7.jpg"
+  },
+  {
+    "id": "F8",
+    "name": "Apple orchards",
+    "verdict": "Chile is a clear hero, but the axes do not let readers measure orchard size or yield.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "'Smaller' and 'Larger' never identify area, and neither axis has numeric ticks. Label Area (ha) and Yield (t/ha), with a few quiet numeric ticks on each."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "The context dots and stems are very faint against the dark ground. Raise the single context tone enough to preserve the distribution while keeping Chile dominant."
+      }
+    ],
+    "sheet": "https://stow.sh/m6bgwrsvdews9jratq326cht5a/F8.jpg"
+  },
+  {
+    "id": "F9",
+    "name": "Where carbon goes",
+    "verdict": "The waterfall reads at both widths, with a clear Air hero and legible signed changes.",
+    "items": [],
+    "sheet": "https://stow.sh/eccvtyed0dama18a6xje5ggq1k/F9.jpg"
+  },
+  {
+    "id": "F10",
+    "name": "Hour of birth",
+    "verdict": "The matrix stays legible on mobile, but the tip is detached from the selected cell and the size encoding lacks a scale.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The Sat 15:00 card sits above the Monday row, far from the selected Saturday dot. Place it beside that cell and flip horizontally to avoid covering neighbouring dots."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The circle sizes have no labelled reference until hover. Add a compact size key with representative percentages so the matrix can be read quantitatively at rest."
+      }
+    ],
+    "sheet": "https://stow.sh/6ppd34x47tsfkxveyt6r7fc433/F10.jpg"
+  },
+  {
+    "id": "F11",
+    "name": "Rain so far",
+    "verdict": "The gauge is clear in all supplied variants; the tip could provide a more useful breakdown.",
+    "items": [
+      {
+        "severity": "idea",
+        "where": "tip",
+        "note": "'To come · 439 mm' repeats the central readout. Use the card to show rainfall received and the reference total behind the 36%."
+      }
+    ],
+    "sheet": "https://stow.sh/w1kvjpcnarngf4f4qmz0kqv44p/F11.jpg"
+  },
+  {
+    "id": "F12",
+    "name": "Museum visits",
+    "verdict": "The red ticks and mobile clumps are fixed, but the comparison years are missing and the closest endpoints still merge.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Nothing identifies the open dots as 2019 and the filled dots as 2025. Add a compact year key and name those years in the tip instead of relying on an unexplained arrow."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The British Museum endpoints overlap into one small two-tone mark. Offset their dots vertically with short leaders to the true positions, preserving the horizontal value scale."
+      }
+    ],
+    "sheet": "https://stow.sh/mv0xqzq384na0ffqp95s1gx0sx/F12.jpg"
+  },
+  {
+    "id": "F13",
+    "name": "Milk by use",
+    "verdict": "The mobile treemap distorts the Other group's visible area and leaves too many products unnamed.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "'Other · 14%' becomes four thin strips occupying only a small fraction of the visible tile area. Preserve its share of usable tile area when reflowing, rather than consuming most of the group with its heading and padding."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The small cheese tiles are unnamed; at 390 Other cheese and every product in Other also lose their names. Use external labels or a compact product key for tiles that cannot fit text."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The long Cheddar card covers its own printed name at the tile's top edge. Use a compact card beside the tile, with separate rows for volume and share."
+      }
+    ],
+    "sheet": "https://stow.sh/5xmpt71tep2mtmw1b7h5t9859f/F13.jpg"
+  },
+  {
+    "id": "F14",
+    "name": "Finish times",
+    "verdict": "The distribution and modal column read, but periodic dark rows introduce an unnecessary competing pattern.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Regular darker rows run across the distribution and create horizontal bands unrelated to the highlighted time bin. Keep context ticks at one quiet tone and reserve ink for the hero column."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The floating 1,815 has no count label. Add a short 'runners' label to that value or a small unit key for the tally marks."
+      }
+    ],
+    "sheet": "https://stow.sh/fxpbwme3v29b2caqr9zmd7c55x/F14.jpg"
+  },
+  {
+    "id": "F15",
+    "name": "Sunshine by season",
+    "verdict": "The boxes reflow cleanly, but the tiny Winter fill and oversized tip need restraint.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Winter's small crosshatched box reads as a chain of dark diamonds around its median. Use a simpler hero fill or an ink outline so the median and quartile boundaries remain distinct."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The wide Autumn card overlaps the upper-right edge of the Summer box. Stack median, middle half and outlier count in a narrower card beside Autumn, clear of neighbouring boxes."
+      }
+    ],
+    "sheet": "https://stow.sh/49f57htesaqfyn36qqyw96gk3g/F15.jpg"
+  },
+  {
+    "id": "F16",
+    "name": "Runs by source",
+    "verdict": "The stream has a strong Fours hero, but a missing series name and prose-like tip weaken its reading.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The thin top ribbon is unnamed at rest, although the tip identifies it as Extras. Add a quiet end label with a leader if it cannot fit inside the ribbon."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The values form a long wrapped sentence and Fours is buried after other series. Use the shared pooled card with one named value per row and Fours first."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "Running's dot screen is much harder to see than the other ribbons. Raise its shared fill tone enough to retain the lower silhouette."
+      }
+    ],
+    "sheet": "https://stow.sh/4g4q3ghsfjcjhqzjpg6f9cbvh4/F16.jpg"
+  },
+  {
+    "id": "F17",
+    "name": "Daily price",
+    "verdict": "The candles and latest hero are clean, but the price has no identity or unit and its tip is hard to scan.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The chart shows prices such as 21.30 without an instrument or currency. Use a named, unitful price series and carry its currency on the value axis and in the tip."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "Open, high, low and close are compressed into an O/H/L/C sentence that wraps before the close. Give each measure a named row with aligned two-decimal values."
+      }
+    ],
+    "sheet": "https://stow.sh/v8cewz2f5wa4tq3akr7gqqxfc0/F17.jpg"
+  },
+  {
+    "id": "F18",
+    "name": "Supply and demand",
+    "verdict": "The shared scale makes the comparison honest, but heavy dividers and tall mobile panels overpower the traces.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Solid monthly dividers inside the stippled areas compete with the data outlines. Reduce them to quiet hairlines or remove them, retaining the emphasised peak stem."
+      },
+      {
+        "severity": "idea",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Three tall panels consume a long scroll while Nuclear occupies only a thin strip at the bottom of its panel. Reduce the common panel height and vertical gaps while retaining the shared value scale."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The 20 May / 3,905 card omits the measure and unit. Name Demand and show GWh in the readout so it remains clear beside the other two panels."
+      }
+    ],
+    "sheet": "https://stow.sh/t2sgztf7kxdv8127me79ghrzzq/F18.jpg"
+  },
+  {
+    "id": "F19",
+    "name": "Fuels by quarter",
+    "verdict": "The fourth panel remains orphaned at desktop width, and the mobile capture loses the chart's name.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 / paper 1280 / dark 1280",
+        "note": "The panels wrap three plus one, leaving Other alone beside a large empty area. Use a balanced two-by-two grid at this width."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The supplied narrow shots start with the gallery header and Gas; 'Fuels by quarter' is absent. Keep the chart name above the first panel in the narrow layout and capture."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The Gas tip says only Q2 / 13, repeating the bar label without a unit or series name. Show Gas, Q2 and 13 TWh in the shared readout."
+      }
+    ],
+    "sheet": "https://stow.sh/34dxc8gaaj6j73h19247pth15p/F19.jpg"
+  },
+  {
+    "id": "F20",
+    "name": "Best yields",
+    "verdict": "The highlighted cluster is strong, but its countries and quantitative scales are missing.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The three ink countries are identified only by 'Smallest orchards, biggest yields' and '3 points'. Name those countries and their yields so the highlighted finding can be read without hovering each stem."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The axes show only Yield and Smaller/Larger, with no numerical calibration or area name. Add Area (ha), Yield (t/ha) and a few quiet ticks."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "A context dot lies directly on the third hero stem and is obscured by it. Draw dots above stems with paper rings so both records remain visible."
+      }
+    ],
+    "sheet": "https://stow.sh/t4ambh1p8gy06sjybcekkvh4z1/F20.jpg"
+  },
+  {
+    "id": "F21",
+    "name": "Faint crowd",
+    "verdict": "The hero group stands out, but missing names and scales leave the finding vague and dark context is too faint.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "'3 points' does not identify the three emphasised countries or their yields. Replace the headline-style group caption with a short group name and compact country/value labels."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Smaller/Larger does not name orchard area, and there are no numeric axis ticks. Add Area (ha), Yield (t/ha) and sparse calibration ticks."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "The faint context dots and stems nearly disappear into the background. Use a slightly stronger single context tone while retaining the clear separation from the hero group."
+      }
+    ],
+    "sheet": "https://stow.sh/trmzzyvw5skkr95n7ygdmr2bmd/F21.jpg"
+  },
+  {
+    "id": "R1",
+    "name": "Years at or over fifteen",
+    "verdict": "The mobile ticks and target label placement are fixed; the standalone card still needs to name its count.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "'15 a year' and the bare tip value 9 never identify what is being counted. Name earthquakes in the target label and tip, using short measure labels rather than explanatory prose."
+      }
+    ],
+    "sheet": "https://stow.sh/dsvg419azh27xn1mvazpgqtmff/R1.jpg"
+  },
+  {
+    "id": "R2",
+    "name": "Reservoir level",
+    "verdict": "Whole-percent labels are improved, but the normal-range band overwhelms the quiet half of the line in dark mode.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "dark 1280 / dark 390",
+        "note": "The below-target dots, trough and final 63% label have weak contrast against the normal-range band. Lighten the line and label tones over the band so the decline and recovery remain readable."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The normal-range rectangle is a large solid slab behind a delicate line. Use a quieter band tone and keep its edges lighter than the data trace."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The full-height hover strip is heavier than the line and reference marks. Use the thin cursor rule with a paper-ringed point instead of a broad column band."
+      }
+    ],
+    "sheet": "https://stow.sh/chv224mah30551z8vb59t24gkk/R2.jpg"
+  },
+  {
+    "id": "R3",
+    "name": "Museum visits over six million",
+    "verdict": "The precision and mobile tick clutter are improved, but the unnamed years and threshold rounding still confuse the comparison.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The open and filled endpoints have no year key, and the tip's arrow names neither period. Identify 2019 and 2025 explicitly in a compact key and in the tip."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Tate's 5.99m and National Gallery's 6.01m both print as 6.0m despite falling on opposite sides of the threshold. Keep two decimals for values this close to 6m so the labels agree with the threshold encoding."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The British Museum's open and filled dots touch and merge near the target line. Separate the dots vertically with short leaders while preserving their horizontal values."
+      }
+    ],
+    "sheet": "https://stow.sh/na5rq3fqhdmeq0k91dwf5qdk5m/R3.jpg"
+  },
+  {
+    "id": "R4",
+    "name": "Orchard yield and size",
+    "verdict": "The threshold emphasis is clear, but the area band is too heavy and the axes remain under-specified.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The 100 to 200k ha band is the only calibration of orchard area; Smaller/Larger never names the axis and yield has no numeric ticks. Label both measures and add sparse ticks so points outside the band can be read."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The area band reads as a tall grey slab and overwhelms the faint points inside it, especially in dark. Quiet the band fill and give its points sufficient contrast above it."
+      },
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The two values are bare rows, even though their units distinguish them. Name the rows Area and Yield to make the shared card explicit."
+      }
+    ],
+    "sheet": "https://stow.sh/6as2fwkm97hfbe7s0dd5ew5nzr/R4.jpg"
+  },
+  {
+    "id": "R5",
+    "name": "Orders ahead",
+    "verdict": "The mobile text no longer collides, but the missing thousand-unit scale and forecast dates prevent a precise reading.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The data is thousands of orders per day, but the axis, 53 label and tip print bare numbers. Format values as 53k and 38k, or add a short 'Thousand orders/day' axis unit."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Only Jan 2026 and Apr are dated, leaving the forecast boundary and endpoint undated. Add ticks at the forecast start and end so the two-month horizon can be read."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "'9 in 10 outcomes' floats above the fan towards the forecast divider. Put it at the outer band's right end, with a short leader if needed, and align Half with its own band's end."
+      }
+    ],
+    "sheet": "https://stow.sh/555pzx3sqchq18p4rz402325s4/R5.jpg"
+  },
+  {
+    "id": "R6",
+    "name": "Households buying",
+    "verdict": "The intervals are clear at both widths, but the tip masks another row and the uncertainty unit is ambiguous.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "tip",
+        "note": "The Textiles card covers Flooring's estimate dot and the middle of its interval. Move it into clear space beside the Textiles row, avoiding every neighbouring interval."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Labels such as '42% ± 4' leave the uncertainty unit unstated. Print '42% ± 4 pp' or show the low–high percentage endpoints consistently."
+      }
+    ],
+    "sheet": "https://stow.sh/4xw13vzp3wfxpbfpmmgt1qrvdf/R6.jpg"
+  },
+  {
+    "id": "G3",
+    "name": "A pint over time",
+    "verdict": "Clear at both widths; the tip repeats an existing value.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "tip",
+        "note": "The card repeats £3.37 directly above the printed £3.37. Keep one value readout while the tip is open."
+      }
+    ],
+    "sheet": "https://stow.sh/mc9y7sz3anm0nafqb9713jv16z/G3.jpg"
+  },
+  {
+    "id": "G4",
+    "name": "Pollen in honey",
+    "verdict": "The waffle reads well at both widths, but the tip hides its key.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Borage family tip covers the Pea family legend row. Place it in the clear space below the key, outside every legend row."
+      }
+    ],
+    "sheet": "https://stow.sh/g7gsjn44r32s0v01hnca9n7zef/G4.jpg"
+  },
+  {
+    "id": "G5",
+    "name": "Long novels",
+    "verdict": "The document marks have character, but narrow rows need clearer grouping.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The gap between novels is barely larger than the gap between the two lines of one novel. Increase the gap between novels and tighten each pair of lines."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Add one compact exemplar naming the word count represented by a full document. The partial documents then become readable without counting backwards from the totals."
+      }
+    ],
+    "sheet": "https://stow.sh/qwx0g6hyap4vavgp5cvjd2yk04/G5.jpg"
+  },
+  {
+    "id": "G6",
+    "name": "Moving between regions",
+    "verdict": "The wide network is legible; the narrow version is cramped.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The links compress into a dense knot between London and South East, while labels occupy most of the width. Use a taller, more open node arrangement at this width so the connections have room to separate."
+      }
+    ],
+    "sheet": "https://stow.sh/rsyydet2wv80jw84qbkdadn38q/G6.jpg"
+  },
+  {
+    "id": "G7",
+    "name": "Indo-European",
+    "verdict": "The branches and names remain clear at both widths, and the tip now clears the tree.",
+    "items": [],
+    "sheet": "https://stow.sh/407nah1epyzcff9bsawxtg95nr/G7.jpg"
+  },
+  {
+    "id": "G8",
+    "name": "Rain and river",
+    "verdict": "The paired panels work, but the tip obscures a peak and the axes need restraint.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The 12 Dec tip cuts across the lower flanks of the nearby 10 Dec river peak. Move the card into the empty band between the rain and river panels."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The unit repeats on every rain and river tick. Print mm and m³/s once per scale and leave the remaining ticks as numbers."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The date axis never prints the year. Include it on the first date tick so this event can be dated without opening a tip."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 390",
+        "note": "Reduce the empty vertical band between the two panels. Bring rain and flow closer together so their shared dates are easier to compare."
+      }
+    ],
+    "sheet": "https://stow.sh/mtds5h1wys3dkrt5zva7r661g4/G8.jpg"
+  },
+  {
+    "id": "G9",
+    "name": "Largest asteroids",
+    "verdict": "The wide scatter reads, but the narrow cluster loses names and obscures the hero.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "Hygiea, Vesta and Sylvia lose their labels in the cluster around Ceres. Give those labels reserved positions with short leaders instead of dropping them."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Sylvia is drawn across the top of the Ceres hero bubble. Draw Ceres above the context with a paper separator so its full silhouette remains readable."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Add a compact bubble-size key labelled in km. Inclination and eccentricity are named, but diameter has no visible scale."
+      }
+    ],
+    "sheet": "https://stow.sh/bacx9vh6gn7jp95nnyhzserzk9/G9.jpg"
+  },
+  {
+    "id": "G10",
+    "name": "Names rising, falling",
+    "verdict": "The signed bars and values read cleanly at both widths, and the tip clears the row labels.",
+    "items": [],
+    "sheet": "https://stow.sh/5ed4t396m94cfwnw47r5asqebv/G10.jpg"
+  },
+  {
+    "id": "G11",
+    "name": "Into the Thames",
+    "verdict": "The network is clear, but the wide composition leaves too much unused space.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all palettes 1280",
+        "note": "The seven-spoke graph occupies only the middle of the card, with broad empty sides and a deep lower margin. Enlarge the spoke layout within the available area while keeping the labels outside the nodes."
+      }
+    ],
+    "sheet": "https://stow.sh/rz5wd7w8py80w93jnt34dv9hds/G11.jpg"
+  },
+  {
+    "id": "G12",
+    "name": "Cold December",
+    "verdict": "The cold spell is clear, but the narrow hatch becomes visual noise.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The daily bars are too thin to carry both a hatch and an outline; they read as tiny ladder marks. Use quiet solid bars at this width and retain the single solid hero."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Neither the first date tick nor the tip includes the year. Print the year on the first date tick."
+      }
+    ],
+    "sheet": "https://stow.sh/k6h1x1rs258k29d636et7vqeay/G12.jpg"
+  },
+  {
+    "id": "G13",
+    "name": "Free time",
+    "verdict": "The radial comparison is legible, but its tip masks the wedges.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The 35–44 tip covers the top of its wedge and the boundary with 25–34. Move it outside the radial marks into a clear margin."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 390",
+        "note": "The narrow labels keep population percentages but drop the free-time values. Prioritise hours and minutes beside each age group, since those are the measure named by the chart."
+      }
+    ],
+    "sheet": "https://stow.sh/85kx7tkdag60h99vcwq30x7re8/G13.jpg"
+  },
+  {
+    "id": "G14",
+    "name": "Up the Hudson",
+    "verdict": "The tidal rhythm is visible, but the narrow bubbles merge into bands.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "Adjacent bubbles overlap so heavily that the hatched rows become continuous ropes. Reduce their maximum diameter relative to the hourly spacing so individual sizes remain distinguishable."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Coxsackie tip overlaps the lower edge of the Hyde Park bubbles above it. Increase the row gap or place the tip in a clear outer margin."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Add a shared bubble-size key with the water-level unit. Without opening a tip, the size changes have no numerical reference."
+      }
+    ],
+    "sheet": "https://stow.sh/7w4x1yeqmr706hjayann2rmsw4/G14.jpg"
+  },
+  {
+    "id": "G15",
+    "name": "Easter dates",
+    "verdict": "The dot distributions read well; the contextual medians are too faint.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all, especially dark",
+        "note": "The median ticks for the 1900s, 2000s and 2100s nearly disappear through the dot stacks. Raise their contrast and give them a paper separation from the dots, keeping the 1800s median strongest."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Name the highlighted vertical tick with a short Median label. Its meaning currently appears only in the tip."
+      }
+    ],
+    "sheet": "https://stow.sh/8e7j84p9vzb5cq6whjqwq2jq12/G15.jpg"
+  },
+  {
+    "id": "G16",
+    "name": "Busiest stations",
+    "verdict": "The ranking is clear at both widths and the tip now clears adjacent bars.",
+    "items": [
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Add one short measure label identifying what the values in millions count. The repeated m suffix gives magnitude but does not identify the station-use measure."
+      }
+    ],
+    "sheet": "https://stow.sh/1k7y2hhdfa7xtz45vt0pq5359f/G16.jpg"
+  },
+  {
+    "id": "G17",
+    "name": "Rolling swell",
+    "verdict": "The line stays readable on narrow screens, but its scale lacks context.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The endpoint prints 24 immediately beside the right-axis tick 24. Suppress the coincident tick while the endpoint value is shown."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Add a minimal relative-time scale and the measure unit. The resting chart has neither, so the visible 16–26 range and duration cannot be interpreted."
+      }
+    ],
+    "sheet": "https://stow.sh/j22f4p38jx7nmnp2bkp4747wnq/G17.jpg"
+  },
+  {
+    "id": "G18",
+    "name": "Premier League goals",
+    "verdict": "The cumulative line reads clearly; hover duplicates the headline readout.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The headline changes to 819 goals to 1 Mar while the tip repeats 1 Mar and 819 goals to date. Use one coordinated date-and-total readout instead of printing the same pair twice."
+      }
+    ],
+    "sheet": "https://stow.sh/edw8ynd386cc7ehpwdyv02aeax/G18.jpg"
+  },
+  {
+    "id": "G19",
+    "name": "Tenor weights",
+    "verdict": "The distributions and medians read at both widths, and the wrapped tip now clears the neighbouring whisker.",
+    "items": [],
+    "sheet": "https://stow.sh/x966e8m9s4xn38ywhazkgqe9jn/G19.jpg"
+  },
+  {
+    "id": "G20",
+    "name": "Kit by income",
+    "verdict": "The matrix reads numerically, but narrow headers and tip placement still need work.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "Headers split inside words as Tum-ble, Dishw-asher, Com-puter and Inter-net. Use deliberate readable labels and line breaks, or reflow the columns so words stay intact."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The 8th/Computer tip covers the seventh-row values in the middle columns. Anchor it outside the matrix rather than over another row."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 1280",
+        "note": "The ten rows expand into an excessively tall wall of large tiles. Cap the matrix height and reduce tile size so the full comparison fits the house card proportions."
+      }
+    ],
+    "sheet": "https://stow.sh/rmrq8ctd97qyrf349dmz0aefva/G20.jpg"
+  },
+  {
+    "id": "G21",
+    "name": "Nobel countries",
+    "verdict": "The narrow period headers are fixed, but the tip still covers another country.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Germany tip hides France’s values in the right-hand columns. Place the readout outside the matrix so every country remains comparable."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Reduce the contrast of the dense hatch steps and let the printed ranks do more of the work. This would quiet the field and make Japan’s outlined row a clearer focal point."
+      }
+    ],
+    "sheet": "https://stow.sh/ykk1bw1z5ve84xyqwc8c2cndhw/G21.jpg"
+  },
+  {
+    "id": "G22",
+    "name": "Free vote",
+    "verdict": "The wide flows read; the narrow layout gives the ribbons too little horizontal room.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The flows occupy a strip roughly 100px wide while the long labels take the sides. Put party and outcome labels above or below their nodes at this width to give the crossings more horizontal space."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Conservative → No tip sits across the central ribbon crossings and hides other routes. Reserve a clear readout area above the network."
+      }
+    ],
+    "sheet": "https://stow.sh/3pkmmbehz57yqem588tk2pvg43/G22.jpg"
+  },
+  {
+    "id": "G23",
+    "name": "From the Wey",
+    "verdict": "Selection is clear, but the narrow reach caption crosses unrelated branches.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "The reach caption extends left from Wey across the Mole and Cherwell links. Give it a reserved two-line block below Wey, with a short leader back to the selected node."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 1280",
+        "note": "The small star leaves wide empty margins around the network. Expand the spoke arrangement while reserving enough room for Wey’s caption."
+      }
+    ],
+    "sheet": "https://stow.sh/9sf1927whsmmvc662s7aethpk7/G23.jpg"
+  },
+  {
+    "id": "B1",
+    "name": "Land borders",
+    "verdict": "The selected links stand out, but the narrow chart leaves their destinations anonymous.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "Only Russia is named, so the highlighted border links cannot be matched to countries. Keep direct-neighbour names visible using an outer label column with leaders or a compact linked list."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 1280",
+        "note": "The ring occupies roughly a third of the card width and floats between large empty gutters. Increase its usable footprint or use a tighter frame while preserving readable country labels."
+      },
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The Uganda tip repeats the Uganda caption directly beneath it and covers the selected arcs. Combine the name, reach and neighbour total into one readout in a clear part of the card."
+      }
+    ],
+    "sheet": "https://stow.sh/cay2k1r1czvwmwx2m015aj1p3w/B1.jpg"
+  },
+  {
+    "id": "B2",
+    "name": "Lines and stations",
+    "verdict": "The hubs are legible, but the network's encoding and faint context need refinement.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "dark, both widths",
+        "note": "The non-hero hub fills and link network fade into the background while their labels remain bright. Raise those quiet mark tones enough to keep the network readable."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The station-dot sizes and links between line hubs have no visible encoding key. Add a compact exemplar identifying a line hub, a station dot and an interchange link."
+      }
+    ],
+    "sheet": "https://stow.sh/t0jtpczb0n8axbj5q6dchvvf82/B2.jpg"
+  },
+  {
+    "id": "B3",
+    "name": "Mammal tree",
+    "verdict": "The wide tree is readable, but mobile removes the names needed to understand its middle levels.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "Families and Orders still have headers and counts, but every family and order name is missing. Keep a readable minimum width with horizontal scrolling or offer a level-by-level tree that retains those names."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "The header counts sit at inconsistent horizontal positions, and Superorders is offset from its node column. Anchor each header and count to the actual column geometry."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The vertical column guides are dotted gridlines. Use quiet solid hairlines so dots remain part of the data texture vocabulary."
+      }
+    ],
+    "sheet": "https://stow.sh/jkev4q5bgt9ap4exh1sc1w2hv6/B3.jpg"
+  },
+  {
+    "id": "B4",
+    "name": "From Germany",
+    "verdict": "The selected-node ring and paper palette are fixed; mobile labels and the duplicated readout remain weak.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "None of Germany's four direct neighbours is named. Retain their names beside the ring or in a compact neighbour list linked to the corresponding dots."
+      },
+      {
+        "severity": "rough",
+        "where": "pink and dark 1280 tip",
+        "note": "The Uganda tip repeats the central Uganda caption and lies across its selected links. Merge the two readouts and place them in a clear central or outer area."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 1280",
+        "note": "The circle uses only about a third of the card width, leaving broad empty sides. Fit this chart to a half-width frame or enlarge the ring and its label area."
+      }
+    ],
+    "sheet": "https://stow.sh/1aq3z6vsx3k84ge42zjck53b6q/B4.jpg"
+  },
+  {
+    "id": "B5",
+    "name": "From Piccadilly",
+    "verdict": "The selection still reads as a dense web, and the strongest hub texture points to the wrong line.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Northern retains the strongest crosshatched hub while the selected Piccadilly hub has the same pale hatch as the others. Give Piccadilly the selected outline and hero fill, and quiet Northern during this selection."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The web of direct and second-step links is so similar in weight that Piccadilly's route cannot be followed through it. Keep direct links in ink, make second-step links quieter and fade the remaining context."
+      },
+      {
+        "severity": "rough",
+        "where": "all palettes 390",
+        "note": "Piccadilly and Jubilee sit on the same label line with little separation, while the reach caption runs beneath Jubilee. Move the selected-node caption below the graph with a short leader to Piccadilly."
+      }
+    ],
+    "sheet": "https://stow.sh/2czc9mfcpwbr6fverjmwthx0e7/B5.jpg"
+  },
+  {
+    "id": "D1",
+    "name": "Wind and demand",
+    "verdict": "Readable at both widths; the demand hatching could step back further.",
+    "items": [
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Lighten the hatch between demand and wind so the darker wind line leads before the filled band does. Keep the two direct readouts."
+      }
+    ],
+    "sheet": "https://stow.sh/tekpypttdhz7p3d17bvtjhcz9g/D1.jpg"
+  },
+  {
+    "id": "D2",
+    "name": "Generation by fuel",
+    "verdict": "The stack reads, but hover removes the fuel names and the textures compete.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "Hover replaces Wind, Imports, Gas and Nuclear with bare values. Keep each fuel name beside its value so the readout can be understood without remembering the resting labels."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The four dense fill patterns compete with the Wind outline. Reduce the contrast of the three context fills while retaining their distinct texture families."
+      }
+    ],
+    "sheet": "https://stow.sh/xb12sjyd61x8z13xnt7pe39gve/D2.jpg"
+  },
+  {
+    "id": "D3",
+    "name": "Carbon intensity",
+    "verdict": "Clean across the supplied widths, palettes and cursor states.",
+    "items": [],
+    "sheet": "https://stow.sh/fqmhv84sw39rpdjxd88hvnnan3/D3.jpg"
+  },
+  {
+    "id": "D4",
+    "name": "Monthly mix",
+    "verdict": "Gas leads clearly, but the mobile key and hover context need work.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The key wraps as three entries followed by Other alone. Use a balanced two-by-two key with aligned names and values."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "Wind, Nuclear and Other have weak separation, especially in the narrow columns. Increase context outline and texture contrast enough to distinguish each segment."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The key values change on hover without a printed date or clear selected column. Show the selected month beside the readout and mark its column."
+      }
+    ],
+    "sheet": "https://stow.sh/zjbb6wj9zwnj4jrg2ftcrf78tg/D4.jpg"
+  },
+  {
+    "id": "D5",
+    "name": "Demand change",
+    "verdict": "The signed bars are clear; the hover value is in the wrong place.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The −8% readout floats above the +20% gridline while its bar extends below zero. Anchor the value just beyond the negative bar end, with the selected month."
+      }
+    ],
+    "sheet": "https://stow.sh/w9tt840e6jjnjqnnwxrt5syrtm/D5.jpg"
+  },
+  {
+    "id": "D6",
+    "name": "A year by fuel",
+    "verdict": "A clear ranking with an excessively faint hover context.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "Selecting Coal nearly erases the other bars, especially in dark. Keep the context bars legible so their lengths can still be compared with the selected stub."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "The scale extends to 120 TWh although the largest bar is 87.4. End it at 100 TWh to give the short bars more usable length."
+      }
+    ],
+    "sheet": "https://stow.sh/ye3mmdjev7zcnwm746ht80czk3/D6.jpg"
+  },
+  {
+    "id": "D7",
+    "name": "Cleaner regions",
+    "verdict": "The comparison is legible on desktop but squeezed and unitless on mobile.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The narrow layout removes every g/kWh unit. Print the unit once beside the year headings rather than dropping it entirely."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The two label columns leave only a short central slope, compressing London and Yorkshire into nearly the same path. Put the region names above their endpoint values or shorten the repeated names to recover plot width."
+      }
+    ],
+    "sheet": "https://stow.sh/rhzt57yev3fs489q1gh1sgznv8/D7.jpg"
+  },
+  {
+    "id": "D8",
+    "name": "Gigawatt stations",
+    "verdict": "The scatter has no distinct hero and loses individual points at narrow width.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Drax has the same mid-tone dot as the other non-fossil stations. Give this labelled maximum the hero tone and keep the other stations on the quiet ramp."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Several stations around 25–45 years and 1,000–1,400 MW overlap into paired blobs. Use smaller context dots or a counted cluster mark for coincident stations, with their names available in the readout."
+      }
+    ],
+    "sheet": "https://stow.sh/rnbjvg3rqypp46ncrc5m3v0ggx/D8.jpg"
+  },
+  {
+    "id": "D9",
+    "name": "Where energy goes",
+    "verdict": "The main flow is clear; the narrow loss labels interrupt the downstream paths.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Conversion sits lower than Supply and Use, leaving an uneven header row. Align all three column headings and keep TWh as one shared unit."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Conversion loss 286 and Own use and losses 138 extend across the ribbons entering the Use column. Place the labels below their own terminal nodes with short leaders, clear of those ribbons."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "The non-alert ribbons are dim and the paper plates behind loss labels read as rectangular cuts. Raise ribbon contrast slightly and use close-fitting text halos instead of wide plates."
+      }
+    ],
+    "sheet": "https://stow.sh/x75mmk9t9wxk6285x200t1p9p3/D9.jpg"
+  },
+  {
+    "id": "D10",
+    "name": "Wind, year on year",
+    "verdict": "The time axis is improved, but the last annotation still touches the value axis.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Darragh runs straight into the +200% tick label. Move the storm name left of its band or down inside a clear part of the plot."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The cursor marks a reading but prints neither its date nor its percentage. Add a compact dated value readout in the clear space above the line."
+      }
+    ],
+    "sheet": "https://stow.sh/xrcqfwjj66yxjy3b7xz1kqxxfn/D10.jpg"
+  },
+  {
+    "id": "D11",
+    "name": "2024 against 2023",
+    "verdict": "The paired trend works on desktop; mobile gives too much width to its end labels.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The right label column consumes about a third of the available width and crushes the dotted tails. Stack the year and value within a narrower label column and return the space to the plot."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Most of the lower plot is empty because the value axis starts at zero. Use a clearly labelled tighter range for these two line series so their differences are easier to compare."
+      }
+    ],
+    "sheet": "https://stow.sh/2q87qqdv25sh3dy43xa1fpbh3g/D11.jpg"
+  },
+  {
+    "id": "D12",
+    "name": "Nuclear output",
+    "verdict": "Clean in the supplied shots; the figure, date and cursor form a coherent readout.",
+    "items": [],
+    "sheet": "https://stow.sh/5jhj5w6dmtr2cnsfgsr96ppr0y/D12.jpg"
+  },
+  {
+    "id": "D13",
+    "name": "Gas against the plan",
+    "verdict": "The plan comparison is strong, but the reference label and hover placement still obscure it.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The 2030 plan 5% plate cuts through the first bars, especially at 390. Put the reference name in the clear margin at the right end of the target line."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The hovered 31% value sits above the 50% gridline, detached from its bar. Position it immediately above the selected bar and include its month."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The engraved upper portions become solid bars at this width. Use a fill treatment that stays distinct at narrow bar widths, while preserving the approved emphasis above the target."
+      }
+    ],
+    "sheet": "https://stow.sh/mnw7wq1z9n46e3x6v8xtnzs39r/D13.jpg"
+  },
+  {
+    "id": "D14",
+    "name": "Share by fuel",
+    "verdict": "The proportions are readable, but fine textures and missing hover readings limit the comparison.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The thin upper segments turn the dot and rule fills into a striped screen. Simplify the context fills at this width and preserve a clear boundary between Wind, Nuclear and Other."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "Hover changes the Gas fills without showing a selected month or any fuel percentages. Add one dated readout containing the four shares and a visible selected column."
+      }
+    ],
+    "sheet": "https://stow.sh/s5svdpass36x3d530mkqmadr33/D14.jpg"
+  },
+  {
+    "id": "D15",
+    "name": "Vitals",
+    "verdict": "The negative zero is fixed; the panels still lack a time reference and a named limit.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "There are no dates or time ticks anywhere in the panels, so the curves and headline readings have no visible period. Add shared start/end dates and a dated reading above the facets."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Solar uses TWh while Demand, Wind and Imports use GWh. Use GWh consistently for these energy panels so readers can compare the figures directly."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "Lowest frequency has an unnamed dashed threshold. Label it 49.5 Hz beside the rule so the red breach has an explicit reference."
+      }
+    ],
+    "sheet": "https://stow.sh/qw9gtv22egtrxgcptcbqmcex6g/D15.jpg"
+  },
+  {
+    "id": "D16",
+    "name": "Intensity by region",
+    "verdict": "The regional changes are clear on desktop; small changes collapse at 390.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The long region names squeeze the plot until the start and end dots overlap on the small increases. Give names their own line or shorten them, and retain enough plot width to separate those endpoints."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 / paper 1280 / dark 1280",
+        "note": "g/kWh repeats on every nonzero tick and every change label. Print the unit once above the scale and keep the numerical ticks and change column lighter."
+      }
+    ],
+    "sheet": "https://stow.sh/8e3zch1k9gjvsfvsjn15b97ex0/D16.jpg"
+  },
+  {
+    "id": "D17",
+    "name": "Dirty hours",
+    "verdict": "The two time blocks, density ladder and single exceptional cell remain readable in all supplied states.",
+    "items": [],
+    "sheet": "https://stow.sh/nmdaatz2pde1xkf3gm0ypcpzvp/D17.jpg"
+  },
+  {
+    "id": "D18",
+    "name": "Frequency",
+    "verdict": "The breach and its dated readout are clear; the filled area adds unnecessary visual weight.",
+    "items": [
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Remove the stippled area down to the 49.2 axis floor. A line, the named 49.5 Hz limit and the single red breach would focus the chart on the deviation rather than an arbitrary filled area."
+      }
+    ],
+    "sheet": "https://stow.sh/nqgynfwhvkwwhgwdwzr9thy1k3/D18.jpg"
+  },
+  {
+    "id": "D19",
+    "name": "Stations by fuel",
+    "verdict": "The station ages overplot at 390 and the median ticks merge with data dots.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Gas and Wind dots merge into solid runs, hiding how many stations occupy each age. Stack coincident dots in compact regular rows or use a small beeswarm instead of drawing them on one baseline."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The Oil and Nuclear median ticks pass through station dots and create hybrid marks. Draw median ticks just above the dot rows, with a consistent small gap."
+      }
+    ],
+    "sheet": "https://stow.sh/rppqk8bmz1xv74pzcteafcqz1d/D19.jpg"
+  },
+  {
+    "id": "D20",
+    "name": "Demand by region",
+    "verdict": "The line hierarchy is restrained, but the measure and cursor readings are unspecified.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The value axis and North 96 label never name the unit or index basis. Add the measure once beside the value scale so 96 has an unambiguous meaning."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The cursor adds dots but no selected date or numerical readings for the regions. Add a pooled dated readout with region names, especially for the seven lines folded into the group label."
+      }
+    ],
+    "sheet": "https://stow.sh/48bv56mcnp7hqcgqmw9ygymcvk/D20.jpg"
+  },
+  {
+    "id": "M1",
+    "name": "Christmas trees",
+    "verdict": "Oregon reads as hero, but missing-data outlines and narrow callouts need polish.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "The borders of the blank no-data states nearly disappear into the background, especially Nevada and Arizona. Increase their quiet boundary contrast so they remain part of the map."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 tip",
+        "note": "Hovering Louisiana dims the rest of the map until most state detail and the Oregon readout are hard to compare. Keep a higher minimum contrast for context fills and printed values."
+      },
+      {
+        "severity": "idea",
+        "where": "all palettes 390",
+        "note": "The narrow map keeps OR but drops its value and the other leading-state callouts. Reserve compact leader callouts for Oregon and North Carolina so the main comparison survives the smaller size."
+      }
+    ],
+    "sheet": "https://stow.sh/d6xxsnpvyfe0b087z59wqv5mzn/M1.jpg"
+  },
+  {
+    "id": "M2",
+    "name": "Wine drinking",
+    "verdict": "The world map loses its small-country hero and does not state its measure.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all palettes 390",
+        "note": "Portugal loses its label and is too small to read as the hero; AU becomes the only labelled country. Keep Portugal’s value in an external callout and add a Europe inset large enough to show the selected country."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The legend shows bare thresholds and values such as 6.8 without a unit. Label the scale as litres of pure alcohol from wine per person aged 15+, with 2022, so readers do not mistake these for litres of wine."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "The lower-value country screens and boundaries are too dim against the background. Raise their contrast enough to separate low consumption from no data while keeping Portugal strongest."
+      }
+    ],
+    "sheet": "https://stow.sh/frapkmz5f8ybdzkmxaq7pz8ytg/M2.jpg"
+  },
+  {
+    "id": "O1",
+    "name": "Summer of 1976",
+    "verdict": "The peak is clear; the quiet key and overlapping hover card need refinement.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The Above and Below swatches are much fainter than the weekly-mean key, especially in dark and at 390. Increase the swatch contrast so their dot and hatch patterns can be matched to the daily deviations."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The 3 Aug card covers the descending weekly-mean line and daily texture to its left. Move it into the clear space above the August section and keep a short connection to its point."
+      }
+    ],
+    "sheet": "https://stow.sh/sxmwt5n1k6c91y710arcabgwqr/O1.jpg"
+  },
+  {
+    "id": "O2",
+    "name": "Everyday prices",
+    "verdict": "The combined ruler and price changes are distinctive, but the tip still covers the scale.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Tea card covers the 100% ruler label and the right-hand ticks. Put the card below the ruler in a clear gap between the leaders."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Loaf and Milk place their percentages and prices almost side by side with no clear column gap. Stagger the two label blocks vertically and keep a leader back to each segment."
+      },
+      {
+        "severity": "idea",
+        "where": "pink 1280 / paper 1280 / dark 1280",
+        "note": "The four very thin change bars leave large empty spans under the ruler. Shorten this panel or give the bars slightly more width so the composition feels deliberate rather than stretched."
+      }
+    ],
+    "sheet": "https://stow.sh/6nvr4cpv5c90wqgc7622s00f0q/O2.jpg"
+  },
+  {
+    "id": "O3",
+    "name": "Arable crops",
+    "verdict": "Wheat is now a clear hero, but the values need units and the context paths need more contrast.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The final values and tip use bare counts such as 1,531k and 135k without naming what is measured. Add the actual unit to a shared value-column heading and the tip."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "All five year ticks repeat four digits in a tight strip. Keep 1984 in full and abbreviate the following years to 94, 04, 14 and 24 using the house year-axis format."
+      },
+      {
+        "severity": "rough",
+        "where": "dark 1280 / dark 390",
+        "note": "The lower-ranked crop paths are too dim to follow reliably through the crossings. Raise the context line contrast while keeping Wheat distinctly stronger."
+      }
+    ],
+    "sheet": "https://stow.sh/403z12avkj9wwhj5qcwa7qz6cf/O3.jpg"
+  },
+  {
+    "id": "O4",
+    "name": "Vote share",
+    "verdict": "The distributions read, but clustered deciles and weak hero emphasis make the chart harder than necessary.",
+    "items": [
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Liberal Democrat and Green Party decile ticks collapse into dark combs near the low end. At narrow width show fewer quantile ticks, retaining the full deciles in the tip."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Labour differs mainly through its text and median tick. Give its range a stronger outline or distinct hero fill so the selected distribution leads before its label does."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "Hover fades the other party names and medians until comparison becomes difficult. Keep their text readable and reduce only the contextual marks."
+      }
+    ],
+    "sheet": "https://stow.sh/j3q63gjmvazg1n54d4fxjhf71f/O4.jpg"
+  },
+  {
+    "id": "O5",
+    "name": "Against normal",
+    "verdict": "The deviation ribbon is clear, but the hover card still hides the summer crest.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The September card lies across the July–August peaks and their crosshatching. Put it in the empty area below the selected point or in a reserved readout strip."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Replace Normal with the actual reference-period label. A short year range identifies the comparator without adding prose."
+      }
+    ],
+    "sheet": "https://stow.sh/669z7x331ph541k6tvpngtc78a/O5.jpg"
+  },
+  {
+    "id": "O6",
+    "name": "Goods exports",
+    "verdict": "The directional ribbons work; the tip obscures their destination and the desktop circle is small.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Manufactures card covers the ribbon ends entering the Manufactures sector. Place it outside the ring with a short leader to the selected sector."
+      },
+      {
+        "severity": "idea",
+        "where": "pink 1280 / paper 1280 / dark 1280",
+        "note": "Enlarge the circle within the desktop card while keeping the labels outside it. The present ring leaves broad empty margins and makes the smaller flows unnecessarily fine."
+      }
+    ],
+    "sheet": "https://stow.sh/pck9ts1bngahkhpx8bnncg2j18/O6.jpg"
+  },
+  {
+    "id": "O7",
+    "name": "A year by month",
+    "verdict": "The radial shape reads, but a ring label touches the data and the key dominates the composition.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The 10 °C label sits on the top of the shape and its hatch. Move the ring value to a free angular position and keep a clear paper gap around it."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The exemplar key occupies roughly a third of the card, with substantial unused space beside it. Compact the key and move the main radial plot higher."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The May card sits above the radial plot, far from the highlighted May point on the lower right. Place the card beside that point outside the ring, with a short leader."
+      }
+    ],
+    "sheet": "https://stow.sh/fq54rdjn03eznwynypeecxqff7/O7.jpg"
+  },
+  {
+    "id": "O8",
+    "name": "Hot year",
+    "verdict": "The overview and peak read well; the hover card still masks the selected detail.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The 31 July card crosses the 37.3 °C spike stem and covers later daily stems and part of the mean line. Move it into the clear upper-left area of the detail plot."
+      },
+      {
+        "severity": "idea",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "The detail view labels only Jul 2022 and Aug. Add a few weekly ticks so the narrow zoom can be read more precisely without opening a tip."
+      }
+    ],
+    "sheet": "https://stow.sh/h4sqfjc7xvqczx86xt6dwyn9j8/O8.jpg"
+  },
+  {
+    "id": "O9",
+    "name": "Towers by county",
+    "verdict": "Devon leads clearly, but the small counties and parent-group hover need identification.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The tip prints 2093 towers without a thousands separator. Format it as 2,093 towers."
+      },
+      {
+        "severity": "rough",
+        "where": "all",
+        "note": "The eight circles in the two small side groups have no county names or values. Add compact external county labels with leaders, or a labelled companion list for those groups."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The tip names Dove and outlines the outer parent ring, although the visible labels and title describe counties. Name the parent group on the chart or restrict these hover stops to the county circles."
+      }
+    ],
+    "sheet": "https://stow.sh/1kjqwfd170m6djze0pb4mavpzd/O9.jpg"
+  },
+  {
+    "id": "O10",
+    "name": "Land by nation",
+    "verdict": "The land mix reads, but the right-hand percentages have no category heading.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The right-hand values are farmland shares, but their position beside the whole stack makes them look like totals. Add a Farmland heading above that column or place the values beside the farmland segment."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "Hovering Built makes the other land uses almost disappear, especially in dark. Keep enough context contrast to compare the selected segment against the whole bar."
+      }
+    ],
+    "sheet": "https://stow.sh/qrr0qydwj7kexpgy08bm41v7jk/O10.jpg"
+  },
+  {
+    "id": "O11",
+    "name": "Share of orders",
+    "verdict": "The tip placement is improved, but its percentage-change wording is wrong.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "Wood changes from 21% to 22%, but the tip says 1% more. Print +1 percentage point; a relative percentage change would be about +4.8%."
+      },
+      {
+        "severity": "rough",
+        "where": "pink 390 / paper 390 / dark 390",
+        "note": "Tile and Wood lose their arrow shafts and become pairs of dots, making direction hard to read. Print a compact signed percentage-point change beside these short movements."
+      },
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "The starting and ending shares have no named comparison periods. Add one compact key naming the periods represented by the start dot and arrow end."
+      }
+    ],
+    "sheet": "https://stow.sh/bwd6k6ytssp02vpsf8gxm0j9k4/O11.jpg"
+  },
+  {
+    "id": "O12",
+    "name": "Against plan",
+    "verdict": "The bullet measures are clear, but number formatting and hover placement remain defective.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "all",
+        "note": "Searches reads 1.2 of 2 without a count scale or unit, while Members prints 3100 of 3000 without separators. Name the search magnitude and format the counts as 3,100 of 3,000 in both captions and tips."
+      },
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The Searches card now follows its own row, but its bottom edge still covers the measure bar. Move it into the gap above the row with a clear margin from both the bar and the Brands caption."
+      }
+    ],
+    "sheet": "https://stow.sh/h3dja5qade8a9h6fc8bwm3ef05/O12.jpg"
+  },
+  {
+    "id": "O13",
+    "name": "Members by age",
+    "verdict": "The mirrored values are clear; the redundant tip hides the row it describes.",
+    "items": [
+      {
+        "severity": "wrong",
+        "where": "pink 1280 tip / dark 1280 tip",
+        "note": "The 25–34 card covers the age label and most of its Workplaces bar while repeating values already printed. Keep the row highlight and remove the redundant card, or place it outside the data."
+      },
+      {
+        "severity": "idea",
+        "where": "all",
+        "note": "Move Homes and Workplaces above their columns. Readers would identify the two distributions before scanning the bars rather than finding the names underneath."
+      }
+    ],
+    "sheet": "https://stow.sh/vq839hq1agmz8t0d8cdzxw41a6/O13.jpg"
+  }
+]
