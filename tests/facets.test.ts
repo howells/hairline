@@ -17,6 +17,7 @@ const days = (values: number[]): DailyDatum[] =>
     date: `2024-03-${String(4 + i).padStart(2, "0")}`,
     value,
   }));
+
 const big = days([40, 60, 80, 70, 90, 100, 95]);
 const small = days([4, 6, 8, 7, 9, 10, 9]);
 
@@ -34,6 +35,7 @@ const nothing = () => null;
 
 const grid = (width: number) =>
   facets({ children: nothing, label: "Regions", panels, width });
+
 const scaled = (scale?: "free" | "shared") =>
   facets({ children: nothing, label: "Regions", panels, scale, width: 800 });
 
@@ -95,6 +97,7 @@ const heroes = (hero?: string | null) => {
       if (cell.hero) {
         seen.push(cell.panel.key);
       }
+
       return null;
     },
     hero,
@@ -102,6 +105,7 @@ const heroes = (hero?: string | null) => {
     panels,
     width: 800,
   });
+
   return seen;
 };
 
@@ -121,6 +125,7 @@ describe("one hero, the rest on the ramp", () => {
       axis: true,
       children: (cell) => {
         seen.push({ axis: cell.axis, width: cell.width });
+
         return null;
       },
       label: "Regions",
@@ -143,6 +148,7 @@ describe("one hero, the rest on the ramp", () => {
     facets({
       children: (cell) => {
         axes.push(cell.axis);
+
         return null;
       },
       label: "Regions",
@@ -158,6 +164,7 @@ const gridYs = (html: string) =>
   [...html.matchAll(/class="grid-line"[^>]*?\sy1="(?<y>[\d.]+)"/gu)].map(
     (m) => m.groups?.y
   );
+
 const labels = (html: string) =>
   (html.match(/class="t-axis t-halo"/gu) ?? []).length;
 
@@ -167,10 +174,12 @@ const path = (html: string) =>
 
 const sized = { height: 200, width: 320 };
 const domain: [number, number] = [0, 100];
+
 const area = (props: Partial<ComponentProps<typeof HairlineArea>>) =>
   renderToString(
     createElement(HairlineArea, { data: big, ...sized, ...props })
   );
+
 const line = (props: Partial<ComponentProps<typeof HairlineLine>>) =>
   renderToString(
     createElement(HairlineLine, { data: big, ...sized, ...props })
@@ -202,6 +211,7 @@ const gridWidth = (html: string) => {
     /class="grid-line"[^>]*?\sx1="(?<a>[\d.]+)"[^>]*?\sx2="(?<b>[\d.]+)"/u.exec(
       html
     );
+
   return Number(m?.groups?.b) - Number(m?.groups?.a);
 };
 
@@ -241,6 +251,7 @@ const rungTop = (data: { label: string; value: number }[], max?: number) => {
   const html = renderToString(
     createElement(RungBars, { data, height: 200, max, unit: 1, width: 200 })
   );
+
   return Math.min(
     ...[...html.matchAll(/class="grow-x[^"]*"[^>]*?\sy="(?<y>[\d.]+)"/gu)].map(
       (m) => Number(m.groups?.y)

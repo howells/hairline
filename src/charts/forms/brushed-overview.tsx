@@ -24,13 +24,17 @@ import { activeDaysDemo } from "./brushed-overview.data";
 import type { DayValue } from "./brushed-overview.data";
 
 const fmtDay = utcFormat("%a %-d %b");
+
 /** A difference in degrees, always signed ("+15.6 °C", "−2.1 °C"). */
 const fmtSigned = (v: number) => {
   const t = Math.abs(v).toFixed(1);
+
   return `${v < 0 && t !== "0.0" ? "−" : "+"}${t} °C`;
 };
+
 /** Value rules at whole degrees need no decimal ("30 °C"). */
 const fmtTick = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
+
 /** Days either side of the window's centre when it opens. */
 const OPEN_HALF = 31;
 
@@ -39,6 +43,7 @@ const OPEN_HALF = 31;
  * grip's invisible 44px hit area hangs out past it.
  */
 const X0 = 0;
+
 /** The right-hand value column, which the end grip's 22px also fits in. */
 const AXIS = 40;
 const DETAIL_H = 360;
@@ -68,11 +73,14 @@ const DateTicks = (props: {
   const t = scaleUtc()
     .domain([props.data[props.span.a].date, props.data[props.span.b].date])
     .range([props.x0, props.x1]);
+
   // Keep every date whole inside the plot's ends.
   const ticks = t
     .ticks(Math.max(2, Math.floor((props.x1 - props.x0) / 90)))
     .filter((d) => t(d) > props.x0 + 18 && t(d) < props.x1 - 18);
+
   const labels = tickLabels(ticks);
+
   return (
     <g>
       {ticks.map((d, k) => (
@@ -94,6 +102,7 @@ const stemClass = (peak: boolean, hover: boolean) => {
   if (peak) {
     return "stroke-ink";
   }
+
   return hover ? "stroke-l1" : "stroke-l4";
 };
 
@@ -113,6 +122,7 @@ const Stems = (props: StemsProps) => (
     {props.data.slice(props.span.a, props.span.b + 1).map((d, k) => {
       const i = props.span.a + k;
       const peak = i === props.peak;
+
       return (
         <Stem
           className={`transition-tone ${stemClass(peak, props.hover === i)}`}
@@ -137,22 +147,27 @@ const Detail = (props: DetailProps) => {
   const x1 = props.width - AXIS;
   const floor = DETAIL_H - 34;
   const x = scaleLinear().domain([a, b]).range([X0, x1]);
+
   const y = scaleLinear()
     .domain([Math.min(...values, ...means), Math.max(...values, ...means)])
     .nice(4)
     .range([floor - 8, 28]);
+
   const path =
     line<number>()
       .x((_, k) => x(a + k))
       .y((m) => y(m))
       .curve(curveMonotoneX)(means) ?? "";
+
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
     const i = clamp(Math.round(x.invert(px)), a, b);
     const top = Math.min(y(props.data[i].value), y(props.mean[i]));
     props.hover.show(i, x(i), top - 6);
   };
+
   const label = `Daily maximum temperature, ${fmtDay(props.data[a].date)} to ${fmtDay(props.data[b].date)}, with the 7-day average: hottest ${fmtDegC(props.data[peak].value)} on ${fmtDay(props.data[peak].date)}`;
+
   return (
     <ChartSvg
       className="touch-pan-y"
@@ -236,18 +251,23 @@ const Detail = (props: DetailProps) => {
  */
 export const BrushedOverview = (props: { data?: DayValue[] }) => {
   const data = props.data ?? activeDaysDemo;
+
   const mean = weeklyMean(
     data.map((d) => d.value),
     "trailing"
   );
+
   const last = data.length - 1;
   const top = Math.max(...data.map((d) => d.value));
   const hottest = data.findIndex((d) => d.value === top);
+
   const [span, setSpan] = useState<Span>({
     a: clamp(hottest - OPEN_HALF, 0, last),
     b: clamp(hottest + OPEN_HALF, 0, last),
   });
+
   const hover = useHover<number>();
+
   return (
     <Plot
       overlay={

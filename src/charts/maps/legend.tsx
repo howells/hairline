@@ -13,8 +13,10 @@ import { stepFill } from "./step-fill";
 /** Side of a key swatch (KeySwatch), and the gap before its label. */
 const SWATCH = KEY.swatch;
 const SWATCH_GAP = KEY.gap;
+
 /** Widest gap between keys. */
 const KEY_GAP = KEY.entryGap;
+
 /** Each key's pointer target: at least 44 by 44. */
 const HIT = 44;
 
@@ -42,6 +44,7 @@ interface Key {
 /** Keys left to right: no value (when shown), under the first break, then each break and up. */
 const keysFor = (props: LegendProps): Key[] => {
   const t = props.thresholds;
+
   const rows = [
     ...(props.emptyLabel === undefined
       ? []
@@ -49,19 +52,24 @@ const keysFor = (props: LegendProps): Key[] => {
     { bin: 0, label: `<${props.short(t[0])}` },
     ...t.map((v, i) => ({ bin: i + 1, label: `${props.short(v)}+` })),
   ];
+
   const sized = rows.map((r) => {
     const w = SWATCH + SWATCH_GAP + sansWidth(r.label, 12);
+
     return { ...r, slot: Math.max(HIT, Math.ceil(w)), w };
   });
+
   // The gap closes up on narrow plots so the row always fits on one line.
   const room = props.width - sized.reduce((acc, k) => acc + k.slot, 0);
   const gap = clamp(room / Math.max(1, sized.length - 1), 0, KEY_GAP);
   const keys: Key[] = [];
   let x = 0;
+
   for (const k of sized) {
     keys.push({ ...k, x });
     x += k.slot + gap;
   }
+
   return keys;
 };
 
@@ -75,6 +83,7 @@ const LegendKey = (props: {
   const { k } = props;
   const f = stepFill(k.bin, props.pid);
   const left = k.x + (k.slot - k.w) / 2;
+
   return (
     <DimGroup
       dim={props.active !== null && props.active !== k.bin}
@@ -115,6 +124,7 @@ export const Legend = (props: LegendProps) => {
   const total = last === undefined ? 0 : last.x + last.slot;
   const slack = pad(last) - pad(keys.at(0));
   const left = Math.round(Math.max(0, (props.width - total + slack) / 2));
+
   return (
     <g transform={`translate(${left}, ${Math.round(props.y)})`}>
       {keys.map((k) => (

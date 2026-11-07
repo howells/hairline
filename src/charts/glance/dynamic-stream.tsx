@@ -42,12 +42,15 @@ const whole = (v: number) => `${Math.round(v)}`;
 const domainOf = (feed: StreamFeed): [number, number] => {
   let lo = Number.POSITIVE_INFINITY;
   let hi = Number.NEGATIVE_INFINITY;
+
   for (let s = 0; s < 400; s += 1) {
     const v = feed(s);
     lo = Math.min(lo, v);
     hi = Math.max(hi, v);
   }
+
   const pad = (hi - lo) * 0.1;
+
   return [lo - pad, hi + pad];
 };
 
@@ -67,6 +70,7 @@ const useStreamClock = (
     reduced: "step",
     step: { every: interval * 3, unit: interval },
   });
+
   return {
     elapsed: clock.t,
     handleToggle: clock.handleToggle,
@@ -203,20 +207,24 @@ export const DynamicStream = (props: DynamicStreamProps) => {
             right: 64,
             top: 14,
           };
+
           const right = width - m.right;
           const dx = (right - m.left) / (win - 1);
           // The newest value sits one step past the right edge and slides in.
           const xOf = (s: number) => right - (head - s - 1 + frac) * dx;
+
           const y = scaleLinear()
             .domain([lo, hi])
             .nice()
             .range([height - m.bottom, m.top]);
+
           const handleMove = (e: PointerEvent<SVGSVGElement>) => {
             const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
             const s = Math.round(head - 1 + frac - (right - px) / dx);
             const k = Math.max(head - win + 1, Math.min(head - 1, s));
             hover.show(k, xOf(k), y(feed(k)) - 10);
           };
+
           return (
             <ChartSvg
               className="touch-pan-y"

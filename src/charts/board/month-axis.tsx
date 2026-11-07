@@ -9,9 +9,11 @@ const edgeAnchor = (
   width: number
 ): Placed["anchor"] => {
   const half = (t.label.length * TICK_CHAR) / 2;
+
   if (t.x - half < 0) {
     return "start";
   }
+
   return t.x + half > width ? "end" : "middle";
 };
 
@@ -31,18 +33,22 @@ interface Placed {
 /** A label's left and right edges for its anchor. */
 const extent = (t: Placed) => {
   const w = t.label.length * TICK_CHAR;
+
   if (t.anchor === "start") {
     return [t.x, t.x + w];
   }
+
   return t.anchor === "end" ? [t.x - w, t.x] : [t.x - w / 2, t.x + w / 2];
 };
 
 /** Labels left to right, dropping any that would touch the one kept before it. */
 const clearOf = (ticks: { label: string; x: number }[], width: number) => {
   const kept: Placed[] = [];
+
   for (const t of ticks) {
     const placed = { ...t, anchor: edgeAnchor(t, width) };
     const prev = kept.at(-1);
+
     if (
       prev === undefined ||
       extent(placed)[0] - extent(prev)[1] >= LABEL_CLEAR
@@ -50,6 +56,7 @@ const clearOf = (ticks: { label: string; x: number }[], width: number) => {
       kept.push(placed);
     }
   }
+
   return kept;
 };
 

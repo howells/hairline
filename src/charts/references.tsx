@@ -21,14 +21,18 @@ import { PlateLabel } from "./texture";
 /** The bands, drawn first, behind the marks. Their names come with `ReferenceOverlay`. */
 export const ReferenceBands = (props: ReferenceProps) => {
   const { along, plane } = props;
+
   return (
     <g className="fade">
       {bandsOf(props.refs).map((band) => {
         const [start, end] = spanOf(band, props);
+
         if (end <= start) {
           return null;
         }
+
         const key = `${band.from}-${band.to}`;
+
         return along === "y" ? (
           <g key={key}>
             <rect
@@ -95,6 +99,7 @@ const plateAt = (plate: Plate, text: string, className: string) => (
 
 const BandName = (props: ReferenceProps & { band: ReferenceBand }) => {
   const plate = bandPlate(props, props.band);
+
   return plate === null || props.band.label === undefined
     ? null
     : plateAt(plate, props.band.label, "t-axis");
@@ -103,9 +108,11 @@ const BandName = (props: ReferenceProps & { band: ReferenceBand }) => {
 const LineMark = (props: ReferenceProps & { line: ReferenceLine }) => {
   const { along, line, plane } = props;
   const placed = linePlate(props, line);
+
   if (placed === null) {
     return null;
   }
+
   return (
     <g>
       {along === "y" ? (

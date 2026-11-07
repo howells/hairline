@@ -31,6 +31,7 @@ export const FigureReadout = (props: {
 
 /** Gap between a tag and its dot, px. */
 const TAG_GAP = 10;
+
 /** Tags flip to the left of the cursor within this distance of the edge. */
 const TAG_ROOM = 120;
 
@@ -59,7 +60,9 @@ export const CursorTags = (props: {
     props.min,
     props.max
   );
+
   const flip = props.cx > props.right - TAG_ROOM;
+
   if (props.plate === true) {
     return props.tags.map((t, i) => (
       <PlateLabel
@@ -73,6 +76,7 @@ export const CursorTags = (props: {
       />
     ));
   }
+
   return props.tags.map((t, i) => (
     <Label
       anchor={flip ? "end" : "start"}

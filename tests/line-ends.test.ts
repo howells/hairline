@@ -63,12 +63,15 @@ describe("where the labels stand", () => {
       max: 130,
       min: 8,
     });
+
     const ys = [...labels.map((l) => l.y), group?.y ?? 0].toSorted(
       (a, b) => a - b
     );
+
     for (let k = 1; k < ys.length; k += 1) {
       expect(ys[k] - ys[k - 1]).toBeGreaterThanOrEqual(15 - 1e-6);
     }
+
     expect(ys[0]).toBeGreaterThanOrEqual(8);
     expect(ys.at(-1)).toBeLessThanOrEqual(130);
   });

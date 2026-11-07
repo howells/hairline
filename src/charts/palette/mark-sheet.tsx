@@ -41,6 +41,7 @@ const sheetFor = (width: number): Sheet => {
   const narrow = width < 560;
   const labelW = narrow ? 96 : 136;
   const colW = Math.min(132, Math.floor((width - labelW) / 4));
+
   return {
     col: (k) => labelW + k * colW + colW / 2,
     colW,
@@ -93,6 +94,7 @@ const Row = (p: {
   s: Sheet;
 }) => {
   const y = Math.round(p.s.top + p.s.rowH * p.index + 18);
+
   return (
     <g>
       <Label middle muted voice="label" x={0} y={y}>
@@ -117,6 +119,7 @@ const Row = (p: {
 /** A tick standing on a short baseline, so its length reads against the floor. */
 const TickSpecimen = (p: { size: TickSize; x: number; y: number }) => {
   const floor = p.y + 8;
+
   return (
     <g>
       <HRule x0={p.x - 10} x1={p.x + 10} y={floor} />
@@ -339,11 +342,13 @@ const ROWS: SheetRow[] = [
  */
 export const MarkSheet = () => {
   const rows = ROWS;
+
   return (
     <Plot>
       {(width) => {
         const s = sheetFor(width);
         const height = s.top + s.rowH * rows.length;
+
         return (
           <ChartSvg
             height={height}

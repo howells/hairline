@@ -10,5 +10,6 @@ export const stepFill = (bin: number, pid: string): StepFill => {
   if (bin < 0) {
     return { className: "fill-paper" };
   }
+
   return { className: "", fill: paint(`${pid}-${bin}`) };
 };

@@ -33,18 +33,23 @@ export const regionsFrom = <K extends string>(
   if (!isTopology(raw)) {
     throw new Error("Expected a TopoJSON topology");
   }
+
   const { geometries } = raw.objects[object];
   const collection = feature(raw, raw.objects[object]);
+
   const features =
     collection.type === "FeatureCollection"
       ? collection.features
       : [collection];
+
   const regions: Region[] = [];
+
   for (const [i, f] of features.entries()) {
     const id = geometries[i].id ?? "";
     const { name } = geometries[i].properties;
     regions.push({ feature: f, key: keyOf(id, name), name });
   }
+
   return regions;
 };
 
@@ -54,19 +59,24 @@ export const mainCentroid = (
   path: ReturnType<typeof geoPath>
 ): [number, number] => {
   const { geometry } = f;
+
   if (geometry.type !== "MultiPolygon") {
     return path.centroid(f);
   }
+
   let best: Polygon | null = null;
   let bestArea = -1;
+
   for (const coordinates of geometry.coordinates) {
     const polygon: Polygon = { coordinates, type: "Polygon" };
     const area = geoArea(polygon);
+
     if (area > bestArea) {
       bestArea = area;
       best = polygon;
     }
   }
+
   return best === null ? path.centroid(f) : path.centroid(best);
 };
 
@@ -92,9 +102,11 @@ const partOf = (coordinates: Position[][]): Part => {
   const polygon: Polygon = { coordinates, type: "Polygon" };
   const centre = geoCentroid(polygon);
   let r = 0;
+
   for (const p of coordinates[0]) {
     r = Math.max(r, degrees(geoDistance(centre, [p[0], p[1]])));
   }
+
   return { area: geoArea(polygon), centre, r };
 };
 
@@ -106,6 +118,7 @@ const partGap = (a: Part, b: Part) =>
 const clusterParts = (parts: Part[], link: number) => {
   const group = parts.map((_, i) => i);
   const root = (i: number): number => (group[i] === i ? i : root(group[i]));
+
   for (const [i, a] of parts.entries()) {
     for (const [j, b] of parts.entries()) {
       if (j > i && partGap(a, b) < link) {
@@ -113,6 +126,7 @@ const clusterParts = (parts: Part[], link: number) => {
       }
     }
   }
+
   return parts.map((_, i) => root(i));
 };
 
@@ -125,31 +139,38 @@ const clusterParts = (parts: Part[], link: number) => {
  */
 export const withoutRemoteIslets = (region: Region): Region => {
   const { geometry } = region.feature;
+
   if (geometry.type !== "MultiPolygon") {
     return region;
   }
+
   const parts = geometry.coordinates.map(partOf);
   const groups = clusterParts(parts, 5);
   const biggest = Math.max(...parts.map((p) => p.area));
   const mainGroup = groups[parts.findIndex((p) => p.area === biggest)];
   const remote = new Set<number>();
+
   for (const g of new Set(groups)) {
     const members = parts.flatMap((_, i) => (groups[i] === g ? [i] : []));
     const area = members.reduce((total, i) => total + parts[i].area, 0);
+
     const nearest = Math.min(
       ...members.flatMap((i) =>
         parts.flatMap((p, j) => (groups[j] === g ? [] : [partGap(parts[i], p)]))
       )
     );
+
     if (g !== mainGroup && area < biggest * 0.01 && nearest > 15) {
       for (const i of members) {
         remote.add(i);
       }
     }
   }
+
   if (remote.size === 0) {
     return region;
   }
+
   return {
     ...region,
     feature: {
@@ -173,22 +194,30 @@ const FAR_SIDE = 179;
  */
 export const withoutWrappedParts = (region: Region): Region => {
   const { geometry } = region.feature;
+
   if (geometry.type !== "MultiPolygon") {
     return region;
   }
+
   const areas = geometry.coordinates.map((coordinates) =>
     geoArea({ coordinates, type: "Polygon" })
   );
+
   const biggest = Math.max(...areas);
+
   const kept = geometry.coordinates.filter((polygon, i) => {
     const lons = polygon[0].map((p) => p[0]);
+
     const straddles =
       Math.min(...lons) < -FAR_SIDE && Math.max(...lons) > FAR_SIDE;
+
     return areas[i] === biggest || !straddles;
   });
+
   if (kept.length === geometry.coordinates.length) {
     return region;
   }
+
   return {
     ...region,
     feature: {

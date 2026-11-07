@@ -36,18 +36,22 @@ const DENSITY = [
 const DialFace = (props: { dial: Dial }) => {
   const { cx, cy, R } = props.dial;
   const ticks = Array.from({ length: 24 }, (_, k) => k);
+
   return (
     <g className="fade">
       {ticks.map((k) => {
         const deg = k * 15;
         const major = k % 6 === 0;
+
         const [x0, y0] = clock(
           cx,
           cy,
           R + 18 - (major ? TICK.lg : TICK.sm),
           deg
         );
+
         const [x1, y1] = clock(cx, cy, R + 18, deg);
+
         return (
           <PixelLine
             key={`tick-${deg}`}
@@ -61,6 +65,7 @@ const DialFace = (props: { dial: Dial }) => {
       })}
       {[0, 6, 12, 18].map((h) => {
         const [x, y] = clock(cx, cy, R + 32, h * 15);
+
         return (
           <Label
             anchor="middle"
@@ -90,11 +95,14 @@ const slicesOf = (spans: Span[]): Slice[] => {
   const cuts = [...new Set(spans.flatMap((w) => [w.a0, w.a1]))].toSorted(
     (a, b) => a - b
   );
+
   return cuts.slice(1).map((e, k) => {
     const s = cuts[k] ?? e;
+
     const reaches = spans
       .flatMap((w) => (w.a0 <= s && w.a1 >= e ? [w.reach] : []))
       .toSorted((a, b) => b - a);
+
     return { e, reaches, s };
   });
 };
@@ -107,36 +115,46 @@ const levelPath = (dial: Dial, slices: Slice[], level: number) => {
   const { cx, cy, r0 } = dial;
   const runs: { e: number; r: number; s: number }[][] = [];
   let run: { e: number; r: number; s: number }[] = [];
+
   for (const slice of slices) {
     const r = slice.reaches.at(level);
     const last = run.at(-1);
+
     if (r === undefined || (last !== undefined && last.e !== slice.s)) {
       if (run.length > 0) {
         runs.push(run);
       }
+
       run = [];
     }
+
     if (r !== undefined) {
       run.push({ e: slice.e, r, s: slice.s });
     }
   }
+
   if (run.length > 0) {
     runs.push(run);
   }
+
   return runs
     .map((steps) => {
       const start = steps[0]?.s ?? 0;
       const end = steps.at(-1)?.e ?? start;
+
       const outer = steps
         .map((st) => {
           const [ax, ay] = clock(cx, cy, st.r, st.s);
           const [bx, by] = clock(cx, cy, st.r, st.e);
+
           return `L${ax},${ay}A${st.r},${st.r} 0 0 1 ${bx},${by}`;
         })
         .join("");
+
       const [ix, iy] = clock(cx, cy, r0, start);
       const [jx, jy] = clock(cx, cy, r0, end);
       const large = end - start > 180 ? 1 : 0;
+
       return `M${ix},${iy}${outer}L${jx},${jy}A${r0},${r0} 0 ${large} 0 ${ix},${iy}Z`;
     })
     .join("");
@@ -171,14 +189,17 @@ const HitWedges = (props: {
   spans: Span[];
 }) => {
   const { cx, cy, r0 } = props.dial;
+
   const order = props.spans
     .map((span, i) => ({ i, span }))
     .toSorted((a, b) => b.span.reach - a.span.reach);
+
   return (
     <g>
       {order.map(({ i, span }) => {
         const hovered = props.hovered === i;
         const [tx, ty] = clock(cx, cy, span.reach, (span.a0 + span.a1) / 2);
+
         return (
           <HitPath
             className={`transition-tone ${hovered ? "stroke-ink" : "stroke-none"}`}
@@ -232,20 +253,24 @@ export const RadialPatchwork = (props: RadialPatchworkProps) => {
       {(width) => {
         // Hour labels reach ~40px beyond the rim, above and below.
         const noteH = noteSpace(noteOf(props), width - 16, 20);
+
         const R = clamp(
           Math.min(width / 2 - 48, (height - 88 - noteH) / 2),
           90,
           220
         );
+
         const dial: Dial = {
           R,
           cx: Math.round(width / 2),
           cy: Math.round(R + 44),
           r0: R * 0.12,
         };
+
         const svgH = Math.min(height, Math.round(2 * R + 88 + noteH));
         const spans = data.map((event) => spanOf(dial, event, maxSize));
         const flagged = spans.filter((_, i) => data[i]?.flagged === true);
+
         return (
           <>
             {props.glyphKey === false ? null : (

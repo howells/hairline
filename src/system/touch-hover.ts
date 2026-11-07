@@ -18,6 +18,7 @@
 
 /** The element a lifted finger last left, whose leave is held back. */
 let held: Element | null = null;
+
 /** True from a touch's pointercancel until its pointerout passes. */
 let scrolling = false;
 
@@ -27,9 +28,11 @@ const isTouch = (e: PointerEvent) => e.isTrusted && e.pointerType === "touch";
 const release = (e: PointerEvent) => {
   const target = held;
   held = null;
+
   if (target?.isConnected !== true) {
     return;
   }
+
   target.dispatchEvent(
     new PointerEvent("pointerout", {
       bubbles: true,
@@ -45,11 +48,14 @@ const onOut = (e: PointerEvent) => {
   if (!isTouch(e)) {
     return;
   }
+
   if (scrolling) {
     scrolling = false;
     held = null;
+
     return;
   }
+
   if (e.target instanceof Element) {
     held = e.target;
     e.stopPropagation();
@@ -66,6 +72,7 @@ const onDown = (e: PointerEvent) => {
   if (!isTouch(e) || !(e.target instanceof Element)) {
     return;
   }
+
   e.target.dispatchEvent(
     new PointerEvent("pointermove", {
       bubbles: true,

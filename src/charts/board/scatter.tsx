@@ -31,6 +31,7 @@ export interface ScatterPoint {
   /** The point's name in the hover readout, when it has no standing label. */
   title?: string;
 }
+
 /** Pointer snaps to the nearest point within this many pixels. */
 const SNAP = 24;
 
@@ -114,19 +115,23 @@ const nearest = (
 ) => {
   let best: number | null = null;
   let bestD = SNAP * SNAP;
+
   for (const [i, p] of points.entries()) {
     const d = (frame.x(p.x) - px) ** 2 + (frame.y(p.y) - py) ** 2;
+
     if (d < bestD) {
       bestD = d;
       best = i;
     }
   }
+
   return best;
 };
 
 const Axes = (props: { frame: Frame }) => {
   const { axis, height: h, m, width, x, y } = props.frame;
   const lastX = axis.xTicks.at(-1);
+
   return (
     <>
       <Label anchor="end" voice="axis" x={width - m.right} y={m.top - 12}>
@@ -177,6 +182,7 @@ const LimitRule = (props: { frame: Frame; zone: string; limit: number }) => {
   const left = Math.round(m.left);
   const zoneW = Math.round(width - m.right) - left;
   const zoneH = Math.max(0, limitY - top);
+
   return (
     <>
       <rect
@@ -218,15 +224,18 @@ const pointTone = (worst: boolean, active: boolean) => {
   if (active) {
     return { fill: "fill-hero", stroke: "stroke-hero" };
   }
+
   return worst ? { fill: "fill-alert", stroke: "stroke-alert" } : POINT_TONE;
 };
 
 /** Centred over its point, unless that would run past the plot's edge. */
 const labelAnchor = (text: string, px: number, frame: Frame) => {
   const half = (text.length * TICK_CHAR) / 2;
+
   if (px - half < frame.m.left) {
     return "start";
   }
+
   return px + half > frame.width - frame.m.right ? "end" : "middle";
 };
 
@@ -248,10 +257,12 @@ const ZoneText = (props: {
 }) => {
   const { frame } = props;
   const mid = props.baseline - MID;
+
   const inZone =
     props.limit !== undefined &&
     mid - 7.5 < Math.round(frame.y(props.limit)) &&
     mid + 7.5 > Math.round(frame.m.top);
+
   return inZone ? (
     <PlateLabel
       anchor={props.anchor}
@@ -289,6 +300,7 @@ const PointMark = (props: {
   // Whole pixels on the half, as the gridlines are: a point on a gridline sits on it.
   const px = crisp(x(p.x));
   const py = crisp(y(p.y));
+
   return (
     <g className="fade" style={stagger(props.i * 0.4)}>
       {hollow ? (
@@ -342,6 +354,7 @@ const HoverReadout = (props: {
   const { axis, height: h, m, x, y } = props.frame;
   const name = hp.name ?? hp.title ?? "";
   const readout = `${name === "" ? "" : `${name} `}${axis.yFormat(hp.y)} · ${axis.xFormat(hp.x)}`;
+
   return (
     <g pointerEvents="none">
       <Cursor x={x(hp.x)} y0={Math.round(y(hp.y) + 8)} y1={h - m.bottom} />
@@ -361,14 +374,17 @@ const HoverReadout = (props: {
 /** Index of the highest point over the limit: the one marked red. */
 const worstIndex = (points: ScatterPoint[], limit: number | undefined) => {
   let worst = -1;
+
   if (limit === undefined) {
     return worst;
   }
+
   for (const [i, p] of points.entries()) {
     if (p.y > limit && (worst < 0 || p.y > points[worst].y)) {
       worst = i;
     }
   }
+
   return worst;
 };
 
@@ -400,7 +416,9 @@ export const Scatter = (props: ScatterProps) => {
           right: 5,
           top: 20,
         };
+
         const h = props.height;
+
         const frame: Frame = {
           axis,
           height: h,
@@ -413,16 +431,20 @@ export const Scatter = (props: ScatterProps) => {
             .domain(props.yDomain)
             .range([h - m.bottom, m.top]),
         };
+
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const r = e.currentTarget.getBoundingClientRect();
+
           const at = nearest(
             props.points,
             frame,
             e.clientX - r.left,
             e.clientY - r.top
           );
+
           hover.set(at);
         };
+
         const hp = hover.key === null ? null : props.points[hover.key];
 
         return (

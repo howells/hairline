@@ -24,11 +24,13 @@ const drawer = <T extends object>(
 ) =>
   function draw(payload: Payload, extra: Partial<T> = {}): ReactElement {
     const checked = entry.validate(payload);
+
     if (!checked.ok) {
       throw new Error(
         `${entry.kind}: ${checked.issues.map((issue) => `${issue.pointer} ${issue.message}`).join("; ")}`
       );
     }
+
     return createElement(Component, { ...checked.value, ...extra });
   };
 

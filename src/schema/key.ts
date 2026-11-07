@@ -13,8 +13,10 @@ export const keyOf = (datum: Keyed): string => {
   if (datum.id !== undefined) {
     return datum.id;
   }
+
   if ("label" in datum) {
     return datum.label;
   }
+
   return "name" in datum ? datum.name : datum.date;
 };

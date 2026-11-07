@@ -91,10 +91,12 @@ const trend = (values: number[]): Trend => {
   const mean = sum(values) / Math.max(1, values.length);
   let num = 0;
   let den = 0;
+
   for (const [i, v] of values.entries()) {
     num += (i - mid) * (v - mean);
     den += (i - mid) ** 2;
   }
+
   return { mean, mid, slope: den === 0 ? 0 : num / den };
 };
 
@@ -102,29 +104,35 @@ const buildRiver = (data: StreamData): River => {
   const rows = data.dates.map((_, i) =>
     data.series.map((s) => s.values[i] ?? 0)
   );
+
   const stacked = stack<number[], number>()
     .keys(data.series.map((_, k) => k))
     .value((row, k) => row[k] ?? 0)
     .order(stackOrderNone)
     .offset(stackOffsetWiggle)(rows);
+
   // Wiggle keeps slopes small but lets the river drift as one series grows;
   // removing the straight-line drift of its midline keeps it level.
   const bottom = stacked[0] ?? [];
   const top = stacked.at(-1) ?? [];
   const mids = bottom.map((p, i) => (p[0] + (top[i]?.[1] ?? p[1])) / 2);
   const { mean, mid, slope } = trend(mids);
+
   const layers = stacked.map((layer) =>
     layer.map((p, i) => ({
       y0: p[0] - mean - slope * (i - mid),
       y1: p[1] - mean - slope * (i - mid),
     }))
   );
+
   const ladder = LADDERS[Math.min(5, data.series.length) - 1] ?? [
     0, 2, 3, 4, 5,
   ];
+
   const ranked = data.series
     .map((s, k) => ({ k, v: s.values.at(-1) ?? 0 }))
     .toSorted((a, b) => b.v - a.v);
+
   const steps = data.series.map(
     (_, k) =>
       ladder[
@@ -134,6 +142,7 @@ const buildRiver = (data: StreamData): River => {
         )
       ] ?? 0
   );
+
   return {
     hi: Math.max(...(layers.at(-1) ?? []).map((p) => p.y1)),
     layers,
@@ -156,12 +165,14 @@ const buildLayout = (
   format: (v: number) => string
 ): Layout => {
   const narrow = width < 560;
+
   // The axis rule reaches 10px past the river on each side, and the latest
   // total sits 10px past its mouth; both stay EDGE inside the svg.
   const totalW = Math.max(
     inkWidth(format(river.totals.at(-1) ?? 0)),
     inkWidth("Total")
   );
+
   const left = EDGE + 10;
   const right = EDGE + 10 + Math.ceil(totalW);
   const top = 18;
@@ -169,21 +180,26 @@ const buildLayout = (
   const px0 = left + (width - left - right - plotW) / 2;
   const first = data.dates[0] ?? new Date(0);
   const last = data.dates.at(-1) ?? first;
+
   const x = scaleUtc()
     .domain([first, last])
     .range([px0, px0 + plotW]);
+
   const tall = height - (hasNote ? 84 : 42) - 18;
+
   // The river fills the height, but its widest point never passes about
   // three fifths of the plot width, so it stays a river rather than a slab.
   const k = Math.min(
     (tall - top) / (river.hi - river.lo),
     (plotW * 0.6) / Math.max(...river.totals)
   );
+
   const half = ((river.hi - river.lo) * k) / 2;
   // Height a width-bound river can't use is given back rather than left empty.
   const trim = Math.max(0, Math.floor(tall - top - 12 - half * 2));
   const riverBottom = tall - trim;
   const midY = Math.max((riverBottom + top) / 2, riverBottom - 12 - half);
+
   return {
     height: height - trim,
     narrow,
@@ -199,6 +215,7 @@ const buildLayout = (
 /** Rank of each series' tone, 0 = today's leader. */
 const toneRanks = (steps: number[]) => {
   const order = [...new Set(steps)].toSorted((a, b) => a - b);
+
   return steps.map((step) => order.indexOf(step));
 };
 
@@ -212,28 +229,37 @@ const Bands = (props: {
 }) => {
   const { layout, river, hover } = props;
   const xAt = (_: Edge, i: number): number => layout.xs[i] ?? 0;
+
   const band = area<Edge>()
     .x(xAt)
     .y0((p) => layout.y(p.y0))
     .y1((p) => layout.y(p.y1))
     .curve(curve);
+
   const topEdge = line<Edge>()
     .x(xAt)
     .y((p) => layout.y(p.y1))
     .curve(curve);
+
   const hoverTop =
     hover === null ? 0 : layout.y(river.layers.at(-1)?.[hover.i]?.y1 ?? 0);
+
   const hoverBottom =
     hover === null ? 0 : layout.y(river.layers[0]?.[hover.i]?.y0 ?? 0);
+
   const ranks = toneRanks(river.steps);
+
   const dim = (k: number) =>
     hover !== null && hover.s !== null && hover.s !== k ? "opacity-30" : "";
+
   const hero = ranks.indexOf(0);
   const heroLayer = river.layers[hero];
+
   return (
     <g clipPath={`url(#${props.clip})`}>
       {river.layers.map((layer, k) => {
         const kind = TEXTURES[Math.min(ranks[k] ?? 0, TEXTURES.length - 1)];
+
         return (
           <path
             className={`stroke-l5 transition-opacity ${dim(k)}`}
@@ -266,17 +292,23 @@ const Bands = (props: {
 /** Each series named where its band is thickest, kept inside the plot. */
 const Labels = (props: { data: StreamData; layout: Layout; river: River }) => {
   const { layout, river } = props;
+
   const labels = river.layers.map((layer, k) => {
     const name = props.data.series[k]?.name ?? "";
     const half = (sansWidth(name, 12) + 16) / 2;
+
     const thickness = layer.map((p, i) => {
       const x = layout.xs[i] ?? 0;
+
       const inside =
         x - half >= layout.px0 + 6 && x + half <= layout.px0 + layout.plotW - 6;
+
       return inside ? layout.y(p.y0) - layout.y(p.y1) : 0;
     });
+
     const best = maxIndex(thickness);
     const edge = layer[best] ?? { y0: 0, y1: 0 };
+
     return {
       fits: (thickness[best] ?? 0) >= 18,
       hero: (toneRanks(river.steps)[k] ?? 0) === 0,
@@ -285,6 +317,7 @@ const Labels = (props: { data: StreamData; layout: Layout; river: River }) => {
       y: (layout.y(edge.y0) + layout.y(edge.y1)) / 2,
     };
   });
+
   return (
     <g className="fade pointer-events-none" style={stagger(8)}>
       {labels.map((l) =>
@@ -315,6 +348,7 @@ const Total = (props: {
   const bottom = layout.y(river.layers[0]?.[last]?.y0 ?? 0);
   const x = layout.px0 + layout.plotW;
   const mid = (top + bottom) / 2;
+
   return (
     <g className="fade" style={stagger(9)}>
       <Label voice="value" x={x + 10} y={mid - 2}>
@@ -345,24 +379,32 @@ const TimeAxis = (props: {
 }) => {
   const { layout, data, yearly } = props;
   const every = layout.narrow ? 6 : 3;
+
   const all = data.dates.flatMap((d, i) => {
     const prev = data.dates[i - 1];
+
     const newMonth =
       prev === undefined || prev.getUTCMonth() !== d.getUTCMonth();
+
     return yearly || (newMonth && d.getUTCMonth() % every === 0)
       ? [{ date: d, x: layout.xs[i] ?? 0 }]
       : [];
   });
+
   const ticks: typeof all = [];
+
   for (const tick of all) {
     const kept = ticks.at(-1);
+
     if (kept === undefined || tick.x - kept.x >= TICK_GAP) {
       ticks.push(tick);
     }
   }
+
   const labels = yearly
     ? ticks.map((t) => yearOnly(t.date))
     : monthTickLabels(ticks.map((t) => t.date));
+
   return (
     <g>
       <HRule
@@ -403,15 +445,20 @@ const hoverAt = (
 ): Hover | null => {
   const box = e.currentTarget.getBoundingClientRect();
   const px = e.clientX - box.left;
+
   if (px < layout.px0 - 10 || px > layout.px0 + layout.plotW + 10) {
     return null;
   }
+
   const i = maxIndex(layout.xs.map((x) => -Math.abs(x - px)));
   const v = layout.y.invert(e.clientY - box.top);
+
   const s = river.layers.findIndex((l) => {
     const edge = l[i];
+
     return edge !== undefined && v >= edge.y0 && v <= edge.y1;
   });
+
   return {
     i,
     narrow: layout.narrow,
@@ -432,9 +479,11 @@ const HoverTip = (props: {
   const date = data.dates[hover.i] ?? new Date(0);
   const when = props.yearly ? yearOnly(date) : `Period from ${fmtDay(date)}`;
   const total = format(props.river.totals[hover.i] ?? 0);
+
   if (hover.narrow) {
     // Narrow: the period, then only the band under the pointer and the total.
     const series = hover.s === null ? undefined : data.series[hover.s];
+
     return (
       <Tooltip x={hover.x} y={hover.y}>
         <b>{when}</b>
@@ -446,11 +495,13 @@ const HoverTip = (props: {
       </Tooltip>
     );
   }
+
   return (
     <Tooltip x={hover.x} y={hover.y}>
       <b>{when}</b>
       {data.series.toReversed().map((s) => {
         const k = data.series.indexOf(s);
+
         return (
           <span
             className={hover.s === null || hover.s === k ? "" : "opacity-55"}
@@ -501,6 +552,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
       {(width) => {
         const hasNote = noteOf(props) !== undefined;
         const layout = buildLayout(width, height, data, river, hasNote, format);
+
         return (
           <ChartSvg
             height={layout.height}

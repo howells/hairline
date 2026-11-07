@@ -16,7 +16,9 @@ export const deckConfigSchema = z.strictObject({
   /** "compare": one light row per chart, proportional strokes beside device strokes, at 2x. */
   layout: z.enum(["compare", "slides"]),
 });
+
 export type DeckConfig = z.infer<typeof deckConfigSchema>;
+
 type Animate = DeckConfig["animate"];
 
 const FONT = '"Inter", ui-sans-serif, system-ui, sans-serif';

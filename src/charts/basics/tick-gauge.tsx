@@ -49,6 +49,7 @@ const SCALE_STOPS = [0.25, 0.5, 0.75, 1];
 const arcPath = (dial: Dial, r: number, a0: number, a1: number): string => {
   const p0 = polar(dial.cx, dial.cy, r, a0);
   const p1 = polar(dial.cx, dial.cy, r, a1);
+
   return `M${p0.x},${p0.y}A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${p1.x},${p1.y}`;
 };
 
@@ -64,17 +65,21 @@ const buildDial = (
   const bottom = hasNote ? 56 : 10;
   // The dial runs from its top (cy − R) down to its two ends (cy − R·cos(sweep/2)).
   const lowFrac = Math.max(-Math.cos(sweep / 2), 0.2);
+
   const radius = Math.min(
     width / 2 - 28,
     Math.max(150, width * 0.27),
     (height - top - bottom - 8) / (1 + lowFrac)
   );
+
   const a0 = -sweep / 2;
   const step = sweep / (n - 1);
+
   const fitted = Math.min(
     height,
     Math.ceil(top + bottom + 8 + radius * (1 + lowFrac))
   );
+
   return {
     a0,
     cx: width / 2,
@@ -99,6 +104,7 @@ const tickTone = (i: number, dial: Dial) => {
   if (i === dial.earned - 1) {
     return "stroke-hero";
   }
+
   return i < dial.earned ? "stroke-l3" : "stroke-l6";
 };
 
@@ -108,8 +114,10 @@ const GUIDE_INSET = 6;
 const Ticks = (props: { dial: Dial }) => {
   const { dial } = props;
   const R = dial.radius;
+
   const ticks = Array.from({ length: dial.n }, (_, i) => {
     const a = dial.a0 + i * dial.step;
+
     return {
       i,
       id: `tick-${i}`,
@@ -118,6 +126,7 @@ const Ticks = (props: { dial: Dial }) => {
       outer: polar(dial.cx, dial.cy, R, a),
     };
   });
+
   return (
     <g>
       {ticks.map((t) => (
@@ -138,6 +147,7 @@ const Ticks = (props: { dial: Dial }) => {
 
 const Scale = (props: { dial: Dial }) => {
   const { dial } = props;
+
   return (
     <g className="fade" style={stagger(12)}>
       {SCALE_STOPS.map((s) => {
@@ -145,6 +155,7 @@ const Scale = (props: { dial: Dial }) => {
         const label = polar(dial.cx, dial.cy, dial.radius - dial.len - 20, a);
         const end = polar(dial.cx, dial.cy, dial.radius - dial.len - 14, a);
         const last = s === 1;
+
         return (
           <Label
             anchor={last ? "end" : "middle"}
@@ -165,6 +176,7 @@ const Scale = (props: { dial: Dial }) => {
 const Centre = (props: { caption: string; dial: Dial; pct: number }) => {
   const { dial } = props;
   const baseline = dial.cy + 6;
+
   return (
     <g>
       <Label
@@ -197,6 +209,7 @@ const HitBands = (props: {
   const { dial } = props;
   const mid = dial.radius - dial.len / 2;
   const end = dial.a0 + dial.sweep + dial.step / 2;
+
   const bands = [
     {
       a0: dial.a0 - dial.step / 2,
@@ -211,11 +224,11 @@ const HitBands = (props: {
       show: dial.earned < dial.n,
     },
   ];
+
   return (
     <g>
-      {bands
-        .filter((b) => b.show)
-        .map((b) => (
+      {bands.map((b) =>
+        b.show ? (
           <path
             className="fill-none stroke-transparent"
             d={arcPath(dial, mid, b.a0, b.a1)}
@@ -227,11 +240,13 @@ const HitBands = (props: {
                 dial.radius + 6,
                 (b.a0 + b.a1) / 2
               );
+
               props.onHover(b.part, p.x, p.y);
             }}
             strokeWidth={dial.len + 12}
           />
-        ))}
+        ) : null
+      )}
     </g>
   );
 };
@@ -250,9 +265,11 @@ export const TickGauge = (props: TickGaugeProps) => {
   const sweep = (props.sweep ?? 240) * DEG;
   const share = clamp(data.value / data.target, 0, 1);
   const earned = Math.round(share * n);
+
   const caption =
     props.caption?.(n - earned) ??
     `${format(Math.max(0, data.target - data.value))} to come`;
+
   const pct = Math.round(share * 100);
   const label = `${pct}% of target: ${format(data.value)} of ${format(data.target)}`;
   const hover = useHover<Part>();
@@ -289,6 +306,7 @@ export const TickGauge = (props: TickGaugeProps) => {
           earned,
           noteOf(props) !== undefined
         );
+
         return (
           <ChartSvg
             height={dial.height}

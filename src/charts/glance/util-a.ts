@@ -11,12 +11,15 @@ let probe: SVGTextElement | null = null;
 export const textWidth = (text: string, role: string) => {
   const key = `${role}|${text}`;
   const known = widths.get(key);
+
   if (known !== undefined) {
     return known;
   }
+
   if (typeof document === "undefined" || document.fonts.status !== "loaded") {
     return sansWidth(text);
   }
+
   if (probe === null) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("aria-hidden", "true");
@@ -26,10 +29,12 @@ export const textWidth = (text: string, role: string) => {
     svg.append(probe);
     document.body.append(svg);
   }
+
   probe.setAttribute("class", role);
   probe.textContent = text;
   const w = probe.getComputedTextLength();
   widths.set(key, w);
+
   return w;
 };
 
@@ -52,6 +57,7 @@ export const LADDER_FILL = [
   "fill-l5",
   "fill-l5",
 ];
+
 export const LADDER_STROKE = [
   "stroke-l0",
   "stroke-l1",
@@ -84,6 +90,7 @@ export const fmtSigned = (v: number) => {
   if (v === 0) {
     return "0";
   }
+
   return `${v > 0 ? "+" : "−"}${Math.abs(v)}`;
 };
 
@@ -112,6 +119,7 @@ export const rectPts = (
 export const circlePts = (cx: number, cy: number, r: number): Pt[] =>
   Array.from({ length: SIDE * 4 }, (_, k): Pt => {
     const a = (-3 * Math.PI) / 4 + (k / (SIDE * 4)) * Math.PI * 2;
+
     return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
   });
 
@@ -132,8 +140,10 @@ export const sectorPts = (
     cx + r * Math.sin(a),
     cy - r * Math.cos(a),
   ];
+
   const lo = (r: number) => a0 + Math.min(g / r, (a1 - a0) / 2.2);
   const hi = (r: number) => a1 - Math.min(g / r, (a1 - a0) / 2.2);
+
   return [
     ...ticks.map((f) => at(r1, lo(r1) + (hi(r1) - lo(r1)) * f)),
     ...ticks.map((f) => at(r1 - (r1 - r0) * f, hi(r1 - (r1 - r0) * f))),

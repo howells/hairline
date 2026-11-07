@@ -73,6 +73,7 @@ const spotOf = (
   const box = el.getBoundingClientRect();
   const sx = box.width > 0 ? width / box.width : 1;
   const sy = box.height > 0 ? height / box.height : 1;
+
   return { x: (client.x - box.left) * sx, y: (client.y - box.top) * sy };
 };
 
@@ -89,26 +90,32 @@ const useDismissWhenPinned = (
         // nothing is listening
       };
     }
+
     const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key === "Escape") {
         onDismiss();
       }
     };
+
     const onDown = (e: globalThis.PointerEvent) => {
       const owner =
         e.target instanceof Element
           ? e.target.closest("[data-hl-pointer]")
           : null;
+
       const ownerId =
         owner instanceof HTMLElement || owner instanceof SVGElement
           ? owner.dataset.hlPointer
           : undefined;
+
       if (ownerId !== id) {
         onDismiss();
       }
     };
+
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onDown);
+
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("pointerdown", onDown);
@@ -119,11 +126,13 @@ const useDismissWhenPinned = (
 /** The showing key, whether it is pinned, and the ways to move and drop it. */
 const usePointerState = <K>(link?: PointerLink<K>) => {
   const id = useId();
+
   const [state, setState] = useState<State<K>>({
     key: null,
     pinned: false,
     via: "pointer",
   });
+
   const linked = link?.value ?? null;
   const key = link === undefined ? state.key : linked;
   const held: HeldRef<K> = useRef(null);
@@ -135,18 +144,22 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
     setState({ key: next, pinned: pinned ?? state.pinned, via });
     link?.set(next);
   };
+
   const cancelLeave = () => {
     if (leaving.current !== null) {
       clearTimeout(leaving.current);
       leaving.current = null;
     }
   };
+
   const clear = () => {
     cancelLeave();
     put(null, "pointer", false);
   };
+
   const leave = () => {
     cancelLeave();
+
     if (!state.pinned) {
       leaving.current = setTimeout(clear, LEAVE_MS);
     }
@@ -155,6 +168,7 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
   useEffect(
     () => () => {
       releaseHold(held);
+
       if (leaving.current !== null) {
         clearTimeout(leaving.current);
       }
@@ -183,8 +197,10 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
   const bind = (options: BindOptions<K>) => {
     const { axis, height, stops, width } = options;
     const reach = options.reach ?? 40;
+
     const pick = (client: Spot, el: SVGSVGElement, limit: number) =>
       nearest(stops, axis, spotOf(client, el, width, height), limit);
+
     const touch = touchHandlers<K>({
       held,
       keyAt: (client, el) => pick(client, el, Infinity)?.key ?? null,
@@ -198,13 +214,17 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
     const onPointerMove = (e: PointerEvent<SVGSVGElement>) => {
       if (e.pointerType === "touch") {
         touch.onPointerMove(e);
+
         return;
       }
+
       if (state.pinned) {
         return;
       }
+
       cancelLeave();
       const stop = pick(clientOf(e), e.currentTarget, reach);
+
       if (stop === null) {
         if (key !== null) {
           put(null, "pointer");
@@ -218,6 +238,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
       if (e.pointerType === "touch" || state.pinned) {
         return;
       }
+
       if (options.hoverable === true) {
         leave();
       } else {
@@ -233,6 +254,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
         put(key, "pointer", false);
       } else {
         const stop = pick(clientOf(e), e.currentTarget, reach);
+
         if (stop !== null) {
           put(stop.key, "pointer", true);
         }
@@ -255,6 +277,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
       onBlur: (e: FocusEvent<SVGSVGElement>) => {
         // The next focus is the keyboard's unless a pointer says otherwise.
         delete e.currentTarget.dataset.hlInput;
+
         if (!state.pinned && state.via === "key") {
           clear();
         }

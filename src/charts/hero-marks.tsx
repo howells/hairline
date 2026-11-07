@@ -50,10 +50,12 @@ export const HeroLabel = ({
 }: HeroLabelProps) => {
   const room =
     Math.max(sansWidth(name, 11), sansWidth(count, 11)) + LEAD.run + 8;
+
   const turn = dot.x + room > width ? -1 : 1;
   const edge = (DOT[size] + LEAD.gap) * Math.SQRT1_2;
   const from = { x: dot.x + turn * edge, y: dot.y - edge };
   const to = { x: dot.x + turn * LEAD.run, y: dot.y - LEAD.run };
+
   return (
     <g className="fade">
       <line

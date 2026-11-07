@@ -61,12 +61,14 @@ const isSymmetric = (values: (number | null)[][]) => {
     if (row.length !== values.length) {
       return false;
     }
+
     for (const [j, v] of row.entries()) {
       if (values[j]?.[i] !== v) {
         return false;
       }
     }
   }
+
   return true;
 };
 
@@ -77,6 +79,7 @@ const lower = ([r, c]: [number, number]): [number, number] =>
 const largestCell = (values: (number | null)[][]): [number, number] => {
   let best: [number, number] = [0, 0];
   let max = -Infinity;
+
   for (const [r, row] of values.entries()) {
     for (const [c, v] of row.entries()) {
       if (v !== null && v > max) {
@@ -85,6 +88,7 @@ const largestCell = (values: (number | null)[][]): [number, number] => {
       }
     }
   }
+
   return best;
 };
 
@@ -103,9 +107,11 @@ const Headers = ({ rows, cols, g, hover, triangle }: HeadersProps) => (
       if (triangle && j === cols.length - 1) {
         return null;
       }
+
       const x = g.x0 + g.cell * j + g.size / 2 + 3;
       // In a triangle each column is named just above its first cell.
       const y = g.top + (triangle ? g.cell * j : 0) - 12;
+
       return (
         <Label
           key={`col-${c}`}
@@ -183,11 +189,14 @@ const ShadeLegend = ({ labels, screens, x, y, span, wide }: LegendProps) => {
   const widths = labels.map(
     (l) => KEY.swatch + KEY.gap + sansWidth(l, 11) + KEY.entryGap
   );
+
   const perRow = wide ? screens.length : 3;
   const column = Math.min(span / perRow, Math.max(...widths));
+
   const offsets = widths.map((_, k) =>
     wide ? sum(widths.slice(0, k)) : column * (k % perRow)
   );
+
   return (
     <g className="fade" style={stagger(10)}>
       {screens.map((screen, k) => (
@@ -256,6 +265,7 @@ const Cell = ({
 }: CellProps) => {
   const x = Math.round(g.x0 + g.cell * j);
   const y = Math.round(g.top + g.cell * at);
+
   if (v === null) {
     return (
       <g className="fade">
@@ -263,6 +273,7 @@ const Cell = ({
       </g>
     );
   }
+
   return (
     <g
       className={`transition-opacity ${lit ? "" : "opacity-30"}`}
@@ -374,8 +385,10 @@ const geometryFor = (
   const colNames = triangle ? cols.slice(0, -1) : cols;
   const left = Math.max(0, ...rowNames.map((r) => sansWidth(r, 11))) + 14;
   const tilt = (HEAD_TILT * Math.PI) / 180;
+
   const reachAt = (cell: number) => {
     const size = Math.round(cell - cell * 0.16);
+
     return Math.max(
       cell * (colNames.length - 1) + size,
       legendW ?? 0,
@@ -389,17 +402,22 @@ const geometryFor = (
       )
     );
   };
+
   let cell = 56;
+
   while (cell > 18 && left + reachAt(cell) > width) {
     cell -= 0.25;
   }
+
   const right = reachAt(cell);
+
   const g: Geometry = {
     cell,
     size: Math.round(cell - cell * 0.16),
     top: legendW === null ? 58 : 76,
     x0: left + Math.max(0, (width - left - right) / 2),
   };
+
   return { g, left, right };
 };
 
@@ -418,11 +436,13 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
   const format = props.format ?? String;
   const [hover, setHover] = useState<[number, number] | null>(null);
   const tex = useTextureIds("matrix");
+
   const fills: MatrixFills = {
     empty: tex("empty"),
     hero: tex("hero"),
     screens: HALFTONE_R.map((_, k) => tex(`screen-${k}`)),
   };
+
   const bin = (v: number) =>
     byStep(
       v,
@@ -434,10 +454,12 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
       ],
       0
     );
+
   const triangle = isSymmetric(data.values);
   const drawnRow = (i: number) => (triangle ? i - 1 : i);
   const rawKey = props.highlight ?? largestCell(data.values);
   const key = triangle ? lower(rawKey) : rawKey;
+
   const legend = [
     `<${t[0]}${unit}`,
     `${t[0]}–${t[1] - 1}${unit}`,
@@ -450,10 +472,12 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
     <Plot>
       {(width) => {
         const narrow = width < 460;
+
         // Wide, the legend runs in one row under the grid and counts in its width.
         const legendW = narrow
           ? null
           : sum(legend.map((l) => 18 + sansWidth(l, 11) + 20)) - 20;
+
         const { g, left, right } = geometryFor(
           width,
           rows,
@@ -461,12 +485,16 @@ export const MatrixHeat = (props: MatrixHeatProps) => {
           triangle,
           legendW
         );
+
         const { cell, size, x0 } = g;
         const legendY = g.top + cell * (drawnRow(rows.length - 1) + 1) + 34;
         const height = props.height ?? legendY + (narrow ? 32 : 14);
+
         const tipV =
           hover === null ? null : (data.values[hover[0]]?.[hover[1]] ?? null);
+
         const keyV = data.values[key[0]]?.[key[1]] ?? 0;
+
         return (
           <div className="relative">
             <ChartSvg

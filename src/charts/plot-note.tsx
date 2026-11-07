@@ -25,9 +25,11 @@ interface PlotNoteProps {
  */
 export const PlotNote = (props: PlotNoteProps) => {
   const lines = noteLines(props.text, props.width, props.metrics);
+
   if (lines.length === 0) {
     return null;
   }
+
   return (
     <g className="fade" style={stagger(props.order ?? 6)}>
       {lines.map((line, k) => (

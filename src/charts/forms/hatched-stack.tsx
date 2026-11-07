@@ -30,8 +30,10 @@ import type { ShareTable, WorkKind, WorkTexture } from "./hatched-stack.data";
 const BAR_H = 55;
 const ROW = 88;
 const KEY_LINE = 20;
+
 /** Room between the key and the first bar. */
 const KEY_GAP = 12;
+
 /** KeySwatch's size, and the gap after it. */
 const SWATCH = KEY.swatch;
 const SWATCH_GAP = KEY.gap;
@@ -51,6 +53,7 @@ interface Cell {
 
 const heroOf = (data: ShareTable): Cell => {
   let best = { kind: 0, row: 0 };
+
   for (const [row, team] of data.rows.entries()) {
     for (const [kind, v] of team.shares.entries()) {
       if (v > data.rows[best.row].shares[best.kind]) {
@@ -58,6 +61,7 @@ const heroOf = (data: ShareTable): Cell => {
       }
     }
   }
+
   return best;
 };
 
@@ -68,6 +72,7 @@ const TONES: Record<WorkTexture, string> = {
   level: "fill-l5",
   upright: "fill-l2",
 };
+
 const TEXTURES: WorkTexture[] = ["cross", "dots", "level", "upright"];
 
 /**
@@ -103,15 +108,18 @@ const engrave = (texture: WorkTexture, id: string, tone: string) => {
   if (texture === "cross") {
     return <CrossHatch id={id} key={id} tone={tone} />;
   }
+
   if (texture === "dots") {
     return (
       // The halftone ladder's middle step: clearly visible at pitch 4.
       <DotScreen id={id} key={id} r={HALFTONE_R[2]} tone={tone} />
     );
   }
+
   if (texture === "level") {
     return <Rules id={id} key={id} tone={tone} />;
   }
+
   return <Rules angle="upright" id={id} key={id} tone={tone} />;
 };
 
@@ -136,10 +144,12 @@ interface Seg {
 const segments = (shares: number[], x0: number, x1: number): Seg[] => {
   const total = sum(shares);
   let acc = 0;
+
   return shares.map((v, k) => {
     const a = Math.round(x0 + ((x1 - x0) * acc) / total);
     acc += v;
     const b = Math.round(x0 + ((x1 - x0) * acc) / total);
+
     return { k, w: b - a - (k === shares.length - 1 ? 0 : 1), x: a };
   });
 };
@@ -157,15 +167,19 @@ const keyLayout = (kinds: WorkKind[], x0: number, width: number) => {
   let x = x0;
   let y = 0;
   const items: KeyItem[] = [];
+
   for (const [k, kind] of kinds.entries()) {
     const w = SWATCH + SWATCH_GAP + sansWidth(kind.name, 11) + KEY.entryGap;
+
     if (x + w - KEY.entryGap > width && x > x0) {
       x = x0;
       y += KEY_LINE;
     }
+
     items.push({ k, kind, w, x, y });
     x += w;
   }
+
   return { height: y + KEY_LINE + 8, items };
 };
 
@@ -225,11 +239,13 @@ interface RowsProps {
 const Rows = (props: RowsProps) => {
   const x0 = props.labelW;
   const x1 = props.width - 40;
+
   return (
     <g>
       {props.data.rows.map((row, r) => {
         const y = props.top + r * ROW;
         const heroRow = r === props.hero.row;
+
         return (
           <g key={row.team}>
             <Label
@@ -244,6 +260,7 @@ const Rows = (props: RowsProps) => {
             {segments(row.shares, x0, x1).map((s) => {
               const hero = heroRow && s.k === props.hero.kind;
               const { texture } = props.data.kinds[s.k];
+
               return (
                 <EngravedRect
                   className={`grow-x ${hero ? "stroke-ink" : "stroke-l5"} ${dimClass(props.hover !== null && props.hover.kind !== s.k)}`}
@@ -299,6 +316,7 @@ export const HatchedStack = (props: { data?: ShareTable }) => {
   const labelW = Math.max(...data.rows.map((r) => sansWidth(r.team, 12))) + 16;
   const row = hover?.row ?? null;
   const kindName = data.kinds[hero.kind].name.toLowerCase();
+
   return (
     <Plot
       overlay={
@@ -319,6 +337,7 @@ export const HatchedStack = (props: { data?: ShareTable }) => {
         const top = key.height + KEY_GAP;
         const height = top + data.rows.length * ROW - (ROW - BAR_H);
         const label = `Share of land by nation, 2021: ${data.rows.map((r) => `${r.team} ${r.shares[hero.kind]}% ${kindName}`).join(", ")}`;
+
         return (
           <ChartSvg
             height={height}

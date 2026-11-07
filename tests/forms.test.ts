@@ -19,6 +19,7 @@ const found = (html: string, text: string) => {
       return { anchor: m.groups.anchor, x: Number(m.groups.x) };
     }
   }
+
   throw new Error(`no text "${text}"`);
 };
 
@@ -27,6 +28,7 @@ const arrowRows = [
   { after: 3, before: 8, label: "South" },
   { after: 6, before: 6, label: "East" },
 ];
+
 const arrows = (props: Partial<ComponentProps<typeof ArrowPlot>> = {}) =>
   renderToString(
     createElement(ArrowPlot, {
@@ -47,14 +49,17 @@ const ridges = (props: Partial<ComponentProps<typeof Ridgeline>> = {}) =>
   renderToString(
     createElement(Ridgeline, { height: 440, width: 640, ...props })
   );
+
 /** The y of every quiet baseline. */
 const baselines = (html: string) =>
   [...html.matchAll(/<line class="rule"[^>]*y1="(?<y>[\d.]+)"/gu)].map((m) =>
     Number(m.groups?.y)
   );
+
 /** The distance between the first two quiet baselines at an overlap. */
 const rowGap = (overlap: number) => {
   const ys = baselines(ridges({ overlap }));
+
   return ys[1] - ys[0];
 };
 
@@ -86,6 +91,7 @@ describe("the arrow plot", () => {
       ],
       width: 320,
     });
+
     // The label ends at x and is wider than 16px, so it starts past the names.
     expect(found(html, "0%").x).toBeGreaterThan(
       found(html, "A long row name").x + 16
@@ -112,9 +118,11 @@ describe("the bullet", () => {
     const html = bullets({
       data: [{ label: "Over", ranges: [10, 20, 30], target: 25, value: 45 }],
     });
+
     const bar = /<rect class="grow-x fill-hero"[^>]*width="(?<w>[\d.]+)"/u.exec(
       html
     );
+
     expect(Number(bar?.groups?.w)).toBeLessThanOrEqual(480);
   });
 
@@ -152,11 +160,14 @@ describe("the pyramid", () => {
       data: [{ label: "All", left: 10, right: 20 }],
       format: (v: number) => `${v}%`,
     });
+
     // The left value ends left of the gutter, the right one starts right of it.
     const gutterL = found(html, "10%").x;
+
     const gutterR = Number(
       /<text[^>]*x="(?<x>[\d.]+)"[^>]*>20%</u.exec(html)?.groups?.x
     );
+
     expect(found(html, "10%").anchor).toBe("end");
     expect(gutterR).toBeGreaterThan(gutterL);
   });
@@ -169,9 +180,11 @@ describe("the pyramid", () => {
 describe("the ridgeline drawn back to front", () => {
   it("fills every ridge with paper, from the back row to the front", () => {
     const html = ridges();
+
     const crests = [
       ...html.matchAll(/<path d="(?<d>[^"]+)" class="fill-paper"/gu),
     ].map((m) => m.groups?.d ?? "");
+
     expect(crests).toHaveLength(6);
     // Each crest starts on its baseline, lower down the page than the last.
     const ys = crests.map((d) => Number(/,(?<y>[\d.]+)/u.exec(d)?.groups?.y));

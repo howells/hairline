@@ -24,6 +24,7 @@ import { rungBarsDemo } from "./rung-bars.data";
 /** The lowest and highest value of a series, which a facet scale spans. */
 const extent = (values: (number | null)[]): [number, number] => {
   const live = values.filter((v): v is number => v !== null);
+
   return [Math.min(...live), Math.max(...live)];
 };
 

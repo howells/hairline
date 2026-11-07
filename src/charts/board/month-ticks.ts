@@ -13,9 +13,11 @@ const monthSpan = (from: Date, to: Date) =>
 /** Every month for half a year of data, quarters for a year or so, else half-years. */
 const stepFor = (from: Date, to: Date) => {
   const span = monthSpan(from, to);
+
   if (span <= 8) {
     return 1;
   }
+
   return span <= 15 ? 3 : 6;
 };
 
@@ -32,9 +34,11 @@ const LEAD_MS = 7 * 86_400_000;
 export const monthTicks = (from: Date, to: Date) => {
   const step = stepFor(from, to);
   const ticks: Date[] = [];
+
   const first = new Date(
     Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1)
   );
+
   for (
     let d = first;
     d <= to;
@@ -44,12 +48,14 @@ export const monthTicks = (from: Date, to: Date) => {
       ticks.push(d < from ? from : d);
     }
   }
+
   return ticks;
 };
 
 /** Indices of the tick months in a list of month starts (one bar per month). */
 export const monthTickIndices = (months: Date[]) => {
   const step = stepFor(months[0], months.at(-1) ?? months[0]);
+
   return months.flatMap((d, i) => (isTickMonth(d, step) ? [i] : []));
 };
 
@@ -64,5 +70,6 @@ export const labelledTicks = <T>(
 ) => {
   const kept = thinTicks(ticks, x);
   const labels = monthTickLabels(kept.map(date));
+
   return kept.map((tick, i) => ({ label: labels[i], tick, x: x(tick) }));
 };

@@ -84,6 +84,7 @@ export const hairlineLineSchema = z
   })
   .superRefine((props, ctx) => {
     const keys = new Set(props.data.map(keyOf));
+
     for (const [i, key] of (props.hero ?? []).entries()) {
       if (!keys.has(key)) {
         ctx.addIssue({
@@ -93,6 +94,7 @@ export const hairlineLineSchema = z
         });
       }
     }
+
     for (const issue of intervalIssues(
       props.data.map((d) => d.date),
       props.intervals
@@ -104,6 +106,7 @@ export const hairlineLineSchema = z
 
 /** The validated payload. */
 export type HairlineLineData = z.infer<typeof hairlineLineSchema>;
+
 /** What `<HairlineLine>` takes: the payload, with both formats also allowed as functions. */
 export type HairlineLineProps = SharedCallbacks &
   Omit<z.input<typeof hairlineLineSchema>, "dateFormat" | "format" | "note"> & {

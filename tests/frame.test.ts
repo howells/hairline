@@ -20,15 +20,19 @@ const bars = [
   { label: "2021", value: 19 },
   { label: "2022", value: 11 },
 ];
+
 const sized = { height: 320, width: 480 };
 
 const chart = createElement(RungBars, { data: bars, ...sized });
+
 const framedProps = (props: Omit<FrameProps, "children">): FrameProps => ({
   ...props,
   children: chart,
 });
+
 const framed = (props: Omit<FrameProps, "children">) =>
   renderToString(createElement(Frame, framedProps(props)));
+
 const at = (html: string, text: string) => html.indexOf(text);
 
 describe("Frame lays out name, source, footnote and note round a chart", () => {
@@ -99,7 +103,9 @@ describe("the in-plot note is unitNote", () => {
       data: bars,
       unitNote: "n",
     });
+
     expect(ok.ok).toBe(true);
+
     const json = z
       .object({
         properties: z.record(
@@ -115,6 +121,7 @@ describe("the in-plot note is unitNote", () => {
           )
         )
       );
+
     expect(json.properties.unitNote).toBeDefined();
     expect(json.properties.unitNote.deprecated).toBeUndefined();
     expect(json.properties.note.deprecated).toBe(true);
@@ -125,6 +132,7 @@ describe("the in-plot note is unitNote", () => {
       new URL("../lib/types/schema/", import.meta.url).pathname,
       "options.d.ts"
     );
+
     expect(options).toMatch(/@deprecated[^/]*\*\/\s*note\?: string;/u);
     expect(options).toMatch(/\bunitNote\?: string;/u);
   });
@@ -134,6 +142,7 @@ describe("the in-plot note is unitNote", () => {
     const roots = ["charts", "schema"].map(
       (dir) => new URL(`../lib/types/${dir}/`, import.meta.url).pathname
     );
+
     const files = roots.flatMap((root) =>
       readdirSync(root, { encoding: "utf-8", recursive: true })
         .filter((f) => f.endsWith(".d.ts"))
@@ -147,6 +156,7 @@ describe("the in-plot note is unitNote", () => {
         )
         .map((f) => read(root, f))
     );
+
     const withNote = files.filter((text) => /\bNoteProps\b/u.test(text));
     expect(withNote.length).toBeGreaterThan(40);
     // No chart restates the declaration by hand.
@@ -161,6 +171,7 @@ describe("no chart takes a source, and a title is only ever the accessible name"
       data: bars,
       source: "x",
     });
+
     expect(
       checked.ok ? [] : checked.issues.map((i) => i.pointer)
     ).toStrictEqual([""]);
@@ -168,11 +179,14 @@ describe("no chart takes a source, and a title is only ever the accessible name"
 
   it("no chart's props declare a source, or a title that is not the accessible one", () => {
     const root = new URL("../lib/types/charts/", import.meta.url).pathname;
+
     const files = readdirSync(root, { encoding: "utf-8", recursive: true })
       .filter((f) => f.endsWith(".d.ts") && !f.includes(".data."))
       .filter((f) => !["frame.d.ts", "svg.d.ts"].includes(path.basename(f)));
+
     const offenders = files.filter((f) => {
       const text = read(root, f);
+
       return (
         /^\s*source\??:/mu.test(text) ||
         /^\s*title\??:/mu.test(
@@ -180,6 +194,7 @@ describe("no chart takes a source, and a title is only ever the accessible name"
         )
       );
     });
+
     expect(offenders).toStrictEqual([]);
   });
 });

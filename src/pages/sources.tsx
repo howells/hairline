@@ -4,6 +4,7 @@ import { SOURCES } from "../gallery/sources";
 /** Every chart that draws on real data, in grid order, with its sources. */
 const credited = ALL_ENTRIES.flatMap((entry) => {
   const sources = SOURCES.filter((s) => s.id === entry.id);
+
   return sources.length === 0 ? [] : [{ entry, sources }];
 });
 

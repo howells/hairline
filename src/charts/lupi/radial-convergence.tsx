@@ -61,6 +61,7 @@ const SIDE = 0.35;
 const meanAngle = (angles: number[]) => {
   const sx = angles.reduce((s, a) => s + Math.sin((a * Math.PI) / 180), 0);
   const sy = angles.reduce((s, a) => s + Math.cos((a * Math.PI) / 180), 0);
+
   return ((Math.atan2(sx, sy) * 180) / Math.PI + 360) % 360;
 };
 
@@ -70,12 +71,14 @@ const themeAngles = (data: ConvergenceItem[]) =>
     const angles = data.flatMap((d, k) =>
       d.theme === theme ? [(360 * k) / data.length] : []
     );
+
     return { angle: meanAngle(angles), count: angles.length, theme };
   });
 
 const buildHubs = (data: ConvergenceItem[], rim: RimGeometry): Hub[] =>
   themeAngles(data).map((t) => {
     const [x, y] = clock(rim.cx, rim.cy, rim.R * 0.34, t.angle);
+
     return { ...t, x, y };
   });
 
@@ -91,11 +94,14 @@ const ThemeLabel = (props: {
   const side = Math.sin((hub.angle * Math.PI) / 180);
   const beside = Math.abs(side) > SIDE;
   const stack = beside && rim.stacked;
+
   const textW = stack
     ? sansWidth(hub.theme, 11)
     : sansWidth(`${hub.theme} · ${hub.count}`, 11);
+
   let anchor: "end" | "middle" | "start" = "middle";
   let lx = px;
+
   if (side > SIDE) {
     anchor = "start";
     lx = Math.min(px, rim.width - textW - 2);
@@ -103,7 +109,9 @@ const ThemeLabel = (props: {
     anchor = "end";
     lx = Math.max(px, textW + 2);
   }
+
   const lit = props.focus === null || props.focus.theme === hub.theme;
+
   return (
     <DimGroup dim={!lit} onPointerEnter={props.onEnter}>
       {stack ? (
@@ -155,6 +163,7 @@ const RimItem = ({ focused, hub, k, lit, onEnter, rim }: RimItemProps) => {
   const [c1x, c1y] = clock(rim.cx, rim.cy, rim.R * 0.52, a);
   const c2x = hub.x + (c1x - hub.x) * 0.25;
   const c2y = hub.y + (c1y - hub.y) * 0.25;
+
   return (
     <g
       className={dimClass(!lit)}
@@ -208,17 +217,21 @@ const rimFor = (
   // Theme names reach this far above and below the rim.
   const reach = 28;
   const themes = themeAngles(data);
+
   // Left and right ink of the rim and its labels about the centre.
   const spanAt = (R: number, stacked: boolean) => {
     let lo = -R - 2;
     let hi = R + 2;
+
     for (const t of themes) {
       const side = Math.sin((t.angle * Math.PI) / 180);
       const px = (R + 16) * side;
+
       const w = sansWidth(
         stacked && Math.abs(side) > SIDE ? t.theme : `${t.theme} · ${t.count}`,
         12
       );
+
       if (side > SIDE) {
         hi = Math.max(hi, px + w);
       } else if (side < -SIDE) {
@@ -228,21 +241,27 @@ const rimFor = (
         hi = Math.max(hi, px + w / 2);
       }
     }
+
     return { hi, lo };
   };
+
   const radiusFor = (stacked: boolean) => {
     let R = 240;
+
     while (R > 64 && spanAt(R, stacked).hi - spanAt(R, stacked).lo > width) {
       R -= 1;
     }
+
     return clamp(Math.min(R, (height - 2 * reach - noteH) / 2), 64, 240);
   };
+
   // Stack the side labels when one line would squeeze the rim.
   const stacked = radiusFor(false) < 130 && radiusFor(true) > radiusFor(false);
   const R = radiusFor(stacked);
   const span = spanAt(R, stacked);
   const n = data.length;
   const plotH = Math.min(height, Math.round(2 * (R + reach) + noteH));
+
   const rim: RimGeometry = {
     R,
     angle: (k) => (360 * k) / n,
@@ -251,6 +270,7 @@ const rimFor = (
     stacked,
     width,
   };
+
   return { plotH, rim };
 };
 
@@ -264,16 +284,19 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
   const height = props.height ?? 460;
   const noun = props.noun ?? "storm";
   const [focus, setFocus] = useState<Focus | null>(null);
+
   const [tip, setTip] = useState<{
     label: string;
     value: string;
     x: number;
     y: number;
   } | null>(null);
+
   const clear = () => {
     setFocus(null);
     setTip(null);
   };
+
   const lit = (theme: string, k: number) =>
     focus === null ||
     (focus.item === null ? focus.theme === theme : focus.item === k);
@@ -294,6 +317,7 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
         const hubs = buildHubs(data, rim);
         const hubOf = new Map(hubs.map((h) => [h.theme, h]));
         const hero = hubs.at(argMax(hubs.map((h) => h.count)))?.theme;
+
         return (
           <ChartSvg
             height={plotH}
@@ -330,9 +354,11 @@ export const RadialConvergence = (props: RadialConvergenceProps) => {
             ))}
             {data.map((d, k) => {
               const hub = hubOf.get(d.theme);
+
               if (hub === undefined) {
                 return null;
               }
+
               return (
                 <RimItem
                   focused={focus !== null}

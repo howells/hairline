@@ -18,6 +18,7 @@ export const PaletteProvider = (props: { children: ReactNode }) => {
     storePalette(palette);
   }, [palette]);
   const value = useMemo(() => ({ palette, setPalette }), [palette]);
+
   return <PaletteContext value={value}>{props.children}</PaletteContext>;
 };
 
@@ -31,6 +32,7 @@ const swapPalette = (id: PaletteId, setPalette: (p: PaletteId) => void) => {
     document.documentElement.dataset.palette = id;
     setPalette(id);
   };
+
   if ("startViewTransition" in document) {
     document.startViewTransition(apply);
   } else {
@@ -40,6 +42,7 @@ const swapPalette = (id: PaletteId, setPalette: (p: PaletteId) => void) => {
 
 export const PaletteSwitcher = () => {
   const { palette, setPalette } = usePalette();
+
   return (
     <fieldset className="m-0 flex border-0 p-0 sm:gap-1">
       <legend className="sr-only">Palette</legend>

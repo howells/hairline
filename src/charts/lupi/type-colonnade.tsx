@@ -69,10 +69,12 @@ interface Layout {
 
 /** Leading of a wrapped owner label; node to label gap; margin at the edge. */
 const OWNER_LINE = 12;
+
 /** The least distance between two owners' labels, px (the house line-end rule). */
 const LABEL_MIN_GAP = 15;
 const OWNER_GAP = 10;
 const OWNER_EDGE = 4;
+
 /** Empty rows between two owners' stacks; radius of one light's hollow dot. */
 const GROUP_GAP = 2;
 const DOT_R = DOT.xs;
@@ -102,14 +104,17 @@ const ownerReserve = (
       (o) => rOf(o.count) + OWNER_GAP + labelWidth(ownerText(o)) + OWNER_EDGE
     )
   );
+
   return Math.min(Math.ceil(need), blockW * 0.42);
 };
 
 const tally = (data: OwnershipDatum[]): OwnerNode[] => {
   const counts = new Map<string, number>();
+
   for (const d of data) {
     counts.set(d.owner, (counts.get(d.owner) ?? 0) + 1);
   }
+
   return [...counts.entries()]
     .toSorted((a, b) => b[1] - a[1])
     .map(([owner, count], rank) => ({ count, owner, rank }));
@@ -118,23 +123,29 @@ const tally = (data: OwnershipDatum[]): OwnerNode[] => {
 /** Each light's row slot: grouped by owner rank, a gap between groups. */
 const slotsOf = (data: OwnershipDatum[], owners: OwnerNode[]) => {
   const rank = new Map(owners.map((o) => [o.owner, o.rank]));
+
   const order = [...data.keys()].toSorted(
     (a, b) =>
       (rank.get(data[a]?.owner ?? "") ?? 0) -
         (rank.get(data[b]?.owner ?? "") ?? 0) || a - b
   );
+
   const slot = new Map<number, number>();
   let next = 0;
   let last: string | undefined;
+
   for (const i of order) {
     const owner = data[i]?.owner;
+
     if (last !== undefined && owner !== last) {
       next += GROUP_GAP;
     }
+
     slot.set(i, next);
     next += 1;
     last = owner;
   }
+
   return { rows: next, slot };
 };
 
@@ -149,25 +160,31 @@ const layoutFor = (
   const blockW = Math.min(width, 600);
   const left = Math.round((width - blockW) / 2);
   const { rows, slot } = slotsOf(data, owners);
+
   // A whole-pixel pitch, so every tick in a stack sits on the pixel grid.
   const pitch = Math.max(
     4,
     Math.floor((height - 12 - noteH) / Math.max(1, rows))
   );
+
   const top = 8;
   const yItem = (i: number) => top + pitch * (slot.get(i) ?? 0);
+
   const ownerY = new Map(
     owners.map((o) => {
       const ys = [...data.keys()].flatMap((i) =>
         data[i]?.owner === o.owner ? [yItem(i)] : []
       );
+
       return [o.owner, (Math.min(...ys) + Math.max(...ys)) / 2];
     })
   );
+
   const maxCount = owners[0]?.count ?? 1;
   const rMax = narrow ? 12 : 16;
   const rOf = (c: number) => Math.max(3, rMax * Math.sqrt(c / maxCount));
   const reserve = ownerReserve(owners, rOf, blockW);
+
   const ownerLines = new Map(
     owners.map((o) => [
       o.owner,
@@ -178,12 +195,14 @@ const layoutFor = (
       ),
     ])
   );
+
   const height2 = Math.round(top + pitch * (rows - 1) + 12 + noteH);
   // Small owners sit a pitch apart; their labels are nudged to the house
   // 15px, never closer, inside the plot.
   const nodeYs = owners.map((o) => ownerY.get(o.owner) ?? top);
   const labelYs = relax(nodeYs, LABEL_MIN_GAP, top, height2 - noteH - 6);
   const labelY = new Map(owners.map((o, k) => [o.owner, labelYs[k]]));
+
   return {
     blockW,
     height: height2,
@@ -223,6 +242,7 @@ const itemLit = (
   if (focus === null) {
     return null;
   }
+
   return focus.item === undefined
     ? focus.owner === data[i]?.owner
     : focus.item === i;
@@ -236,6 +256,7 @@ const ownerLit = (
   if (focus === null) {
     return null;
   }
+
   return focus.owner === undefined
     ? data[focus.item ?? -1]?.owner === o
     : focus.owner === o;
@@ -252,6 +273,7 @@ const Lights = ({ data, at, focus, isHero, onFocus }: LayerProps) => (
       const lit = itemLit(data, focus, i);
       const y = crisp(at.yItem(i));
       const ink = lit === true || isHero(d.owner);
+
       return (
         <g
           className={dimClass(lit === false)}
@@ -337,6 +359,7 @@ const Owners = ({
       const y = at.yOwner(o.owner);
       const r = at.rOf(o.count);
       const hero = isHero(o.owner);
+
       return (
         <g
           key={o.owner}
@@ -389,6 +412,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
   const owners = tally(data);
   const tex = useTextureIds("owners");
   const fills = { hatch: tex("hatch"), hero: tex("hero") };
+
   const heroes = new Set(
     props.highlight === undefined
       ? owners.flatMap((o) => (o.rank < strong ? [o.owner] : []))
@@ -405,6 +429,7 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
           owners,
           noteSpace(noteOf(props), width - 16, 24)
         );
+
         const layer: LayerProps = {
           at,
           data,
@@ -414,9 +439,12 @@ export const TypeColonnade = (props: TypeColonnadeProps) => {
           onFocus: setFocus,
           owners,
         };
+
         const focusOwner = focus?.owner;
+
         const focusItem =
           focus?.item === undefined ? undefined : data[focus.item];
+
         return (
           <div className="relative">
             <ChartSvg

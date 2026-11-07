@@ -32,6 +32,7 @@ interface Dot {
 
 /** Height of one legend line. */
 const LEGEND_ROW = 28;
+
 /** Side of a legend swatch (KeySwatch). */
 const SWATCH = KEY.swatch;
 
@@ -56,7 +57,9 @@ const lookOf = (k: number, tex: (name: string) => string): Look => {
   if (k === 0) {
     return { className: "fill-hero", outlined: false };
   }
+
   const g = GRAMMAR.at(k - 1);
+
   return g === undefined
     ? { className: "stroke-l5 fill-paper", outlined: true }
     : { className: "stroke-l5", fill: paint(tex(g)), outlined: true };
@@ -66,10 +69,12 @@ const lookOf = (k: number, tex: (name: string) => string): Look => {
 const slotsFor = (values: number[], highlight: number | undefined) => {
   const rank = ranks(values);
   const hero = highlight ?? rank.indexOf(0);
+
   return rank.map((r, i) => {
     if (i === hero) {
       return 0;
     }
+
     return r < rank[hero] ? r + 1 : r;
   });
 };
@@ -80,12 +85,15 @@ const apportion = (values: number[], total: number) => {
   const exact = values.map((v) => (sum > 0 ? (v / sum) * total : 0));
   const out = exact.map((e) => Math.floor(e));
   const left = total - out.reduce((a, b) => a + b, 0);
+
   const order = exact
     .map((e, i) => ({ i, r: e - Math.floor(e) }))
     .toSorted((a, b) => b.r - a.r);
+
   for (let k = 0; k < left; k += 1) {
     out[order[k % order.length].i] += 1;
   }
+
   return out;
 };
 
@@ -130,6 +138,7 @@ const WaffleLegend = (props: LegendProps) => (
   <g>
     {props.data.map((d, i) => {
       const { x, y } = props.at(i);
+
       return (
         <DimGroup
           key={d.label}
@@ -188,6 +197,7 @@ const WaffleCells = ({ dim, dots, looks, onEnter, side }: CellsProps) => (
     {dots.map((d) => {
       const look = looks[d.owner];
       const inset = look.outlined ? 0.5 : 0;
+
       return (
         <rect
           key={d.id}
@@ -223,14 +233,17 @@ export const DotWaffle = (props: DotWaffleProps) => {
   const hover = useHover<number>();
   const enter = hover.show;
   const tex = useTextureIds("waffle");
+
   const looks = slotsFor(
     data.map((d) => d.value),
     props.highlight
   ).map((k) => lookOf(k, tex));
+
   const owners = apportion(
     data.map((d) => d.value),
     100
   ).flatMap((c, i) => Array.from({ length: c }, () => i));
+
   const label = `Share of the pollen in honey, one square for each per cent: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
 
   return (
@@ -252,19 +265,24 @@ export const DotWaffle = (props: DotWaffleProps) => {
         const legendW = narrow ? 0 : entryW + 20;
         const noteH = noteSpace(noteOf(props), width - 16, 22);
         const legendRows = narrow ? Math.ceil(data.length / 2) : 0;
+
         const pitch =
           Math.min(
             height - 8 - noteH - legendRows * LEGEND_ROW,
             width - legendW - 16,
             300
           ) / 10;
+
         const side = Math.round(pitch * 0.74);
         const gridW = pitch * 10;
         const gx = (width - gridW - legendW) / 2;
+
         const svgH = narrow
           ? gridW + 20 + legendRows * LEGEND_ROW + noteH
           : height;
+
         const legendGap = Math.min(LEGEND_ROW, (gridW - 8) / data.length);
+
         const dots: Dot[] = owners.map((owner, k) => ({
           cx: gx + ((k % 10) + 0.5) * pitch,
           cy: 4 + (Math.floor(k / 10) + 0.5) * pitch,
@@ -272,6 +290,7 @@ export const DotWaffle = (props: DotWaffleProps) => {
           order: k,
           owner,
         }));
+
         const at = (i: number) =>
           narrow
             ? {

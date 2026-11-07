@@ -49,6 +49,7 @@ export const dailyNoteBoxes = (props: NoteProps): Box[] => {
   if (props.notes.length === 0) {
     return [];
   }
+
   if (props.width < NUMBERED_BELOW) {
     return placeDiscs(pointsOf(props), roomOf(props)).map((d) => ({
       x0: d.x - DISC_R,
@@ -57,5 +58,6 @@ export const dailyNoteBoxes = (props: NoteProps): Box[] => {
       y1: d.cy + DISC_R,
     }));
   }
+
   return noteBoxes(placeNotes(pointsOf(props), roomOf(props)));
 };

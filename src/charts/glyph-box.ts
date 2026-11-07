@@ -26,6 +26,7 @@ export const GLYPH_KEY_PAD = 8;
 /** The box a key of `width` draws its glyph in: a square at the left, at most 136px. */
 export const glyphBox = (width: number): GlyphBox => {
   const size = clamp(Math.round(width * 0.38), 96, 136);
+
   return {
     cx: GLYPH_KEY_PAD + size / 2,
     cy: GLYPH_KEY_PAD + size / 2,

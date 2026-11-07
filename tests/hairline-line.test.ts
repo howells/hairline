@@ -21,6 +21,7 @@ const week: DailyDatum[] = [
   { date: "2024-03-09", value: 8 },
   { date: "2024-03-10", value: 13 },
 ];
+
 const sized = { height: 320, width: 480 };
 
 const render = (props: HairlineLineProps) =>
@@ -28,13 +29,16 @@ const render = (props: HairlineLineProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 /** Every reading is one circle of class `pop`. */
 const dots = (html: string) => count(html, /class="[^"]*\bpop\b/gu);
+
 /** The hero prints its value in the value voice: that value, or "none". */
 const hero = (props: Partial<HairlineLineProps>) =>
   /class="[^"]*t-value[^"]*"[^>]*>(?<value>[^<]*)</u.exec(
     render({ data: week, ...sized, ...props })
   )?.groups?.value ?? "none";
+
 /** The line is one path of class draw: one M for each unbroken run. */
 const runs = (data: DailyDatum[]) =>
   count(
@@ -46,6 +50,7 @@ const runs = (data: DailyDatum[]) =>
 /** The issue pointers of a failed validation; empty when it passed. */
 const pointers = (payload: Payload) => {
   const checked = getChart("hairline-line").validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -120,6 +125,7 @@ describe("the registry", () => {
           )
         )
       );
+
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
       "animate",
@@ -165,6 +171,7 @@ describe("formatters are data", () => {
       format: { currency: "USD", maximumFractionDigits: 0, style: "currency" },
       ...sized,
     });
+
     expect(html).toContain(">$1,235<");
   });
 
@@ -183,6 +190,7 @@ describe("formatters are data", () => {
       dateFormat: "day-month-year",
       ...sized,
     });
+
     expect(html).toContain("4 Mar 2024");
   });
 
@@ -219,6 +227,7 @@ describe("hero", () => {
       { date: "2024-03-04", id: "b", value: 5 },
       { date: "2024-03-05", value: 4 },
     ];
+
     expect([
       hero({ data: twins, hero: ["a"] }),
       hero({ data: twins.toReversed(), hero: ["a"] }),
@@ -316,9 +325,11 @@ describe("value-axis labels", () => {
 
   it("follow an explicit format untouched", () => {
     const narrow = week.map((d, i) => ({ ...d, value: 7.2 + i * 0.2 }));
+
     const labels = axisLabels(
       render({ data: narrow, format: "integer", ...sized })
     );
+
     expect(new Set(labels).size).toBeLessThan(labels.length);
   });
 });

@@ -34,6 +34,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+
 vi.stubGlobal("matchMedia", (media: string) => ({
   addEventListener: vi.fn<() => void>(),
   matches: false,
@@ -51,6 +52,7 @@ type Extra = Partial<z.input<z.ZodObject<typeof sharedShape>>> & {
 type Own = Extra & { height?: number; width?: number };
 
 const sized = { height: 320, width: 480 };
+
 const days = [
   { date: "2024-03-04", value: 3 },
   { date: "2024-03-05", value: 5 },
@@ -123,6 +125,7 @@ const kinds = [
   "rung-bars",
   "slope",
 ] as const satisfies readonly ChartKind[];
+
 /** The five with an in-plot footnote; Slope has none. */
 const noted = kinds.filter((kind) => kind !== "slope");
 const NOTE = "One mark = one reading";
@@ -155,14 +158,17 @@ const element = (kind: ChartKind, extra: Extra, fixed = true): ReactElement =>
 
 const render = (kind: ChartKind, extra: Extra = {}) =>
   renderToString(element(kind, extra));
+
 const tag = (html: string, name: string) =>
   new RegExp(`<${name}[^>]*>`, "u").exec(html)?.[0] ?? "";
+
 const ids = (html: string) =>
   [...html.matchAll(/\sid="(?<id>[^"]*)"/gu)].map((m) => m.groups?.id ?? "");
 
 /** The issue pointers of a payload the registry rejects; empty when it passes. */
 const pointers = (kind: ChartKind, payload: Payload) => {
   const checked = charts[kind].validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -175,6 +181,7 @@ const mount = async (kind: ChartKind, extra: Extra) => {
     root.render(element(kind, extra));
     await Promise.resolve();
   });
+
   return {
     done: async () => {
       await act(async () => {
@@ -226,6 +233,7 @@ describe.each(kinds)("%s shares the options", (kind) => {
           )
         )
       );
+
     expect(Object.keys(json.properties)).toStrictEqual(
       expect.arrayContaining([
         "animate",
@@ -295,8 +303,10 @@ describe.each(kinds)("%s shares the options", (kind) => {
 
   it("describes the payload in a desc the svg points at", () => {
     const html = render(kind);
+
     const target = /aria-describedby="(?<id>[^"]+)"/u.exec(tag(html, "svg"))
       ?.groups?.id;
+
     expect(target).toBeDefined();
     expect(html).toMatch(new RegExp(`<desc id="${target}">[^<]+</desc>`, "u"));
   });
@@ -365,6 +375,7 @@ const tipProps = (): ComponentProps<typeof Tooltip> => ({
   x: 100,
   y: 40,
 });
+
 const plotProps = (scaling: {
   fit?: boolean;
   scale?: number;
@@ -381,9 +392,11 @@ const plotProps = (scaling: {
  */
 const tipStyle = async (scaling: { fit?: boolean; scale?: number }) => {
   const proto = HTMLElement.prototype;
+
   const saved = ["clientHeight", "clientWidth", "offsetParent"].map(
     (key) => [key, Object.getOwnPropertyDescriptor(proto, key)] as const
   );
+
   Object.defineProperty(proto, "clientHeight", {
     configurable: true,
     get: () => 600,
@@ -409,11 +422,13 @@ const tipStyle = async (scaling: { fit?: boolean; scale?: number }) => {
   act(() => {
     root.unmount();
   });
+
   for (const [key, descriptor] of saved) {
     if (descriptor !== undefined) {
       Object.defineProperty(proto, key, descriptor);
     }
   }
+
   return style.replaceAll(" ", "");
 };
 
@@ -428,10 +443,13 @@ const tipLeft = async (
 ) => {
   const { done, host } = await mount(kind, { animate: "off", scale });
   const svg = host.querySelector("svg");
+
   if (svg === null) {
     throw new Error("the chart drew no svg");
   }
+
   svg.getBoundingClientRect = () => new DOMRect(0, 0, 480 * scale, 320 * scale);
+
   const sweep = async (x: number): Promise<void> => {
     await act(async () => {
       svg.dispatchEvent(
@@ -439,14 +457,19 @@ const tipLeft = async (
       );
       await Promise.resolve();
     });
+
     if (host.querySelector("[data-hl-tip]") === null && x < 480) {
       await sweep(x + 4);
     }
   };
+
   await sweep(0);
+
   const style =
     host.querySelector("[data-hl-tip]")?.getAttribute("style") ?? "";
+
   await done();
+
   return Number(/left:\s*(?<px>[\d.]+)px/u.exec(style)?.groups?.px);
 };
 

@@ -29,15 +29,18 @@ const sheetFor = (width: number): Sheet => {
   const narrow = width < 560;
   const labelW = narrow ? 92 : 136;
   const gap = narrow ? 4 : 8;
+
   const tileW = Math.min(
     160,
     Math.floor(
       (width - labelW - gap * (FILL_TONES.length - 1)) / FILL_TONES.length
     )
   );
+
   const tileH = narrow ? 28 : 44;
   const span = labelW + FILL_TONES.length * (tileW + gap) - gap;
   const left = Math.max(0, Math.round((width - span) / 2));
+
   return {
     col: (k) => left + labelW + k * (tileW + gap),
     labelX: left,
@@ -133,6 +136,7 @@ const FamilyRows = ({ hover, id, s }: BodyProps) => (
     {FILL_FAMILIES.map((family, r) => {
       const y = s.top + r * s.rowH;
       const allowed: readonly FillTone[] = family.tones;
+
       return (
         <g key={family.id}>
           <RowName x={s.labelX} label={family.label} y={y + s.tileH / 2} />
@@ -140,6 +144,7 @@ const FamilyRows = ({ hover, id, s }: BodyProps) => (
             if (!allowed.includes(t.id)) {
               return null;
             }
+
             const common = {
               fill: paint(id(`${family.id}-${t.id}`)),
               h: s.tileH,
@@ -150,9 +155,11 @@ const FamilyRows = ({ hover, id, s }: BodyProps) => (
               x: s.col(k),
               y,
             };
+
             if (family.id === "beads") {
               return <RungTile key={t.id} {...common} />;
             }
+
             return (
               <Tile
                 key={t.id}
@@ -172,6 +179,7 @@ const LadderRows = ({ hover, id, s, top }: BodyProps & { top: number }) => {
   const rows = FILL_LADDERS.flatMap((ladder) =>
     ladder.tones.map((tone) => ({ ladder, tone }))
   );
+
   return (
     <g>
       <HRule
@@ -187,10 +195,12 @@ const LadderRows = ({ hover, id, s, top }: BodyProps & { top: number }) => {
       ))}
       {rows.map(({ ladder, tone }, r) => {
         const y = top + r * s.rowH;
+
         const name =
           ladder.tones.length > 1
             ? `${ladder.label} · ${tone === "mid" ? "mid" : "quiet"}`
             : ladder.label;
+
         return (
           <g key={`${ladder.id}-${tone}`}>
             <RowName x={s.labelX} label={name} y={y + s.tileH / 2} />
@@ -271,6 +281,7 @@ export const FillSheet = () => {
   const id = useTextureIds("fills");
   const hover = useHover<string>();
   const ladderRows = FILL_LADDERS.reduce((n, l) => n + l.tones.length, 0);
+
   return (
     <Plot
       overlay={
@@ -286,6 +297,7 @@ export const FillSheet = () => {
         const ladderTop = s.top + FILL_FAMILIES.length * s.rowH + 44;
         const labelTop = ladderTop + ladderRows * s.rowH + 44;
         const height = labelTop + s.rowH;
+
         return (
           <ChartSvg
             height={height}

@@ -50,13 +50,16 @@ const Row = (props: RowProps) => {
   const x0 = props.labelW + 12;
   const top = TOP + index * PITCH;
   const mid = top + BAND / 2;
+
   // Each row has its own scale, ending at its widest range, or past it when
   // the measure or the target reaches further.
   const x = scaleLinear()
     .domain([0, Math.max(...datum.ranges, datum.value, datum.target)])
     .range([x0, props.right]);
+
   const edges = [x0, ...datum.ranges.map((r) => Math.round(x(r)))];
   const barW = Math.max(0, Math.round(x(datum.value)) - x0);
+
   return (
     <DimGroup
       dim={props.dim}
@@ -127,6 +130,7 @@ const pct = (d: BulletDatum) =>
 
 const check = (d: BulletDatum) => {
   const [a, b, c] = d.ranges;
+
   if (!(a > 0 && a <= b && b <= c)) {
     throw new Error(
       `Bullet "${d.label}": ranges must be positive and rise, got ${d.ranges.join(", ")}`
@@ -142,13 +146,16 @@ const check = (d: BulletDatum) => {
  */
 export const Bullet = (props: BulletProps) => {
   const data = props.data ?? bulletDemo;
+
   for (const d of data) {
     check(d);
   }
+
   const format = props.format ?? String;
   const height = props.height ?? TOP + PITCH * data.length - 8;
   const hover = useHover<number>();
   const hovered = hover.at === null ? undefined : data[hover.at.key];
+
   const label = data
     .map((d) => `${d.label}: ${format(d.value)} of ${format(d.target)}`)
     .join(", ");
@@ -186,6 +193,7 @@ export const Bullet = (props: BulletProps) => {
         const labelW =
           2 +
           Math.ceil(Math.max(0, ...data.map((d) => sansWidth(d.label, 11))));
+
         return (
           <ChartSvg
             desc={`${data.length} measures, each against its target.`}

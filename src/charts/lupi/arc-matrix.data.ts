@@ -27,6 +27,7 @@ export interface ArcMatrixData {
 }
 
 const rows = ["Scotland", "England", "Wales", "Northern Ireland"];
+
 const cols = [
   "2014/15",
   "2015/16",

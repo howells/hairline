@@ -7,11 +7,13 @@ export const MIN_TICK_GAP = 60;
 
 /** Approximate advance of one tick-type glyph (11px Inter), px. */
 export const TICK_CHAR = 6.4;
+
 /** Clear space wanted between short tick labels, px. */
 const TICK_PAD = 14;
 
 /** Approximate advance of one label glyph (12px medium), px. */
 const LABEL_CHAR = 6.8;
+
 /** Room around a row label: the gap to the plot and a little air, px. */
 const LABEL_PAD = 36;
 
@@ -40,9 +42,11 @@ export const thinTicks = <T>(
 ): T[] => {
   for (let step = 1; step < ticks.length; step += 1) {
     const kept = ticks.filter((_, i) => i % step === 0);
+
     if (isSpaced(kept.map(x), gap)) {
       return kept;
     }
   }
+
   return ticks.slice(0, 1);
 };

@@ -16,6 +16,7 @@ const points: PlumbDatum[] = [
   { label: "Birch", x: 40, y: 12 },
   { label: "Cedar", x: 70, y: 22 },
 ];
+
 const sized = { height: 400, width: 560 };
 const keyed = { hero: ["Cedar"], labelled: ["Cedar"], ...sized };
 
@@ -25,13 +26,16 @@ const render = (props: PlumbScatterProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 /** Every point is one circle; the hero's is fill-hero on a paper ring. */
 const dots = (html: string) => count(html, /<circle/gu);
+
 const heroDots = (html: string) =>
   count(html, /class="fill-hero stroke-paper pop"/gu);
 
 const pointers = (payload: Payload) => {
   const checked = getChart("plumb-scatter").validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -57,6 +61,7 @@ describe("a consumer renders PlumbScatter through the registry", () => {
       ],
       flavour: "mint",
     });
+
     const issues = bad.ok ? [] : bad.issues;
     expect(issues.map((i) => i.pointer).toSorted()).toStrictEqual([
       "",
@@ -116,6 +121,7 @@ describe("the registry", () => {
           )
         )
       );
+
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties)).toContain("labelled");
   });
@@ -129,6 +135,7 @@ describe("formatters are data", () => {
       formatX: "compact",
       ...sized,
     });
+
     expect(html).toContain(">Alder · 3,000%<");
   });
 
@@ -153,6 +160,7 @@ describe("hero and labelling by key", () => {
       { id: "a", label: "Same", x: 10, y: 5 },
       { id: "b", label: "Same", x: 50, y: 9 },
     ];
+
     const html = render({ data: twins, hero: ["a"], ...sized });
     expect(dots(html)).toBe(2);
     expect(heroDots(html)).toBe(1);

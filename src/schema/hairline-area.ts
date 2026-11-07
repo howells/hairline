@@ -111,6 +111,7 @@ export const hairlineAreaSchema = z
         path: ["emphasis"],
       });
     }
+
     for (const issue of intervalIssues(
       props.data.map((d) => d.date),
       props.intervals
@@ -122,6 +123,7 @@ export const hairlineAreaSchema = z
 
 /** The validated payload. */
 export type HairlineAreaData = z.infer<typeof hairlineAreaSchema>;
+
 /** What `<HairlineArea>` takes: the payload, with both formats also allowed as functions. */
 export type HairlineAreaProps = SharedCallbacks &
   Omit<z.input<typeof hairlineAreaSchema>, "dateFormat" | "format" | "note"> & {

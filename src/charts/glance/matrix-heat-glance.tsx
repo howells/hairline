@@ -38,8 +38,10 @@ interface Hit {
 
 /** Tile corner (the radius scale's small step). */
 const TILE_RADIUS = 2;
+
 /** Dot radius of each bin's screen, lowest bin first: the shared halftone ladder at pitch 4. */
 const DOT_RADII = HALFTONE_R;
+
 /** Key swatch size, the gap after it, and the space between key entries. */
 const SWATCH = KEY.swatch;
 const SWATCH_GAP = KEY.gap;
@@ -110,10 +112,13 @@ interface KeyProps {
 const Key = (p: KeyProps) => {
   const widths = p.labels.map((l) => Math.ceil(textWidth(l, "t-axis")));
   const entryW = (k: number) => SWATCH + SWATCH_GAP + widths[k];
+
   const total =
     widths.reduce((a, _, k) => a + entryW(k), 0) +
     KEY_SPACE * (widths.length - 1);
+
   const left = Math.max(0, Math.round(p.right - total));
+
   const entries = p.labels.map((l, k) => ({
     at:
       left +
@@ -121,6 +126,7 @@ const Key = (p: KeyProps) => {
     l,
     screen: p.screens[k],
   }));
+
   return (
     <g className="fade">
       {entries.map((e) => (
@@ -162,6 +168,7 @@ const TileRows = (p: TileRowsProps) => (
   <g>
     {p.data.rows.map((row, i) => {
       const cy = p.top + i * (p.pitch + p.gap);
+
       return (
         <g key={row}>
           <Label
@@ -176,6 +183,7 @@ const TileRows = (p: TileRowsProps) => (
           </Label>
           {p.data.columns.map((col, j) => {
             const cx = p.x0 + j * (p.cell + p.gap);
+
             return (
               <Cell
                 key={col}
@@ -210,12 +218,14 @@ const binScale = (domain: [number, number]) =>
 const binLabels = (domain: [number, number], format: (v: number) => string) =>
   DOT_RADII.map((_, k) => {
     const [lo, hi] = binScale(domain).invertExtent(k);
+
     return `${format(lo)}–${format(hi)}${k === DOT_RADII.length - 1 ? "%" : ""}`;
   });
 
 /** [row, column] of the highest value. */
 const peakOf = (values: number[][]): [number, number] => {
   let best: [number, number] = [0, 0];
+
   for (const [i, row] of values.entries()) {
     for (const [j, v] of row.entries()) {
       if (v > values[best[0]][best[1]]) {
@@ -223,6 +233,7 @@ const peakOf = (values: number[][]): [number, number] => {
       }
     }
   }
+
   return best;
 };
 
@@ -266,21 +277,28 @@ export const MatrixHeatGlance = (props: MatrixHeatGlanceProps) => {
         const labelGap = narrow ? 8 : 16;
         // The row names and the grid are one block, centred in the width.
         const names = labelRoom(data.rows);
+
         const cell = snapTile(
           Math.min(80, (width - names - labelGap - gap * (nC - 1)) / nC)
         );
+
         const gridW = cell * nC + gap * (nC - 1);
+
         const x0 = Math.round(
           (width - names - labelGap - gridW) / 2 + names + labelGap
         );
+
         // Names wider than their column wrap over it, never onto a neighbour's line.
         const heads = data.columns.map((c) =>
           headerLines(c, cell + gap - 4, (t) => textWidth(t, "t-label"))
         );
+
         const top =
           26 + (Math.max(...heads.map((h) => h.length)) - 1) * HEAD_LINE;
+
         const pitch = snapTile(Math.min(cell * 0.86, 76));
         const keyY = top + nR * pitch + gap * (nR - 1) + 18;
+
         const height =
           props.height ??
           keyY + SWATCH + 6 + noteSpace(noteOf(props), width - 16, 30);

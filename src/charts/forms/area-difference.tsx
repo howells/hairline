@@ -24,12 +24,14 @@ import type { PlanWeek } from "./area-difference.data";
 const TICKS = 5;
 
 const fmtWeek = utcFormat("%-d %b");
+
 /** The two lines' names, set at their right-hand ends. */
 const ACTUAL_NAME = "2022";
 const NORMAL_NAME = "Normal";
 
 /** Temperatures read in degrees, to a tenth ("12.3 °C"). */
 const degrees = fmtDegC;
+
 /** Value rules fall on whole degrees ("10 °C"). */
 const ruleDegrees = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
 
@@ -48,10 +50,12 @@ const makeFrame = (data: PlanWeek[], width: number, height: number) => {
   const top = 12;
   const lo = Math.min(...values);
   const hi = Math.max(...values);
+
   // A little air under the lowest week, so the floor never meets the line.
   const y = scaleLinear()
     .domain([lo - (hi - lo) * 0.06, hi])
     .range([bottom, top]);
+
   // Room for the widest value label and its gap, and for the end names.
   const x0 =
     Math.ceil(
@@ -61,27 +65,33 @@ const makeFrame = (data: PlanWeek[], width: number, height: number) => {
           .map((t) => sansWidth(ruleDegrees(t).replaceAll("1", "0"), 11))
       )
     ) + 8;
+
   const x1 =
     width -
     8 -
     Math.ceil(Math.max(sansWidth(ACTUAL_NAME, 11), sansWidth(NORMAL_NAME, 11)));
+
   const x = scaleLinear()
     .domain([0, data.length - 1])
     .range([x0, x1]);
+
   return { bottom, top, x: (i: number) => x(i), x0, x1, y } satisfies Frame;
 };
 
 /** Ends of the two lines, labelled in place; nudged apart when they meet. */
 const EndLabels = (props: { data: PlanWeek[]; frame: Frame }) => {
   const last = props.data.at(-1);
+
   if (last === undefined) {
     return null;
   }
+
   const ya = props.frame.y(last.actual);
   const yp = props.frame.y(last.plan);
   const mid = (ya + yp) / 2;
   const half = Math.max(Math.abs(ya - yp), 14) / 2;
   const actualUp = ya <= yp;
+
   return (
     <g className="fade">
       <Label
@@ -108,13 +118,18 @@ const EndLabels = (props: { data: PlanWeek[]; frame: Frame }) => {
 const Axes = (props: { data: PlanWeek[]; frame: Frame; width: number }) => {
   const { frame } = props;
   const step = props.width < 520 ? 3 : 2;
+
   const firsts = props.data.flatMap((d, i) => {
     const prev = props.data[i - 1];
+
     const fresh =
       prev === undefined || prev.week.getUTCMonth() !== d.week.getUTCMonth();
+
     return fresh && d.week.getUTCMonth() % step === 0 ? [i] : [];
   });
+
   const labels = monthTickLabels(firsts.map((i) => props.data[i].week));
+
   return (
     <g>
       <ValueGrid
@@ -145,6 +160,7 @@ const GapReading = (props: { d: PlanWeek; frame: Frame; i: number }) => {
   const x = props.frame.x(props.i);
   const ya = props.frame.y(props.d.actual);
   const yp = props.frame.y(props.d.plan);
+
   return (
     <g className="pointer-events-none">
       <Stem
@@ -171,26 +187,31 @@ const AreaDifferenceSvg = (props: SvgProps) => {
   const { data } = props;
   const frame = makeFrame(data, props.width, props.height);
   const x = (_: PlanWeek, i: number) => frame.x(i);
+
   const between = area<PlanWeek>()
     .curve(curveMonotoneX)
     .x(x)
     .y0((d) => frame.y(d.plan))
     .y1((d) => frame.y(d.actual))(data);
+
   const above = area<PlanWeek>()
     .curve(curveMonotoneX)
     .x(x)
     .y0(frame.top - 8)
     .y1((d) => frame.y(d.plan))(data);
+
   const below = area<PlanWeek>()
     .curve(curveMonotoneX)
     .x(x)
     .y0(frame.bottom + 8)
     .y1((d) => frame.y(d.plan))(data);
+
   const trace = (key: "actual" | "plan") =>
     line<PlanWeek>()
       .curve(curveMonotoneX)
       .x(x)
       .y((d) => frame.y(d[key]))(data) ?? "";
+
   const ahead = data.filter((d) => d.actual >= d.plan).length;
   const label = `Weekly mean temperature in Central England, 2022, against the 1991 to 2020 normal: above normal in ${ahead} of ${data.length} weeks`;
 
@@ -259,9 +280,11 @@ const AreaDifferenceSvg = (props: SvgProps) => {
 
 const gapText = (d: PlanWeek) => {
   const gap = d.actual - d.plan;
+
   if (gap === 0) {
     return "at normal";
   }
+
   return gap > 0
     ? `${degrees(gap)} above normal`
     : `${degrees(-gap)} below normal`;
@@ -275,6 +298,7 @@ const gapText = (d: PlanWeek) => {
 export const AreaDifference = (props: { data?: PlanWeek[] }) => {
   const data = props.data ?? planWeeksDemo;
   const hover = useHover<number>();
+
   return (
     <Plot
       overlay={

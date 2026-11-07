@@ -33,6 +33,7 @@ export const linePaths = (
   const at = { x: (i: number) => crisp(frame.x(i)), y: frame.y };
   const last = readings.length - 1;
   const kept = Math.min(forecast, readings.length) - 1;
+
   return {
     forecast:
       forecast >= readings.length
@@ -83,21 +84,27 @@ export const frameOf = (
   const x1 = x0 + frameW - room.left;
   const [lo, hi] = at.reach;
   const span = hi - lo;
+
   const y = scaleLinear()
     .domain(
       at.domain ??
         (span < FLAT_SPAN ? [lo - 1, hi + 1] : [lo - span * 0.25, hi])
     )
     .range([at.floor, at.top]);
+
   if (at.domain === undefined) {
     y.nice(5);
   }
+
   const start = readings[0].date.getTime();
+
   const dayAt = (i: number) =>
     Math.round((readings[i].date.getTime() - start) / DAY_MS);
+
   const xScale = scaleLinear()
     .domain([0, Math.max(1, dayAt(readings.length - 1))])
     .range([x0 + 8, x1 - room.right]);
+
   const frame: Frame = {
     floor: at.floor,
     x: (i) => xScale(dayAt(i)),
@@ -105,5 +112,6 @@ export const frameOf = (
     x1,
     y,
   };
+
   return { dayAt, frame, xScale };
 };

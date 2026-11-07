@@ -22,6 +22,7 @@ import { sansWidth } from "../src/charts/util";
 const PHONE = 390;
 
 const text = (html: string) => html.replaceAll(/<[^>]*>/gu, "|");
+
 /** Every label in the key's svg: its x and its words. */
 const labels = (html: string) =>
   [
@@ -29,14 +30,18 @@ const labels = (html: string) =>
       /<text[^>]*?\sx="(?<x>[\d.]+)"[^>]*>(?<words>[^<]+)<\/text>/gu
     ),
   ].map((m) => ({ words: m.groups?.words ?? "", x: Number(m.groups?.x) }));
+
 const words = (html: string) => labels(html).map((l) => l.words);
+
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
 
 const box = glyphBox(480);
+
 /** GlyphKey on the server; a function, so the glyph travels as a plain prop. */
 const keyed = (props: ComponentProps<typeof GlyphKey>) =>
   renderToString(createElement(GlyphKey, props));
+
 const demo = keyed({
   box,
   children: createElement("circle", { cx: box.cx, cy: box.cy, r: 20 }),
@@ -130,6 +135,7 @@ describe("the key draws a real record, never an invented one", () => {
     const flagged = bubbleAlmanacDemo.filter(
       (d) => d.flag === true && d.core > 0
     );
+
     const [largest] = flagged.toSorted((a, b) => b.value - a.value);
     expect(words(keys.bubble)).toContain(
       `${largest.category}, ${largest.year}`
@@ -171,6 +177,7 @@ const anyCross = (
   order.some((a, row) =>
     order.some((b, other) => {
       const [p1, p2, q1, q2] = [anchors[a], ends[row], anchors[b], ends[other]];
+
       return (
         other > row &&
         side(p1, p2, q1) * side(p1, p2, q2) < 0 &&
@@ -186,10 +193,12 @@ describe("leaders never cross", () => {
       [100, 60],
       [20, 62],
     ];
+
     const ends: [number, number][] = [
       [200, 20],
       [200, 40],
     ];
+
     expect(anyCross(anchors, ends, [0, 1])).toBe(true);
     expect(anyCross(anchors, ends, leaderOrder(anchors, ends))).toBe(false);
   });
@@ -201,12 +210,14 @@ describe("leaders never cross", () => {
       [200, 110],
       [200, 150],
     ];
+
     const anchors: [number, number][] = [
       [90, 120],
       [30, 40],
       [60, 140],
       [120, 80],
     ];
+
     expect(anyCross(anchors, ends, leaderOrder(anchors, ends))).toBe(false);
   });
 
@@ -215,6 +226,7 @@ describe("leaders never cross", () => {
       k,
       k,
     ]);
+
     expect(() => leaderOrder(seven, seven)).toThrow("at most");
   });
 });

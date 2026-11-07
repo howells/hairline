@@ -28,6 +28,7 @@ export const Ring = ({
   ...rest
 }: CircleProps & { open?: boolean; size?: DotSize; weight?: RingWeight }) => {
   const sw = RING_WEIGHT[weight];
+
   return (
     <circle
       className={`${open ? "fill-none" : "fill-paper"} ${className}`}
@@ -77,9 +78,11 @@ export const Bar = ({
       <path className={className} d={barPath(x, y, w, h, dir)} {...rest} />
     );
   }
+
   const upright = dir === "up" || dir === "down";
   const left = crisp(x);
   const top = crisp(y);
+
   return (
     <path
       className={cx("shape-crisp", outline, className)}

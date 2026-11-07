@@ -17,6 +17,7 @@ const orders = (n: number): number[][] => {
   if (n === 0) {
     return [[]];
   }
+
   return orders(n - 1).flatMap((rest) =>
     Array.from({ length: n }, (_, at) => rest.toSpliced(at, 0, n - 1))
   );
@@ -25,11 +26,13 @@ const orders = (n: number): number[][] => {
 /** How bad an order is: each crossing outweighs any length, then the total leader length. */
 const costOf = (anchors: Point[], ends: Point[], order: number[]) => {
   let cost = 0;
+
   for (const [row, a] of order.entries()) {
     cost += Math.hypot(
       anchors[a][0] - ends[row][0],
       anchors[a][1] - ends[row][1]
     );
+
     for (const [other, b] of order.entries()) {
       if (
         other > row &&
@@ -39,6 +42,7 @@ const costOf = (anchors: Point[], ends: Point[], order: number[]) => {
       }
     }
   }
+
   return cost;
 };
 
@@ -54,14 +58,18 @@ export const leaderOrder = (anchors: Point[], ends: Point[]) => {
       `A glyph key labels at most ${MOST_PARTS} parts, not ${anchors.length}`
     );
   }
+
   let best: number[] = [];
   let bestCost = Infinity;
+
   for (const order of orders(anchors.length)) {
     const cost = costOf(anchors, ends, order);
+
     if (cost < bestCost) {
       best = order;
       bestCost = cost;
     }
   }
+
   return best;
 };

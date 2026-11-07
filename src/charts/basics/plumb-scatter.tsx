@@ -67,6 +67,7 @@ const dotClass = (
   if (clearing !== undefined) {
     return clearing ? "pop fill-hero" : "pop fill-l5";
   }
+
   return `pop ${contextClass(context, "fill")}`;
 };
 
@@ -102,6 +103,7 @@ const Point = ({
 }: PointProps) => {
   const px = x(datum.x);
   const py = y(datum.y);
+
   return (
     <DimGroup dim={dim}>
       {hero ? (
@@ -160,10 +162,12 @@ const Point = ({
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: PlumbDatum[]) => {
   const seen = new Map<string, number>();
+
   return data.map((d) => {
     const key = keyOf(d);
     const nth = seen.get(key) ?? 0;
     seen.set(key, nth + 1);
+
     return `${key}#${nth}`;
   });
 };
@@ -173,10 +177,12 @@ const defaultYDomain = (ys: number[]): [number, number] => {
   if (ys.length === 0) {
     return [0, 1];
   }
+
   const min = Math.min(...ys);
   const tidy = Math.floor((min - 10) / 10) * 10;
   const lo = min < 0 ? tidy : Math.max(0, tidy);
   const hi = Math.max(...ys);
+
   return [lo, hi > lo ? hi : lo + 1];
 };
 
@@ -185,9 +191,12 @@ const defaultXDomain = (xs: number[]): [number, number] => {
   if (xs.length === 0) {
     return [0, 10];
   }
+
   const lo =
     Math.min(...xs) < 0 ? Math.floor((Math.min(...xs) * 1.12) / 10) * 10 : 0;
+
   const hi = Math.ceil((Math.max(...xs) * 1.12) / 10) * 10;
+
   return [lo, hi > lo ? hi : lo + 10];
 };
 
@@ -200,7 +209,9 @@ const labelledIndices = (
   if (keys === undefined) {
     return new Set(fallback);
   }
+
   const wanted = new Set(keys);
+
   return new Set(data.flatMap((d, i) => (wanted.has(keyOf(d)) ? [i] : [])));
 };
 
@@ -214,9 +225,11 @@ const summary = (
   if (data.length === 0) {
     return "No data.";
   }
+
   const ys = data.map((d) => d.y);
   const high = data[ys.indexOf(Math.max(...ys))];
   const low = data[ys.indexOf(Math.min(...ys))];
+
   return [
     `${plural(data.length, "point")}. Highest: ${high.label}, ${formats.y(high.y)}. Lowest: ${low.label}, ${formats.y(low.y)}.`,
     props.heroLabel === undefined
@@ -328,13 +341,17 @@ const PlumbScatterSvg = ({
   const plotW = Math.min(width - EDGE * 2, 600);
   const x0 = (width - plotW) / 2;
   const floor = floorOf(props, { height, width });
+
   const x = scaleLinear()
     .domain(domains.x)
     .range([x0, x0 + plotW]);
+
   const y = scaleLinear()
     .domain(domains.y)
     .range([floor - 14, 46]);
+
   const plane = { x0, x1: x0 + plotW, y0: 30, y1: floor };
+
   const { avoid, names, places } = namesOf(data, {
     format,
     heroes,
@@ -344,7 +361,9 @@ const PlumbScatterSvg = ({
     x,
     y,
   });
+
   const stops = stopsOf(data, order, { format, formatX, names, x, y });
+
   return (
     <Pointer axis="xy" height={height} stops={stops} width={width}>
       {(pointer) => (
@@ -432,8 +451,10 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const data = (props.data ?? []).filter(
     (d) => Number.isFinite(d.x) && Number.isFinite(d.y)
   );
+
   const height = props.height ?? 440;
   const format = resolveFormat(props.format);
+
   const formatX =
     props.formatX === undefined
       ? (v: number) => `${Math.round(v)}`
@@ -444,30 +465,37 @@ const PlumbScatterPlot = (props: PlumbScatterProps) => {
   const keys = reactKeys(data);
   const highest = ys.length === 0 ? -1 : ys.indexOf(Math.max(...ys));
   const lowest = ys.length === 0 ? -1 : ys.indexOf(Math.min(...ys));
+
   // The hero and the labels are by key so reordering never moves them; a key
   // that names no point draws none. The highest is the hero unless told.
   const heroKeyed = heroKeys(
     props.hero,
     highest < 0 ? [] : [keyOf(data[highest])]
   );
+
   const heroes = new Set(
     data.flatMap((d, i) => (heroKeyed.has(keyOf(d)) ? [i] : []))
   );
+
   // The hero group's label names it, so its points need no name of their own.
   const labelled = new Set(
     [...labelledIndices(data, props.labelled, [highest, lowest])].filter(
       (i) => props.heroLabel === undefined || !heroes.has(i)
     )
   );
+
   const xDomain =
     props.xDomain ??
     defaultXDomain([...xs, ...referenceValues(props.xReferences)]);
+
   const yDomain =
     props.yDomain ??
     defaultYDomain([...ys, ...referenceValues(props.references)]);
+
   const byX = data.map((d, i) => ({ i, x: d.x })).toSorted((a, b) => a.x - b.x);
   const order = new Map(byX.map((entry, r) => [entry.i, r]));
   const label = props.title ?? describe(data, formatX, format);
+
   const columns =
     props.heroLabel === undefined
       ? ["Label", "X", "Y"]

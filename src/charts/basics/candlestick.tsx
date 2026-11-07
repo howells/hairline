@@ -57,6 +57,7 @@ const EDGE = 2;
 /** The Mondays that carry a tick: all of them, or every other when narrow. */
 const shownMondays = (data: CandleDatum[], narrow: boolean) => {
   const mondays = data.filter((d) => d.date.getUTCDay() === 1);
+
   return narrow ? mondays.filter((_, k) => k % 2 === 0) : mondays;
 };
 
@@ -75,6 +76,7 @@ const buildLayout = (
       .range([0, frameW - VALUE_AXIS_ROOM])
       .paddingInner(0.1)
       .paddingOuter(0.4);
+
   // How far the centred labels (dates, highest and lowest price) reach past
   // the frame's left edge, which the frame then makes room for.
   const overhang = (frameW: number) => {
@@ -82,10 +84,12 @@ const buildLayout = (
     const bw = x.bandwidth();
     const shown = shownMondays(data, bw < 12);
     const dates = dayTickLabels(shown.map((d) => d.date));
+
     const labels = [
       ...shown.map((d, k) => ({ d, text: dates[k] ?? "" })),
       ...priced,
     ];
+
     return Math.max(
       0,
       ...labels.map(
@@ -93,17 +97,21 @@ const buildLayout = (
       )
     );
   };
+
   const cap = data.length * 26 + VALUE_AXIS_ROOM;
   let frameW = Math.min(width - EDGE * 2, cap);
+
   for (let k = 0; k < 3; k += 1) {
     frameW = Math.min(width - EDGE * 2 - overhang(frameW), cap);
   }
+
   const over = overhang(frameW);
   const left = Math.round((width - frameW - over) / 2 + over);
   const right = left + frameW;
   const axisY = Math.round(height - (hasNote ? 78 : 32));
   const x = bandsFor(frameW).range([left, right - VALUE_AXIS_ROOM]);
   const bw = x.bandwidth();
+
   return {
     axisY,
     body: Math.max(3, Math.min(14, bw * 0.62)),
@@ -126,6 +134,7 @@ const DayAxis = (props: { data: CandleDatum[]; layout: Layout }) => {
   const { layout } = props;
   const shown = shownMondays(props.data, layout.narrow);
   const labels = dayTickLabels(shown.map((d) => d.date));
+
   return (
     <g>
       <HRule x0={layout.left} x1={layout.right} y={layout.axisY} />
@@ -177,6 +186,7 @@ const Candle = (props: CandleProps) => {
   const s = up ? outline(props.hero) : Number(hatched);
   const solid = props.hero ? "fill-hero" : "stroke-l5";
   const hollow = props.hero ? "fill-paper stroke-hero" : "fill-paper stroke-l3";
+
   return (
     <DimGroup
       dim={props.dim}
@@ -260,6 +270,7 @@ export const Candlestick = (props: CandlestickProps) => {
             d === undefined ? [] : [{ d, text: fmtPrice(k === 0 ? hi : lo) }]
           )
         );
+
         return (
           <ChartSvg
             height={height}

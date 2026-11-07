@@ -24,9 +24,11 @@ export const stemClass = (
   if (hero || clearing === true) {
     return "grow-y fill-hero";
   }
+
   if (hovered) {
     return "grow-y fill-l2";
   }
+
   return clearing === false ? "grow-y fill-l5" : "grow-y fill-l4";
 };
 
@@ -75,13 +77,17 @@ export const valueScale = (
   if (scale.domain !== undefined) {
     return scaleLinear().domain(scale.domain).range([floor, top]);
   }
+
   const { ticks } = scale;
   const last = ticks?.at(-1);
+
   if (last !== undefined && last > 0) {
     return scaleLinear().domain([0, last]).range([floor, top]);
   }
+
   const lo = Math.min(0, extent.lo);
   const hi = Math.max(lo + 1, extent.hi);
+
   return scaleLinear().domain([lo, hi]).nice(4).range([floor, top]);
 };
 
@@ -96,6 +102,7 @@ export const shapesOf = (
   forecast: number
 ) => {
   const observed = readings.slice(0, forecast);
+
   return {
     fill:
       d3area<Reading>()
@@ -124,6 +131,7 @@ export const edgesOf = (width: number, maxWidth: number, axis: ValueAxis) => {
   const room = axisRoom(axis);
   const frameW = Math.min(width - 16, maxWidth + room.left + room.right);
   const x0 = Math.round((width - frameW) / 2);
+
   return [x0 + room.left, x0 + frameW] as const;
 };
 
@@ -137,6 +145,7 @@ export const startOf = (
     hero < 0
       ? 0
       : Math.ceil(sansWidth(format(valueAt(readings, hero)), 12) / 2) + 2;
+
   return hero === 0 ? Math.max(8, half) : 8;
 };
 

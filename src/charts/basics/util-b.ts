@@ -10,11 +10,13 @@ export const polar = (cx: number, cy: number, r: number, a: number) => ({
 /** Index of the largest value (first one wins ties). */
 export const maxIndex = (values: readonly number[]): number => {
   let best = 0;
+
   for (const [i, v] of values.entries()) {
     if (v > (values[best] ?? Number.NEGATIVE_INFINITY)) {
       best = i;
     }
   }
+
   return best;
 };
 
@@ -24,6 +26,7 @@ export const maxIndex = (values: readonly number[]): number => {
  */
 export const inkWidth = (text: string, metrics?: FontMetrics) => {
   const digits = (text.match(/\d/gu) ?? []).length;
+
   return (
     digits * 0.65 * 11 +
     sansWidth(text.replaceAll(/\d/gu, ""), 11, metrics) * 0.93

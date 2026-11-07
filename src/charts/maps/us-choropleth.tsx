@@ -30,10 +30,13 @@ interface USChoroplethProps extends NoteProps {
 const BREAKS: [number, number, number, number] = [
   10_000, 50_000, 250_000, 1_000_000,
 ];
+
 /** The states printed on the map by default, most trees first. */
 const LABELLED = ["OR", "NC", "MI"];
+
 const project = (size: [number, number], outlines: FeatureCollection) =>
   geoAlbersUsa().fitSize(size, outlines);
+
 /** Trees in thousands or millions ("10k", "4.8m"). */
 const treesShort = (v: number) =>
   v >= 1_000_000
@@ -48,16 +51,20 @@ const treesShort = (v: number) =>
 export const USChoropleth = (props: USChoroplethProps) => {
   const data = props.data ?? usChoroplethDemo;
   const format = props.format ?? fmtInt;
+
   const rows = useMemo(
     () => data.map((d) => ({ key: d.state, value: d.value })),
     [data]
   );
+
   const labels =
     props.highlight === undefined ? LABELLED : [props.highlight].flat();
+
   const top = data
     .toSorted((a, b) => b.value - a.value)
     .slice(0, 5)
     .map((d) => `${d.state} ${format(d.value)}`);
+
   return (
     <Choropleth
       ariaLabel={`Christmas trees cut in 2022 by state, most: ${top.join(", ")}`}

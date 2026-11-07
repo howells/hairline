@@ -35,6 +35,7 @@ interface BarcodeLollipopProps extends NoteProps {
 
 const twoDp = d3format(".2f");
 const metres = (v: number) => `${twoDp(v)} m`;
+
 const dayFmt = (d: Date) =>
   d.toLocaleString("en-GB", {
     day: "numeric",
@@ -57,24 +58,30 @@ interface TopLabel {
 const spreadLabels = (labels: TopLabel[], lo: number, hi: number) => {
   const placed = labels.map((l) => ({ ...l })).toSorted((a, b) => a.x - b.x);
   const clash = (a: TopLabel, b: TopLabel) => Math.abs(a.y - b.y) < 14;
+
   for (let pass = 0; pass < 40; pass += 1) {
     let moved = false;
+
     for (const [k, b] of placed.entries()) {
       const a = placed[k - 1];
       const overlap = a === undefined ? 0 : a.x + a.w / 2 + 6 - (b.x - b.w / 2);
+
       if (a !== undefined && overlap > 0.5 && clash(a, b)) {
         a.x -= overlap / 2;
         b.x += overlap / 2;
         moved = true;
       }
     }
+
     for (const l of placed) {
       l.x = clamp(l.x, lo + l.w / 2, hi - l.w / 2);
     }
+
     if (!moved) {
       break;
     }
   }
+
   return new Map(placed.map((l) => [l.i, l.x]));
 };
 
@@ -125,6 +132,7 @@ const DayMark = ({
   const r = DOT[hero ? "md" : dotSize];
   // A 2px stem sits on whole pixels, a 1px one on the half pixel.
   const stemX = hero ? Math.round(x) : crisp(x);
+
   return (
     <DimGroup dim={dim}>
       <Stem
@@ -166,7 +174,9 @@ const MonthTicks = (props: {
   const starts = props.data.flatMap((d, i) =>
     i === 0 || d.date.getUTCDate() === 1 ? [i] : []
   );
+
   const labels = monthTickLabels(starts.map((i) => props.data[i].date));
+
   return (
     <g>
       {starts.map((i, k) => (
@@ -220,6 +230,7 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
   const topN = props.top ?? 3;
   const hover = useHover<number>();
   const lows = data.map((d) => d.low ?? d.value * 0.9);
+
   const top = new Set(
     data
       .map((d, i) => ({ i, v: d.value }))
@@ -253,24 +264,32 @@ export const BarcodeLollipop = (props: BarcodeLollipopProps) => {
           right: 8,
           top: 10,
         };
+
         const floor = height - m.bottom;
         const step = (width - m.left - m.right) / Math.max(1, data.length - 1);
         const x = (i: number) => m.left + i * step;
+
         const y = scaleLinear()
           .domain([Math.min(...lows), Math.max(...data.map((d) => d.value))])
           .range([floor - 6, m.top + 22]);
+
         const dotSize: DotSize = step >= 8 ? "sm" : "xs";
+
         const labelX = spreadLabels(
           [...top].map((i) => topLabel(i, data[i], format, x, y)),
           m.left - step / 2,
           width - 2
         );
+
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
+
           if (px < m.left - step || px > width - m.right + step) {
             hover.clear();
+
             return;
           }
+
           const i = clamp(Math.round((px - m.left) / step), 0, data.length - 1);
           hover.show(i, x(i), y(data[i].value) - DOT[dotSize] - 6);
         };

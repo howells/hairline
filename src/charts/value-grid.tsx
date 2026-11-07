@@ -40,12 +40,14 @@ interface ValueGridProps {
 /** Solid 1px value rules across the plot, each with its value: the one value grid. */
 export const ValueGrid = (props: ValueGridProps) => {
   const right = props.side === "right";
+
   return (
     <g>
       {props.ticks.flatMap((v) => {
         const at = props.y(v);
         const ruled = at < props.floor - 1;
         const text = props.format(v);
+
         const shown =
           props.labels !== false &&
           (!right ||
@@ -61,9 +63,11 @@ export const ValueGrid = (props: ValueGridProps) => {
                 CLEAR
               )
             ));
+
         if (!ruled && props.labelFloor !== true) {
           return [];
         }
+
         return (
           <g key={v}>
             {ruled ? (

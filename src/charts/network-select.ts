@@ -37,11 +37,13 @@ export const useNodeSelection = (preselected: string | undefined) => {
   const bind = (b: Binding) => {
     const at = (e: PointerEvent<SVGSVGElement>) => {
       const box = e.currentTarget.getBoundingClientRect();
+
       return {
         x: (e.clientX - box.left) * (b.width / box.width),
         y: (e.clientY - box.top) * (b.height / box.height),
       };
     };
+
     return {
       leave: () => {
         if (!touch.current && (b.held ?? null) === null) {
@@ -51,6 +53,7 @@ export const useNodeSelection = (preselected: string | undefined) => {
       svg: {
         onKeyDown: (e: KeyboardEvent<SVGSVGElement>) => {
           const next = nextByKey(e.key, b.ids, selected);
+
           if (next !== undefined && b.ids.length > 0) {
             e.preventDefault();
             setLive(next ?? undefined);
@@ -58,6 +61,7 @@ export const useNodeSelection = (preselected: string | undefined) => {
         },
         onPointerDown: (e: PointerEvent<SVGSVGElement>) => {
           touch.current = e.pointerType === "touch";
+
           if (touch.current) {
             const p = at(e);
             setLive(b.find(p.x, p.y, REACH.touch));
@@ -65,14 +69,17 @@ export const useNodeSelection = (preselected: string | undefined) => {
         },
         onPointerMove: (e: PointerEvent<SVGSVGElement>) => {
           touch.current = e.pointerType === "touch";
+
           if (touch.current || (b.held ?? null) !== null) {
             return;
           }
+
           const p = at(e);
           setLive(b.find(p.x, p.y, REACH.mouse) ?? undefined);
         },
         onPointerUp: (e: PointerEvent<SVGSVGElement>) => {
           const p = at(e);
+
           if (
             b.find(
               p.x,
@@ -87,5 +94,6 @@ export const useNodeSelection = (preselected: string | undefined) => {
       },
     };
   };
+
   return { bind, chosen: live !== undefined, selected };
 };

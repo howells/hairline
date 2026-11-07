@@ -48,6 +48,7 @@ const leafNames = (d: TreeDatum): string[] =>
 const branchOf = (n: P) => {
   const top = n.ancestors().find((a) => a.depth === 1);
   const siblings = n.ancestors().at(-1)?.children ?? [];
+
   return top === undefined ? -1 : siblings.indexOf(top);
 };
 
@@ -83,22 +84,27 @@ const labelAt = (
   if (role === "leaf") {
     return { anchor: "start", x: x + 6, y } as const;
   }
+
   if (role === "mid") {
     return { anchor: "middle", x, y: above ? y - 14 : y + 14 } as const;
   }
+
   return { anchor: "end", x: x - 10, y } as const;
 };
 
 const TreeNode = ({ n, x, y, k, tone, lit, hitRight, onEnter }: NodeProps) => {
   const leaf = n.children === undefined;
   let role: "leaf" | "mid" | "root" = "mid";
+
   if (n.depth === 0) {
     role = "root";
   } else if (leaf) {
     role = "leaf";
   }
+
   const above = n.x <= (n.ancestors().at(-1)?.x ?? n.x);
   const at = labelAt(role, x, y, above);
+
   return (
     <DimGroup dim={!lit} onPointerEnter={onEnter}>
       <HitRect
@@ -169,20 +175,26 @@ export const TreeLR = (props: TreeLRProps) => {
           right: labelRoom(leafNames(data), "t-label") + 6,
           top: 10,
         };
+
         const laid = tree<TreeDatum>()
           .size([height - m.top - m.bottom, width - m.left - m.right])
           .separation((a, b) => (a.parent === b.parent ? 1 : 1.9))(
           hierarchy(data)
         );
+
         const X = (n: P) => m.left + n.y;
         const Y = (n: P) => m.top + n.x;
         const link = linkHorizontal<{ source: P; target: P }, P>().x(X).y(Y);
         const heroName = props.highlight ?? laid.children?.[0]?.data.name;
+
         const hero = (n: P) => {
           const b = branchOf(n);
+
           return b >= 0 && laid.children?.[b].data.name === heroName;
         };
+
         const toneStep = (n: P) => (branchOf(n) < 0 ? 0 : REST);
+
         // Hovering lights the path to the root and the whole subtree below.
         // Keyed by path: the layout (and its node objects) is rebuilt each render.
         const trail = new Set(
@@ -190,6 +202,7 @@ export const TreeLR = (props: TreeLRProps) => {
             ? []
             : [...tip.node.ancestors(), ...tip.node.descendants()].map(pathOf)
         );
+
         const lit = (n: P) => tip === null || trail.has(pathOf(n));
 
         return (

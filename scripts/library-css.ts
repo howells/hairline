@@ -17,8 +17,10 @@ import { Scanner } from "@tailwindcss/oxide";
 import { transform } from "lightningcss";
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
+
 const source = (name: string) =>
   readFileSync(here(`../src/system/${name}`), "utf-8");
+
 const out = (name: string, text: string) => {
   writeFileSync(here(`../lib/${name}`), text);
 };
@@ -32,17 +34,20 @@ const compiled = async () => {
     '@import "tailwindcss/utilities.css" layer(utilities);',
     source("hairline.css"),
   ].join("\n");
+
   const compiler = await compile(css, {
     base: here("../src/system"),
     onDependency() {
       // Nothing to watch: this runs once per build.
     },
   });
+
   const scanner = new Scanner({
     sources: [
       { base: here("../lib/charts"), negated: false, pattern: "**/*.js" },
     ],
   });
+
   return compiler.build(scanner.scan());
 };
 
@@ -51,14 +56,17 @@ const inlineTheme = (css: string) => {
   const block = /@layer theme \{\s*:root, :host \{(?<body>[^}]*)\}\s*\}/u.exec(
     css
   );
+
   const body = block?.groups?.body ?? "";
   let text = css.replace(block?.[0] ?? "", "");
+
   for (const found of body.matchAll(
     /(?<name>--[\w-]+):\s*(?<value>[^;]+);/gu
   )) {
     const { name = "", value = "" } = found.groups ?? {};
     text = text.replaceAll(`var(${name})`, value.replaceAll(/\s+/gu, " "));
   }
+
   return text;
 };
 
@@ -67,18 +75,22 @@ const topLevel = (css: string) => {
   const rules: string[] = [];
   let depth = 0;
   let start = 0;
+
   for (let i = 0; i < css.length; i += 1) {
     const char = css[i];
+
     if (char === "{") {
       depth += 1;
     } else if (char === "}") {
       depth -= 1;
+
       if (depth === 0) {
         rules.push(css.slice(start, i + 1).trim());
         start = i + 1;
       }
     }
   }
+
   return rules;
 };
 
@@ -91,18 +103,23 @@ const scoped = (css: string): string => {
   const bare = css
     .replaceAll(/\/\*[\s\S]*?\*\//gu, "")
     .replaceAll(/@layer [\w-]+;/gu, "");
+
   const wrapped = topLevel(bare).flatMap((rule): string[] => {
     if (rule.startsWith("@layer properties")) {
       return [];
     }
+
     if (rule.startsWith("@layer")) {
       return [scoped(rule.slice(rule.indexOf("{") + 1, -1))];
     }
+
     if (/^@(?:keyframes|property|position-try)\b/u.test(rule)) {
       return [rule];
     }
+
     return [`.hl-root {\n${rule}\n}`];
   });
+
   return wrapped.join("\n");
 };
 
@@ -116,17 +133,21 @@ const flatten = (css: string) =>
 
 const namespaced = (css: string) => {
   let text = css.replaceAll("--tw-", "--hl-tw-");
+
   for (const name of KEYFRAMES) {
     text = text
       .replaceAll(`@keyframes ${name} `, `@keyframes hl-${name} `)
       .replaceAll(`animation: ${name} `, `animation: hl-${name} `)
       .replaceAll(`animation-name: ${name}`, `animation-name: hl-${name}`);
   }
+
   return text;
 };
 
 out("tokens.css", source("tokens.css"));
+
 out("theme.css", `@source "./charts";\n\n${source("hairline.css")}`);
+
 out(
   "hairline.css",
   `${source("tokens.css")}\n${namespaced(flatten(inlineTheme(await compiled())))}`

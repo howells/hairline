@@ -16,6 +16,7 @@ import { labelGap, thinTicks } from "./thin-ticks";
 
 /** Gap between a row's name and the plot's labels, px. */
 const NAME_GAP = 20;
+
 /** Gap between a row's far dot and its change, px. */
 const VALUE_GAP = 14;
 
@@ -39,6 +40,7 @@ const scaleReach = (
   const [first = 0] = ticks;
   const span = (ticks.at(-1) ?? first) - first;
   const lastLabel = sansWidth(fmt.tick(ticks.at(-1) ?? first));
+
   return Math.min(
     width - Math.ceil(lastLabel / 2) - from,
     ...rows.map(
@@ -74,6 +76,7 @@ const DumbbellRow = (props: {
   const bh = y.bandwidth();
   const cy = Math.round((y(r.name) ?? 0) + bh / 2);
   const ink = props.worst ? "fill-alert" : "fill-hero";
+
   return (
     <DimGroup
       dim={props.dim}
@@ -124,6 +127,7 @@ const DumbbellRow = (props: {
 /** The row whose value rose the most, if any rose. */
 const worstRow = (rows: Row[]) => {
   const rise = Math.max(...rows.map((r) => r.after - r.before));
+
   return rows.find((r) => rise > 0 && r.after - r.before === rise)?.name;
 };
 
@@ -161,8 +165,10 @@ export const Dumbbell = (props: {
           left: NAME_GAP + nameWidth(props.rows.map((r) => r.name)),
           top: 8,
         };
+
         const h = props.height;
         const from = m.left + 16;
+
         const x = scaleLinear()
           .domain([props.ticks[0], props.ticks.at(-1) ?? props.ticks[0]])
           .range([
@@ -173,6 +179,7 @@ export const Dumbbell = (props: {
                 tick: props.tickFormat,
               }),
           ]);
+
         const y = scaleBand()
           .domain(props.rows.map((r) => r.name))
           .range([m.top, h - m.bottom]);

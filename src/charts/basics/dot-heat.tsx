@@ -48,6 +48,7 @@ interface Grid {
 /** The ring's least clearance from any dot, and its dots' radius. */
 const RING_CLEAR = 2.5;
 const RING_DOT = 0.75;
+
 /** How far out the ring would like to sit from the peak dot. */
 const RING_GAP = 4;
 
@@ -63,15 +64,18 @@ const ringRadius = (
 ) => {
   const own = grid.radius(values[peakR]?.[peakC] ?? 0);
   let r = own + RING_GAP;
+
   for (const dr of [-1, 0, 1]) {
     for (const dc of [-1, 0, 1]) {
       const v = values[peakR + dr]?.[peakC + dc];
+
       if ((dr !== 0 || dc !== 0) && v !== undefined && v > 0) {
         const dist = Math.hypot(dr * grid.rowH, dc * grid.colW);
         r = Math.min(r, dist - grid.radius(v) - RING_CLEAR - RING_DOT);
       }
     }
   }
+
   return Math.max(own + RING_CLEAR + RING_DOT, r);
 };
 
@@ -93,18 +97,23 @@ const dotClass = (v: number, span: Span, hero: boolean): string => {
   if (hero) {
     return "fill-hero";
   }
+
   if (v <= 0) {
     return "fill-l5";
   }
+
   const share = spanShare(v, span);
+
   if (share >= 2 / 3) {
     return "fill-l2";
   }
+
   return share >= 1 / 3 ? "fill-l3" : "fill-l4";
 };
 
 /** Gap between the row names and the first column. */
 const NAME_GAP = 14;
+
 /** Margin kept between the grid's ink and the svg edge. */
 const EDGE = 2;
 
@@ -138,6 +147,7 @@ const buildGrid = (
   const n = data.columns.length;
   const last = data.values.map((row) => row[n - 1] ?? 0);
   const lastLabel = inkWidth(data.columns[n - 1] ?? "") / 2;
+
   // The row names, in full while the columns have room and cut to two letters
   // once they don't; the grid is sized to the names it really carries.
   const sizeFor = (narrow: boolean) => {
@@ -146,6 +156,7 @@ const buildGrid = (
       Math.max(
         ...data.rows.map((row) => inkWidth(narrow ? row.slice(0, 2) : row))
       );
+
     // The last column's ink reaches past its centre by its biggest dot, or by
     // half its axis label when that column is labelled.
     const reach = (colW: number) =>
@@ -153,33 +164,44 @@ const buildGrid = (
         dotRadius(Math.max(...last), span, maxRadius(colW)),
         (n - 1) % (narrow ? every * 2 : every) === 0 ? lastLabel : 0
       );
+
     let colRoom = (width - labelW - EDGE * 2) / n;
+
     for (let k = 0; k < 4; k += 1) {
       colRoom = (width - labelW - EDGE * 2 - reach(colRoom)) / (n - 0.5);
     }
+
     return { colRoom, labelW, reach };
   };
+
   let narrow = false;
   let size = sizeFor(false);
+
   if (Math.min(size.colRoom, 58) < 34) {
     narrow = true;
     size = sizeFor(true);
   }
+
   const { colRoom, labelW } = size;
+
   // Rows never stretch far past the columns: a narrow grid gives height back.
   const rowH = Math.min(
     (height - top - bottom) / data.rows.length,
     colRoom * 1.15
   );
+
   const gridH = rowH * data.rows.length;
   const colW = Math.min(colRoom, rowH * 1.05, 58);
+
   // Centre the names and the grid's ink together.
   const x0 =
     (width - labelW - (n - 0.5) * colW - size.reach(colW)) / 2 + labelW;
+
   const cell = Math.min(colW, rowH);
   // Room for the peak's ring between two full-size neighbours: the ring keeps
   // RING_CLEAR from its own dot and from every neighbour.
   const rMax = maxRadius(cell);
+
   return {
     cell,
     colW,
@@ -197,17 +219,20 @@ const buildGrid = (
 
 const peakOf = (cells: Cell[]): readonly [number, number] => {
   let [best] = cells;
+
   for (const cell of cells) {
     if (best === undefined || cell.v > best.v) {
       best = cell;
     }
   }
+
   return best === undefined ? [0, 0] : [best.r, best.c];
 };
 
 const Axes = (props: { data: DotHeatData; every: number; grid: Grid }) => {
   const { grid } = props;
   const step = grid.narrow ? props.every * 2 : props.every;
+
   return (
     <g>
       {props.data.rows.map((row, r) => (
@@ -251,6 +276,7 @@ interface DotsProps {
 
 const Dots = (props: DotsProps) => {
   const { grid } = props;
+
   return (
     <g>
       {props.cells.map((cell, k) => (
@@ -295,11 +321,14 @@ export const DotHeat = (props: DotHeatProps) => {
   const cells: Cell[] = data.values.flatMap((row, r) =>
     row.map((v, c) => ({ c, id: `${data.rows[r]}-${data.columns[c]}`, r, v }))
   );
+
   const filled = cells.flatMap((d) => (d.v > 0 ? [d.v] : []));
+
   const span: Span =
     filled.length === 0
       ? { hi: 1, lo: 1 }
       : { hi: Math.max(...filled), lo: Math.min(...filled) };
+
   const [peakR, peakC] = props.highlight ?? peakOf(cells);
   const peakV = data.values[peakR]?.[peakC] ?? 0;
   const peakId = `${data.rows[peakR]}-${data.columns[peakC]}`;
@@ -328,6 +357,7 @@ export const DotHeat = (props: DotHeatProps) => {
           noteOf(props) !== undefined,
           props.labelEvery ?? 2
         );
+
         return (
           <ChartSvg
             height={grid.height}

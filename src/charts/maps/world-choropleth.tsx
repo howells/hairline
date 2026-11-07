@@ -24,13 +24,17 @@ interface WorldChoroplethProps extends NoteProps {
 }
 
 const BREAKS: [number, number, number, number] = [1, 2, 3, 4];
+
 /** Countries printed on the map by default: the heaviest drinkers on four continents. */
 const LABELLED = ["Portugal", "France", "Italy", "Australia", "Argentina"];
+
 const project = (size: [number, number], outlines: FeatureCollection) =>
   geoEqualEarth().fitSize(size, outlines);
+
 /** Litres to the tenth, but whole numbers stay whole in the key ("2+"). */
 const litres = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1));
 const fmtLitres = (v: number) => v.toFixed(1);
+
 /**
  * Outlines without far-flung specks (Hawaii would be a stray dot in the
  * Pacific) or slivers thrown across the antimeridian to the map's far edge.
@@ -47,6 +51,7 @@ const regions = worldCountries.map((r) =>
 export const WorldChoropleth = (props: WorldChoroplethProps) => {
   const data = props.data ?? worldChoroplethDemo;
   const format = props.format ?? fmtLitres;
+
   const rows = useMemo(
     () =>
       data.map((d) => ({
@@ -58,12 +63,15 @@ export const WorldChoropleth = (props: WorldChoroplethProps) => {
       })),
     [data]
   );
+
   const labels =
     props.highlight === undefined ? LABELLED : [props.highlight].flat();
+
   const top = data
     .toSorted((a, b) => b.value - a.value)
     .slice(0, 5)
     .map((d) => `${d.code ?? d.country} ${format(d.value)}`);
+
   return (
     <Choropleth
       ariaLabel={`World choropleth, highest: ${top.join(", ")}`}

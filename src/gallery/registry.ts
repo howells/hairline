@@ -12,8 +12,10 @@ import type { GalleryEntry } from "./types";
 
 const byId = (list: GalleryEntry[], id: string) =>
   list.filter((e) => e.id === id);
+
 const without = (list: GalleryEntry[], ...ids: string[]) => {
   const skip = new Set(ids);
+
   return list.filter((e) => !skip.has(e.id));
 };
 

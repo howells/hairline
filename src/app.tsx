@@ -38,17 +38,21 @@ const RouteContent = (props: {
   if (props.section === "chart" && props.arg !== undefined) {
     return <SingleChart id={props.arg} />;
   }
+
   if (props.section === "kit") {
     return <KitGrid />;
   }
+
   if (props.section === "sources") {
     return <Credits />;
   }
+
   return <ChartGrid />;
 };
 
 export const App = () => {
   const [section, arg] = useRoute();
+
   return (
     <>
       <TopBar />

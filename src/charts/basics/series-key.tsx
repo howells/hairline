@@ -35,6 +35,7 @@ interface SeriesKeyProps {
 export const SeriesKey = (props: SeriesKeyProps) => {
   const left =
     props.align === "end" ? props.x - keyWidth(props.items) : props.x;
+
   const starts = props.items.map(
     (_, i) =>
       left +
@@ -42,6 +43,7 @@ export const SeriesKey = (props: SeriesKeyProps) => {
         .slice(0, i)
         .reduce((w, item) => w + itemWidth(item) + BETWEEN, 0)
   );
+
   return (
     <g className="fade">
       {props.items.map((item, i) => (

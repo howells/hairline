@@ -85,6 +85,7 @@ const plain = (v: number) => `${Math.round(v * 10) / 10}`;
 /** Gridlines at round steps, ending on the first one at or past the largest value. */
 const gridTicks = (max: number) => {
   const step = tickStep(0, max, 4);
+
   return Array.from({ length: Math.ceil(max / step) + 1 }, (_, k) => k * step);
 };
 
@@ -109,16 +110,20 @@ const seats = (
   const first = Math.ceil(floor / pitch);
   const cols = px.map((v) => Math.max(first, Math.round(v / pitch)));
   const counts = new Map<number, number>();
+
   for (const c of cols) {
     counts.set(c, (counts.get(c) ?? 0) + 1);
   }
+
   const tallest = Math.max(1, ...counts.values());
   const row = Math.min(pitch, room / tallest);
   const used = new Map<number, number>();
+
   return cols.map((c) => {
     const j = used.get(c) ?? 0;
     used.set(c, j + 1);
     const step = Math.ceil(j / 2) * (j % 2 === 0 ? -1 : 1);
+
     return { x: c * pitch, y: centre + step * row };
   });
 };
@@ -132,6 +137,7 @@ const MarkedDot = (p: {
   value: number;
 }) => {
   const radius = DOT[p.dot === "sm" ? "md" : "lg"];
+
   return (
     <g className="pop">
       <HeroDot
@@ -160,6 +166,7 @@ const MarkedDot = (p: {
 const Band = (p: BandProps) => {
   const radius = DOT[p.dot];
   const marked = new Set(p.marked);
+
   const lattice = seats(
     p.group.values.map((v) => p.x(v)),
     radius * 2 + 2,
@@ -167,6 +174,7 @@ const Band = (p: BandProps) => {
     p.band * 0.9,
     p.x(0) + radius + 2
   );
+
   return (
     <DimGroup dim={p.hover !== null && p.hover.g !== p.g}>
       <Label
@@ -183,8 +191,10 @@ const Band = (p: BandProps) => {
         if (marked.has(k)) {
           return null;
         }
+
         const seat = lattice[k];
         const on = p.hover !== null && p.hover.g === p.g && p.hover.k === k;
+
         return (
           <Ring
             // Records carry no id; group + ordinal is their identity.
@@ -247,8 +257,10 @@ export const JitterStrip = (props: JitterStripProps) => {
   const medians = data.map((d) => median(d.values) ?? 0);
   const showMedian = props.median ?? true;
   const heroNames = new Set(props.hero);
+
   const markedOf = (d: JitterGroup) =>
     (d.names ?? []).flatMap((name, k) => (heroNames.has(name) ? [k] : []));
+
   const label = `Jitter strip: ${data
     .map((d, i) =>
       [
@@ -284,6 +296,7 @@ export const JitterStrip = (props: JitterStripProps) => {
       {(width) => {
         const narrow = width < 480;
         const ticks = gridTicks(max);
+
         const m = {
           bottom: 40 + noteSpace(noteOf(props), width - 16, 16),
           // Room for the longest group name.
@@ -294,9 +307,11 @@ export const JitterStrip = (props: JitterStripProps) => {
           ),
           top: 10,
         };
+
         const x = scaleLinear()
           .domain([0, ticks.at(-1) ?? max])
           .range([m.left + 6, width - m.right]);
+
         const band = (height - m.top - m.bottom) / data.length;
         const floor = height - m.bottom;
 

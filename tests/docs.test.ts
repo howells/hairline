@@ -24,6 +24,7 @@ import { ChartGrid } from "../src/pages/gallery";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const read = (file: string) => readFileSync(path.join(root, file), "utf-8");
+
 const escaped = (text: string) =>
   text
     .replaceAll("&", "&amp;")
@@ -31,13 +32,17 @@ const escaped = (text: string) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#x27;");
+
 const chartFor = (kind: string) => {
   const chart = registry.find((c) => c.kind === kind);
+
   if (chart === undefined) {
     throw new Error(`No chart ${kind}`);
   }
+
   return chart;
 };
+
 /** The property names the schema itself declares, from its JSON Schema. */
 const declared = (schema: z.ZodType) =>
   Object.keys(
@@ -45,6 +50,7 @@ const declared = (schema: z.ZodType) =>
       .object({ properties: z.record(z.string(), z.unknown()) })
       .parse(z.toJSONSchema(schema, { io: "input" })).properties
   );
+
 const kinds = registry.map((chart) => chart.kind);
 
 describe("the props table is generated from the schema", () => {
@@ -70,6 +76,7 @@ describe("the props table is generated from the schema", () => {
     const data = propsOf(chartFor("hairline-line").schema).find(
       (row) => row.name === "data"
     );
+
     expect(data?.type).toBe(
       "{ date: string; value: number | null; id?: string }[]"
     );
@@ -81,6 +88,7 @@ describe("the props table is generated from the schema", () => {
         .filter((row) => (row.description ?? "").length === 0)
         .map((row) => `${chart.kind}.${row.name}`)
     );
+
     expect(blank).toStrictEqual([]);
   });
 
@@ -91,24 +99,30 @@ describe("the props table is generated from the schema", () => {
         z.object({ items: z.unknown().optional() })
       ),
     });
+
     const Fields = z.object({
       properties: z.record(
         z.string(),
         z.object({ description: z.string().optional() })
       ),
     });
+
     const blank = registry.flatMap((chart) => {
       const top = Items.parse(z.toJSONSchema(chart.schema, { io: "input" }));
+
       return Object.entries(top.properties).flatMap(([name, node]) => {
         const items = Fields.safeParse(node.items);
+
         if (!items.success) {
           return [];
         }
+
         return Object.entries(items.data.properties)
           .filter(([, field]) => (field.description ?? "").length === 0)
           .map(([field]) => `${chart.kind}.${name}[].${field}`);
       });
     });
+
     expect(blank).toStrictEqual([]);
   });
 
@@ -116,6 +130,7 @@ describe("the props table is generated from the schema", () => {
     const note = propsOf(chartFor("rung-bars").schema).find(
       (row) => row.name === "note"
     );
+
     expect(note?.deprecated).toBe(true);
   });
 });
@@ -133,6 +148,7 @@ describe("every example is a valid payload", () => {
 /** The chart pages the site's content source writes. */
 const load = async () => {
   const result = await chartPages.load();
+
   return result.entries;
 };
 
@@ -141,6 +157,7 @@ describe("the docs site has a page for every chart", () => {
     const entries = await load();
     expect(chartPages.prefix).toBe("charts");
     expect(entries.map((entry) => entry.slug)).toStrictEqual(kinds);
+
     for (const entry of entries) {
       expect(entry.body.format).toBe("mdx");
       expect(entry.raw?.endsWith(entry.body.text)).toBe(true);
@@ -170,9 +187,11 @@ describe("the docs site has a page for every chart", () => {
     expect(body).toContain(`getChart("${kind}").validate(payload)`);
     // The props: every declared property, from the generated rows.
     const props = /<Props rows=\{(?<rows>.*)\} \/>/u.exec(body)?.groups?.rows;
+
     const rows = z
       .array(z.object({ name: z.string() }))
       .parse(JSON.parse(props ?? "[]"));
+
     expect(rows.map((row) => row.name).toSorted()).toStrictEqual(
       declared(chart.schema).toSorted()
     );
@@ -199,6 +218,7 @@ describe("what agents read", () => {
       );
       expect(details).toContain(`@howells/hairline/${chart.kind}`);
     }
+
     expect(details).toContain("json-schema/index.json");
   });
 
@@ -208,6 +228,7 @@ describe("what agents read", () => {
 
   it("a props table reaches the Markdown mirror as a table, every row", () => {
     const rows = propsOf(chartFor("rung-bars").schema);
+
     const table =
       markdownComponents.Props({
         childBlocks: () => [],
@@ -225,6 +246,7 @@ describe("what agents read", () => {
           })),
         },
       }) ?? "";
+
     expect(table.split("\n")).toHaveLength(rows.length + 2);
     expect(table).toContain(String.raw`\| "mount" \|`);
   });
@@ -253,6 +275,7 @@ describe("the site's colours are deriveTheme's", () => {
     for (const [name, value] of Object.entries(dark)) {
       expect(css).toContain(`${name}: ${value};`);
     }
+
     for (const name of Object.keys(light)) {
       expect(css).toContain(`${name}:`);
     }
@@ -266,10 +289,12 @@ describe("the gallery carries no prose and no docs", () => {
     for (const entry of ALL_ENTRIES) {
       expect(html).toContain(`aria-label="${escaped(entry.name)}"`);
     }
+
     for (const chart of registry) {
       expect(html).not.toContain(escaped(chart.whenToUse));
       expect(html).not.toContain(escaped(chart.dataShape));
     }
+
     expect(html).not.toContain("#/docs");
   });
 
@@ -296,9 +321,14 @@ describe("the README is accurate where that can be checked", () => {
   });
 
   it("points only at files that exist", () => {
-    const links = [...readme.matchAll(/\]\((?<href>[^)#]+)\)/gu)]
-      .map((m) => m.groups?.href ?? "")
-      .filter((href) => !href.startsWith("http"));
+    const links = [...readme.matchAll(/\]\((?<href>[^)#]+)\)/gu)].flatMap(
+      (m) => {
+        const href = m.groups?.href ?? "";
+
+        return href.startsWith("http") ? [] : [href];
+      }
+    );
+
     for (const href of links) {
       expect(existsSync(path.join(root, href)), href).toBe(true);
     }
@@ -308,15 +338,18 @@ describe("the README is accurate where that can be checked", () => {
     const { exports } = z
       .object({ exports: z.record(z.string(), z.unknown()) })
       .parse(JSON.parse(read("package.json")));
+
     const used = new Set(
       [...readme.matchAll(/@howells\/hairline\/(?<sub>[\w./*-]+)/gu)].map(
         (m) => `./${(m.groups?.sub ?? "").replace(/\/$/u, "")}`
       )
     );
+
     for (const sub of used) {
       const known = sub.startsWith("./json-schema")
         ? "./json-schema/*" in exports
         : sub in exports;
+
       expect(known, sub).toBe(true);
     }
   });

@@ -12,9 +12,11 @@ export const isAlert = (th: Threshold | undefined, v: number) => {
   if (th?.alert === "below") {
     return v < th.value;
   }
+
   if (th?.alert === "above") {
     return v > th.value;
   }
+
   return false;
 };
 
@@ -30,25 +32,34 @@ export const worstRun = (
   if (th?.alert === undefined) {
     return null;
   }
+
   let worst = -1;
+
   for (const [i, d] of data.entries()) {
     const deeper =
       worst < 0 || breach(th, d.value) > breach(th, data[worst].value);
+
     if (isAlert(th, d.value) && deeper) {
       worst = i;
     }
   }
+
   if (worst < 0) {
     return null;
   }
+
   let a = worst;
+
   while (a > 0 && isAlert(th, data[a - 1].value)) {
     a -= 1;
   }
+
   let b = worst;
+
   while (b < data.length - 1 && isAlert(th, data[b + 1].value)) {
     b += 1;
   }
+
   return [a, b];
 };
 

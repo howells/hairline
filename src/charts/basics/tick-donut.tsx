@@ -38,6 +38,7 @@ const TICKS = 100;
 
 /** How far the dotted guide ring sits inside the tick ring. */
 const GUIDE_INSET = 6;
+
 /** Rung tones for the sources after the hero, by rank: one step lighter each. */
 const TICK_TONES = ["stroke-l3", "stroke-l4", "stroke-l5", "stroke-l6"];
 
@@ -50,16 +51,20 @@ const apportion = (values: number[]) => {
   const exact = values.map((v) => (total > 0 ? (v / total) * TICKS : 0));
   const counts = exact.map((e) => Math.floor(e));
   let left = TICKS - counts.reduce((a, b) => a + b, 0);
+
   const byRemainder = exact
     .map((e, i) => ({ i, rem: e - Math.floor(e) }))
     .toSorted((a, b) => b.rem - a.rem);
+
   for (const { i } of byRemainder) {
     if (left <= 0) {
       break;
     }
+
     counts[i] += 1;
     left -= 1;
   }
+
   return counts;
 };
 
@@ -74,8 +79,10 @@ interface Dial {
 /** Point at `deg` degrees clockwise from twelve o'clock. */
 const polar = (dial: Dial, deg: number, r: number) => {
   const a = ((deg - 90) * Math.PI) / 180;
+
   return { x: dial.cx + r * Math.cos(a), y: dial.cy + r * Math.sin(a) };
 };
+
 const angle = (t: number) => (t / TICKS) * 360;
 
 interface Placement {
@@ -93,12 +100,15 @@ const labelPlacement = (mid: number, lines: number): Placement => {
   const s = Math.sin((mid * Math.PI) / 180);
   const c = Math.cos((mid * Math.PI) / 180);
   const extra = (lines - 1) * LABEL_LINE;
+
   if (s > 0.25) {
     return { anchor: "start", dy: 3.5 - extra / 2 };
   }
+
   if (s < -0.25) {
     return { anchor: "end", dy: 3.5 - extra / 2 };
   }
+
   return { anchor: "middle", dy: c > 0 ? -4 - extra : 10 };
 };
 
@@ -106,12 +116,15 @@ const labelPlacement = (mid: number, lines: number): Placement => {
 const labelRoom = (width: number, cx: number, mid: number, r: number) => {
   const s = Math.sin((mid * Math.PI) / 180);
   const x = cx + (r + LABEL_GAP) * s;
+
   if (s > 0.25) {
     return width - EDGE - x;
   }
+
   if (s < -0.25) {
     return x - EDGE;
   }
+
   return 2 * Math.min(x, width - x) - 2 * EDGE;
 };
 
@@ -119,15 +132,18 @@ const labelRoom = (width: number, cx: number, mid: number, r: number) => {
 const labelReach = (mid: number, lines: number, r: number) => {
   const rad = (mid * Math.PI) / 180;
   const extra = (lines - 1) * LABEL_LINE;
+
   if (Math.abs(Math.sin(rad)) > 0.25) {
     return Math.abs(Math.cos(rad)) * (r + LABEL_GAP) + extra / 2 + 12;
   }
+
   return r + LABEL_GAP + 14 + extra;
 };
 
 /** Largest dial radius at which a label `w` px wide fits at angle `mid`. */
 const radiusFor = (width: number, mid: number, w: number) => {
   const s = Math.abs(Math.sin((mid * Math.PI) / 180));
+
   return s > 0.25 ? (width / 2 - EDGE - w) / s - LABEL_GAP : Infinity;
 };
 
@@ -140,9 +156,11 @@ interface SourceLabel {
 /** A label's lines: "Name · value" if it fits, else the name (wrapped) over the value. */
 const labelLines = (label: SourceLabel, room: number) => {
   const full = `${label.name} · ${label.value}`;
+
   if (labelWidth(full) <= room) {
     return [full];
   }
+
   return [...wrapWords(label.name, room, labelWidth), label.value];
 };
 
@@ -157,7 +175,9 @@ const fitRadius = (width: number, r0: number, labels: SourceLabel[]) => {
       radiusFor(width, l.mid, labelWidth(`${l.name} · ${l.value}`))
     )
   );
+
   const r1 = Math.min(r0, Math.max(Math.max(56, r0 * 0.85), oneLine));
+
   const stacked = Math.min(
     ...labels.map((l) =>
       labelLines(l, labelRoom(width, width / 2, l.mid, r1)).length === 1
@@ -169,6 +189,7 @@ const fitRadius = (width: number, r0: number, labels: SourceLabel[]) => {
           )
     )
   );
+
   return Math.max(56, Math.min(r1, stacked));
 };
 
@@ -182,6 +203,7 @@ const spread = (
   // The every-tenth rungs reach 4px past the rim.
   let lo = cx - rOut - 4;
   let hi = cx + rOut + 4;
+
   for (const [i, l] of labels.entries()) {
     const x = cx + (rOut + LABEL_GAP) * Math.sin((l.mid * Math.PI) / 180);
     const w = Math.max(...(lines[i] ?? []).map((line) => inkWidth(line)));
@@ -195,6 +217,7 @@ const spread = (
       anchor === "end" ? x : x + (anchor === "start" ? w : w / 2)
     );
   }
+
   return [lo, hi] as const;
 };
 
@@ -226,6 +249,7 @@ const Source = ({
   const tone = hero
     ? "stroke-hero"
     : TICK_TONES[Math.max(0, Math.min(rank, TICK_TONES.length) - 1)];
+
   const a0 = angle(start);
   const a1 = angle(start + count);
   const mid = (a0 + a1) / 2;
@@ -233,6 +257,7 @@ const Source = ({
   const place = labelPlacement(mid, lines.length);
   // Keep a stacked label's first line inside the top of the svg.
   const textY = Math.max(text.y, 11 - place.dy);
+
   const hit =
     d3arc<{ endAngle: number; startAngle: number }>()
       .innerRadius(dial.rIn - 14)
@@ -240,10 +265,12 @@ const Source = ({
       endAngle: (a1 * Math.PI) / 180,
       startAngle: (a0 * Math.PI) / 180,
     }) ?? "";
+
   const ticks = Array.from({ length: count }, (_, k) => ({
     id: `tick-${start + k}`,
     t: start + k,
   }));
+
   const anchorPt = polar(dial, mid, dial.rOut);
 
   return (
@@ -318,15 +345,18 @@ const TickDonutSvg = ({
   const notes = noteLines(note, width - 24);
   const noteH = notes.length > 0 ? 18 + notes.length * NOTE_LINE : 0;
   const side = width < 440 ? 72 : 128;
+
   const starts = counts.map((_, i) =>
     counts.slice(0, i).reduce((a, b) => a + b, 0)
   );
+
   // One rung is one percent, so each source is labelled with its rung count.
   const labels: SourceLabel[] = data.map((d, i) => ({
     mid: angle(starts[i] + counts[i] / 2),
     name: d.label,
     value: `${counts[i]}%`,
   }));
+
   const rOut = fitRadius(
     width,
     Math.max(
@@ -335,25 +365,33 @@ const TickDonutSvg = ({
     ),
     labels
   );
+
   const tickLen = Math.max(12, rOut * 0.17);
+
   // Centre the dial and its labels together: the labels are rarely the same
   // width on both sides.
   const linesAt = (cx: number) =>
     labels.map((l) => labelLines(l, labelRoom(width, cx, l.mid, rOut)));
+
   const recentre = (cx: number, ls: string[][]) => {
     const [lo, hi] = spread(cx, rOut, labels, ls);
+
     return cx + (width - lo - hi) / 2;
   };
+
   const cx0 = width / 2;
   const cx1 = recentre(cx0, linesAt(cx0));
   const lines = linesAt(cx1);
   const cx = recentre(cx1, lines);
+
   const reach = Math.max(
     rOut + 8,
     ...labels.map((l, i) => labelReach(l.mid, lines[i].length, rOut))
   );
+
   // A width-bound dial gives back the height it can't use.
   const plotH = Math.min(height - noteH, Math.ceil(2 * reach + 24));
+
   const dial: Dial = {
     cx,
     cy: plotH / 2 + 4,
@@ -361,6 +399,7 @@ const TickDonutSvg = ({
     rOut,
     tickLen,
   };
+
   const label = `Shares of the whole: ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
 
   return (
@@ -428,6 +467,7 @@ export const TickDonut = (props: TickDonutProps) => {
   const format = props.format ?? String;
   const hover = useHover<number>();
   const total = data.reduce((a, d) => a + d.value, 0);
+
   const pct = (v: number) =>
     `${total > 0 ? Math.round((v / total) * 100) : 0}%`;
 

@@ -46,17 +46,21 @@ const describe = (d: LineageDatum) => {
   const parts = [`added ${yearOf(d.shipped)}`];
   const reworked = d.reworked ?? [];
   const dormant = d.dormant ?? [];
+
   if (reworked.length > 0) {
     parts.push(`changed ${reworked.map(yearOf).join(", ")}`);
   }
+
   if (dormant.length > 0) {
     parts.push(
       `suspended ${dormant.map(([a, b]) => `${yearOf(a)}–${yearOf(b)}`).join(", ")}`
     );
   }
+
   parts.push(
     d.retired === undefined ? "in use today" : `dropped ${yearOf(d.retired)}`
   );
+
   return parts.join(" · ");
 };
 
@@ -65,8 +69,10 @@ const segmentsOf = (d: LineageDatum, end: number): Segment[] => {
   const dormant = d.dormant ?? [];
   const cuts = [d.shipped, ...dormant.flat(), end].toSorted((a, b) => a - b);
   const out: Segment[] = [];
+
   for (const [k, a] of cuts.entries()) {
     const b = cuts[k + 1];
+
     if (b !== undefined && b > a) {
       const mid = (a + b) / 2;
       out.push({
@@ -77,6 +83,7 @@ const segmentsOf = (d: LineageDatum, end: number): Segment[] => {
       });
     }
   }
+
   return out;
 };
 
@@ -92,11 +99,13 @@ const YearGrid = ({ years, y, x0, x1, every }: GridProps) => {
   // Labels fall on whole multiples of `every`; once years are under 10px
   // apart only those years carry a rule, so the grid stays a few fine lines.
   const ticked = years.filter((yr) => yr % every === 0);
+
   const labels = new Map(
     yearTickLabels(ticked.map((yr) => new Date(Date.UTC(yr, 0, 1)))).map(
       (label, k) => [ticked[k], label]
     )
   );
+
   return (
     <g>
       {(every >= 5 ? ticked : years).map((yr) => (
@@ -141,17 +150,20 @@ const FeatureColumn = ({
   const events = [feature.shipped, ...(feature.reworked ?? [])].toSorted(
     (a, b) => a - b
   );
+
   const end = feature.retired ?? floorYear;
   const ly = floor + 14;
   // The hero's 2px line sits on whole pixels, a 1px one on the half pixel;
   // its marks centre on the same x, and on the half-pixel year rules.
   const stemX = hero ? Math.round(x) : crisp(x);
   let labelTone = "fill-muted";
+
   if (hero) {
     labelTone = "";
   } else if (feature.retired !== undefined) {
     labelTone = "fill-faint";
   }
+
   return (
     <>
       <HitRect
@@ -236,17 +248,20 @@ export const TrendLineage = (props: TrendLineageProps) => {
   const data = props.data ?? trendLineageDemo;
   const height = props.height ?? 460;
   const hover = useHover<number>();
+
   const allYears = data.flatMap((d) => [
     d.shipped,
     ...(d.reworked ?? []),
     ...(d.retired === undefined ? [] : [d.retired]),
   ]);
+
   const hero =
     props.highlight ??
     data
       .filter((d) => d.retired === undefined)
       .toSorted((a, b) => a.shipped - b.shipped)
       .at(0)?.name;
+
   const [y0, y1] = props.years ?? [
     Math.floor(Math.min(...allYears)),
     Math.ceil(Math.max(...allYears)),
@@ -274,18 +289,24 @@ export const TrendLineage = (props: TrendLineageProps) => {
           right: 0,
           top: 14,
         };
+
         const colsW = Math.min(width - m.left - m.right, data.length * 64);
         const gx0 = m.left + (width - m.left - m.right - colsW) / 2;
         const colW = colsW / data.length;
         const cx = (i: number) => gx0 + colW * (i + 0.5);
+
         const y = scaleLinear()
           .domain([y0, y1 + FLOOR_PAD])
           .range([m.top + 8, height - m.bottom]);
+
         const yearStep = y(y0 + 1) - y(y0);
         const floor = y(y1 + FLOOR_PAD);
+
         const size: DotSize =
           Math.min(yearStep * 0.32, colW * 0.2) >= DOT.lg ? "lg" : "md";
+
         const years = Array.from({ length: y1 - y0 + 1 }, (_, k) => y0 + k);
+
         const every = byStep(
           yearStep,
           [
@@ -296,7 +317,9 @@ export const TrendLineage = (props: TrendLineageProps) => {
           ],
           25
         );
+
         const tip = hover.key === null ? undefined : data[hover.key];
+
         return (
           <div className="relative">
             <ChartSvg

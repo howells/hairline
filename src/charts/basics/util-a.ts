@@ -15,6 +15,7 @@ export const fmtMonthDay = (d: Date) => monthDay(d);
 export const dayAfter = (start: string, n: number) => {
   const d = new Date(`${start}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
+
   return d;
 };
 
@@ -41,6 +42,7 @@ export const dailyFloor = (
   metrics?: FontMetrics
 ) => {
   const notes = noteLines(note, width - 24, metrics);
+
   return Math.round(
     height -
       (notes.length > 0 ? 56 : 34) -

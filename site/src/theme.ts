@@ -11,6 +11,7 @@ import { DARK, LIGHT, token } from "./palette";
 type Integration = NonNullable<BlumeConfig["integrations"]>[number];
 
 const ID = "virtual:hairline-site.css";
+
 /** Resolved id: it ends in .css, so Vite treats the module as a stylesheet. */
 const RESOLVED = "/@hairline-site/theme.css";
 

@@ -60,6 +60,7 @@ interface BandProps {
 const Band = (p: BandProps) => {
   const lw = p.x(p.datum.left);
   const rw = p.x(p.datum.right);
+
   return (
     <DimGroup dim={p.dim} onPointerEnter={p.handleHover}>
       <HitRect height={p.pitch} width={p.width} x={0} y={p.cy - p.pitch / 2} />
@@ -125,6 +126,7 @@ export const Pyramid = (props: PyramidProps) => {
   const hover = useHover<number>();
   const tex = useTextureIds("pyramid");
   const hovered = hover.at === null ? undefined : data[hover.at.key];
+
   const label = data
     .map(
       (d) =>
@@ -158,19 +160,24 @@ export const Pyramid = (props: PyramidProps) => {
     >
       {(width) => {
         const gutter = widest(data.map((d) => d.label)) + 2 * GUTTER_PAD;
+
         const valueW =
           VALUE_GAP +
           widest(data.flatMap((d) => [format(d.left), format(d.right)]));
+
         const room = Math.max(0, (width - gutter) / 2 - valueW - 2);
+
         const x = scaleLinear()
           .domain([0, Math.max(1, ...data.flatMap((d) => [d.left, d.right]))])
           .range([0, room]);
+
         const cx = width / 2;
         const pitch = (height - TOP - NAMES) / Math.max(1, data.length);
         const barH = Math.min(24, Math.round(pitch * 0.64));
         const edgeL = Math.round(cx - gutter / 2);
         const edgeR = Math.round(cx + gutter / 2);
         const nameY = height - 10;
+
         return (
           <ChartSvg
             desc={`${data.length} bands; ${sides[0]} against ${sides[1]}.`}
@@ -184,6 +191,7 @@ export const Pyramid = (props: PyramidProps) => {
             </defs>
             {data.map((d, i) => {
               const cy = TOP + pitch * (i + 0.5);
+
               return (
                 <Band
                   barH={barH}

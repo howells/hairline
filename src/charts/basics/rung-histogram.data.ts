@@ -44,15 +44,20 @@ export const rungHistogramDemo: HistBin[] = [
 /** Where the cumulative count crosses half, interpolated inside its bin. */
 export const binMedian = (bins: readonly HistBin[]): number => {
   let total = 0;
+
   for (const b of bins) {
     total += b.count;
   }
+
   let run = 0;
+
   for (const b of bins) {
     if (run + b.count >= total / 2) {
       return b.x0 + ((total / 2 - run) / b.count) * (b.x1 - b.x0);
     }
+
     run += b.count;
   }
+
   return bins.at(-1)?.x1 ?? 0;
 };

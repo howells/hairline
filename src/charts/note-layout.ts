@@ -51,15 +51,20 @@ export interface Box {
 
 /** The gap between a point and its leader, px. */
 const POINT_GAP = 5;
+
 /** Leader length, px. */
 const LEAD = 18;
+
 /** Line heights of the title and the detail, px. */
 const TITLE_H = 14;
 const DETAIL_H = 13;
+
 /** Clear space kept around a note, px. */
 const CLEAR = 4;
+
 /** Samples along the line are this far apart, px. */
 const STEP = 4;
+
 /** A numbered disc's radius, and its gap from the point, px. */
 export const DISC_R = 8;
 const DISC_GAP = 4;
@@ -74,13 +79,16 @@ const overlaps = (a: Box, b: Box, pad: number) =>
 const sampled = (line: NoteRoom["line"]) =>
   line.flatMap((p, k) => {
     const next = line[k + 1];
+
     if (next === undefined) {
       return [p];
     }
+
     const n = Math.max(
       1,
       Math.ceil(Math.hypot(next.x - p.x, next.y - p.y) / STEP)
     );
+
     return Array.from({ length: n }, (_, i) => ({
       x: p.x + ((next.x - p.x) * i) / n,
       y: p.y + ((next.y - p.y) * i) / n,
@@ -98,6 +106,7 @@ const cost = (
   samples: ReturnType<typeof sampled>
 ) => {
   let total = 0;
+
   for (const b of boxes) {
     total += outside(b, room) ? 1000 : 0;
     total += taken.some((t) => overlaps(b, t, CLEAR)) ? 500 : 0;
@@ -111,6 +120,7 @@ const cost = (
           p.y < b.y1 + CLEAR
       ).length;
   }
+
   return total;
 };
 
@@ -139,12 +149,14 @@ const candidate = (
   const y0 = above ? near - h : near;
   const x0 = anchor === "start" ? p.x : p.x - w;
   const words: Box = { x0, x1: x0 + w, y0, y1: y0 + h };
+
   const leader: Box = {
     x0: p.x - 1,
     x1: p.x + 1,
     y0: Math.min(p.y + (above ? -POINT_GAP : POINT_GAP), near),
     y1: Math.max(p.y + (above ? -POINT_GAP : POINT_GAP), near),
   };
+
   return {
     boxes: [words, leader],
     placed: {
@@ -175,16 +187,20 @@ const ORDER = [
 export const placeNotes = (points: readonly NotePoint[], room: NoteRoom) => {
   const samples = sampled(room.line);
   const taken: Box[] = [];
+
   return points.map((p, k): PlacedNote => {
     const options = ORDER.map(([side, anchor], i) => ({
       ...candidate(p, side, anchor),
       rank: i,
     }));
+
     const costs = options.map(
       (o) => cost(o.boxes, taken, room, samples) + o.rank * 0.1
     );
+
     const best = options[costs.indexOf(Math.min(...costs))];
     taken.push(...best.boxes);
+
     return { ...p, ...best.placed, n: k + 1 };
   });
 };
@@ -195,6 +211,7 @@ export const noteBoxes = (placed: readonly PlacedNote[]): Box[] =>
     const w = widthOf(n);
     const x0 = n.anchor === "start" ? n.x : n.x - w;
     const y0 = n.titleY - (TITLE_H - 3);
+
     return {
       x0: Math.min(x0, n.x - 1),
       x1: Math.max(x0 + w, n.x + 1),
@@ -213,22 +230,28 @@ export interface PlacedDisc extends NotePoint {
 export const placeDiscs = (points: readonly NotePoint[], room: NoteRoom) => {
   const samples = sampled(room.line);
   const taken: Box[] = [];
+
   return points.map((p, k): PlacedDisc => {
     const options = [-1, 1].map((dir, rank) => {
       const cy = p.y + dir * (DISC_GAP + DISC_R);
+
       const disc: Box = {
         x0: p.x - DISC_R,
         x1: p.x + DISC_R,
         y0: cy - DISC_R,
         y1: cy + DISC_R,
       };
+
       return { cy, disc, rank };
     });
+
     const costs = options.map(
       (o) => cost([o.disc], taken, room, samples) + o.rank * 0.1
     );
+
     const best = options[costs.indexOf(Math.min(...costs))];
     taken.push(best.disc);
+
     return { ...p, cy: best.cy, n: k + 1 };
   });
 };

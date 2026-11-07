@@ -30,9 +30,11 @@ export const Key = (props: KeyProps) => {
   const widths = props.items.map(
     (item) => MARK_W + MARK_GAP + sansWidth(item.label, 11)
   );
+
   const total =
     widths.reduce((acc, w) => acc + w, 0) +
     ITEM_GAP * Math.max(0, widths.length - 1);
+
   const placed = props.items.map((item, k) => ({
     at:
       props.right -
@@ -40,6 +42,7 @@ export const Key = (props: KeyProps) => {
       widths.slice(0, k).reduce((acc, w) => acc + w + ITEM_GAP, 0),
     item,
   }));
+
   return (
     <g className="fade">
       {placed.map(({ at, item }) => (

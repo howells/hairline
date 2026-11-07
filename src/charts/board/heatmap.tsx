@@ -22,19 +22,26 @@ import { nameWidth } from "./room";
  * size per bin. The last bin is the threshold and over.
  */
 const BINS = HALFTONE_R.map((r, k) => ({ name: `bin-${k}`, r }));
+
 /** Paper left between neighbouring cells, px. */
 const GAP = 2;
+
 /** Least paper between a cell's rule and its screen, px (clears the corners). */
 const PAD = 2;
+
 /** The day in two halves, stacked: midnight to noon, then noon to midnight. */
 const HALF = 12;
 const HALVES = [0, HALF];
+
 /** Hour labels under each half. */
 const HOUR_TICKS = [0, 6];
+
 /** Room under each half for its hour labels, px. */
 const TICK_ROOM = 22;
+
 /** Paper between the two halves, px. */
 const HALF_GAP = 10;
+
 /** Gap between the row labels and the cells, px. */
 const LABEL_GAP = 10;
 
@@ -52,6 +59,7 @@ interface HeatmapProps {
 /** Where the single highest cell sits: the one red. */
 const hottest = (values: number[][]) => {
   let best: [number, number] = [0, 0];
+
   for (const [r, row] of values.entries()) {
     for (const [c, v] of row.entries()) {
       if (v > values[best[0]][best[1]]) {
@@ -59,6 +67,7 @@ const hottest = (values: number[][]) => {
       }
     }
   }
+
   return best;
 };
 
@@ -68,6 +77,7 @@ const hour = (h: number) => `${String(h).padStart(2, "0")}:00`;
 const binOf = (props: HeatmapProps) => {
   const [lo] = props.domain;
   const step = (props.threshold - lo) / (BINS.length - 1);
+
   return scaleThreshold()
     .domain(BINS.slice(1).map((_, k) => lo + step * (k + 1)))
     .range(BINS.map((_, k) => k));
@@ -85,6 +95,7 @@ const ScreenCell = (props: {
   const rows = Math.floor((props.h - PAD * 2) / pitch);
   const ox = Math.floor((props.w - cols * pitch) / 2);
   const oy = Math.floor((props.h - rows * pitch) / 2);
+
   return (
     <>
       <rect
@@ -141,6 +152,7 @@ const HalfDay = (props: {
   const w = Math.round(x.bandwidth()) - GAP;
   const h = rowH - GAP;
   const bin = binOf(chart);
+
   return (
     <g>
       {chart.rows.map((row, r) => (
@@ -161,6 +173,7 @@ const HalfDay = (props: {
           const cy = Math.round(top + r * rowH);
           const active = props.active?.[0] === r && props.active[1] === c;
           const hero = props.worst[0] === r && props.worst[1] === c;
+
           return (
             <g
               key={`${chart.rows[r]}-${hour(c)}`}
@@ -259,6 +272,7 @@ export const Heatmap = (props: HeatmapProps) => {
         const rowH = rowHeight(width, labelW);
         const blockH = props.rows.length * rowH + TICK_ROOM;
         const h = blockH * 2 + HALF_GAP;
+
         const x = scaleBand<number>()
           .domain(Array.from({ length: HALF }, (_, i) => i))
           .range([labelW, width]);

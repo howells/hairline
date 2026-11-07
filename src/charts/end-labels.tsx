@@ -2,6 +2,7 @@ import type { EndPlacement } from "./line-ends";
 import { LEAD, TEXT_GAP } from "./line-ends";
 import { Label } from "./text";
 import { stagger } from "./util";
+
 /** The hero's value stands this far after its name, px. */
 const VALUE_GAP = 6;
 
@@ -13,6 +14,7 @@ const VALUE_GAP = 6;
 export const EndLabels = (props: { placed: EndPlacement; x: number }) => {
   const { group, labels } = props.placed;
   const text = props.x + LEAD + TEXT_GAP;
+
   return (
     <g className="fade" style={stagger(12, "series")}>
       {labels.map((l) => (

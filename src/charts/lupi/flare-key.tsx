@@ -18,11 +18,13 @@ interface FlareKeyProps {
 const exemplarOf = (data: PatchworkEvent[]) => {
   const flagged = data.filter((d) => d.flagged === true);
   let best: PatchworkEvent | null = null;
+
   for (const d of flagged.length > 0 ? flagged : data) {
     if (best === null || d.minutes > best.minutes) {
       best = d;
     }
   }
+
   return best;
 };
 
@@ -33,6 +35,7 @@ const ringPath = (
 ) => {
   const [x0, y0] = clock(dial.cx, dial.cy, dial.r0, a0);
   const [x1, y1] = clock(dial.cx, dial.cy, dial.r0, a1);
+
   return `M${x0} ${y0}A${dial.r0} ${dial.r0} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1} ${y1}`;
 };
 
@@ -43,18 +46,23 @@ const ringPath = (
 export const FlareKey = (props: FlareKeyProps) => {
   const hero = useTextureIds("flare-key")("hero");
   const flare = exemplarOf(props.data);
+
   if (flare === null) {
     return null;
   }
+
   const box = glyphBox(props.width);
+
   const { dial, ring, span } = zoomFlare(
     box,
     flare,
     Math.max(1, ...props.data.map((d) => d.size))
   );
+
   const mid = (span.a0 + span.a1) / 2;
   const middle = (dial.r0 + span.reach) / 2;
   const meaning = `${props.outlined.charAt(0).toUpperCase()}${props.outlined.slice(1)}`;
+
   return (
     <GlyphKey
       box={box}

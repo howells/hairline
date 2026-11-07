@@ -37,6 +37,7 @@ const segmentOf = (segment: PropertyKey) =>
 /** ["data", 2, "value"] as "data[2].value". */
 export const pointerOf = (path: readonly (string | number)[]) => {
   let text = "";
+
   for (const segment of path) {
     if (Number.isInteger(segment)) {
       text += `[${segment}]`;
@@ -44,6 +45,7 @@ export const pointerOf = (path: readonly (string | number)[]) => {
       text += text === "" ? String(segment) : `.${segment}`;
     }
   }
+
   return text;
 };
 
@@ -53,12 +55,15 @@ export const validate = <T>(
   input: Payload
 ): Validated<T> => {
   const result = schema.safeParse(input);
+
   if (result.success) {
     return { ok: true, value: result.data };
   }
+
   return {
     issues: result.error.issues.map((issue) => {
       const path = issue.path.map(segmentOf);
+
       return {
         code: issue.code,
         message: issue.message,

@@ -20,6 +20,7 @@ const px = (length: string) => Number(length.slice(0, -2));
 /** Content-box width of an element, padding excluded, as ResizeObserver reports it. */
 const contentWidth = (el: HTMLElement) => {
   const style = getComputedStyle(el);
+
   return Math.floor(
     el.clientWidth - px(style.paddingLeft) - px(style.paddingRight)
   );
@@ -47,14 +48,17 @@ export const useMeasure = <T extends HTMLElement>(
           setWidth(Math.floor(entry.contentRect.width));
         })
       : null;
+
     if (ro !== null && ref.current !== null) {
       setWidth(contentWidth(ref.current));
       ro.observe(ref.current);
     }
+
     return () => {
       ro?.disconnect();
     };
   }, [enabled]);
+
   return [ref, width] as const;
 };
 
@@ -71,13 +75,16 @@ export const useReveal = (ref: RefObject<HTMLElement | null>) => {
       },
       { threshold: 0.2 }
     );
+
     if (ref.current !== null) {
       io.observe(ref.current);
     }
+
     return () => {
       io.disconnect();
     };
   }, [ref]);
+
   return shown;
 };
 
@@ -86,6 +93,7 @@ const REDUCED = "(prefers-reduced-motion: reduce)";
 const subscribeReduced = (onChange: () => void) => {
   const mq = window.matchMedia(REDUCED);
   mq.addEventListener("change", onChange);
+
   return () => {
     mq.removeEventListener("change", onChange);
   };
@@ -120,6 +128,7 @@ export const IdScope = (props: { children?: ReactNode; prefix: string }) =>
 export const useSvgId = (prefix: string) => {
   const scope = useContext(IdPrefix);
   const id = `${prefix}-${useId().replaceAll(/[^\w-]/gu, "")}`;
+
   return scope === "" ? id : `${scope}-${id}`;
 };
 
@@ -139,6 +148,7 @@ const settled = async (el: HTMLElement) => {
   const running = (el.getAnimations?.({ subtree: true }) ?? []).filter(
     (a) => "animationName" in a
   );
+
   await Promise.all(
     running.map(async (a) => {
       try {
@@ -161,6 +171,7 @@ const phaseOf = (still: boolean, revealed: boolean): Phase => {
   if (still) {
     return "still";
   }
+
   return revealed ? "shown" : "hidden";
 };
 
@@ -192,10 +203,12 @@ export const useEntry = (
   const [seenKey, setSeenKey] = useState(options.replayKey);
   const [revealedIn, setRevealedIn] = useState(-1);
   const [settledIn, setSettledIn] = useState(-1);
+
   if (seenKey !== options.replayKey) {
     setSeenKey(options.replayKey);
     setCycle(cycle + 1);
   }
+
   const revealed = revealedIn === cycle;
   const ready = still || settledIn === cycle;
 
@@ -204,16 +217,19 @@ export const useEntry = (
     if (still) {
       return unsubscribe;
     }
+
     if (animate === "mount") {
       const frame = requestAnimationFrame(() => {
         // Make the hidden state real before the shown one, so a replay restarts.
         void ref.current?.getBoundingClientRect();
         setRevealedIn(cycle);
       });
+
       return () => {
         cancelAnimationFrame(frame);
       };
     }
+
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -223,9 +239,11 @@ export const useEntry = (
       },
       { threshold: 0.2 }
     );
+
     if (ref.current !== null) {
       io.observe(ref.current);
     }
+
     return () => {
       io.disconnect();
     };
@@ -236,20 +254,25 @@ export const useEntry = (
     if (!revealed || still) {
       return unsubscribe;
     }
-    let live = true;
+
+    const abort = new AbortController();
+
     const finish = async () => {
       if (ref.current !== null) {
         await settled(ref.current);
       }
-      if (live) {
+
+      if (!abort.signal.aborted) {
         setSettledIn(cycle);
       }
     };
+
     const frame = requestAnimationFrame(() => {
       void finish();
     });
+
     return () => {
-      live = false;
+      abort.abort();
       cancelAnimationFrame(frame);
     };
   }, [cycle, ref, revealed, still]);
@@ -282,6 +305,7 @@ export interface Sync {
  */
 export const useScrub = (restIndex: number, dates: Date[], sync?: Sync) => {
   const times = dates.map((d) => d.getTime());
+
   const pointer = usePointer<number>(
     sync === undefined
       ? undefined
@@ -292,6 +316,7 @@ export const useScrub = (restIndex: number, dates: Date[], sync?: Sync) => {
           value: sync.time === null ? null : bisectCenter(times, sync.time),
         }
   );
+
   return {
     bind: (positions: number[], size: { height: number; width: number }) =>
       pointer.bind({
@@ -322,6 +347,7 @@ export interface HoverAt<K> {
  */
 export const useHover = <K>() => {
   const [at, setAt] = useState<HoverAt<K> | null>(null);
+
   const show = (key: K, x = 0, y = 0) => {
     setAt((prev) =>
       prev !== null && prev.key === key && prev.x === x && prev.y === y
@@ -329,6 +355,7 @@ export const useHover = <K>() => {
         : { key, x, y }
     );
   };
+
   return {
     at,
     clear: () => {

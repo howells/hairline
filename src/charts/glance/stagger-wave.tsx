@@ -46,6 +46,7 @@ interface WaveBarProps {
  */
 const WaveBar = (p: WaveBarProps) => {
   const up = p.top <= p.zero;
+
   return (
     <Bar
       className={cx("grow-y", up ? null : "from-top", p.hero && "fill-hero")}
@@ -95,6 +96,7 @@ const weekday = utcFormat("%a %-d %b");
 const dayTickLabels = (dates: Date[]) =>
   dates.map((d, i) => {
     const prev = dates[i - 1];
+
     return prev === undefined || prev.getUTCMonth() !== d.getUTCMonth()
       ? dayMonth(d)
       : dayOnly(d);
@@ -162,22 +164,28 @@ export const StaggerWave = (props: StaggerWaveProps) => {
       {(width) => {
         const bottom = 24 + noteSpace(noteOf(props), width - 16, 16);
         const floor = height - bottom;
+
         const y = scaleLinear()
           .domain([Math.min(0, lowest), Math.max(0, max)])
           .nice(6)
           .range([floor, 8]);
+
         const m = { bottom, left: axisRoom(y.ticks(6)), right: 0, top: 8 };
+
         const x = scaleBand<number>()
           .domain(data.map((_, i) => i))
           .range([m.left, width - m.right])
           .paddingInner(width < 460 ? 0.25 : 0.32)
           .paddingOuter(0.1);
+
         const bw = x.bandwidth();
         // Mondays: every week on a wide plot, every other week on a phone.
         const every = width < 460 ? 14 : 7;
+
         const ticks = data.flatMap((d, i) =>
           i % every === 0 ? [{ d, i }] : []
         );
+
         const tickLabels = dayTickLabels(ticks.map((t) => t.d.date));
 
         return (
@@ -201,6 +209,7 @@ export const StaggerWave = (props: StaggerWaveProps) => {
                 const left = x(i) ?? 0;
                 const top = y(d.value);
                 const zero = y(0);
+
                 return (
                   <DimGroup
                     key={d.date.toISOString()}

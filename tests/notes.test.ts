@@ -22,6 +22,7 @@ const week: DailyDatum[] = [
   { date: "2024-03-09", value: 8 },
   { date: "2024-03-10", value: 13 },
 ];
+
 const notes = [
   { at: "2024-03-05", detail: "Orders dip", title: "Price change" },
   { at: "2024-03-09", title: "Showroom opens" },
@@ -34,6 +35,7 @@ type Props = Partial<HairlineAreaProps & HairlineLineProps>;
 
 const line = (props: Props) =>
   renderToString(createElement(HairlineLine, { ...wide, ...props }));
+
 const area = (props: Props) =>
   renderToString(createElement(HairlineArea, { ...wide, ...props }));
 
@@ -87,6 +89,7 @@ describe.each([
       data: [...week.slice(0, 3), { date: "2024-03-07", value: null }],
       notes: [{ at: "2024-03-07", title: "On a gap" }],
     });
+
     expect(html).not.toContain("On a gap");
   });
 
@@ -95,6 +98,7 @@ describe.each([
       data: week,
       notes: [{ at: "2030-01-01", title: "Nowhere" }],
     });
+
     expect(checked.ok).toBe(false);
     expect(checked.ok ? [] : checked.issues.map((i) => i.pointer)).toContain(
       "notes"

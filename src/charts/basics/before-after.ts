@@ -66,6 +66,7 @@ const reachOf = (fit: Fit, x0: number) =>
     ...fit.data.map((d) => {
       const t = fraction(fit, Math.max(d.before, d.after));
       const room = labelRoom(fit.labels.right(d), fit.dotR, fit.metrics);
+
       return t > 0 ? x0 + (fit.width - EDGE - room - x0) / t : Infinity;
     })
   );
@@ -77,6 +78,7 @@ const pushOf = (fit: Fit, x0: number, x1: number) =>
     ...fit.data.map((d) => {
       const room = labelRoom(fit.labels.left(d), fit.dotR, fit.metrics);
       const at = x0 + fraction(fit, Math.min(d.before, d.after)) * (x1 - x0);
+
       return room === 0 ? 0 : fit.labelW + 4 + room - at;
     })
   );
@@ -102,26 +104,32 @@ export const buildLayout = (
   const labelW = EDGE + Math.min(width * 0.32, Math.ceil(longest));
   const bottom = hasNote ? BOTTOM + 30 : BOTTOM;
   const values = [...data.flatMap((d) => [d.before, d.after]), ...marked];
+
   // Round the ends outwards so the axis ends read as whole steps, not 9.204.
   const [lo, hi] = scaleLinear()
     .domain([Math.min(0, ...values) * 1.04, Math.max(0, ...values) * 1.04])
     .nice()
     .domain();
+
   const span = hi > lo ? hi - lo : 1;
   const dotSize: DotSize = width < 420 ? "md" : "lg";
   const dotR = DOT[dotSize];
   const fit: Fit = { data, dotR, labelW, labels, lo, metrics, span, width };
   let x0 = labelW + NAME_GAP;
   let x1 = Math.max(x0, reachOf(fit, x0));
+
   // Moving the left end changes the reach, so settle in a few passes.
   for (let pass = 0; pass < 4; pass += 1) {
     const push = pushOf(fit, x0, x1);
+
     if (push === 0) {
       break;
     }
+
     x0 += push;
     x1 = Math.max(x0, reachOf(fit, x0));
   }
+
   return {
     dotR,
     dotSize,
@@ -151,17 +159,21 @@ export const summary = (
   if (data.length === 0) {
     return "No data.";
   }
+
   const big = data[maxIndex(data.map((d) => Math.abs(d.before - d.after)))];
+
   return `${plural(data.length, "row")}. Biggest change: ${big.label}, ${format(big.before)} to ${format(big.after)}. The data table lists every row.`;
 };
 
 /** React keys: each datum's key, numbered when the key repeats. */
 export const reactKeys = (data: DumbbellDatum[]) => {
   const seen = new Map<string, number>();
+
   return data.map((d) => {
     const key = keyOf(d);
     const nth = seen.get(key) ?? 0;
     seen.set(key, nth + 1);
+
     return `${key}#${nth}`;
   });
 };

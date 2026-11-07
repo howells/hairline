@@ -65,19 +65,24 @@ const TONE_CLASS: Record<Tone, { fill: string; stroke: string }> = {
   l4: { fill: "fill-l4", stroke: "stroke-l4" },
   l5: { fill: "fill-l5", stroke: "stroke-l5" },
 };
+
 const TONES: Tone[] = ["ink", "l2", "l3", "l4", "l5"];
+
 /** Solid tones per link kind: the service mesh reads first, satellites quietly. */
 const EDGE_CLASS: Record<EdgeKind, string> = {
   cross: "stroke-grid",
   mesh: "stroke-l5",
   spoke: "stroke-l6",
 };
+
 /** Hub-to-hub traffic in the three line weights: 1px, 1.5px, 2px. */
 const MESH_WIDTHS = [1, 1.5, 2];
+
 const edgeWidth = (e: Edge) =>
   e.kind === "mesh"
     ? MESH_WIDTHS[Math.min(MESH_WIDTHS.length, Math.max(1, e.weight)) - 1]
     : 1;
+
 /*
  * Selecting a star sets data-step on it and on what it reaches (0 itself, 1
  * direct, 2 two steps) and data-focus on the root; the browser restyles, React
@@ -85,8 +90,10 @@ const edgeWidth = (e: Edge) =>
  */
 /** A satellite: ink at 0 and 1, mid at 2, the rest back to the paper. */
 const STAR_STEP = `transition-opacity group-data-[focus=true]/galaxy:not-data-[step]:opacity-40 group-data-[focus=true]/galaxy:data-[step=0]:fill-hero group-data-[focus=true]/galaxy:data-[step=1]:fill-ink group-data-[focus=true]/galaxy:data-[step=2]:fill-l3`;
+
 /** A hub is engraved: its rule takes the step's tone. */
 const HUB_STEP = `transition-opacity group-data-[focus=true]/galaxy:not-data-[step]:opacity-40 group-data-[focus=true]/galaxy:data-[step=0]:stroke-ink group-data-[focus=true]/galaxy:data-[step=1]:stroke-ink group-data-[focus=true]/galaxy:data-[step=2]:stroke-l3`;
+
 /** A hub's name: faded with the rest, and left to the caption when selected. */
 const NAME_STEP = `transition-opacity group-data-[focus=true]/galaxy:not-data-[step]:opacity-40 group-data-[focus=true]/galaxy:data-[step=0]:opacity-0`;
 const EDGE_STEP = `transition-tone group-data-[focus=true]/galaxy:not-data-[step]:opacity-10 group-data-[focus=true]/galaxy:data-[step=1]:stroke-ink group-data-[focus=true]/galaxy:data-[step=2]:stroke-l3`;
@@ -105,16 +112,20 @@ const useGalaxySimulation = (
           drawGalaxy(galaxy, handles);
         })
       : null;
+
     sim.current = simulation;
+
     if (simulation !== null && reduced) {
       settle(galaxy, simulation);
       drawGalaxy(galaxy, handles);
     }
+
     return () => {
       simulation?.stop();
       sim.current = null;
     };
   }, [galaxy, shown, handles, reduced]);
+
   return sim;
 };
 
@@ -123,6 +134,7 @@ const writeCaption = (caption: SVGGElement | undefined, text: string[]) => {
   if (caption === undefined) {
     return;
   }
+
   const [name, note] = text.length === 0 ? ["", ""] : text;
   const lines = caption.querySelectorAll("text");
   lines[0].textContent = name;
@@ -146,60 +158,79 @@ const useStarFocus = (
   const lit = useRef<SVGElement[]>([]);
   const current = useRef<string | null>(null);
   const live = useRef<HTMLSpanElement | null>(null);
+
   const focus = useCallback(
     (id: string | null) => {
       if (current.current === id) {
         return;
       }
+
       current.current = id;
+
       for (const el of lit.current) {
         delete el.dataset.step;
       }
+
       lit.current = [];
       const root = handles.frame.get("root");
+
       if (root !== undefined) {
         root.dataset.focus = String(id !== null);
       }
+
       const caption = handles.caption.get("root");
+
       if (caption !== undefined) {
         caption.dataset.id = id ?? "";
       }
+
       if (id === null) {
         writeCaption(caption, []);
+
         if (live.current !== null) {
           live.current.textContent = "";
         }
+
         return;
       }
+
       const steps = stepsFrom(galaxy.neighbours, id);
+
       const mark = (el: SVGElement | undefined, step: number) => {
         if (el !== undefined) {
           el.dataset.step = String(step);
           lit.current.push(el);
         }
       };
+
       for (const [n, step] of steps) {
         mark(handles.stars.get(n), step);
         mark(handles.labels.get(n), step);
       }
+
       for (const e of galaxy.edges) {
         const step = linkStepOf(steps, e.a.id, e.b.id);
+
         if (step < 3) {
           mark(handles.edges.get(e.id), step);
         }
       }
+
       writeCaption(caption, [id, reachText(steps)]);
       placeCaption(galaxy, handles);
+
       if (live.current !== null) {
         live.current.textContent = `${id}: ${reachText(steps)}`;
       }
     },
     [galaxy, handles]
   );
+
   useEffect(() => {
     current.current = null;
     focus(rest);
   }, [focus, rest]);
+
   return { current, focus, live };
 };
 
@@ -240,6 +271,7 @@ const GalaxyMarks = (props: {
   pid: string;
 }) => {
   const { galaxy, handles, pid } = props;
+
   return (
     <>
       <g>
@@ -264,6 +296,7 @@ const GalaxyMarks = (props: {
       <g>
         {galaxy.stars.map((s) => {
           const look = starPaint(s, pid);
+
           return (
             <circle
               className={`cursor-grab touch-none ${look.className} ${s.hub ? HUB_STEP : STAR_STEP}`}
@@ -286,6 +319,7 @@ const GalaxyMarks = (props: {
       <g className="pointer-events-none">
         {[...galaxy.rings.values()].map((ring) => {
           const spot = labelAt(galaxy, ring);
+
           // On another hub's engraving the name sits on a plate; elsewhere,
           // over lines and satellites, on its halo. drawGalaxy keeps both the
           // position and the choice current as hubs move.
@@ -347,18 +381,21 @@ interface DragState {
 
 const pointerIn = (e: PointerEvent<SVGSVGElement>) => {
   const box = e.currentTarget.getBoundingClientRect();
+
   return { x: e.clientX - box.left, y: e.clientY - box.top };
 };
 
 /** The star under the pointer, or the nearest within reach of it: a fingertip reaches further than a mouse. */
 const starUnder = (e: PointerEvent<SVGSVGElement>, galaxy: Galaxy) => {
   const { x, y } = pointerIn(e);
+
   const at = pickNode(
     galaxy.stars.map((s) => ({ r: s.r, x: s.x ?? 0, y: s.y ?? 0 })),
     x,
     y,
     e.pointerType === "touch" ? REACH.touch : REACH.mouse
   );
+
   return galaxy.stars[at] ?? null;
 };
 
@@ -375,6 +412,7 @@ const useGalaxyPointer = (args: {
 }) => {
   const { current, focus, galaxy, handles, onTip, rest, sim } = args;
   const drag = useRef<DragState | null>(null);
+
   const tipFor = (s: Star): StarTip => ({
     degree: galaxy.neighbours.get(s.id)?.length ?? 0,
     id: s.id,
@@ -382,19 +420,24 @@ const useGalaxyPointer = (args: {
     x: s.x ?? 0,
     y: (s.y ?? 0) - s.r - 4,
   });
+
   const onPointerDown = (e: PointerEvent<SVGSVGElement>) => {
     const { x, y } = pointerIn(e);
     const under = starUnder(e, galaxy);
+
     // A satellite rides on its ring: grabbing it moves the whole hub.
     const star =
       under === null || under.hub
         ? under
         : ([...galaxy.rings.values()].find((r) => r.sats.includes(under))
             ?.hub ?? null);
+
     drag.current = { moved: false, pointer: e.pointerId, star, x0: x, y0: y };
+
     if (star === null) {
       return;
     }
+
     e.currentTarget.setPointerCapture(e.pointerId);
     e.currentTarget.dataset.dragging = "true";
     star.fx = star.x;
@@ -403,12 +446,15 @@ const useGalaxyPointer = (args: {
     focus(star.id);
     onTip(null);
   };
+
   const onPointerMove = (e: PointerEvent<SVGSVGElement>) => {
     const { x, y } = pointerIn(e);
     const d = drag.current;
+
     if (d !== null && Math.hypot(x - d.x0, y - d.y0) > 3) {
       d.moved = true;
     }
+
     if (d !== null && d.star !== null) {
       const s = d.star;
       const ring = galaxy.rings.get(s.id);
@@ -416,25 +462,31 @@ const useGalaxyPointer = (args: {
       const at = ring === undefined ? { x, y } : fitHub(galaxy, ring, x, y);
       s.fx = at.x;
       s.fy = at.y;
+
       if (sim.current === null) {
         s.x = s.fx;
         s.y = s.fy;
         galaxy.orbit();
         drawGalaxy(galaxy, handles);
       }
+
       return;
     }
+
     const star = starUnder(e, galaxy);
     focus(star?.id ?? rest);
     onTip(star === null ? null : tipFor(star));
   };
+
   const onPointerUp = (e: PointerEvent<SVGSVGElement>) => {
     const d = drag.current;
     drag.current = null;
     delete e.currentTarget.dataset.dragging;
+
     if (d === null) {
       return;
     }
+
     if (d.star !== null) {
       // Let go: the links pull it home.
       d.star.fx = null;
@@ -443,11 +495,14 @@ const useGalaxyPointer = (args: {
         ?.alphaTarget(0)
         .alpha(Math.max(sim.current.alpha(), 0.5))
         .restart();
+
       if (e.currentTarget.hasPointerCapture(d.pointer)) {
         e.currentTarget.releasePointerCapture(d.pointer);
       }
+
       return;
     }
+
     if (!d.moved) {
       // Click on empty space: replay the big bang.
       focus(null);
@@ -457,6 +512,7 @@ const useGalaxyPointer = (args: {
       sim.current?.alpha(1).restart();
     }
   };
+
   /** A tap holds its node: a finger lifting is not the pointer leaving. */
   const onPointerLeave = (e: PointerEvent<SVGSVGElement>) => {
     if (
@@ -467,18 +523,22 @@ const useGalaxyPointer = (args: {
       onTip(null);
     }
   };
+
   /** Arrow keys step through the stars; Escape gives the selection back. */
   const onKeyDown = (e: KeyboardEvent<SVGSVGElement>) => {
     const ids = galaxy.stars.map((s) => s.id);
     const next = nextByKey(e.key, ids, current.current);
+
     if (next === undefined) {
       return;
     }
+
     e.preventDefault();
     const star = galaxy.stars.find((s) => s.id === next);
     focus(next ?? rest);
     onTip(star === undefined ? null : tipFor(star));
   };
+
   return {
     onKeyDown,
     onPointerCancel: onPointerUp,
@@ -501,17 +561,21 @@ const GalaxySvg = (props: {
   const { data, onTip, width } = props;
   // A ring layout needs a taller plot than a free one: its ellipse stands upright.
   const aspect = width < RING_BELOW ? 1.15 : 0.82;
+
   const height = Math.min(
     props.height,
     Math.round(clamp(width * aspect, 360, 480))
   );
+
   const wrap = useRef<HTMLDivElement>(null);
   const shown = useReveal(wrap);
   const floor = height - noteSpace(props.note, width - 16, 18);
+
   const galaxy = useMemo(
     () => buildGalaxy(data, width, floor),
     [data, width, floor]
   );
+
   const handles = useMemo<Handles>(
     () => ({
       caption: new Map(),
@@ -522,10 +586,12 @@ const GalaxySvg = (props: {
     }),
     []
   );
+
   const sim = useGalaxySimulation(galaxy, shown, handles);
   const pid = useTextureIds("galaxy")("hub");
   const rest = props.selected ?? null;
   const { current, focus, live } = useStarFocus(galaxy, handles, rest);
+
   const pointer = useGalaxyPointer({
     current,
     focus,
@@ -535,11 +601,13 @@ const GalaxySvg = (props: {
     rest,
     sim,
   });
+
   // Built once per layout; the simulation then moves these elements directly.
   const marks = useMemo(
     () => <GalaxyMarks galaxy={galaxy} handles={handles} pid={pid} />,
     [galaxy, handles, pid]
   );
+
   const domains = new Set(data.nodes.map((n) => n.domain)).size;
   const label = `Underground lines and stations: ${data.nodes.length} nodes in ${domains} lines`;
 
@@ -581,6 +649,7 @@ export const ForceGalaxy = (props: ForceGalaxyProps) => {
   const data = props.data ?? forceGalaxyDemo;
   const format = props.format ?? fmtMillions;
   const [tip, setTip] = useState<StarTip | null>(null);
+
   return (
     <Plot
       overlay={

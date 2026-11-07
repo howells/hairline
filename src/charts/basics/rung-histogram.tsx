@@ -59,6 +59,7 @@ const buildLayout = (
   const maxRungs = Math.max(1, ...data.map((d) => Math.round(d.count / unit)));
   const lo = data[0]?.x0 ?? 0;
   const hi = data.at(-1)?.x1 ?? 1;
+
   return {
     floor,
     // The tallest bin reaches the top: rungs spread to fill the height given.
@@ -80,15 +81,19 @@ const Axis = (props: {
 }) => {
   const { layout } = props;
   const last = props.data.at(-1);
+
   const edges = [
     ...props.data.map((d) => d.x0),
     ...(last === undefined ? [] : [last.x1]),
   ];
+
   const step = Math.max(
     1,
     props.every * (layout.plotW / props.data.length < 34 ? 2 : 1)
   );
+
   const y = layout.floor + 4;
+
   return (
     <g>
       <HRule
@@ -133,6 +138,7 @@ const Bin = (props: BinProps) => {
   const bw = layout.x(bin.x1) - left;
   const top = rungY(layout.floor, count - 1, layout.pitch);
   const hitTop = Math.min(top, layout.floor - 30) - 12;
+
   return (
     <DimGroup
       dim={props.dim}
@@ -173,6 +179,7 @@ const Marker = (props: { label: string; layout: Layout; value: number }) => {
   const { layout } = props;
   const mx = layout.x(props.value);
   const flip = mx > layout.x0 + layout.plotW * 0.7;
+
   return (
     <g className="fade" pointerEvents="none" style={stagger(10)}>
       <DottedLine
@@ -207,9 +214,11 @@ export const RungHistogram = (props: RungHistogramProps) => {
   const marker = props.marker === undefined ? binMedian(data) : props.marker;
   const peak = maxIndex(data.map((d) => d.count));
   const hover = useHover<number>();
+
   const label = data
     .map((d) => `${formatX(d.x0)}–${formatX(d.x1)}: ${format(d.count)}`)
     .join(", ");
+
   const lo = data[0]?.x0 ?? 0;
   const hi = data.at(-1)?.x1 ?? 0;
 
@@ -234,6 +243,7 @@ export const RungHistogram = (props: RungHistogramProps) => {
           unit,
           noteOf(props) !== undefined
         );
+
         return (
           <ChartSvg
             height={height}

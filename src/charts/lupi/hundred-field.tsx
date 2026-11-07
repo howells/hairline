@@ -53,10 +53,13 @@ interface Head {
 }
 
 const TURN = 2 * Math.PI;
+
 /** Vogel's golden angle. */
 const GOLDEN = Math.PI * (3 - Math.sqrt(5));
+
 /** The cuts start this many spiral steps out, leaving the heart open. */
 const CUT_FROM = 2.2;
+
 /** Room for a rim label above or below the head: the name over its count. */
 const LABEL_H = 30;
 
@@ -78,26 +81,35 @@ const CUT_TRIES = 24;
  */
 const cutAngle = (seeds: Polar[], e: number, from: number) => {
   const n = seeds.length;
+
   const at = (j: number) => {
     const p = seeds[((j % n) + n) % n];
     const wrap = Math.floor(j / n) * TURN;
+
     return p === undefined ? undefined : { a: p.a + wrap, r: p.r };
   };
+
   const lo = at(e - 1)?.a ?? 0;
   const hi = at(e)?.a ?? 0;
+
   const near = Array.from({ length: 10 }, (_, j) => at(e - 5 + j)).filter(
     (p) => p !== undefined && p.r > from
   );
+
   let best = { a: (lo + hi) / 2, room: -1 };
+
   for (let t = 1; t < CUT_TRIES; t += 1) {
     const a = lo + ((hi - lo) * t) / CUT_TRIES;
+
     const room = Math.min(
       ...near.map((p) => (p?.r ?? 0) * Math.abs(Math.sin(a - (p?.a ?? 0))))
     );
+
     if (room > best.room) {
       best = { a, room };
     }
   }
+
   return best.a;
 };
 
@@ -113,36 +125,47 @@ const sunflower = (
 ): Head => {
   const total = data.reduce((s, d) => s + d.value, 0);
   const c = frame.R / Math.sqrt(Math.max(1, total));
+
   const raw = Array.from({ length: total }, (_, k) => ({
     a: (k * GOLDEN) % TURN,
     k,
     r: c * Math.sqrt(k + 0.5),
   })).toSorted((p, q) => p.a - q.a);
+
   // Turn the head so the cut between the last and first seed sits at noon.
   const spin = TURN - cutAngle(raw, total, c * CUT_FROM);
+
   const cut = (e: number) => {
     if (e <= 0) {
       return 0;
     }
+
     return e >= total ? TURN : cutAngle(raw, e, c * CUT_FROM) + spin;
   };
+
   let start = 0;
   let other = 0;
+
   const wedges = data.map((group, index): Wedge => {
     const end = start + group.value;
+
     const seeds = raw.slice(start, end).map((p): Seed => {
       const a = p.a + spin;
+
       return {
         k: p.k,
         x: Math.round(frame.cx + p.r * Math.sin(a)) + 0.5,
         y: Math.round(frame.cy - p.r * Math.cos(a)) + 0.5,
       };
     });
+
     const isHero = index === hero;
     const glyph = isHero ? "seed" : (GLYPHS[other % GLYPHS.length] ?? "dot");
+
     if (!isHero) {
       other += 1;
     }
+
     const wedge = {
       from: cut(start),
       glyph,
@@ -152,9 +175,12 @@ const sunflower = (
       seeds,
       to: cut(end),
     };
+
     start = end;
+
     return wedge;
   });
+
   return { ...frame, c, wedges };
 };
 
@@ -163,6 +189,7 @@ const SIZES: Record<"large" | "small", Record<Glyph, DotSize>> = {
   large: { cross: "sm", dot: "sm", ring: "lg", seed: "lg" },
   small: { cross: "xs", dot: "xs", ring: "md", seed: "md" },
 };
+
 /** Below this spiral spacing (px) the seeds step down a size. */
 const SMALL_HEAD = 15;
 
@@ -170,11 +197,13 @@ const SeedMark = (props: { glyph: Glyph; seed: Seed; small: boolean }) => {
   const { glyph, seed } = props;
   const size = SIZES[props.small ? "small" : "large"][glyph];
   const style = stagger(seed.k, "dense");
+
   if (glyph === "cross") {
     // Arms one pixel longer than the dot of the same size, on whole pixels.
     const s = DOT[size] + 1;
     const x = seed.x - 0.5;
     const y = seed.y - 0.5;
+
     return (
       <g style={style} className="pop fill-l3">
         <rect height={1} width={s * 2 + 1} x={x - s} y={y} />
@@ -182,6 +211,7 @@ const SeedMark = (props: { glyph: Glyph; seed: Seed; small: boolean }) => {
       </g>
     );
   }
+
   if (glyph === "ring") {
     return (
       <Ring
@@ -193,6 +223,7 @@ const SeedMark = (props: { glyph: Glyph; seed: Seed; small: boolean }) => {
       />
     );
   }
+
   return (
     <Dot
       style={style}
@@ -214,6 +245,7 @@ const slicePath = (head: Head, w: Wedge, r: number) => {
   const p = polar(head, r, w.from);
   const q = polar(head, r, w.to);
   const large = w.to - w.from > Math.PI ? 1 : 0;
+
   return `M${head.cx},${head.cy}L${p.x},${p.y}A${r},${r} 0 ${large} 1 ${q.x},${q.y}Z`;
 };
 
@@ -224,23 +256,28 @@ const labelAt = (head: Head, w: Wedge) => {
   const sin = Math.sin(mid);
   const cos = Math.cos(mid);
   let anchor: "end" | "middle" | "start" = "middle";
+
   if (sin > 0.3) {
     anchor = "start";
   } else if (sin < -0.3) {
     anchor = "end";
   }
+
   // Name baseline: the two-line block hangs above, below or beside the point.
   let y = p.y + 1;
+
   if (cos > 0.5) {
     y = p.y - 16;
   } else if (cos < -0.5) {
     y = p.y + 11;
   }
+
   return { anchor, lower: cos < 0, x: p.x, y };
 };
 
 const WedgeMarks = ({ head, w }: { head: Head; w: Wedge }) => {
   const label = labelAt(head, w);
+
   return (
     <>
       <HitPath d={slicePath(head, w, head.R + head.c * 2)} />
@@ -283,6 +320,7 @@ const Engraving = ({ head }: { head: Head }) => (
     {head.wedges.map((w) => {
       const p = polar(head, head.c * CUT_FROM, w.from);
       const q = polar(head, head.R + head.c * 0.8, w.from);
+
       return (
         <line
           className="stroke-l4"
@@ -310,9 +348,11 @@ export const HundredField = (props: HundredFieldProps) => {
   const unit = props.unit ?? "donors";
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const hover = useHover<number>();
+
   const byValue = [...data.keys()].toSorted(
     (a, b) => (data[b]?.value ?? 0) - (data[a]?.value ?? 0)
   );
+
   const hero =
     props.highlight === undefined
       ? (byValue[0] ?? 0)
@@ -326,18 +366,22 @@ export const HundredField = (props: HundredFieldProps) => {
         // the label sides; the head then grows until head and labels fill
         // the width, and the whole is centred.
         const probe = sunflower(data, hero, { R: 100, cx: 0, cy: 0 });
+
         const spanAt = (r: number) => {
           const c = r / Math.sqrt(Math.max(1, total));
           const rim = r + Math.max(0.8 * c + 2, 7);
           let lo = -rim;
           let hi = rim;
+
           for (const w of probe.wedges) {
             const mid = (w.from + w.to) / 2;
             const px = (r + c * 1.6) * Math.sin(mid);
+
             const room = Math.max(
               sansWidth(w.group.label, 11),
               sansWidth(String(w.group.value), 11)
             );
+
             if (Math.sin(mid) > 0.3) {
               hi = Math.max(hi, px + room);
             } else if (Math.sin(mid) < -0.3) {
@@ -347,25 +391,33 @@ export const HundredField = (props: HundredFieldProps) => {
               hi = Math.max(hi, px + room / 2);
             }
           }
+
           return { hi, lo };
         };
+
         let R = Math.max(40, (height - noteH - 2 * LABEL_H) / 2 - 12);
+
         while (R > 40 && spanAt(R).hi - spanAt(R).lo > width) {
           R -= 1;
         }
+
         const span = spanAt(R);
+
         // On narrow screens the head is width-bound: drop the unused height.
         const svgH = Math.min(
           height,
           Math.round(2 * (R + 12 + LABEL_H) + noteH)
         );
+
         const head = sunflower(data, hero, {
           R,
           cx: Math.round((width - (span.hi - span.lo)) / 2 - span.lo) + 0.5,
           cy: Math.round((svgH - noteH) / 2),
         });
+
         const tip = hover.key === null ? undefined : head.wedges[hover.key];
         const tipAt = tip === undefined ? undefined : labelAt(head, tip);
+
         return (
           <div className="relative">
             <ChartSvg

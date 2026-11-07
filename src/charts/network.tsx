@@ -30,6 +30,7 @@ export const NodeCaption = ({
 }: CaptionProps) => {
   const run = Math.max(sansWidth(name, 11), sansWidth(note, 11)) + r + 8;
   const turn = side ?? (x + run > width ? -1 : 1);
+
   return (
     <g className="pointer-events-none">
       <Label

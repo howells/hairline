@@ -10,6 +10,7 @@ import { vi } from "vitest";
 const nothing = () => {
   /* inert */
 };
+
 class Inert {
   disconnect = nothing;
   observe = nothing;
@@ -21,6 +22,7 @@ export const WIDTH = 640;
 const boundingBox = function boundingBox(this: Element) {
   const width = Number(this.getAttribute("width") ?? WIDTH);
   const height = Number(this.getAttribute("height") ?? 0);
+
   return new DOMRect(0, 0, width, height);
 };
 
@@ -55,15 +57,18 @@ export const mount = async (chart: ReactElement) => {
     createRoot(host).render(createElement("div", null, chart));
     await Promise.resolve();
   });
+
   return host;
 };
 
 /** The chart's svg; a chart without one fails the test. */
 export const svgOf = (host: Element) => {
   const svg = host.querySelector("svg");
+
   if (svg === null) {
     throw new Error("The chart drew no svg");
   }
+
   return svg;
 };
 

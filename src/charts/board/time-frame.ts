@@ -127,6 +127,7 @@ export const LINE_TONE = {
   1: { past: "var(--hl-line1)" },
   2: { past: "var(--hl-line2)" },
 } as const;
+
 export const DOT_TONE = { 1: "fill-hero", 2: "fill-l3" } as const;
 
 /** A series is identified within its chart by its tone, dash and name. */
@@ -146,6 +147,7 @@ export const endSeriesOf = (
 ): EndSeries[] =>
   props.series.map((s) => {
     const last = s.data.at(-1)?.value ?? 0;
+
     return {
       display: s.format(last),
       hero: s.tone === 1,
@@ -160,14 +162,17 @@ export const checkEndLabels = (props: TimeLinesProps) => {
   if (props.endLabels === undefined) {
     return;
   }
+
   if (props.series.some((s) => s.name === undefined || s.name === "")) {
     throw new Error("TimeLines endLabels: every series needs a name");
   }
+
   if (isRightAxis(props.y)) {
     throw new Error(
       "TimeLines endLabels: the right margin is the labels', so the scale cannot sit there"
     );
   }
+
   if (props.readout === "legend") {
     throw new Error("TimeLines endLabels replace the legend readout");
   }

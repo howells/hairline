@@ -57,13 +57,17 @@ interface Triptych {
 }
 
 const HEADER_Y = 12;
+
 /** The count's row under a narrow plot's heading names. */
 const HEADER_Y2 = 26;
+
 /** Smallest vertical gap between middle-column labels at rest. */
 const LABEL_GAP = 18;
 const TOP = 46;
+
 /** Gap between a first or last column mark and its label. */
 const LABEL_INSET = 14;
+
 /** Tallest pointer row a stop needs. */
 const ROW_MAX = 44;
 
@@ -71,10 +75,12 @@ const stopKey = (column: number, name: string) => `${column}:${name}`;
 
 const busiest = (paths: ThreadPath[], column: number) => {
   const counts = new Map<string, number>();
+
   for (const p of paths) {
     const name = p.stops[column] ?? "";
     counts.set(name, (counts.get(name) ?? 0) + 1);
   }
+
   return [...counts].toSorted((a, b) => b[1] - a[1])[0]?.[0] ?? "";
 };
 
@@ -107,7 +113,9 @@ const parentYs = (
           )
         ),
       ];
+
       const ys = kids.map((k) => prev.get(k) ?? TOP);
+
       return [name, ys.reduce((a, b) => a + b, 0) / Math.max(1, ys.length)];
     })
   );
@@ -135,6 +143,7 @@ const layoutTriptych = (
   const dx = width - widest(data.columns[last] ?? []) - LABEL_INSET + 1.5;
   const xs = data.columns.map((_, c) => sx + ((dx - sx) * c) / last);
   const ys: Map<string, number>[] = [];
+
   for (const [c, names] of data.columns.entries()) {
     ys.push(
       c === 0
@@ -142,6 +151,7 @@ const layoutTriptych = (
         : parentYs(names, data.paths, c, ys[c - 1] ?? new Map())
     );
   }
+
   const stops = ys.flatMap((column, c) =>
     [...column].map(([name, y], index): Stop => ({
       column: c,
@@ -151,18 +161,25 @@ const layoutTriptych = (
       y,
     }))
   );
+
   const wobble = Math.min(18, width * 0.012);
+
   const threads = data.paths.map((path, i): Thread => {
     const at = (c: number) => ys[c]?.get(path.stops[c] ?? "") ?? TOP;
+
     const segments = xs.slice(1).map((x1, s) => {
       const x0 = xs[s] ?? sx;
       // A little play in each curve's waist so a bundle reads as many threads.
       const m = (x0 + x1) / 2 + rndSigned(i, 5 + s * 4) * wobble;
+
       return `C${m},${at(s)} ${m},${at(s + 1)} ${x1},${at(s + 1)}`;
     });
+
     return { d: `M${sx + 4},${at(0)}${segments.join("")}`, path };
   });
+
   const pitch = ys.map((column) => pitchOf([...column.values()]));
+
   return {
     // Middle labels thin out when their column is tight; a traced bundle still lights its own.
     every: pitch.map((p) => Math.max(1, Math.ceil(LABEL_GAP / p))),
@@ -179,6 +196,7 @@ const touches = (path: ThreadPath, focus: Focus) => {
   if (focus.kind === "thread") {
     return path.id === focus.id;
   }
+
   return path.stops[focus.column] === focus.name;
 };
 
@@ -186,9 +204,11 @@ const sameFocus = (a: Focus | null, b: Focus | null) => {
   if (a === null || b === null) {
     return a === b;
   }
+
   if (a.kind === "thread" && b.kind === "thread") {
     return a.id === b.id;
   }
+
   return (
     a.kind === "node" &&
     b.kind === "node" &&
@@ -240,6 +260,7 @@ const DestinationMark = (props: {
   x: number;
 }) => {
   const { stop, x } = props;
+
   return (
     <>
       {props.hero ? (
@@ -276,6 +297,7 @@ const StopMark = (props: {
   const x = triptych.xs[stop.column] ?? 0;
   // 2px ticks on whole pixels.
   const tickY = Math.round(stop.y) - 1;
+
   if (stop.column === 0) {
     return (
       <g className={`transition-opacity ${tone}`}>
@@ -299,8 +321,10 @@ const StopMark = (props: {
       </g>
     );
   }
+
   if (stop.column < triptych.xs.length - 1) {
     const every = triptych.every[stop.column] ?? 1;
+
     return (
       <g className={`transition-opacity ${tone}`}>
         <rect
@@ -324,6 +348,7 @@ const StopMark = (props: {
       </g>
     );
   }
+
   return (
     <g className={`transition-opacity ${tone}`}>
       <DestinationMark
@@ -338,21 +363,26 @@ const StopMark = (props: {
 
 const hitBox = (stop: Stop, triptych: Triptych) => {
   const x = triptych.xs[stop.column] ?? 0;
+
   if (stop.column === 0) {
     return { width: x - 4, x: 0 };
   }
+
   if (stop.column < triptych.xs.length - 1) {
     return { width: 70, x: x - 6 };
   }
+
   return { width: 110, x: x - 8 };
 };
 
 const StopLayer = (props: { lit: Set<string> | null; triptych: Triptych }) => {
   const { lit, triptych } = props;
+
   return (
     <g>
       {triptych.stops.map((stop) => {
         const pitch = triptych.pitch[stop.column] ?? ROW_MAX;
+
         return (
           <g className="cursor-pointer" key={stop.key}>
             <HitRect
@@ -424,15 +454,18 @@ const Headings = (props: {
 }) => {
   const { wide, xs } = props.triptych;
   const last = xs.length - 1;
+
   // Each heading sits on its column's label edge; narrow plots hide middle
   // labels, so those headings stand on their ticks, leaning outward, and
   // every heading sets its name over its count so neighbours never collide.
   // The last slides left when it would run past the plot's edge.
   const place = (c: number, label: string) => {
     const x = xs[c] ?? 0;
+
     if (c === 0) {
       return { anchor: "end" as const, x: x - LABEL_INSET, y: HEADER_Y };
     }
+
     if (c < last) {
       return wide
         ? { anchor: "start" as const, x: x + 9, y: HEADER_Y }
@@ -444,22 +477,27 @@ const Headings = (props: {
             y: HEADER_Y,
           };
     }
+
     const count = String(countOf(props.paths, c));
+
     const w = Math.ceil(
       wide
         ? sansWidth(`${label} ${count}`, 12)
         : Math.max(sansWidth(label, 12), sansWidth(count, 12))
     );
+
     return {
       anchor: "start" as const,
       x: Math.min(x + LABEL_INSET, props.width - w - 2),
       y: HEADER_Y,
     };
   };
+
   return (
     <g aria-live="polite">
       {xs.map((_, c) => {
         const label = props.headings[c] ?? "";
+
         return (
           <Heading
             count={countOf(props.paths, c)}
@@ -479,14 +517,19 @@ const targetFocus = (
   triptych: Triptych
 ): Focus | null => {
   const { target } = e;
+
   if (!(target instanceof SVGElement)) {
     return null;
   }
+
   const { thread } = target.dataset;
+
   if (thread !== undefined) {
     return { id: thread, kind: "thread" };
   }
+
   const stop = triptych.stops.find((s) => s.key === target.dataset.stop);
+
   return stop === undefined
     ? null
     : { column: stop.column, kind: "node", name: stop.name };
@@ -499,9 +542,11 @@ const useEscape = (active: boolean, release: () => void) => {
         release();
       }
     };
+
     if (active) {
       window.addEventListener("keydown", onKey);
     }
+
     return () => {
       window.removeEventListener("keydown", onKey);
     };
@@ -536,19 +581,23 @@ const TriptychSvg = (props: {
 }) => {
   const { data, focus, height, note, width } = props;
   const floor = height - 16 - noteSpace(note, width - 16, 18);
+
   const triptych = useMemo(
     () => layoutTriptych(data, width, floor),
     [data, width, floor]
   );
+
   // Same element between renders: hovering redraws only the lit threads on top.
   const base = useMemo(
     () => <ThreadBase threads={triptych.threads} />,
     [triptych]
   );
+
   const litThreads =
     focus === null
       ? []
       : triptych.threads.filter((t) => touches(t.path, focus));
+
   const litStops =
     focus === null
       ? null
@@ -557,6 +606,7 @@ const TriptychSvg = (props: {
             t.path.stops.map((name, c) => stopKey(c, name))
           )
         );
+
   const label = `Mammal tree: ${data.columns
     .map(
       (names, c) => `${names.length} ${(props.headings[c] ?? "").toLowerCase()}`
@@ -616,12 +666,14 @@ export const ThreadTriptych = (props: ThreadTriptychProps) => {
   const [hover, setHover] = useState<Focus | null>(null);
   const [pinned, setPinned] = useState<Focus | null>(null);
   const focus = pinned ?? hover;
+
   const release = useMemo(
     () => () => {
       setPinned(null);
     },
     []
   );
+
   useEscape(pinned !== null, release);
 
   return (

@@ -19,10 +19,13 @@ const props: RungBarsProps = {
   height: 320,
   width: 480,
 };
+
 const render = (extra: Partial<RungBarsProps> = {}) =>
   renderToString(createElement(RungBars, { ...props, ...extra }));
+
 const tag = (html: string, name: string) =>
   new RegExp(`<${name}[^>]*>`, "u").exec(html)?.[0] ?? "";
+
 /**
  * Hidden means inside an sr-only block: a table given sr-only itself ignores
  * the 1px box, grows to its rows and lengthens the page.
@@ -30,14 +33,17 @@ const tag = (html: string, name: string) =>
 const hidden = (html: string) =>
   /<div class="sr-only"><table>/u.test(html) &&
   !tag(html, "table").includes("sr-only");
+
 const cells = (html: string) =>
   [...html.matchAll(/<t[dh][^>]*>(?<text>[^<]*)<\/t[dh]>/gu)].map(
     (m) => m.groups?.text
   );
+
 /** Axe's violation ids for the markup placed in a page. */
 const violations = async (html: string) => {
   document.body.innerHTML = `<main>${html}</main>`;
   const result = await axe.run(document.body);
+
   return result.violations.map((v) => v.id);
 };
 
@@ -59,8 +65,10 @@ describe("the chart is an image with a name and a description", () => {
 
   it("the summary describes the payload, not demo copy", () => {
     const html = render();
+
     const desc =
       /<desc[^>]*>(?<text>[^<]+)<\/desc>/u.exec(html)?.groups?.text ?? "";
+
     expect(desc).toBe(
       "3 bars. Largest: Oak, 19. Smallest: Elm, 7. The data table lists every bar."
     );
@@ -73,6 +81,7 @@ describe("a table carries every value", () => {
     const html = renderToString(
       createElement(RungBars, { data: props.data, initialWidth: 400 })
     );
+
     expect(hidden(html)).toBe(true);
     expect(cells(html)).toStrictEqual([
       "Label",
@@ -97,6 +106,7 @@ describe("a table carries every value", () => {
       data: [{ label: "Oak", value: 1234 }],
       format: "compact",
     });
+
     expect(cells(html)).toContain("1.2K");
   });
 
@@ -146,6 +156,7 @@ describe("the chart can be read without a mouse", () => {
     });
     const svg = host.querySelector("svg");
     expect(svg).not.toBeNull();
+
     for (const name of ["ArrowRight", "Enter"]) {
       // oxlint-disable-next-line no-await-in-loop -- the keys are pressed in order
       await act(async () => {
@@ -155,6 +166,7 @@ describe("the chart can be read without a mouse", () => {
         await Promise.resolve();
       });
     }
+
     const tip = host.querySelector("[data-hl-tip]");
     expect(tip?.getAttribute("aria-hidden")).toBe("true");
     expect(host.querySelector("output[aria-live]")?.textContent).toContain(

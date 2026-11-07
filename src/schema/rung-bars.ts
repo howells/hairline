@@ -143,8 +143,10 @@ export const rungBarsSchema = z
 
 /** One bar. */
 export type RungDatum = z.infer<typeof rungDatumSchema>;
+
 /** The validated payload. */
 export type RungBarsData = z.infer<typeof rungBarsSchema>;
+
 /** What `<RungBars>` takes: the payload, with `format` also allowed as a function. */
 export type RungBarsProps = SharedCallbacks &
   Omit<z.input<typeof rungBarsSchema>, "format" | "note"> & {

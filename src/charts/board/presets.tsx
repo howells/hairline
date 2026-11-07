@@ -68,6 +68,7 @@ const WINDIEST_WEEK = highestIndex(values(weeklyWind).slice(0, 52));
 
 /** Where 2024 and 2023 part furthest, either way, after the first ten weeks. */
 const GAP_FROM = 10;
+
 const WIDEST_GAP =
   GAP_FROM +
   highestIndex(
@@ -99,6 +100,7 @@ const FOSSIL = new Set(["Coal", "Gas", "Oil"]);
 
 /** Stations of 1,000 MW or more: capacity against age, fossil hollow. */
 const gigawattStations: ScatterPoint[] = [];
+
 for (const s of stations) {
   if (s.mw >= 1000) {
     gigawattStations.push({

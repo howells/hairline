@@ -25,6 +25,7 @@ export const labelBox = (
   // Semibold values run a little wider than the measure: err wide.
   const w = Math.ceil(sansWidth(text, 12));
   const left = { end: x - w, middle: x - w / 2, start: x }[anchor];
+
   return {
     x0: left,
     x1: left + w,

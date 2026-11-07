@@ -19,6 +19,7 @@ import { angleOf, fmtRing, polar } from "./year-geometry";
 import { YearKey } from "./year-key";
 
 const fmt = fmtDegC;
+
 /** Room outside the outer ring for the month names. */
 const EDGE = 30;
 
@@ -43,11 +44,15 @@ const PLATE_HALF = 7.5;
  */
 const yearRadiusAtLabels = (props: DialProps) => {
   const n = props.data.length;
+
   const at = (i: number) => {
     const k = (i + n) % n;
+
     return polar(angleOf(k, n), props.r(props.data[k].value));
   };
+
   const [a, b, c, d] = [at(-1), at(0), at(1), at(2)];
+
   return Math.hypot(
     (9 * (b.x + c.x) - a.x - d.x) / 16,
     (9 * (b.y + c.y) - a.y - d.y) / 16
@@ -63,11 +68,13 @@ const Furniture = (props: DialProps) => {
   const n = props.data.length;
   const names = monthTickLabels(props.data.map((d) => d.date));
   const year = yearRadiusAtLabels(props);
+
   return (
     <g>
       {props.rings.map((v) => {
         const at = polar(RING_LABEL, props.r(v) - RING_INSET);
         const onYear = year > props.r(v) - RING_INSET - PLATE_HALF;
+
         return (
           <g key={v}>
             <DotRing
@@ -94,6 +101,7 @@ const Furniture = (props: DialProps) => {
       })}
       {props.data.map((d, i) => {
         const p = polar(angleOf(i, n), props.outer + EDGE / 2);
+
         return (
           <Label
             anchor="middle"
@@ -129,10 +137,12 @@ const Trace = (props: DialProps & { peak: number }) => {
   const path = yearPath(props);
   const peak = props.data[props.peak];
   const pp = polar(angleOf(props.peak, n), props.r(peak.value));
+
   const hp =
     props.hover === null
       ? null
       : polar(angleOf(props.hover, n), props.r(props.data[props.hover].value));
+
   return (
     <g>
       <path
@@ -180,6 +190,7 @@ export const RadialYear = (props: {
   const hatch = useTextureIds("year")("hatch");
   const values = data.map((d) => d.value);
   const peak = values.indexOf(Math.max(...values));
+
   return (
     <Plot
       overlay={
@@ -196,24 +207,30 @@ export const RadialYear = (props: {
       {(width) => {
         const size = Math.min(width, 460);
         const outer = size / 2 - EDGE;
+
         const scale = scaleLinear()
           .domain([0, Math.max(...values)])
           .nice(3)
           .range([0, outer]);
+
         const rings = scale.ticks(3).filter((v) => v > 0);
         const cx = Math.round(width / 2);
         const cy = Math.round(size / 2);
         const label = `Mean daily maximum temperature by month, 2022: warmest ${fmt(data[peak].value)} in ${fmtMonth(data[peak].date)}`;
+
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const box = e.currentTarget.getBoundingClientRect();
           const dx = e.clientX - box.left - cx;
           const dy = e.clientY - box.top - cy;
           const turn = (Math.atan2(dx, -dy) + Math.PI * 2) % (Math.PI * 2);
+
           const i =
             Math.round((turn / (Math.PI * 2)) * data.length) % data.length;
+
           const p = polar(angleOf(i, data.length), scale(data[i].value));
           hover.show(i, cx + p.x, cy + p.y - 10);
         };
+
         const dial: DialProps = {
           data,
           hover: hover.key,
@@ -221,6 +238,7 @@ export const RadialYear = (props: {
           r: scale,
           rings,
         };
+
         return (
           <>
             {props.glyphKey === false ? null : (

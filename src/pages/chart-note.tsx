@@ -29,11 +29,14 @@ const InfoGlyph = (props: { anchor: string }) => (
 export const ChartNote = (props: { entry: GalleryEntry }) => {
   const { id, name } = props.entry;
   const text = ABOUT[id];
+
   if (text === undefined) {
     return null;
   }
+
   const sources = SOURCES.filter((s) => s.id === id);
   const note = `note-${id}`;
+
   return (
     <>
       <button

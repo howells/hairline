@@ -115,6 +115,7 @@ const SlopeRow = (props: {
   const tone = ROW_TONE[props.role];
   const valueClass = `${VALUE} ${tone.value}`;
   const { name } = row;
+
   return (
     <DimGroup
       className="fade"
@@ -176,9 +177,11 @@ const roleOf = (row: Row, rows: Row[]): Role => {
   const change = (r: Row) => r.to - r.from;
   const best = Math.min(...rows.map(change));
   const worst = Math.max(...rows.map(change));
+
   if (best < 0 && change(row) === best) {
     return "lead";
   }
+
   return worst > 0 && change(row) === worst ? "worst" : "rest";
 };
 
@@ -187,9 +190,11 @@ const extentOf = (rows: Row[]): [number, number] => {
   const values = rows.flatMap((r) => [r.from, r.to]);
   const low = Math.min(...values);
   const high = Math.max(...values);
+
   if (values.length === 0) {
     return [0, 1];
   }
+
   return low === high ? [low - 1, high + 1] : [low, high];
 };
 
@@ -202,12 +207,15 @@ const summary = (
   if (rows.length === 0) {
     return "No data.";
   }
+
   let [up] = rows;
   let [down] = rows;
+
   for (const r of rows) {
     up = r.to - r.from > up.to - up.from ? r : up;
     down = r.to - r.from < down.to - down.from ? r : down;
   }
+
   return `${plural(rows.length, "line")} from ${labels[0]} to ${labels[1]}. Biggest rise: ${up.name}, ${format(up.from)} to ${format(up.to)}. Biggest fall: ${down.name}, ${format(down.from)} to ${format(down.to)}. The data table lists every line.`;
 };
 
@@ -215,10 +223,13 @@ const SlopePlot = (props: SlopeProps) => {
   const rows = (props.rows ?? []).filter(
     (r) => Number.isFinite(r.from) && Number.isFinite(r.to)
   );
+
   const h = props.height ?? 420;
   const wide = resolveFormat(props.format);
+
   const narrow =
     props.narrowFormat === undefined ? wide : resolveFormat(props.narrowFormat);
+
   const domain = props.domain ?? extentOf(rows);
   const hover = useHover<number>();
 
@@ -238,6 +249,7 @@ const SlopePlot = (props: SlopeProps) => {
         const format = width < NARROW ? narrow : wide;
         const top = 40;
         const bottom = 24;
+
         // Each side's labels run out to the edge: the columns sit just inside.
         const xs: [number, number] = [
           LABEL_GAP +
@@ -255,35 +267,44 @@ const SlopePlot = (props: SlopeProps) => {
               props.metrics
             ),
         ];
+
         const y = scaleLinear()
           .domain(domain)
           .range([h - bottom, top + 16]);
+
         const lys = nudge(
           rows.map((r) => y(r.from)),
           15,
           top + 8,
           h - 8
         );
+
         const rys = nudge(
           rows.map((r) => y(r.to)),
           15,
           top + 8,
           h - 8
         );
+
         const seen = new Map<string, number>();
+
         const keys = rows.map((r) => {
           const key = keyOf(r);
           const nth = seen.get(key) ?? 0;
           seen.set(key, nth + 1);
+
           return `${key}#${nth}`;
         });
+
         const roleAt = (r: Row, i: number): Role => {
           if (props.emphasis === undefined) {
             return roleOf(r, rows);
           }
+
           // The first row of that key leads, should the key repeat.
           return keys[i] === `${props.emphasis}#0` ? "lead" : "rest";
         };
+
         const label =
           props.title ??
           props.label ??

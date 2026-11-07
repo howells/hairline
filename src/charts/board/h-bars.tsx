@@ -61,6 +61,7 @@ const Bar = (props: {
   const x = Math.round(props.x);
   const y = Math.round(props.y);
   const width = Math.max(0, Math.round(props.width));
+
   return (
     <g
       className={`grow-x transition-opacity ${props.bar.dim ? "opacity-30" : "opacity-100"}`}
@@ -100,19 +101,24 @@ export const HBars = (props: HBarsProps) => {
       {(width) => {
         // The last tick's label is centred on the plot's edge.
         const lastTick = props.ticks.at(-1) ?? 0;
+
         const m = {
           bottom: 30,
           left: NAME_GAP + nameWidth(props.rows.map((r) => r.name)),
           right: Math.ceil(sansWidth(tickFormat(lastTick)) / 2),
           top: 0,
         };
+
         const h = props.height;
+
         const x = scaleLinear()
           .domain([0, lastTick])
           .range([m.left, width - m.right]);
+
         const y = scaleBand()
           .domain(props.rows.map((r) => r.name))
           .range([m.top, h - m.bottom]);
+
         const bh = y.bandwidth();
 
         return (
@@ -146,6 +152,7 @@ export const HBars = (props: HBarsProps) => {
               const cy = (y(r.name) ?? 0) + bh / 2;
               const active = hover.key === r.name;
               const dim = hover.dim(r.name);
+
               return (
                 <g key={r.name} onPointerEnter={hover.enter(r.name)}>
                   <HitRect height={bh} width={width} x={0} y={y(r.name)} />

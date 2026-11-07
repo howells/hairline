@@ -26,6 +26,7 @@ interface BubbleMarkProps {
 /** The almanac's glyph: a veiled circle sized by amount, a core by yield, a dotted ring when flagged. */
 export const BubbleMark = (props: BubbleMarkProps) => {
   const { cx, cy, hero, r } = props;
+
   return (
     <>
       <circle
@@ -62,6 +63,7 @@ export const BubbleMark = (props: BubbleMarkProps) => {
 /** The cell the key draws: the largest that fell on the year before, else the largest. */
 const exemplarOf = (data: AlmanacCell[]) => {
   const bySize = data.toSorted((a, b) => b.value - a.value);
+
   return bySize.find((d) => d.flag === true && d.core > 0) ?? bySize[0];
 };
 
@@ -77,19 +79,23 @@ export const BubbleKey = (props: BubbleKeyProps) => {
   const { data } = props;
   const screen = useTextureIds("almanac-key")("screen");
   const cell = exemplarOf(data);
+
   if (cell === undefined) {
     return null;
   }
+
   const box = glyphBox(props.width);
   const flag = cell.flag === true;
   // The chart's own ratios: the largest circle fills the box less the ring.
   const maxR = box.size / 2 - RING_GAP - 4;
+
   const r = Math.max(
     3,
     scaleSqrt()
       .domain([0, Math.max(1, ...data.map((d) => d.value))])
       .range([0, maxR])(cell.value)
   );
+
   const coreR =
     cell.core > 0
       ? Math.max(
@@ -99,9 +105,11 @@ export const BubbleKey = (props: BubbleKeyProps) => {
             .range([0, maxR * 0.16])(cell.core)
         )
       : 0;
+
   const rim = r * Math.SQRT1_2;
   const ring = (r + RING_GAP) * Math.SQRT1_2;
   const name = `${cell.category}, ${cell.year}`;
+
   return (
     <GlyphKey
       box={box}

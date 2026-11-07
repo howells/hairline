@@ -17,6 +17,7 @@ const rows: SlopeRow[] = [
   { from: 200, name: "South", to: 240 },
   { from: 150, name: "East", to: 140 },
 ];
+
 const labels: [string, string] = ["2023", "2024"];
 const sized = { height: 320, width: 560 };
 
@@ -28,11 +29,13 @@ const render = (props: SlopeProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 /** The hero tone appears on one ring and one dot per emphasised row. */
 const heroMarks = (html: string) => count(html, /(?:fill|stroke)-hero/gu);
 
 const emphasised = (data: SlopeRow[]) =>
   render({ emphasis: "East", labels, rows: data, ...sized });
+
 /** Whether the first hero-toned group also names East. */
 const heroText = (html: string) =>
   /fill-hero[^]*?<\/g>/u.exec(html)?.[0].includes("East");
@@ -40,6 +43,7 @@ const heroText = (html: string) =>
 /** The issue pointers of a failed validation; empty when it passed. */
 const pointers = (payload: Payload) => {
   const checked = getChart("slope").validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -70,6 +74,7 @@ describe("a consumer renders Slope through the registry", () => {
       labels,
       rows: [{ from: "1", name: "a", to: 2 }, { name: "b" }],
     });
+
     const issues = bad.ok ? [] : bad.issues;
     expect(issues.map((i) => i.pointer).toSorted()).toStrictEqual([
       "",
@@ -130,6 +135,7 @@ describe("the registry", () => {
           )
         )
       );
+
     expect(json.required.toSorted()).toStrictEqual(["labels", "rows"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
       "animate",
@@ -163,6 +169,7 @@ describe("formatters are data", () => {
       rows: [{ from: 0.5, name: "a", to: 0.25 }],
       ...sized,
     });
+
     expect(html).toContain(">50%<");
     expect(html).toContain(">25%<");
   });
@@ -180,6 +187,7 @@ describe("formatters are data", () => {
       narrowFormat: "integer" as const,
       rows,
     };
+
     // The data table always carries the full format; the drawing narrows.
     expect(drawn(render({ ...props, width: 400 }))).not.toContain(">280 g<");
     expect(drawn(render({ ...props, width: 600 }))).toContain(">280 g<");
@@ -203,6 +211,7 @@ describe("emphasis", () => {
       { from: 5, id: "a", name: "Same", to: 1 },
       { from: 5, id: "b", name: "Same", to: 9 },
     ];
+
     expect(pointers({ emphasis: "b", labels, rows: twins })).toStrictEqual([]);
   });
 });

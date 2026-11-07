@@ -119,6 +119,7 @@ const row = (item: Payload) =>
 /** A prop's value as it reads in JSX: arrays of objects one row to a line. */
 const literal = (value: Payload[string]) => {
   const rows = Rows.safeParse(value);
+
   return rows.success
     ? `[\n${rows.data.map((item) => `    ${row(item)},`).join("\n")}\n  ]`
     : JSON.stringify(value);
@@ -132,6 +133,7 @@ export const exampleFor = (kind: string): Payload => {
   if (!isKind(kind)) {
     throw new Error(`No example for ${kind}`);
   }
+
   return EXAMPLES[kind];
 };
 
@@ -142,6 +144,7 @@ export const exampleCode = (component: string, kind: string) => {
       ? `  ${name}=${JSON.stringify(value)}`
       : `  ${name}={${literal(value)}}`
   );
+
   return [
     `import { ${component} } from "@howells/hairline/${kind}";`,
     "",

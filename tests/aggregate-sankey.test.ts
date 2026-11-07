@@ -40,6 +40,7 @@ describe("AggregateSankey node totals", () => {
     const html = render({ totals: false });
     expect(html).not.toContain("61.3%");
     expect(html).not.toContain("49.4%");
+
     for (const name of [...data.sources, ...data.targets]) {
       expect(html).toContain(name);
     }

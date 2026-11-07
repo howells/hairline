@@ -49,10 +49,12 @@ export const spanOf = (
 ): [number, number] => {
   const a = props.scale(band.from);
   const b = props.scale(band.to);
+
   const [lo, hi] =
     props.along === "y"
       ? [props.plane.y0, props.plane.y1]
       : [props.plane.x0, props.plane.x1];
+
   return [
     Math.round(Math.max(lo, Math.min(a, b))),
     Math.round(Math.min(hi, Math.max(a, b))),
@@ -68,6 +70,7 @@ const uprightPlates = (
 ): Plate[] => {
   const tops =
     at === "start" ? [plane.y0 + 3] : [plane.y1 - 3 - PLATE_H, plane.y0 + 3];
+
   return tops.flatMap((top) =>
     [x + MARGIN, x - MARGIN - width].map((left) => ({
       h: PLATE_H,
@@ -84,27 +87,35 @@ export const bandPlate = (
   band: ReferenceBand
 ): Plate | null => {
   const { along, plane } = props;
+
   if (band.label === undefined) {
     return null;
   }
+
   const [start, end] = spanOf(band, props);
+
   if (end <= start) {
     return null;
   }
+
   const width = plateWidth(band.label);
+
   const across = {
     hi: props.within?.[1] ?? plane.x1,
     lo: props.within?.[0] ?? plane.x0,
   };
+
   if (along === "y") {
     return clearest(
       levelBandPlates(width, { end, start }, across),
       props.avoid
     );
   }
+
   // An upright band names itself inside its top or bottom when it fits, else over the plane.
   const room = end - start;
   const left = (start + end) / 2 - width / 2;
+
   const plates: Plate[] =
     width + MARGIN <= room
       ? [plane.y0 + 3, plane.y1 - 3 - PLATE_H].map((top) => ({
@@ -114,6 +125,7 @@ export const bandPlate = (
           w: width,
         }))
       : [{ h: PLATE_H, left, top: plane.y0 - 3 - PLATE_H, w: width }];
+
   return clearest(plates, props.avoid);
 };
 
@@ -122,19 +134,25 @@ export const linePlate = (props: ReferenceProps, line: ReferenceLine) => {
   const { along, plane } = props;
   const at = props.scale(line.value);
   const span = along === "y" ? [plane.y0, plane.y1] : [plane.x0, plane.x1];
+
   if (!Number.isFinite(at) || !inside(at, span[0], span[1])) {
     return null;
   }
+
   const width = line.label === undefined ? 0 : plateWidth(line.label);
+
   const across = {
     hi: props.within?.[1] ?? plane.x1,
     lo: props.within?.[0] ?? plane.x0,
   };
+
   const plates =
     along === "y"
       ? levelLinePlates(width, Math.round(at), across, line.at)
       : uprightPlates(width, Math.round(at), plane, line.at);
+
   const plate = clearest(plates, props.avoid);
+
   // A name that would sit on a mark at both ends of a level line, and has no
   // end of its own, looks along the line for a clear stretch.
   if (
@@ -143,8 +161,10 @@ export const linePlate = (props: ReferenceProps, line: ReferenceLine) => {
     clearance(plate, props.avoid) < CLEAR
   ) {
     const along8 = alongLinePlates(width, Math.round(at), across);
+
     return { at, plate: clearest([plate, ...along8], props.avoid) };
   }
+
   return { at, plate };
 };
 
@@ -153,10 +173,12 @@ export const referenceBoxes = (props: ReferenceProps): Box[] =>
   [
     ...linesOf(props.refs).flatMap((line) => {
       const placed = linePlate(props, line);
+
       return placed === null || line.label === undefined ? [] : [placed.plate];
     }),
     ...bandsOf(props.refs).flatMap((band) => {
       const plate = bandPlate(props, band);
+
       return plate === null ? [] : [plate];
     }),
   ].map((p) => ({ x0: p.left, x1: p.left + p.w, y0: p.top, y1: p.top + p.h }));

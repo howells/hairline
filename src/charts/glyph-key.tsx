@@ -26,8 +26,10 @@ interface GlyphKeyProps {
 
 /** Gap between the glyph's box and the labels' column. */
 const LABEL_GAP = 40;
+
 /** Where a label's second line sits below its first. */
 const DETAIL_DROP = 14;
+
 /** Where the leader meets a label, below the title's baseline. */
 const LEADER_DROP = -4;
 
@@ -45,17 +47,21 @@ export const GlyphKey = (props: GlyphKeyProps) => {
   const labelX = Math.round(box.cx + box.size / 2 + LABEL_GAP);
   const count = props.parts.length;
   const row = (GLYPH_KEY_HEIGHT - GLYPH_KEY_PAD * 2) / count;
+
   const ys = props.parts.map((_, k) =>
     Math.round(GLYPH_KEY_PAD + row * k + row / 2)
   );
+
   // The order of the labels that lets no two leaders cross.
   const order = leaderOrder(
     props.parts.map((p) => p.at),
     ys.map((y) => [labelX - 8, y + LEADER_DROP])
   );
+
   const rows = order.map((a, k) => ({ part: props.parts[a], y: ys[k] }));
   const parts = rows.map((r) => r.part);
   const meanings = parts.map((p) => `${p.name}: ${p.detail}`);
+
   return (
     <div>
       <ChartSvg

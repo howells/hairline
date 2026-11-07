@@ -66,11 +66,13 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
   const hover = useHover<number>();
   const tex = useTextureIds("bars");
   const hatch = tex("hatch");
+
   // The leader in ink, every other bar engraved in one grey.
   const tones = rankTones(
     data.map((d) => d.value),
     [0, 4]
   );
+
   const label = data.map((d) => `${d.label} ${format(d.value)}`).join(", ");
 
   return (
@@ -88,19 +90,23 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
     >
       {(width) => {
         const narrow = width < 460;
+
         const m = {
           bottom: 34 + noteSpace(noteOf(props), width - 16, 18),
           left: 8,
           right: 8,
           top: 40,
         };
+
         const x = scaleBand<number>()
           .domain(data.map((_, i) => i))
           .range([m.left, width - m.right])
           .paddingInner(narrow ? 0.38 : 0.58)
           .paddingOuter(0.25);
+
         const bw = Math.min(x.bandwidth(), 96);
         const floor = height - m.bottom;
+
         const y = scaleLinear()
           .domain([0, Math.max(...data.map((d) => d.value))])
           .range([floor, m.top]);
@@ -118,6 +124,7 @@ export const ChunkyBars = (props: ChunkyBarsProps) => {
             {data.map((d, i) => {
               const cx = (x(i) ?? 0) + x.bandwidth() / 2;
               const top = y(d.value);
+
               return (
                 <DimGroup
                   dim={hover.dim(i)}

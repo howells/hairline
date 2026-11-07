@@ -20,13 +20,16 @@ const lowOf = (d: BarcodeDatum) => d.low ?? d.value * 0.9;
 /** The day the key draws: the highest high water, the chart's hero. */
 export const TideKey = (props: TideKeyProps) => {
   const { data } = props;
+
   if (data.length === 0) {
     return null;
   }
+
   const day = data[argMax(data.map((d) => d.value))];
   const low = lowOf(day);
   const box = glyphBox(props.width);
   const top = box.cy - box.size / 2;
+
   // The chart's own scale: lowest low to highest high, over the barcode's height.
   const y = scaleLinear()
     .domain([
@@ -34,6 +37,7 @@ export const TideKey = (props: TideKeyProps) => {
       Math.max(...data.map((d) => d.value)),
     ])
     .range([top + box.size - 6, top + 22]);
+
   return (
     <GlyphKey
       box={box}

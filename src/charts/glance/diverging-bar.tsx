@@ -31,6 +31,7 @@ interface DivergingBarProps extends NoteProps {
 /** Tick step that gives roughly four gridlines a side. */
 const tickStep = (ext: number) => {
   const [, next] = scaleLinear().domain([0, ext]).ticks(4);
+
   return next ?? 1;
 };
 
@@ -54,6 +55,7 @@ interface BarProps {
 const DivergingRow = (p: BarProps) => {
   const gain = p.d.value >= 0;
   const { onPointerEnter } = p;
+
   return (
     <DimGroup dim={p.dim} onPointerEnter={onPointerEnter}>
       <HitRect x={0} y={p.cy - p.band / 2} width={p.width} height={p.band} />
@@ -129,8 +131,10 @@ const valueScale = (s: ScaleSpec) => {
     Math.floor(s.lo / s.step) * s.step - (s.lo < 0 ? s.step * 0.5 : 0),
     Math.ceil(s.hi / s.step) * s.step,
   ];
+
   const r0 = s.m.left + (s.lo < 0 ? 28 : 0);
   const edge = s.width - 4 - 8 - s.valueW;
+
   const r1 =
     s.hi > 0
       ? Math.min(
@@ -138,12 +142,14 @@ const valueScale = (s: ScaleSpec) => {
           r0 + ((edge - r0) * (domain[1] - domain[0])) / (s.hi - domain[0])
         )
       : s.width - s.m.right;
+
   return scaleLinear().domain(domain).range([r0, r1]);
 };
 
 /** Gridlines every `every` units across the domain, both sides of zero. */
 const gridTicks = ([d0, d1]: number[], every: number) => {
   const first = Math.ceil(d0 / every) * every;
+
   return Array.from(
     { length: Math.floor((d1 - first) / every) + 1 },
     (_, k) => first + k * every
@@ -166,9 +172,11 @@ const fillOf = (
   if (hero) {
     return { className: "fill-hero" };
   }
+
   if (gain) {
     return { className: "stroke-l5 shape-crisp", pattern: paint(tex("hatch")) };
   }
+
   return alert
     ? { className: "fill-alert" }
     : { className: "stroke-l5 shape-crisp", pattern: paint(tex("dots")) };
@@ -190,6 +198,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
   const hi = Math.max(0, ...data.map((d) => d.value));
   const step = tickStep(Math.max(-lo, hi));
   const tex = useTextureIds("net");
+
   const heroIndex =
     props.highlight ?? data.findIndex((d) => d.value === hi && hi > 0);
 
@@ -208,28 +217,34 @@ export const DivergingBar = (props: DivergingBarProps) => {
     >
       {(width) => {
         const narrow = width < 460;
+
         // Names flush left of the plot; the longest gain's value ends flush right.
         const labelW =
           labelRoom(
             data.map((d) => d.label),
             "t-label"
           ) + 4;
+
         const valueW = labelRoom(
           data.map((d) => format(d.value)),
           "t-value"
         );
+
         const m = {
           bottom: 4 + noteSpace(noteOf(props), width - 16, 24),
           left: labelW + 16,
           right: 40,
           top: 4,
         };
+
         const x = valueScale({ hi, lo, m, step, valueW, width });
+
         const y = scaleBand<number>()
           .domain(data.map((_, i) => i))
           .range([m.top, height - m.bottom])
           .paddingInner(0.64)
           .paddingOuter(0.32);
+
         const zero = crisp(x(0));
         const ticks = gridTicks(x.domain(), step * (narrow ? 2 : 1));
 
@@ -252,6 +267,7 @@ export const DivergingBar = (props: DivergingBarProps) => {
             {data.map((d, i) => {
               const cy = (y(i) ?? 0) + y.bandwidth() / 2;
               const bh = Math.min(y.bandwidth(), 22);
+
               return (
                 <DivergingRow
                   key={d.label}

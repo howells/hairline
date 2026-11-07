@@ -10,8 +10,10 @@ test("side-by-side of the six charts at 2x, proportional then device strokes", a
 }) => {
   await page.goto("/compare.html");
   await page.evaluate(async () => await document.fonts.ready);
+
   const picture = await page.locator("main").screenshot({
     path: new URL("artefacts/strokes-2x.png", import.meta.url).pathname,
   });
+
   expect(picture.byteLength).toBeGreaterThan(0);
 });

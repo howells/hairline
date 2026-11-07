@@ -58,10 +58,12 @@ const stripFor = (
   const n = Math.max(3, Math.round((d.value / max) * maxBars));
   const w = n * PITCH;
   const x0 = Math.round(cx - w / 2);
+
   const bars = Array.from({ length: n }, (_, k) => ({
     id: `${d.label}-${k}`,
     x: crisp(x0 + PITCH * k + PITCH / 2),
   }));
+
   return { bars, w, x0 };
 };
 
@@ -78,13 +80,17 @@ const threadsFor = (
   strips.slice(1).flatMap((dn, j) => {
     const up = strips[j];
     const picks = dn.bars.filter((_, k) => k % 2 === 0);
+
     return picks.map((bar, k) => {
       const share = (bar.x - dn.x0) / dn.w;
+
       const at = Math.min(
         up.bars.length - 1,
         Math.floor(share * up.bars.length)
       );
+
       const xa = up.bars[at]?.x ?? up.x0;
+
       return {
         d: vCurve(xa, yOf(j) + h / 2, bar.x, yOf(j + 1) - h / 2, 0.55),
         id: `thread-${j}-${k}`,
@@ -174,8 +180,10 @@ const StepShares = ({ data, left, strips, yOf }: StepProps) => (
       const y = (yOf(j) + yOf(j + 1)) / 2;
       const share = `${Math.round((d.value / prev) * 100)}%`;
       const from = left + sansWidth(share, 11) + 10;
+
       const fan =
         ((strips[j]?.bars[0]?.x ?? 0) + (strips[j + 1]?.bars[0]?.x ?? 0)) / 2;
+
       return (
         <g
           key={`share-${d.label}`}
@@ -241,6 +249,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
         const narrow = width < 460;
         const blockW = Math.min(width, 640);
         const left = (width - blockW) / 2;
+
         // The stage names and figures end at the block's edge.
         const labelW = Math.max(
           ...data.flatMap((d) => [
@@ -248,6 +257,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
             sansWidth(format(d.value), 11),
           ])
         );
+
         const labelX = left + blockW - labelW;
         const a0 = left + (narrow ? 60 : 96);
         const a1 = labelX - (narrow ? 16 : 30);
@@ -255,6 +265,7 @@ export const HourglassStream = (props: HourglassStreamProps) => {
         const noteW = width - 16 - 2 * Math.abs(cx - width / 2);
         const h = narrow ? 20 : 28;
         const top = h / 2 + 4;
+
         const pitch =
           data.length > 1
             ? (height -
@@ -264,15 +275,19 @@ export const HourglassStream = (props: HourglassStreamProps) => {
                 noteSpace(noteOf(props), noteW, 24)) /
               (data.length - 1)
             : 0;
+
         const yOf = (i: number) => top + pitch * i;
+
         const strips = data.map((d) =>
           stripFor(d, max, cx, Math.floor((a1 - a0) / PITCH))
         );
+
         const tip = hover.key === null ? undefined : data[hover.key];
         // The stage whose steps lead: the hovered one, else the hero.
         const heroAt = props.highlight ?? data.length - 1;
         const active = hover.key ?? heroAt;
         const [first] = data;
+
         return (
           <div className="relative">
             <ChartSvg

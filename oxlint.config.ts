@@ -34,5 +34,8 @@ export default {
   ],
   rules: {
     "howells/no-raw-type-utilities": ["error", { allow: TYPE_CASE }],
+    // <Label> is the chart's SVG <text> voice, not a form label: only HTML
+    // <label> is held to having a control.
+    "jsx-a11y/label-has-associated-control": ["error", { labelComponents: [] }],
   },
 };

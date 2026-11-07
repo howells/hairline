@@ -17,6 +17,7 @@ const rows: DumbbellDatum[] = [
   { after: 3, before: 8, label: "South" },
   { after: 6, before: 6, label: "East" },
 ];
+
 const sized = { height: 320, width: 480 };
 
 const render = (props: DumbbellQueueProps) =>
@@ -24,18 +25,22 @@ const render = (props: DumbbellQueueProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 /** Every change rung is a rect of class grow-y. */
 const rungs = (html: string) => count(html, /class="grow-y/gu);
+
 /** The x centre of the hero dot: where emphasis landed. */
 const heroX = (data: DumbbellDatum[], emphasis?: string) => {
   const html = render({ data, emphasis, ...sized });
   const dot = /<circle[^>]*fill-hero[^>]*>/u.exec(html)?.[0] ?? "";
+
   return /cx="(?<x>[\d.]+)"/u.exec(dot)?.groups?.x;
 };
 
 /** The issue pointers of a failed validation; empty when it passed. */
 const pointers = (payload: Payload) => {
   const checked = getChart("dumbbell-queue").validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -69,6 +74,7 @@ describe("a consumer renders DumbbellQueue through the registry", () => {
       format: (v) => `${v}m`,
       ...sized,
     });
+
     expect(html).toContain(">10m<");
     expect(html).not.toContain("9.204m");
   });
@@ -78,22 +84,28 @@ describe("a consumer renders DumbbellQueue through the registry", () => {
       { after: 8.85, before: 5.99, label: "Tate" },
       { after: 5.19, before: 4.16, label: "Science" },
     ];
+
     for (const width of [300, 480, 900]) {
       const html = render({ data: museums, height: 240, unit: 0.25, width });
       const byRow = new Map<string, number[]>();
+
       for (const m of html.matchAll(
         /<rect class="grow-y[^"]*"[^>]*x="(?<x>[\d.-]+)" y="(?<y>[\d.-]+)"/gu
       )) {
         const y = m.groups?.y ?? "";
         byRow.set(y, [...(byRow.get(y) ?? []), Number(m.groups?.x)]);
       }
+
       expect(byRow.size).toBeGreaterThan(0);
+
       for (const xs of byRow.values()) {
         const sorted = xs.toSorted((p, q) => p - q);
+
         for (const [i, x] of sorted.slice(1).entries()) {
           expect(x - sorted[i]).toBeGreaterThanOrEqual(5);
         }
       }
+
       expect(rungs(html)).toBeGreaterThan(0);
     }
   });
@@ -103,6 +115,7 @@ describe("a consumer renders DumbbellQueue through the registry", () => {
       data: [{ after: "12", before: 1, label: "a" }, { label: "b" }],
       flavour: "mint",
     });
+
     const issues = bad.ok ? [] : bad.issues;
     expect(issues.map((i) => i.pointer).toSorted()).toStrictEqual([
       "",
@@ -162,6 +175,7 @@ describe("the registry", () => {
           )
         )
       );
+
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
       "alert",
@@ -196,6 +210,7 @@ describe("formatters are data", () => {
       format: "percent",
       ...sized,
     });
+
     expect(html).toContain(">50%<");
     expect(html).toContain(">25%<");
   });
@@ -206,6 +221,7 @@ describe("formatters are data", () => {
       format: { currency: "USD", maximumFractionDigits: 0, style: "currency" },
       ...sized,
     });
+
     expect(html).toContain(">$1,235<");
   });
 
@@ -215,6 +231,7 @@ describe("formatters are data", () => {
       format: (v) => `${v} visits`,
       ...sized,
     });
+
     expect(html).toContain(">10 visits<");
   });
 
@@ -236,6 +253,7 @@ describe("emphasis", () => {
       { after: 9, before: 1, id: "a", label: "Same" },
       { after: 3, before: 1, id: "b", label: "Same" },
     ];
+
     expect(heroX(twins, "b")).toBe(heroX(twins.toReversed(), "b"));
     expect(heroX(twins, "b")).not.toBe(heroX(twins, "a"));
   });

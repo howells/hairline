@@ -16,17 +16,21 @@ import { describe, expect, it } from "vitest";
 
 const sized = { height: 360, width: 520 };
 const render = (element: ReactElement) => renderToString(element);
+
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 const days = Array.from({ length: 10 }, (_, i) => ({
   date: `2024-03-${String(i + 1).padStart(2, "0")}`,
   value: 10 + i,
 }));
+
 const bars = [
   { label: "A", value: 10 },
   { label: "B", value: 20 },
   { label: "C", value: 30 },
 ];
+
 const target = { emphasis: "above", label: "Target 20", value: 20 } as const;
 const band = { from: 12, label: "Last year", to: 18 };
 
@@ -40,6 +44,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(count(html, /dash-rule/gu)).toBe(1);
     expect(html).toContain("Target 20");
     expect(html).toContain("Last year");
@@ -55,6 +60,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("Reference line: Target 20");
     expect(html).toContain("Reference band: Last year");
     expect(html).toContain("12 to 18");
@@ -67,6 +73,7 @@ describe("references on every typed chart", () => {
     const html = render(
       createElement(RungBars, { data: bars, references: [target], ...sized })
     );
+
     // B and C clear it (at or above 20); A falls short
     expect(html).toContain("fill-l5");
     const plain = render(createElement(RungBars, { data: bars, ...sized }));
@@ -84,6 +91,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(html).not.toContain("fill-l5");
   });
 
@@ -96,6 +104,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(count(low, /dash-rule/gu)).toBe(1);
   });
 
@@ -108,6 +117,7 @@ describe("references on every typed chart", () => {
           ...sized,
         })
       );
+
       expect(html).toContain("Target 15");
       expect(count(html, /dash-rule/gu)).toBe(1);
       expect(html).toContain("Reference band: Last year");
@@ -125,6 +135,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("Six");
     expect(html).toContain("fill-l5");
     expect(html).toContain("Reference line: Six");
@@ -142,6 +153,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("Y line");
     expect(html).toContain("X band");
     expect(html).toContain("Reference line on y: Y line");
@@ -153,6 +165,7 @@ describe("references on every typed chart", () => {
       label,
       value: i === 2 || i === 3 ? 4 : 20,
     }));
+
     const html = render(
       createElement(RungBars, {
         data: short,
@@ -161,6 +174,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     const xOf = (pattern: RegExp) => Number(pattern.exec(html)?.groups?.x);
     const name = xOf(/x="(?<x>[\d.]+)"[^>]*>Target 10</u);
     expect(name).toBeGreaterThan(xOf(/x="(?<x>[\d.]+)"[^>]*>C</u));
@@ -176,6 +190,7 @@ describe("references on every typed chart", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("Reference line on y: Far off");
     expect(count(html, /dash-rule/gu)).toBe(0);
   });
@@ -201,6 +216,7 @@ const covering = (coverage: number) => ({
   coverage,
   points: [{ date: "2024-03-02", high: 2, low: 1 }],
 });
+
 const checkIntervals = (intervals: HairlineLineProps["intervals"]) =>
   charts["hairline-line"].validate({ data: days, intervals }).ok;
 
@@ -221,6 +237,7 @@ describe("intervals and forecast", () => {
       ],
     },
   ];
+
   const drawn = (Chart: typeof HairlineArea | typeof HairlineLine) =>
     render(
       createElement(Chart, {
@@ -250,6 +267,7 @@ describe("intervals and forecast", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("Likely range");
     expect(html).not.toContain("9 in 10");
   });
@@ -260,6 +278,7 @@ describe("intervals and forecast", () => {
       expect(html).toContain(">Forecast<");
       expect(count(html, /dash-rule/gu)).toBe(1);
     }
+
     const plain = render(createElement(HairlineArea, { data: days, ...sized }));
     expect(plain).not.toContain("Forecast");
   });
@@ -290,6 +309,7 @@ describe("intervals and forecast", () => {
         },
       ],
     });
+
     expect(result.ok).toBe(false);
     expect(result.ok ? [] : result.issues.map((i) => i.pointer)).toStrictEqual([
       "intervals[0].points[0].date",
@@ -318,10 +338,13 @@ const plateOf = (values: number[]) => {
       width: 390,
     })
   );
+
   const at = html.indexOf(">Normal range<");
   const plate = html.slice(html.lastIndexOf("<rect", at), at);
+
   const read = (axis: "x" | "y") =>
     Number(new RegExp(` ${axis}="(?<n>[\\d.]+)"`, "u").exec(plate)?.groups?.n);
+
   return { left: read("x"), top: read("y") };
 };
 
@@ -377,6 +400,7 @@ describe("references and intervals beside the daily charts' other props", () => 
         notes: [{ at: "2024-03-05", title: "Launch" }],
       })
     );
+
     expect(html).toContain("Target 15");
     expect(html).toContain(">Half<");
     expect(html).toContain("Launch");

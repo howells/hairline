@@ -112,6 +112,7 @@ const columnsFor = (width: number): Columns => {
   const specimen = narrow ? 150 : 200;
   const size = narrow ? 44 : 64;
   const weight = 64;
+
   return {
     left: Math.max(
       0,
@@ -132,7 +133,11 @@ export const TypeSheet = () => (
     {(width) => {
       const c = columnsFor(width);
       const height = HEAD + ROWS.reduce((n, r) => n + r.height, 0);
-      let y = HEAD;
+
+      const tops = ROWS.map((_, i) =>
+        ROWS.slice(0, i).reduce((n, r) => n + r.height, HEAD)
+      );
+
       return (
         <ChartSvg
           height={height}
@@ -148,8 +153,8 @@ export const TypeSheet = () => (
               Weight
             </Label>
             {ROWS.map((row, i) => {
-              const mid = Math.round(y + row.height / 2);
-              y += row.height;
+              const mid = Math.round(tops[i] + row.height / 2);
+
               return (
                 <g className="fade" key={row.label} style={stagger(i, "fine")}>
                   <Label middle muted voice="label" x={0} y={mid}>

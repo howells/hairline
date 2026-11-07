@@ -53,26 +53,32 @@ const cascadeLayout = (
   const pitch = clamp((width - 40) / counts.length, 16, 38);
   const x0 = (width - pitch * counts.length) / 2 + pitch / 2;
   const colX = (i: number) => x0 + i * pitch;
+
   // The floor sits as low as the rotated labels hanging off it allow.
   const drop = Math.max(
     0,
     ...labels.map((l, i) => 10 + sansWidth(l, 11) - (colX(i) - x0) * 0.32)
   );
+
   const floor0 = height - 6 - noteH - drop;
   const floorY = (x: number) => floor0 - (x - x0) * 0.32;
   const gap = 14;
+
   // Vertical dot pitch: the tallest column (above its own floor) must clear the top.
   const room = counts.map((k, i) =>
     k > 1 ? (floorY(colX(i)) - gap - 34) / (k - 1) : 99
   );
+
   // A whole-pixel pitch, so every tick in a column sits on the pixel grid.
   const dy = Math.floor(clamp(Math.min(...room), 4, 10));
+
   // When the dot pitch tops out, the columns fall short of the top: lift the
   // whole cascade by the spare room and shorten the plot to match.
   const slack = Math.max(
     0,
     Math.min(...counts.map((k, i) => floorY(colX(i)) - gap - (k - 1) * dy - 34))
   );
+
   return {
     capW: Math.round(Math.min(pitch * 0.6, 14)),
     colX,
@@ -113,6 +119,7 @@ const Column = ({
   const base = Math.round(floorY(x) - gap);
   const topY = base - (count - 1) * dy;
   const units = Array.from({ length: count - 1 }, (_, r) => r);
+
   return (
     <DimGroup
       dim={dim}
@@ -175,8 +182,10 @@ const Column = ({
  */
 export const DotCascade = (props: DotCascadeProps) => {
   const raw = props.data ?? dotCascadeDemo;
+
   const data =
     props.sort === false ? raw : raw.toSorted((a, b) => a.value - b.value);
+
   const unit = props.unit ?? 10_000;
   const height = props.height ?? 440;
   const format = props.format ?? fmtKInt;
@@ -207,8 +216,10 @@ export const DotCascade = (props: DotCascadeProps) => {
           data.map((d) => d.label),
           noteSpace(noteOf(props), width - 16, 20)
         );
+
         const fx0 = layout.colX(0) - layout.pitch * 0.7;
         const fx1 = layout.colX(data.length - 1) + layout.pitch * 0.7;
+
         return (
           <ChartSvg
             height={layout.height}

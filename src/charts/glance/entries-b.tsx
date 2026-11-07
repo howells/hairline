@@ -13,6 +13,7 @@ import { Violin } from "./violin";
 /** Days after 21 March as a date: 0 is 21 March, 11 is 1 April. */
 const easterDate = (v: number) => {
   const day = 21 + Math.round(v);
+
   return day <= 31 ? `${day} Mar` : `${day - 31} Apr`;
 };
 

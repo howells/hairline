@@ -36,6 +36,7 @@ describe("the line chart", () => {
 
   it("keeps the other scale values", () => {
     const all = texts(renderLine());
+
     for (const v of ["$1.18", "$1.16", "$1.14", "$1.10", "$1.08"]) {
       expect(all).toContain(v);
     }
@@ -48,6 +49,7 @@ describe("the area chart", () => {
     date: `2024-03-${String(i + 1).padStart(2, "0")}`,
     value: i === 9 ? 29 : i * 2,
   }));
+
   const render = () =>
     renderToString(
       createElement(HairlineArea, {

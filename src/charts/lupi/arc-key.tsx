@@ -12,6 +12,7 @@ interface ArcKeyProps {
 /** The largest cell, with the row and column it sits in. */
 const largestOf = (data: ArcMatrixData) => {
   let best: { c: number; r: number; v: number } | null = null;
+
   for (const [r, row] of data.values.entries()) {
     for (const [c, v] of row.entries()) {
       if (best === null || v > best.v) {
@@ -19,6 +20,7 @@ const largestOf = (data: ArcMatrixData) => {
       }
     }
   }
+
   return best;
 };
 
@@ -31,9 +33,11 @@ const RADIUS = 0.22;
 /** One real cell drawn large: the bubble on its bowed row, its area and row named. */
 export const ArcKey = (props: ArcKeyProps) => {
   const cell = largestOf(props.data);
+
   if (cell === null) {
     return null;
   }
+
   const row = props.data.rows[cell.r];
   const col = props.data.cols[cell.c];
   const box = glyphBox(props.width);
@@ -44,10 +48,12 @@ export const ArcKey = (props: ArcKeyProps) => {
   const right = box.cx + box.size / 2;
   // The row's curve a little in from its left end.
   const t = 6 / box.size;
+
   const rowY =
     (1 - t) ** 2 * (box.cy + dy) +
     2 * t * (1 - t) * (box.cy - dy) +
     t ** 2 * (box.cy + dy);
+
   return (
     <GlyphKey
       box={box}

@@ -32,6 +32,7 @@ for (const animate of ["off", "mount"]) {
       javaScriptEnabled: false,
       viewport: { height: 1080, width: 1920 },
     });
+
     const server = await bare.newPage();
     await server.goto(`/${animate}.html`);
     const before = await boxes(server);

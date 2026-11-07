@@ -24,6 +24,7 @@ const sankeyData = {
   sources: ["Searching", "A product page"],
   targets: ["Ordered", "Left"],
 };
+
 const sankey = () =>
   createElement(AggregateSankey, {
     data: sankeyData,
@@ -61,6 +62,7 @@ const painted = (root: ParentNode) =>
   [...root.querySelectorAll("[fill],[stroke]")].flatMap((el) =>
     [el.getAttribute("fill"), el.getAttribute("stroke")].flatMap((v) => {
       const id = /^url\(#(?<id>[^)]+)\)$/u.exec(v ?? "")?.groups?.id;
+
       return id === undefined ? [] : [id];
     })
   );
@@ -68,6 +70,7 @@ const painted = (root: ParentNode) =>
 const markup = (html: string) => {
   const host = document.createElement("div");
   host.innerHTML = html;
+
   return host;
 };
 
@@ -86,9 +89,11 @@ describe("every ribbon is one gradient of the ink, dark at the source", () => {
     const list = gradients(host);
     expect(list).toHaveLength(sankeyData.flows.length);
     checkAll(list);
+
     for (const g of list) {
       expect(g.to[0]).toBeGreaterThan(g.from[0]);
     }
+
     expect(painted(host).toSorted()).toStrictEqual(
       list.map((g) => g.id).toSorted()
     );
@@ -98,9 +103,11 @@ describe("every ribbon is one gradient of the ink, dark at the source", () => {
     const paths = [
       ...markup(renderToString(sankey())).querySelectorAll("path"),
     ].filter((p) => p.getAttribute("stroke")?.startsWith("url(#") === true);
+
     const pale = paths.filter(
       (p) => p.getAttribute("class")?.includes("opacity-40") === true
     );
+
     expect(paths).toHaveLength(4);
     expect(pale).toHaveLength(2);
   });
@@ -110,20 +117,26 @@ describe("every ribbon is one gradient of the ink, dark at the source", () => {
     const list = gradients(host);
     expect(list.length).toBeGreaterThan(1);
     checkAll(list);
+
     for (const g of list) {
       expect(g.to[0]).toBe(g.from[0]);
       expect(g.to[1]).toBeGreaterThan(g.from[1]);
     }
+
     expect([...new Set(painted(host))].toSorted()).toStrictEqual(
       list.map((g) => g.id).toSorted()
     );
+
     const threads = [...host.querySelectorAll("path")].filter(
       (p) => p.getAttribute("stroke")?.startsWith("url(#") === true
     );
+
     const lastStep = list.at(-1)?.id ?? "";
+
     const led = threads.filter(
       (p) => !(p.getAttribute("class") ?? "").includes("opacity-40")
     );
+
     expect(led.length).toBeGreaterThan(0);
     expect(
       led.every((p) => p.getAttribute("stroke") === `url(#${lastStep})`)
@@ -137,6 +150,7 @@ describe("every ribbon is one gradient of the ink, dark at the source", () => {
     expect(list).toHaveLength(pairs);
     checkAll(list);
     expect(new Set(painted(host)).size).toBe(pairs);
+
     // The first five groups are the kinds of goods: every chord starts at one.
     for (const c of chord()(sharedWorkDemo.matrix)) {
       expect(c.source.index).toBeLessThan(5);
@@ -157,6 +171,7 @@ describe("gradient ids are unique per chart instance", () => {
         createElement(ChordRing, { key: "b" })
       )
     );
+
     const ids = idsOf(host);
     expect(ids.length).toBeGreaterThan(0);
     expect(new Set(ids).size).toBe(ids.length);
@@ -172,6 +187,7 @@ describe("gradient ids are unique per chart instance", () => {
         createElement(HourglassStream, { key: "c" })
       )
     );
+
     const ids = idsOf(host);
     expect(new Set(ids).size).toBe(ids.length);
   });
