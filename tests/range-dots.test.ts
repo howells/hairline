@@ -12,9 +12,12 @@ const data = [
   { estimate: 19, high: 30, label: "Stone", low: 8 },
   { estimate: 20, high: 30, label: "Lopsided", low: 15 },
 ];
+
 const sized = { height: 320, width: 520 };
+
 const render = (props: Partial<RangeDotsProps> = {}) =>
   renderToString(createElement(RangeDots, { data, ...sized, ...props }));
+
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
 
@@ -48,6 +51,7 @@ describe("error bars", () => {
       format: (v: number) => `${v}%`,
       formatMargin: (v: number) => `${v} pts`,
     });
+
     expect(html).toContain(">42% ± 4 pts<");
   });
 
@@ -61,9 +65,11 @@ describe("error bars", () => {
   it("is registered, and its schema checks the interval holds the estimate", () => {
     const chart = charts["range-dots"];
     expect(chart.validate({ data }).ok).toBe(true);
+
     const bad = chart.validate({
       data: [{ estimate: 50, high: 46, label: "Paint", low: 38 }],
     });
+
     expect(bad.ok ? [] : bad.issues.map((i) => i.pointer)).toStrictEqual([
       "data[0].estimate",
     ]);

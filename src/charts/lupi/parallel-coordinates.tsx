@@ -47,8 +47,10 @@ const rowPath = (pts: Point[]) => {
   const segments = pts.slice(1).map((p, k) => {
     const from = pts[k];
     const dx = (p.x - from.x) * 0.45;
+
     return `C${from.x + dx},${from.y} ${p.x - dx},${p.y} ${p.x},${p.y}`;
   });
+
   return pts.length > 0 ? `M${pts[0].x},${pts[0].y}${segments.join("")}` : "";
 };
 
@@ -146,6 +148,7 @@ const RowLine = ({ row, index, pts, hero, active, onEnter }: LineProps) => {
   const d = rowPath(pts);
   const strong = hero || active === true;
   const last = pts.at(-1);
+
   return (
     <DimGroup dim={active === false} onPointerEnter={onEnter}>
       <path className="fill-none stroke-transparent" d={d} strokeWidth={10} />
@@ -206,6 +209,7 @@ const Ground = (props: {
 /** An axis's stated domain, widened to every row's value. */
 const widened = (data: ParallelData, a: ParallelAxis): [number, number] => {
   const values = data.rows.map((r) => r.values[a.key] ?? a.domain[0]);
+
   return [Math.min(a.domain[0], ...values), Math.max(a.domain[1], ...values)];
 };
 
@@ -236,27 +240,33 @@ const edgesFor = (
 ) => {
   const first = data.axes.at(0);
   const last = data.axes.at(-1);
+
   const endW =
     last === undefined
       ? 0
       : Math.max(
           ...widened(data, last).map((v) => textW(withUnit(last, v, format)))
         );
+
   const heroW = data.rows.some((r) => r.name === highlight)
     ? 12 + textW(highlight ?? "")
     : 0;
+
   const settle = (edge: { l: number; r: number }) => {
     const gap = (blockW - edge.l - edge.r) / Math.max(1, data.axes.length - 1);
+
     return {
       gap,
       l: Math.max(RUG, halfTitle(first, gap)),
       r: Math.max(halfTitle(last, gap), 9 + endW, heroW),
     };
   };
+
   // A title that wraps or not as the edges move can flip-flop: keep the wider
   // edges, and wrap the titles to the roomier gap that goes with them.
   let prev = settle({ l: 30, r: 30 });
   let edge = settle(prev);
+
   for (
     let pass = 0;
     pass < 4 && (edge.l !== prev.l || edge.r !== prev.r);
@@ -265,6 +275,7 @@ const edgesFor = (
     prev = edge;
     edge = settle(edge);
   }
+
   return {
     gap: Math.max(prev.gap, edge.gap),
     l: Math.max(prev.l, edge.l),
@@ -302,6 +313,7 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
   const format = props.format ?? ((v: number) => `${v}`);
   const hover = useHover<number>();
   const ids = useTextureIds("ranges");
+
   // Hero last, so it sits on top.
   const order = data.rows
     .map((r, i) => ({ i, r }))
@@ -321,26 +333,33 @@ export const ParallelCoordinates = (props: ParallelCoordinatesProps) => {
         const top = 58;
         const noteW = width - 16 - Math.abs(left + right - width);
         const bottom = height - (30 + noteSpace(noteOf(props), noteW, 24));
+
         const ax = (k: number) =>
           left + ((right - left) * k) / Math.max(1, data.axes.length - 1);
+
         const ys = scalesOf(data, top, bottom);
         // Room each axis title has between its neighbours.
         const { gap } = edge;
+
         // The axes as drawn: end labels follow the widened domains.
         const shown = data.axes.map((a, k): ParallelAxis => {
           const scale = ys.at(k);
           const lo = scale === undefined ? a.domain[0] : scale.invert(bottom);
           const hi = scale === undefined ? a.domain[1] : scale.invert(top);
+
           return { ...a, domain: [lo, hi] };
         });
+
         const pointsOf = (r: ParallelRow) =>
           data.axes.map((a, k) => ({
             x: ax(k),
             y: ys[k](r.values[a.key] ?? a.domain[0]),
           }));
+
         const stat = (p: number) => statPoints(data, ys, ax, p);
         const tipRow = hover.key === null ? undefined : data.rows[hover.key];
         const tipPts = tipRow === undefined ? [] : pointsOf(tipRow);
+
         return (
           <div className="relative">
             <ChartSvg

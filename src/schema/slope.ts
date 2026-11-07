@@ -109,8 +109,10 @@ export const slopeSchema = z
 
 /** One line. */
 export type SlopeRow = z.infer<typeof slopeRowSchema>;
+
 /** The validated payload. */
 export type SlopeData = z.infer<typeof slopeSchema>;
+
 /** What `<Slope>` takes: the payload, with formats also allowed as functions. */
 export type SlopeProps = SharedCallbacks &
   Omit<z.input<typeof slopeSchema>, "format" | "narrowFormat"> & {

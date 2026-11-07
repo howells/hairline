@@ -19,6 +19,7 @@ const fortnight: DailyDatum[] = [
   date: `2024-03-${String(4 + i).padStart(2, "0")}`,
   value,
 }));
+
 const sized = { height: 320, width: 480 };
 
 const render = (props: HairlineAreaProps) =>
@@ -26,13 +27,16 @@ const render = (props: HairlineAreaProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 /** A stem is one rect of class grow-y. */
 const stems = (html: string) => count(html, /class="[^"]*\bgrow-y\b/gu);
+
 /** The hero prints its value in the value voice: that value, or "none". */
 const hero = (props: Partial<HairlineAreaProps>) =>
   /class="[^"]*t-value[^"]*"[^>]*>(?<value>[^<]*)</u.exec(
     render({ data: fortnight, ...sized, ...props })
   )?.groups?.value ?? "none";
+
 /** The line is one path of class draw: one M for each unbroken run. */
 const runs = (data: DailyDatum[]) =>
   count(
@@ -40,6 +44,7 @@ const runs = (data: DailyDatum[]) =>
       ?.groups?.d ?? "",
     /M/gu
   );
+
 /** Every id a page defines. */
 const ids = (html: string) =>
   [...html.matchAll(/ id="(?<id>[^"]+)"/gu)].map((m) => m.groups?.id);
@@ -47,6 +52,7 @@ const ids = (html: string) =>
 /** The issue pointers of a failed validation; empty when it passed. */
 const pointers = (payload: Payload) => {
   const checked = getChart("hairline-area").validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -124,6 +130,7 @@ describe("the registry", () => {
           )
         )
       );
+
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
       "animate",
@@ -169,6 +176,7 @@ describe("formatters are data", () => {
       format: { currency: "USD", maximumFractionDigits: 0, style: "currency" },
       ...sized,
     });
+
     expect(html).toContain(">$1,235<");
   });
 
@@ -182,6 +190,7 @@ describe("formatters are data", () => {
       dateFormat: (d) => `day ${d.getUTCDate()}`,
       ...sized,
     });
+
     expect(html).toContain("day 4 to day 17");
   });
 
@@ -191,6 +200,7 @@ describe("formatters are data", () => {
       dateFormat: "day-month-year",
       ...sized,
     });
+
     expect(html).toContain("4 Mar 2024 to 17 Mar 2024");
   });
 
@@ -220,6 +230,7 @@ describe("emphasis", () => {
       { date: "2024-03-04", id: "b", value: 5 },
       { date: "2024-03-05", value: 4 },
     ];
+
     expect([
       hero({ data: twins, emphasis: "a" }),
       hero({ data: twins.toReversed(), emphasis: "a" }),
@@ -232,6 +243,7 @@ describe("emphasis", () => {
       { date: "2024-03-04", value: 1 },
       { date: "2024-03-05", value: null },
     ];
+
     expect(hero({ data: gappy, emphasis: "2024-03-05" })).toBe("none");
   });
 });
@@ -325,6 +337,7 @@ describe("two charts on one page", () => {
         createElement(HairlineArea, { data: fortnight, key: "b", ...sized }),
       ])
     );
+
     // Every id is unique, and the two charts each define one texture.
     const all = ids(page);
     expect(new Set(all).size).toBe(all.length);
@@ -355,6 +368,7 @@ describe("value-axis labels", () => {
     const labels = axisLabels(
       render({ data: small, ticks: [0, 0.25, 0.5, 0.75, 1], ...sized })
     );
+
     expect(labels).toStrictEqual(["0.00", "0.25", "0.50", "0.75", "1.00"]);
   });
 
@@ -368,6 +382,7 @@ describe("value-axis labels", () => {
     const labels = axisLabels(
       render({ data: small, format: "integer", ...sized })
     );
+
     expect(new Set(labels).size).toBeLessThan(labels.length);
   });
 });

@@ -33,6 +33,7 @@ html, body { margin: 0; background: #888; font-family: "Inter", ui-sans-serif, s
 `;
 
 rmSync(dist, { force: true, recursive: true });
+
 await build({
   build: {
     emptyOutDir: true,
@@ -80,10 +81,12 @@ await build({
 });
 
 mkdirSync(dist, { recursive: true });
+
 copyFileSync(
   here("../lib/hairline.css"),
   fileURLToPath(new URL("hairline.css", `file://${dist}`))
 );
+
 /** The browser half, where the page hydrates; the static Tailwind page has none. */
 const script = (config: DeckConfig, hydrates: boolean) =>
   hydrates
@@ -120,5 +123,6 @@ ${script(config, hydrates)}
 for (const [name, config] of Object.entries(PAGES)) {
   page(name, config, "hairline.css", true);
 }
+
 // The slides as "off" draws them, under Tailwind's stylesheet instead.
 page("tailwind", PAGES.off, "tailwind.css", false);

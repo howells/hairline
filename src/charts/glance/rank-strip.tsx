@@ -89,6 +89,7 @@ const deltaText = (delta: number) => {
   if (delta > 0) {
     return `+${delta}`;
   }
+
   return delta < 0 ? `−${-delta}` : "±0";
 };
 
@@ -100,6 +101,7 @@ const deltaGap = (hero: boolean) => (hero ? 22 : 16);
 const Row = (p: RowProps) => {
   const { cell, gap, gridW, ring, x0 } = p.geo;
   const delta = climb(p.series);
+
   return (
     <DimGroup dim={p.dimmed}>
       {p.hero ? (
@@ -128,6 +130,7 @@ const Row = (p: RowProps) => {
       {p.series.ranks.map((r, j) => {
         const cx = x0 + j * (cell + gap);
         const period = p.periods[j];
+
         return (
           <g
             key={period}
@@ -197,6 +200,7 @@ const headerOf = (periods: string[]) =>
   periods.map((period, j) => {
     const [part, year] = period.split(" ");
     const prev = periods[j - 1]?.split(" ")[1];
+
     return { part, year: year === prev ? undefined : year };
   });
 
@@ -213,17 +217,22 @@ export const RankStrip = (props: RankStripProps) => {
   const nP = data.periods.length;
   const nS = data.series.length;
   const maxRank = Math.max(...data.series.flatMap((s) => s.ranks));
+
   // Rows in final-period order, so the strip reads as the latest table.
   const rows = data.series.toSorted(
     (a, b) => (a.ranks.at(-1) ?? 0) - (b.ranks.at(-1) ?? 0)
   );
+
   const heroLabel =
     props.highlight ??
     data.series.toSorted((a, b) => climb(b) - climb(a))[0]?.label;
+
   const [hover, setHover] = useState<Hit | null>(null);
   const tex = useTextureIds("rank");
+
   const screen = (rank: number) =>
     tex(SCREENS[ladderStep(rank - 1, maxRank, SCREENS.length - 1)].name);
+
   const header = headerOf(data.periods);
   const hasYears = header.some((h) => h.year !== undefined);
   const label = `Rank per period: ${rows.map((s) => `${s.label} ${s.ranks.join(", ")}`).join("; ")}`;
@@ -251,11 +260,14 @@ export const RankStrip = (props: RankStripProps) => {
         // Rows sit further apart than columns, so the hero's outline has
         // its own clear channel above and below.
         const rowGap = narrow ? 12 : 16;
+
         const cell = Math.min(
           72,
           (width - labelW - deltaW - gap * (nP - 1)) / nP
         );
+
         const gridW = cell * nP + gap * (nP - 1);
+
         const geo: Geometry = {
           cell,
           gap,
@@ -263,13 +275,16 @@ export const RankStrip = (props: RankStripProps) => {
           ring: rowGap / 2,
           x0: labelW + Math.max(0, (width - labelW - deltaW - gridW) / 2),
         };
+
         // Period names wider than their column wrap over it ("1996–" over
         // "2010"), never onto a neighbour's line.
         const heads = header.map((h) =>
           headerLines(h.part, cell + gap - 4, (t) => textWidth(t, "t-label"))
         );
+
         const extra = (Math.max(...heads.map((l) => l.length)) - 1) * HEAD_LINE;
         const top = (hasYears ? 46 : 28) + extra;
+
         const height =
           props.height ??
           top +

@@ -77,6 +77,7 @@ const Row = ({
   const stroke = rise ? "stroke-hero" : "stroke-l3";
   const fill = rise ? "fill-hero" : "fill-l3";
   const base = xa - dir * HEAD.length;
+
   return (
     <DimGroup
       dim={dim}
@@ -149,16 +150,19 @@ export const ArrowPlot = (props: ArrowPlotProps) => {
   const data = (props.data ?? arrowPlotDemo).filter(
     (d) => Number.isFinite(d.before) && Number.isFinite(d.after)
   );
+
   const height = props.height ?? TOP + 24 + ROW * data.length;
   const format = props.format ?? ((v: number) => `${String(v)}%`);
   const keys = reactKeys(data);
   const hover = useHover<number>();
+
   const label =
     data.length === 0
       ? "No data"
       : data
           .map((d) => `${d.label}: ${format(d.before)} to ${format(d.after)}`)
           .join(", ");
+
   const hovered = hover.at === null ? undefined : data[hover.at.key];
 
   return (
@@ -194,8 +198,10 @@ export const ArrowPlot = (props: ArrowPlotProps) => {
           sideLabels(format),
           TOP
         );
+
         const axisY = height - 10;
         const ticks = layout.x.ticks(4);
+
         return (
           <ChartSvg
             desc={summary(data, format)}

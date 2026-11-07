@@ -23,6 +23,7 @@ export const describeLine = (w: Words) => {
   const { first, last, peak, trough } = w.ends;
   const { fmtDate, format, readings } = w;
   const high = `high ${format(w.range.hi)} on ${fmtDate(readings[peak].date)}, low ${format(w.range.lo)} on ${fmtDate(readings[trough].date)}`;
+
   return {
     desc: [
       `${plural(seriesOf(readings).live.length, "reading")}. ${high[0].toUpperCase()}${high.slice(1)}.`,

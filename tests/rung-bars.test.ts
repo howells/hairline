@@ -18,6 +18,7 @@ const bars: RungDatum[] = [
   { label: "2022", value: 11 },
   { label: "2023", value: 7 },
 ];
+
 const sized = { height: 320, width: 480 };
 
 const render = (props: RungBarsProps) =>
@@ -25,13 +26,16 @@ const render = (props: RungBarsProps) =>
 
 const count = (html: string, pattern: RegExp) =>
   (html.match(pattern) ?? []).length;
+
 /** Every rung is one rect of class grow-x; the hero column's are fill-hero. */
 const rungs = (html: string) => count(html, /class="grow-x/gu);
 const heroRungs = (html: string) => count(html, /class="grow-x fill-hero"/gu);
 const noteLineCount = (html: string) => count(html, /class="t-axis"/gu);
+
 /** The y of the chart's floor rule, the first line it draws. */
 const floorOf = (html: string) =>
   /<line[^>]*?\sy1="(?<y>[\d.]+)"/u.exec(html)?.groups?.y;
+
 /** The highest rung's top edge: a smaller y is a taller column. */
 const top = (html: string) =>
   Math.min(
@@ -39,12 +43,14 @@ const top = (html: string) =>
       (match) => Number(match.groups?.y)
     )
   );
+
 const hero = (data: RungDatum[], emphasis?: string) =>
   heroRungs(render({ data, emphasis, ...sized }));
 
 /** The issue pointers of a failed validation; empty when it passed. */
 const pointers = (payload: Payload) => {
   const checked = getChart("rung-bars").validate(payload);
+
   return checked.ok ? [] : checked.issues.map((i) => i.pointer);
 };
 
@@ -69,6 +75,7 @@ describe("a consumer renders RungBars through the registry", () => {
       data: [{ label: "a", value: "12" }, { label: "b" }],
       flavour: "mint",
     });
+
     const issues = bad.ok ? [] : bad.issues;
     expect(issues.map((i) => i.pointer).toSorted()).toStrictEqual([
       "",
@@ -124,16 +131,19 @@ describe("the registry", () => {
         return next(s, c);
       } });
       await import("@howells/hairline/schema");`;
+
     expect(() =>
       execFileSync(process.execPath, ["--input-type=module", "-e", script], {
         cwd: new URL("..", import.meta.url),
         stdio: "pipe",
       })
     ).not.toThrow();
+
     const entry = readFileSync(
       new URL("../lib/schema.js", import.meta.url),
       "utf-8"
     );
+
     expect(entry.startsWith('"use client"')).toBe(false);
   });
 
@@ -152,6 +162,7 @@ describe("the registry", () => {
           )
         )
       );
+
     expect(json.required).toStrictEqual(["data"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
       "animate",
@@ -187,6 +198,7 @@ describe("formatters are data", () => {
       format: "percent",
       ...sized,
     });
+
     expect(html).toContain(">50%<");
   });
 
@@ -196,6 +208,7 @@ describe("formatters are data", () => {
       format: { currency: "USD", maximumFractionDigits: 0, style: "currency" },
       ...sized,
     });
+
     expect(html).toContain(">$1,235<");
   });
 
@@ -205,6 +218,7 @@ describe("formatters are data", () => {
       format: (v) => `${v} quakes`,
       ...sized,
     });
+
     expect(html).toContain(">19 quakes<");
   });
 
@@ -228,6 +242,7 @@ describe("emphasis", () => {
       { id: "a", label: "Same", value: 3 },
       { id: "b", label: "Same", value: 5 },
     ];
+
     expect([hero(twins, "a"), hero(twins.toReversed(), "a")]).toStrictEqual([
       3, 3,
     ]);
@@ -336,10 +351,12 @@ describe("scale for slides", () => {
     expect(svgOf({ ...slide, scale: 2, strokes: "device" })).toContain(
       'data-hl-strokes="device"'
     );
+
     const css = readFileSync(
       new URL("../lib/theme.css", import.meta.url),
       "utf-8"
     );
+
     expect(css).toMatch(
       /data-hl-strokes=.device.[^{]*\{[^}]*vector-effect:\s*non-scaling-stroke/u
     );
@@ -371,6 +388,7 @@ describe("text measurement is deterministic in fixed-size mode", () => {
   it("never touches the document, so loaded fonts cannot change the output", () => {
     const plain = render(noted);
     const touched: string[] = [];
+
     const trap = new Proxy(
       {},
       {
@@ -380,22 +398,27 @@ describe("text measurement is deterministic in fixed-size mode", () => {
         },
       }
     );
+
     vi.stubGlobal("document", trap);
     vi.stubGlobal("OffscreenCanvas", trap);
+
     try {
       expect(render(noted)).toBe(plain);
     } finally {
       vi.unstubAllGlobals();
     }
+
     expect(touched).toStrictEqual([]);
   });
 
   it("a metrics table changes how much room the note reserves", () => {
     const normal = render(noted);
+
     const crowded = render({
       ...noted,
       metrics: { advances: {}, fallback: 1.5 },
     });
+
     expect(noteLineCount(normal)).toBe(1);
     expect(noteLineCount(crowded)).toBeGreaterThan(1);
     expect(crowded).not.toBe(normal);
@@ -403,10 +426,12 @@ describe("text measurement is deterministic in fixed-size mode", () => {
 
   it("a face with a narrower alphabet fits the note on fewer lines", () => {
     const tight = { ...noted, width: 300 };
+
     const narrow = render({
       ...tight,
       metrics: { advances: {}, fallback: 0.3 },
     });
+
     expect(noteLineCount(narrow)).toBeLessThan(noteLineCount(render(tight)));
   });
 
@@ -430,6 +455,7 @@ describe("text measurement is deterministic in fixed-size mode", () => {
       new URL("../lib/theme.css", import.meta.url),
       "utf-8"
     );
+
     expect(css).toContain("font-family: var(--hl-font, var(--font-sans))");
     expect(css).not.toMatch(/font-family: var\(--font-sans\);/u);
   });
@@ -471,13 +497,16 @@ describe("RungBars withheld bars, details and a shared scale", () => {
 
   it("keeps one floor for a shared max, whether or not labels stagger", () => {
     const narrow = { height: 240, width: 200 };
+
     const long = ["Occasional", "Frequent", "Regular", "Power"].map(
       (label, index) => ({ label, value: 100 * (index + 1) })
     );
+
     const short = [
       { label: "A", value: 50 },
       { label: "B", value: 90 },
     ];
+
     expect(floorOf(render({ data: long, max: 400, ...narrow }))).toBe(
       floorOf(render({ data: short, max: 400, ...narrow }))
     );

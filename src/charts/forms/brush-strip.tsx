@@ -18,6 +18,7 @@ import type { DayValue } from "./brushed-overview.data";
 
 /** Strip height: a 44px touch target on its own, plus a pixel of floor. */
 const STRIP_H = 48;
+
 /** Half the invisible hit width of each handle (44px in all). */
 const GRIP = 22;
 
@@ -29,9 +30,11 @@ const MONTH_ROOM = 64;
 /** Label every month, every other, or every quarter, as the room allows. */
 const monthStep = (span: number) => {
   const month = span / 12;
+
   if (month >= MONTH_ROOM) {
     return 1;
   }
+
   return month * 2 >= MONTH_ROOM ? 2 : 3;
 };
 
@@ -46,7 +49,9 @@ const StripMonths = (props: {
       ? [i]
       : []
   );
+
   const labels = monthTickLabels(firsts.map((i) => props.data[i].date));
+
   return (
     <g>
       {firsts.map((i, k) => (
@@ -71,21 +76,27 @@ const useDrag = (
   onChange: (s: Span) => void
 ) => {
   const drag = useRef<Drag | null>(null);
+
   const dayAt = (e: PointerEvent<SVGElement>) => {
     const box = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+
     return x.invert(e.clientX - (box?.left ?? 0));
   };
+
   const stop = () => {
     drag.current = null;
   };
+
   return (grip: Grip) => ({
     onLostPointerCapture: stop,
     onPointerDown: (e: PointerEvent<SVGRectElement>) => {
       e.currentTarget.setPointerCapture(e.pointerId);
       const from = grip === "outside" ? centreOn(span, dayAt(e), last) : span;
+
       if (grip === "outside") {
         onChange(from);
       }
+
       const held = grip === "outside" ? "body" : grip;
       drag.current = { from, grip: held, origin: dayAt(e) };
     },
@@ -112,6 +123,7 @@ const Window = (props: {
   // Handles keep their full 44px; on a narrow window they split the middle.
   const inner = Math.min(GRIP, Math.max(0, (xb - xa) / 2));
   const line2 = props.focused ? 2 : 1;
+
   return (
     <g>
       <rect
@@ -183,30 +195,37 @@ export const BrushStrip = (props: StripProps) => {
   const last = props.data.length - 1;
   const x = scaleLinear().domain([0, last]).range([props.x0, props.x1]);
   const grip = useDrag(x, props.span, last, props.onChange);
+
   const y = scaleLinear()
     .domain([Math.min(...props.mean), Math.max(...props.mean)])
     .range([STRIP_H - 6, 6]);
+
   const path =
     line<number>()
       .x((_, i) => x(i))
       .y((m) => y(m))
       .curve(curveMonotoneX)(props.mean) ?? "";
+
   const tint =
     area<number>()
       .x((_, i) => x(i))
       .y0(STRIP_H - 1)
       .y1((m) => y(m))
       .curve(curveMonotoneX)(props.mean) ?? "";
+
   const xa = Math.round(x(props.span.a));
   const xb = Math.round(x(props.span.b));
   const len = props.span.b - props.span.a;
+
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
     const next = keyTo(e.key, props.span, last);
+
     if (next !== null) {
       e.preventDefault();
       props.onChange(next);
     }
   };
+
   return (
     <div className="relative">
       <input

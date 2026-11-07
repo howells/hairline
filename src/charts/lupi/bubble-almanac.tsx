@@ -66,9 +66,11 @@ const cellId = (d: { category: string; year: number }) =>
 
 /** How far above the first row a slanted head starts, px. */
 const HEAD_DROP = 14;
+
 /** Room across their slant between two neighbouring column names, px: two lines. */
 const HEAD_AIR = 26;
 const SHALLOW = 24;
+
 /**
  * Slant of the column names, in degrees: shallow only where neighbours stand
  * two lines apart across it, so a long name never runs on over the next.
@@ -104,6 +106,7 @@ const almanacLayout = (
 ): AlmanacLayout => {
   const categories = [...new Set(data.map((d) => d.category))];
   const years = [...new Set(data.map((d) => d.year))].toSorted((a, b) => a - b);
+
   // Room left of the grid for the year names; right of it for the last
   // slanted column name, which runs past the grid. The pitch is the widest
   // that fits both, and the whole composition is centred.
@@ -113,11 +116,14 @@ const almanacLayout = (
       sansWidth(l, 11)
     )
   );
+
   const left = 12 + yearW;
   // Sized a little under the real 11: sansWidth rounds each glyph up.
   const nameW = categories.map((c) => sansWidth(c, 10.4));
+
   const rightFor = (pitch: number) => {
     const tilt = (headTilt(pitch) * Math.PI) / 180;
+
     return Math.max(
       pitch * categories.length,
       ...nameW.map(
@@ -126,31 +132,39 @@ const almanacLayout = (
       )
     );
   };
+
   let colPitch = 84;
+
   while (colPitch > 20 && left + rightFor(colPitch) > width) {
     colPitch -= 0.25;
   }
+
   const gridW = colPitch * categories.length;
   const x0 = left + Math.max(0, (width - left - rightFor(colPitch)) / 2);
   // The slanted heads stand above the first row; the room above it is the
   // tallest head's rise, so the longest name never reaches the key.
   const rise = Math.sin((-headTilt(colPitch) * Math.PI) / 180);
+
   const top = Math.max(
     72,
     Math.ceil(HEAD_DROP + 6 + Math.max(...nameW) * rise)
   );
+
   const rowPitch = Math.max(20, (height - top - 8 - noteH) / years.length);
   // The largest bubble fits its cell with a clear gap to every neighbour,
   // counting the hero's 2px outline, so no two bubbles ever touch.
   const cell = Math.min(colPitch, rowPitch);
   const gap = Math.max(4, Math.round(cell * 0.12));
   const maxR = (cell - gap) / 2 - 1;
+
   const radius = scaleSqrt()
     .domain([0, Math.max(1, ...data.map((d) => d.value))])
     .range([0, maxR]);
+
   const core = scaleSqrt()
     .domain([0, Math.max(1, ...data.map((d) => d.core))])
     .range([0, maxR * 0.16]);
+
   return {
     categories,
     colPitch,
@@ -170,9 +184,11 @@ const almanacLayout = (
 const Ledger = (props: { layout: AlmanacLayout }) => {
   const { categories, colPitch, colX, gridW, rowPitch, rowY, x0, years } =
     props.layout;
+
   const yearLabels = yearTickLabels(
     years.map((y) => new Date(Date.UTC(y, 0, 1)))
   );
+
   return (
     <g>
       {years.map((year, k) => (
@@ -240,6 +256,7 @@ const Blob = ({
   const r = layout.radius(cell.value);
   const coreR = layout.core(cell.core);
   const flag = cell.flag === true;
+
   return (
     <DimGroup
       dim={dim}
@@ -316,6 +333,7 @@ export const BubbleAlmanac = (props: BubbleAlmanacProps) => {
         // Bigger blobs first so small ones stay visible on top.
         const order = data.toSorted((a, b) => b.value - a.value);
         const heroId = order.length > 0 ? cellId(order[0]) : "";
+
         return (
           <>
             {props.glyphKey === false ? null : (

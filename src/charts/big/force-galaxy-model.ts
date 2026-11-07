@@ -99,12 +99,15 @@ const LADDER: Tone[] = ["l2", "l2", "l3", "l3", "l4", "l4", "l5", "l5"];
 
 const domainFills = (data: GalaxyData) => {
   const totals = new Map<string, number>();
+
   for (const n of data.nodes) {
     totals.set(n.domain, (totals.get(n.domain) ?? 0) + n.volume);
   }
+
   const ranked = [...totals.keys()].toSorted(
     (a, b) => (totals.get(b) ?? 0) - (totals.get(a) ?? 0)
   );
+
   return {
     fills: new Map(
       ranked.map((d, i) => [d, LADDER[Math.min(i, LADDER.length - 1)]])
@@ -117,6 +120,7 @@ const edgeKind = (a: Star, b: Star): EdgeKind => {
   if (a.hub && b.hub) {
     return "mesh";
   }
+
   return a.domain === b.domain ? "spoke" : "cross";
 };
 
@@ -135,27 +139,35 @@ export interface Ring {
 
 /** Room under a ring for its hub's name. */
 const LABEL_ROOM = 16;
+
 /** Half the height of a `t-label` line. */
 const LABEL_HALF = 8;
+
 /** Gap between a ring's outer satellites and its hub's name. */
 const LABEL_GAP = 6;
+
 /** Clear space kept between every ring, label and the plot's edge. */
 const EDGE_PAD = 4;
+
 /** Below this plot width the hubs sit on a ring rather than float free. */
 export const RING_BELOW = 520;
 
 const starsFor = (data: GalaxyData, scale: number) => {
   const { fills, ranked } = domainFills(data);
+
   // The hero: the hub of the busiest domain.
   const heroId = data.nodes.find(
     (n) => n.hub === true && n.domain === ranked[0]
   )?.id;
+
   const maxOf = (hub: boolean) =>
     Math.max(
       1,
       ...data.nodes.flatMap((n) => ((n.hub === true) === hub ? [n.volume] : []))
     );
+
   const [maxHub, maxSat] = [maxOf(true), maxOf(false)];
+
   return data.nodes.map((n): Star => ({
     domain: n.domain,
     hub: n.hub === true,
@@ -172,10 +184,12 @@ const starsFor = (data: GalaxyData, scale: number) => {
 /** Each hub's ring: an orbit wide enough to keep its satellites evenly apart. */
 const ringsFor = (stars: Star[], scale: number) => {
   const rings = new Map<string, Ring>();
+
   for (const hub of stars.filter((s) => s.hub)) {
     const sats = stars
       .filter((s) => !s.hub && s.domain === hub.domain)
       .toSorted((a, b) => b.volume - a.volume);
+
     const widest = Math.max(0, ...sats.map((s) => s.r));
     const around = sats.reduce((t, s) => t + 2 * s.r + 4 * scale, 0);
     const orbit = Math.max(hub.r + 12 * scale + widest, around / (2 * Math.PI));
@@ -187,6 +201,7 @@ const ringsFor = (stars: Star[], scale: number) => {
       sats,
     });
   }
+
   return rings;
 };
 
@@ -194,6 +209,7 @@ const ringsFor = (stars: Star[], scale: number) => {
 const orbitAll = (rings: Map<string, Ring>) => {
   for (const ring of rings.values()) {
     const n = Math.max(1, ring.sats.length);
+
     for (const [k, s] of ring.sats.entries()) {
       const a = (k / n) * Math.PI * 2;
       s.x = (ring.hub.x ?? 0) + ring.orbit * Math.sin(a);
@@ -206,9 +222,11 @@ const edgesFor = (data: GalaxyData, stars: Star[]) => {
   const byId = new Map(stars.map((s) => [s.id, s]));
   const neighbours = new Map<string, string[]>(stars.map((s) => [s.id, []]));
   const edges: Edge[] = [];
+
   for (const l of data.links) {
     const a = byId.get(l.source);
     const b = byId.get(l.target);
+
     if (a !== undefined && b !== undefined) {
       neighbours.get(a.id)?.push(b.id);
       neighbours.get(b.id)?.push(a.id);
@@ -223,6 +241,7 @@ const edgesFor = (data: GalaxyData, stars: Star[]) => {
       });
     }
   }
+
   return { edges, neighbours };
 };
 
@@ -244,15 +263,19 @@ const slotsFor = (
   const across = width / 2 - EDGE_PAD - Math.max(ringR, nameW / 2);
   const down = floor / 2 - EDGE_PAD - ringR - LABEL_GAP - LABEL_HALF * 2;
   const R = Math.max(20, Math.min(across, down));
+
   const homes = hubs.map((ring, i) => {
     const a = (i / hubs.length) * Math.PI * 2;
+
     return { a, half: Math.max(ringRadius(ring), ring.labelW / 2), ring };
   });
+
   // Slide the circle sideways so the rings and names, taken together, sit
   // the same distance from either edge.
   const lo = Math.min(...homes.map((h) => R * Math.sin(h.a) - h.half));
   const hi = Math.max(...homes.map((h) => R * Math.sin(h.a) + h.half));
   const shift = -(lo + hi) / 2;
+
   return new Map(
     homes.map((h) => [
       h.ring.hub.id,
@@ -276,6 +299,7 @@ export const buildGalaxy = (
   const { edges, neighbours } = edgesFor(data, stars);
   const hubs = [...rings.values()].map((r) => r.hub);
   const mode: GalaxyMode = width < RING_BELOW ? "ring" : "free";
+
   // Big bang: hubs start on a small ring, each carrying its satellites.
   const place = () => {
     for (const [i, hub] of hubs.entries()) {
@@ -287,9 +311,12 @@ export const buildGalaxy = (
       hub.fx = null;
       hub.fy = null;
     }
+
     orbitAll(rings);
   };
+
   place();
+
   return {
     cx,
     cy,
@@ -323,6 +350,7 @@ export const labelAt = (galaxy: Galaxy, ring: Ring): Point => {
   const [hx, hy] = [ring.hub.x ?? galaxy.cx, ring.hub.y ?? galaxy.cy];
   const out = ringRadius(ring) + LABEL_GAP + LABEL_HALF;
   const above = galaxy.mode === "ring" && hy < galaxy.cy;
+
   return { x: hx, y: above ? hy - out : hy + out - 1 };
 };
 
@@ -334,12 +362,15 @@ export const labelOnEngraving = (galaxy: Galaxy, ring: Ring, spot: Point) => {
   // The plate's half extents: the name plus its 4px padding, 15px tall.
   const halfW = ring.labelW / 2 + 4;
   const halfH = 7.5;
+
   return galaxy.stars.some((s) => {
     if (!s.hub || s.id === ring.hub.id) {
       return false;
     }
+
     const dx = Math.max(0, Math.abs((s.x ?? 0) - spot.x) - halfW);
     const dy = Math.max(0, Math.abs((s.y ?? 0) - spot.y) - halfH);
+
     return Math.hypot(dx, dy) < s.r;
   });
 };
@@ -350,6 +381,7 @@ const reachOf = (galaxy: Galaxy, ring: Ring) => {
   const r = ringRadius(ring);
   const half = Math.max(r, ring.labelW / 2);
   const ly = labelAt(galaxy, ring).y - hy;
+
   return {
     bottom: Math.max(r, ly + LABEL_HALF),
     left: half,
@@ -373,6 +405,7 @@ export const fitHub = (
   y: number
 ): Point => {
   const reach = reachOf(galaxy, ring);
+
   return {
     x: keep(x, reach.left + EDGE_PAD, galaxy.width - reach.right - EDGE_PAD),
     y: keep(y, reach.top + EDGE_PAD, galaxy.floor - reach.bottom - EDGE_PAD),
@@ -387,6 +420,7 @@ export const constrain = (galaxy: Galaxy) => {
     s.x = at.x;
     s.y = at.y;
   }
+
   orbitAll(galaxy.rings);
 };
 
@@ -408,15 +442,18 @@ const drawEdge = (e: Edge, handles: Handles) => {
 export const placeCaption = (galaxy: Galaxy, handles: Handles) => {
   const caption = handles.caption.get("root");
   const star = galaxy.stars.find((s) => s.id === caption?.dataset.id);
+
   if (caption === undefined || star === undefined) {
     return;
   }
+
   const run = Number(caption.dataset.run);
   const turn = (star.x ?? 0) + star.r + 6 + run > galaxy.width ? -1 : 1;
   caption.setAttribute(
     "transform",
     `translate(${fixed((star.x ?? 0) + turn * (star.r + 6))} ${fixed(star.y)})`
   );
+
   for (const text of caption.querySelectorAll("text")) {
     text.setAttribute("text-anchor", turn === 1 ? "start" : "end");
   }
@@ -426,6 +463,7 @@ export const drawGalaxy = (galaxy: Galaxy, handles: Handles) => {
   for (const s of galaxy.stars) {
     drawStar(s, handles);
   }
+
   for (const ring of galaxy.rings.values()) {
     const label = handles.labels.get(ring.hub.id);
     const spot = labelAt(galaxy, ring);
@@ -434,18 +472,22 @@ export const drawGalaxy = (galaxy: Galaxy, handles: Handles) => {
       "transform",
       `translate(${Math.round(spot.x)} ${Math.round(spot.y)})`
     );
+
     if (label !== undefined) {
       label.dataset.plate = String(labelOnEngraving(galaxy, ring, spot));
     }
   }
+
   for (const e of galaxy.edges) {
     drawEdge(e, handles);
   }
+
   placeCaption(galaxy, handles);
 };
 
 /** Pull toward the centre: strong enough that no hub drifts to an edge. */
 const CENTRE_PULL = 0.08;
+
 /** Pull toward a ring-mode home: firm, so a dragged hub springs back. */
 const SLOT_PULL = 0.2;
 
@@ -459,6 +501,7 @@ export const makeSimulation = (galaxy: Galaxy, onTick: () => void) => {
   const { cx, cy, rings, scale, slots } = galaxy;
   const hubs = [...rings.values()].map((r) => r.hub);
   const sim = forceSimulation<Star, Edge>(hubs).alphaDecay(0.022);
+
   if (galaxy.mode === "ring") {
     sim
       .force(
@@ -486,6 +529,7 @@ export const makeSimulation = (galaxy: Galaxy, onTick: () => void) => {
       .force("x", forceX<Star>(cx).strength(CENTRE_PULL))
       .force("y", forceY<Star>(cy).strength(CENTRE_PULL));
   }
+
   return sim.on("tick", () => {
     constrain(galaxy);
     onTick();
@@ -498,6 +542,7 @@ export const settle = (
   sim: ReturnType<typeof makeSimulation>
 ) => {
   sim.stop();
+
   for (const _ of Array.from({ length: 320 })) {
     sim.tick();
     constrain(galaxy);

@@ -17,6 +17,7 @@ for (const animate of ["off", "scroll"]) {
   }) => {
     await page.goto(`/${animate}.html`);
     await page.evaluate(async () => await document.fonts.ready);
+
     const bytes = await page.pdf({
       height: "1080px",
       preferCSSPageSize: true,
@@ -26,13 +27,16 @@ for (const animate of ["off", "scroll"]) {
 
     const pdf = await getDocument({ data: new Uint8Array(bytes) }).promise;
     expect(pdf.numPages).toBe(SLIDE_COUNT);
+
     const pages = await Promise.all(
       Array.from({ length: pdf.numPages }, async (_, index) => {
         const drawn = await pdf.getPage(index + 1);
         const { fnArray } = await drawn.getOperatorList();
+
         return fnArray;
       })
     );
+
     for (const [index, fnArray] of pages.entries()) {
       const paths = fnArray.filter((op) => PATH_OPS.has(op)).length;
       const text = fnArray.filter((op) => TEXT_OPS.has(op)).length;

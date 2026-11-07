@@ -107,6 +107,7 @@ export const plumbScatterSchema = z
   })
   .superRefine((props, ctx) => {
     const keys = new Set(props.data.map(keyOf));
+
     for (const [i, key] of (props.hero ?? []).entries()) {
       if (!keys.has(key)) {
         ctx.addIssue({
@@ -116,6 +117,7 @@ export const plumbScatterSchema = z
         });
       }
     }
+
     for (const [i, key] of (props.labelled ?? []).entries()) {
       if (!keys.has(key)) {
         ctx.addIssue({
@@ -126,8 +128,10 @@ export const plumbScatterSchema = z
         });
       }
     }
+
     for (const name of ["xDomain", "yDomain"] as const) {
       const domain = props[name];
+
       if (domain !== undefined && !(domain[0] < domain[1])) {
         ctx.addIssue({
           code: "custom",
@@ -140,8 +144,10 @@ export const plumbScatterSchema = z
 
 /** One point. */
 export type PlumbDatum = z.infer<typeof plumbDatumSchema>;
+
 /** The validated payload. */
 export type PlumbScatterData = z.infer<typeof plumbScatterSchema>;
+
 /** What `<PlumbScatter>` takes: the payload, with formats also allowed as functions. */
 export type PlumbScatterProps = SharedCallbacks &
   Omit<z.input<typeof plumbScatterSchema>, "format" | "formatX" | "note"> & {

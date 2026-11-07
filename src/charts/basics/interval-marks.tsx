@@ -43,6 +43,7 @@ export const IntervalNames = ({
   y,
 }: BandProps & { bounds: readonly [number, number] }) => {
   const names = nameSlots(bands, { bounds, x, y });
+
   return (
     <g className="fade">
       {names.map(({ band, x: at, y: height }) => (

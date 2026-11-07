@@ -39,9 +39,11 @@ export const bandsOf = (
           const i = readings.findIndex(
             (r) => r.date.getTime() === Date.parse(p.date)
           );
+
           return i === -1 ? [] : [{ high: p.high, i, low: p.low }];
         })
         .toSorted((a, b) => a.i - b.i);
+
       return points.length === 0
         ? []
         : [{ coverage: band.coverage, label: intervalLabel(band), points }];
@@ -60,8 +62,10 @@ export const forecastAt = (
   if (forecast === undefined) {
     return readings.length;
   }
+
   const last = Date.parse(forecast.from);
   const first = readings.findIndex((r) => r.date.getTime() > last);
+
   return first === -1 ? readings.length : first;
 };
 
@@ -90,6 +94,7 @@ export const intervalTable = (
   cells: (i: number) => [
     ...bands.flatMap((band) => {
       const p = band.points.find((q) => q.i === i);
+
       return p === undefined ? ["", ""] : [format(p.low), format(p.high)];
     }),
     ...(forecast.shown ? [i >= forecast.at ? "Forecast" : "Observed"] : []),
@@ -108,6 +113,7 @@ export const intervalFacts = (
 ) =>
   bands.flatMap((band) => {
     const p = band.points.find((q) => q.i === i);
+
     return p === undefined
       ? []
       : [`${band.label}: ${format(p.low)} to ${format(p.high)}`];
@@ -124,6 +130,7 @@ export const intervalDesc = (
       ? [`${forecast.label}: the line is dashed after the rule`]
       : []),
   ];
+
   return parts.length === 0 ? "" : `${parts.join(". ")}.`;
 };
 
@@ -136,8 +143,10 @@ export const forecastNameBox = (label: string, x: number, top: number): Box =>
 
 /** Room between a name's plate and the band's end, clear of the end value's label, px. */
 const NAME_GAP = 14;
+
 /** The step between two names that would otherwise stand on each other, px. */
 const NAME_STEP = 17;
+
 /** Room between a band's upper edge and its name, px. */
 const NAME_LIFT = 12;
 
@@ -152,17 +161,21 @@ export const nameSlots = (
 ) => {
   const ends = bands.flatMap((band) => {
     const end = band.points.at(-1);
+
     return end === undefined ? [] : [{ band, end }];
   });
+
   if (ends.length === 0) {
     return [];
   }
+
   const heights = relax(
     ends.map(({ end }) => at.y(end.high) - NAME_LIFT),
     NAME_STEP,
     at.bounds[0] + NAME_STEP / 2,
     at.bounds[1]
   );
+
   return ends.map(({ band, end }, k) => ({
     band,
     x: at.x(end.i) - NAME_GAP,

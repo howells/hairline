@@ -15,6 +15,7 @@ export const phase = (i: number, cursor: number) => {
   if (i < cursor) {
     return "past";
   }
+
   return i === cursor ? "active" : "future";
 };
 

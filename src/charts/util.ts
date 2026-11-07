@@ -25,9 +25,11 @@ export const clamp = (v: number, lo: number, hi: number): number =>
 
 export const sum = (values: readonly number[]): number => {
   let total = 0;
+
   for (const v of values) {
     total += v;
   }
+
   return total;
 };
 
@@ -44,6 +46,7 @@ export const weeklyMean = (
     const start = align === "centred" ? i - 3 : i - 6;
     const lo = clamp(start, 0, Math.max(0, values.length - 7));
     const week = values.slice(lo, lo + 7);
+
     return sum(week) / week.length;
   });
 
@@ -73,10 +76,13 @@ export const ranks = (values: readonly number[], ascending = false) => {
   const order = values
     .map((v, i) => ({ i, v }))
     .toSorted((a, b) => (ascending ? a.v - b.v : b.v - a.v));
+
   const out = values.map(() => 0);
+
   for (const [r, entry] of order.entries()) {
     out[entry.i] = r;
   }
+
   return out;
 };
 
@@ -93,9 +99,11 @@ export const normals = (
   sd: number
 ): number[] => {
   const uniform = mulberry32(seed);
+
   return Array.from({ length: n }, () => {
     const u = Math.max(1e-9, uniform());
     const v = uniform();
+
     return mean + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
   });
 };
@@ -130,13 +138,18 @@ export const noteLines = (
   if (!hasText(text)) {
     return [];
   }
+
   const parts = text.split(" · ");
+
   if (parts.some((part) => sansWidth(part, NOTE_SIZE, metrics) > width)) {
     return [];
   }
+
   const lines: string[] = [];
+
   for (const part of parts) {
     const last = lines.at(-1);
+
     if (
       last !== undefined &&
       sansWidth(`${last} · ${part}`, NOTE_SIZE, metrics) <= width
@@ -146,6 +159,7 @@ export const noteLines = (
       lines.push(part);
     }
   }
+
   return lines;
 };
 
@@ -160,6 +174,7 @@ export const noteSpace = (
   metrics?: FontMetrics
 ) => {
   const n = noteLines(text, width, metrics).length;
+
   return n === 0 ? 0 : room + (n - 1) * NOTE_LINE;
 };
 
@@ -173,14 +188,17 @@ export const wrapWords = (
   measure: (s: string) => number
 ) => {
   const lines: string[] = [];
+
   for (const word of text.split(" ")) {
     const last = lines.at(-1);
+
     if (last !== undefined && measure(`${last} ${word}`) <= width) {
       lines[lines.length - 1] = `${last} ${word}`;
     } else {
       lines.push(word);
     }
   }
+
   return lines;
 };
 

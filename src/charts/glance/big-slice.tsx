@@ -61,12 +61,15 @@ interface SliceProps {
 }
 
 const pct = (v: number) => `${Math.round(v)}%`;
+
 const minutes = (v: number) => {
   const total = Math.round(v);
+
   return total < 60
     ? `${total}m`
     : `${Math.floor(total / 60)}h ${String(total % 60).padStart(2, "0")}m`;
 };
+
 const ringHours = (v: number) => `${v / 60}h`;
 
 const TAU = Math.PI * 2;
@@ -84,13 +87,17 @@ const runsOf = (
   keep: (s: PieArcDatum<SliceDatum>) => boolean
 ) => {
   const first = slices.findIndex((s) => !keep(s));
+
   if (first === -1) {
     return null;
   }
+
   const runs: { a0: number; a1: number }[] = [];
   let run: { a0: number; a1: number } | null = null;
+
   for (let k = 1; k <= slices.length; k += 1) {
     const slice = slices[(first + k) % slices.length];
+
     if (keep(slice)) {
       const a0: number = run === null ? slice.startAngle : run.a0;
       // Angles restart at 0 after the last slice; keep the run increasing.
@@ -101,6 +108,7 @@ const runsOf = (
       run = null;
     }
   }
+
   return runs;
 };
 
@@ -112,6 +120,7 @@ const topGap = (slices: PieArcDatum<SliceDatum>[]) => {
   const mids = slices.map((s) => (s.startAngle + s.endAngle) / 2);
   const before = Math.max(...mids);
   const after = Math.min(...mids) + TAU;
+
   return (before + after) / 2;
 };
 
@@ -129,25 +138,32 @@ const ringLabelAngle = (
   const radius = r(ring);
   // A slice leaves room if its tip stops a label's half-height short of the ring.
   const runs = runsOf(slices, (s) => r(s.data.intensity) < radius - 7);
+
   if (runs === null) {
     return topGap(slices);
   }
+
   const half = (labelW / 2 + 8) / radius;
   let best: number | null = null;
+
   for (const run of runs) {
     const lo = run.a0 + half;
     const hi = run.a1 - half;
+
     if (lo > hi) {
       continue;
     }
+
     const pick =
       lo <= TAU && TAU <= hi
         ? 0
         : [lo, hi].toSorted((a, b) => fromTop(a) - fromTop(b))[0];
+
     if (best === null || fromTop(pick) < fromTop(best)) {
       best = pick;
     }
   }
+
   return best;
 };
 
@@ -168,6 +184,7 @@ interface RadiusInput {
 /** Sine range swept by an arc between two clock angles (0 to 2π). */
 const sineSpan = (a0: number, a1: number) => {
   const ends = [Math.sin(a0), Math.sin(a1)];
+
   return {
     max: a0 <= Math.PI / 2 && a1 >= Math.PI / 2 ? 1 : Math.max(...ends),
     min: a0 <= 1.5 * Math.PI && a1 >= 1.5 * Math.PI ? -1 : Math.min(...ends),
@@ -179,9 +196,11 @@ const reach = (p: RadiusInput, outer: number) => {
   const r = scaleRadial()
     .domain([0, p.max])
     .range([outer * 0.24, outer]);
+
   const labelRadius = r(p.ring);
   let left = 0;
   let right = 0;
+
   for (const [k, sl] of p.slices.entries()) {
     const ro = r(sl.data.intensity);
     const span = sineSpan(sl.startAngle, sl.endAngle);
@@ -189,15 +208,18 @@ const reach = (p: RadiusInput, outer: number) => {
     right = Math.max(right, span.max * ro);
     const { figures, name } = p.labels[k];
     const text = sansWidth(name, 11) + LABEL_SPACE + sansWidth(figures, 11);
+
     const x =
       Math.sin((sl.startAngle + sl.endAngle) / 2) *
       (Math.max(ro, labelRadius) + LABEL_OFFSET);
+
     if (x >= 0) {
       right = Math.max(right, x + text);
     } else {
       left = Math.max(left, -x + text);
     }
   }
+
   return { left, right };
 };
 
@@ -214,25 +236,33 @@ const pieFit = (p: RadiusInput) => {
       (p.width - (p.narrow ? 68 : 300)) / 2
     )
   );
+
   const fits = (outer: number) => {
     const { left, right } = reach(p, outer);
+
     // A couple of pixels each side for text measured a little short.
     return left + right + 4 <= p.width;
   };
+
   let lo = 60;
   let hi = cap;
+
   if (!fits(hi)) {
     for (let k = 0; k < 20; k += 1) {
       const mid = (lo + hi) / 2;
+
       if (fits(mid)) {
         lo = mid;
       } else {
         hi = mid;
       }
     }
+
     hi = lo;
   }
+
   const { left, right } = reach(p, hi);
+
   return { cx: (p.width - left - right) / 2 + left, outer: hi };
 };
 
@@ -245,6 +275,7 @@ interface RingLabelProps {
 /** Text rotation that runs along the ring at a clock angle, never upside down. */
 const tangent = (angle: number) => {
   const deg = (angle * 180) / Math.PI;
+
   return deg > 90 && deg < 270 ? deg - 180 : deg;
 };
 
@@ -274,6 +305,7 @@ const Slice = (p: SliceProps) => {
   const ly = -Math.cos(mid) * lr;
   const anchor = Math.sin(mid) >= 0 ? "start" : "end";
   const { cx, cy } = p.centre;
+
   return (
     <DimGroup
       dim={p.dim}
@@ -337,6 +369,7 @@ const ringGuides = (
 ): RingGuide[] =>
   rings.map((v) => {
     const labelW = sansWidth(ringFormat(v), 11);
+
     return {
       angle: ringLabelAngle(slices, r, v, labelW),
       half: (labelW / 2 + 5) / r(v),
@@ -397,6 +430,7 @@ export const BigSlice = (props: BigSliceProps) => {
   const total = data.reduce((s, d) => s + d.share, 0);
   const shareOf = (d: SliceDatum) => fmtShare((d.share / total) * 100);
   const label = `Pie: ${data.map((d) => `${d.label} ${shareOf(d)}, ${format(d.intensity)}`).join("; ")}`;
+
   const suffix =
     props.intensityLabel === undefined ? "" : ` ${props.intensityLabel}`;
 
@@ -418,6 +452,7 @@ export const BigSlice = (props: BigSliceProps) => {
     >
       {(width) => {
         const narrow = width < 520;
+
         // Narrow: the name keeps its share and drops the duration.
         const outside = (d: SliceDatum) => ({
           figures: narrow
@@ -425,12 +460,16 @@ export const BigSlice = (props: BigSliceProps) => {
             : `${shareOf(d)} · ${format(d.intensity)}`,
           name: d.label,
         });
+
         const bottom = 8 + noteSpace(noteOf(props), width - 16, 18);
+
         const slices = pie<SliceDatum>()
           .value((d) => d.share)
           .sortValues(null)
           .padAngle(0.035)(data);
+
         const max = Math.max(...data.map((d) => d.intensity), ...rings);
+
         const { cx, outer } = pieFit({
           bottom,
           height,
@@ -441,15 +480,19 @@ export const BigSlice = (props: BigSliceProps) => {
           slices,
           width,
         });
+
         const inner = outer * 0.24;
         const centre = { cx, cy: 28 + outer };
+
         // Narrow screens: the pie is width-bound, so trim the unused height.
         const svgH = Math.min(
           height,
           Math.round(centre.cy + outer + 34 + bottom)
         );
+
         const r = scaleRadial().domain([0, max]).range([inner, outer]);
         const guides = ringGuides(rings, slices, r, ringFormat);
+
         const wedge = arc<Wedge>()
           .innerRadius(inner)
           .outerRadius((d) => d.outer)

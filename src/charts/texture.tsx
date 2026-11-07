@@ -90,9 +90,11 @@ export const CrossHatch = ({
   tone,
 }: PatternProps) => {
   const rising = diagonal(pitch, false, 0);
+
   const falling = diagonal(pitch, true, Math.floor(pitch / 2)).filter(
     (f) => !rising.some((r) => r.x === f.x && r.y === f.y)
   );
+
   return (
     <pattern height={pitch} id={id} patternUnits="userSpaceOnUse" width={pitch}>
       <Ground className={ground} h={pitch} w={pitch} />
@@ -175,6 +177,7 @@ export const DotScreen = ({
   const c = Math.floor(pitch / 2) + 0.5;
   const spills = r > Math.min(c, pitch - c);
   const copies = spills ? NEIGHBOURS : [{ dx: 0, dy: 0, key: "00" }];
+
   return (
     <pattern height={pitch} id={id} patternUnits="userSpaceOnUse" width={pitch}>
       <Ground className={ground} h={pitch} w={pitch} />
@@ -242,10 +245,12 @@ export const DottedLine = ({
   const b = Math.round(vertical ? Math.max(y0, y1) : Math.max(x0, x1));
   const fixed = Math.round(vertical ? x0 : y0);
   const n = Math.max(0, Math.floor((b - a) / pitch));
+
   return (
     <g className={`${className ?? ""} ${tone}`}>
       {Array.from({ length: n + 1 }, (_, k) => {
         const run = a + k * pitch;
+
         return (
           <rect
             height={1}
@@ -293,10 +298,12 @@ export const DotRing = ({
   const end = to ?? from + TURN;
   const n = Math.max(1, Math.round(((end - from) * r) / step));
   const count = full ? n : n + 1;
+
   return (
     <g className={`${className ?? ""} ${tone}`}>
       {Array.from({ length: count }, (_, k) => {
         const a = from + ((end - from) * k) / n;
+
         return (
           <circle
             cx={cx + r * Math.sin(a)}
@@ -320,18 +327,22 @@ const alongPolyline = (points: Vertex[], step: number) => {
   const dots: Vertex[] = [];
   // Distance from the current segment's start to the next dot.
   let next = 0;
+
   for (const [k, b] of points.entries()) {
     const a = points[k - 1];
     const length = a === undefined ? 0 : Math.hypot(b.x - a.x, b.y - a.y);
+
     if (a !== undefined && length > 0) {
       while (next <= length) {
         const t = next / length;
         dots.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
         next += step;
       }
+
       next -= length;
     }
   }
+
   return dots;
 };
 
@@ -377,17 +388,21 @@ const pixelSteps = (x0: number, y0: number, x1: number, y1: number) => {
     1,
     Math.round(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)))
   );
+
   const seen = new Set<string>();
   const cells: { x: number; y: number }[] = [];
+
   for (let k = 0; k <= n; k += 1) {
     const x = Math.floor(x0 + ((x1 - x0) * k) / n);
     const y = Math.floor(y0 + ((y1 - y0) * k) / n);
     const key = `${x},${y}`;
+
     if (!seen.has(key)) {
       seen.add(key);
       cells.push({ x, y });
     }
   }
+
   return cells;
 };
 
@@ -480,6 +495,7 @@ export const EngravedRect = (props: EngravedRectProps) => {
   const ly = props.lead?.y ?? 0;
   const w = Math.max(0, Math.round(props.width) - 1);
   const h = Math.max(0, Math.round(props.height) - 1);
+
   const outline = {
     height: h,
     strokeWidth: 1,
@@ -487,7 +503,9 @@ export const EngravedRect = (props: EngravedRectProps) => {
     x: lx - 0.5,
     y: ly - 0.5,
   };
+
   const translate = `translate(${Math.round(props.x) + 1 - lx} ${Math.round(props.y) + 1 - ly})`;
+
   if (props.whole === undefined) {
     return (
       <g transform={translate}>
@@ -501,9 +519,11 @@ export const EngravedRect = (props: EngravedRectProps) => {
       </g>
     );
   }
+
   const { clear, pitch } = props.whole;
   // The inside's far edge on the pattern, pulled back to a whole tile.
   const end = Math.floor((lx + w - 1 - clear) / pitch) * pitch;
+
   return (
     <g transform={translate}>
       <g
@@ -563,6 +583,7 @@ export const PlateLabel = ({
   const offset = { end: w, middle: w / 2, start: 0 }[anchor];
   const left = Math.round(x - offset);
   const top = Math.round(y - PLATE_H / 2);
+
   return (
     <g>
       <rect

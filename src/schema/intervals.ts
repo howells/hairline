@@ -77,8 +77,10 @@ export const intervalsShape = {
 
 /** One band's edges. */
 export type IntervalPoint = z.infer<typeof intervalPointSchema>;
+
 /** One band. */
 export type Interval = z.infer<typeof intervalSchema>;
+
 /** Where a forecast begins. */
 export type Forecast = z.infer<typeof forecastSchema>;
 
@@ -87,10 +89,13 @@ export const intervalLabel = (band: Interval): string => {
   if (band.label !== undefined) {
     return band.label;
   }
+
   if (Math.abs(band.coverage - 0.5) < 1e-9) {
     return "Half";
   }
+
   const tenths = band.coverage * 10;
+
   return Math.abs(tenths - Math.round(tenths)) < 1e-9
     ? `${Math.round(tenths)} in 10 outcomes`
     : `${Math.round(band.coverage * 100)} in 100 outcomes`;
@@ -106,6 +111,7 @@ export const intervalIssues = (
   intervals: readonly Interval[] | undefined
 ): { message: string; path: (number | string)[] }[] => {
   const days = new Set(dates.map((d) => Date.parse(d)));
+
   return (intervals ?? []).flatMap((band, b) =>
     band.points.flatMap((point, p) => [
       ...(days.has(Date.parse(point.date))

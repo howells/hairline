@@ -37,19 +37,24 @@ interface Step {
 
 const signed = (v: number, format: (v: number) => string) =>
   v < 0 ? `−${format(-v)}` : `+${format(v)}`;
+
 const shownText = (c: Step, format: (v: number) => string) =>
   c.step ? signed(c.shown, format) : format(c.shown);
 
 /** Walk the data, carrying the running level. A total with no value shows the level reached. */
 const resolve = (data: WaterfallDatum[]) => {
   let level = 0;
+
   return data.map((d): Step => {
     if (d.total === true) {
       level = d.value ?? level;
+
       return { from: 0, label: d.label, shown: level, step: false, to: level };
     }
+
     const from = level;
     level += d.value ?? 0;
+
     return { from, label: d.label, shown: d.value ?? 0, step: true, to: level };
   });
 };
@@ -62,9 +67,11 @@ const rungClass = (c: Step, hero: boolean) => {
   if (hero) {
     return "fill-hero";
   }
+
   if (isDeduction(c)) {
     return "";
   }
+
   return c.step ? "fill-l4" : "fill-l3";
 };
 
@@ -73,9 +80,11 @@ const accentClass = (c: Step, hero: boolean) => {
   if (hero) {
     return "fill-hero";
   }
+
   if (isDeduction(c)) {
     return "";
   }
+
   return "fill-l2";
 };
 
@@ -113,6 +122,7 @@ const Block = ({
   const lo = Math.round(Math.min(col.from, col.to) / unit);
   const hi = Math.round(Math.max(col.from, col.to) / unit);
   const top = rungY(floor, hi - 1, pitch);
+
   return (
     <DimGroup
       dim={dim}
@@ -176,6 +186,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
   const hasNote = hasText(noteOf(props));
   const hover = useHover<number>();
   const ids = useTextureIds("waterfall");
+
   const label = cols
     .map((c) => `${c.label} ${shownText(c, format)}`)
     .join(", ");
@@ -198,23 +209,29 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
       {(width) => {
         const plotW = Math.min(width - 32, cols.length * 135);
         const x0 = (width - plotW) / 2;
+
         const x = scaleBand()
           .domain(cols.map((c) => c.label))
           .range([x0, x0 + plotW])
           .paddingInner(0.42)
           .paddingOuter(0.22);
+
         const bw = x.bandwidth();
         const notes = noteLines(noteOf(props), width - 24);
+
         const floor = Math.round(
           height -
             (hasNote ? 50 : 30) -
             Math.max(0, notes.length - 1) * NOTE_LINE
         );
+
         const pitch = rungPitch(
           floor - 34,
           Math.max(...cols.flatMap((c) => [c.from, c.to])) / unit
         );
+
         const hero = props.highlight ?? cols.length - 1;
+
         // Connectors: the running level carried from one column to the next.
         const links = cols.slice(0, -1).map((c, i) => ({
           id: `link-${c.label}`,
@@ -223,6 +240,7 @@ export const RungWaterfall = (props: RungWaterfallProps) => {
           // Level with the top edge of the highest rung at this level.
           y: rungY(floor, Math.round(c.to / unit) - 1, pitch),
         }));
+
         return (
           <ChartSvg
             height={height}

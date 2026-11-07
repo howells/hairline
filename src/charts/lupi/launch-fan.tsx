@@ -85,10 +85,12 @@ const fanLayout = (
 ): FanLayout => {
   const a0 = 4;
   const a1 = 82;
+
   const angleOf = (i: number) =>
     data.length === 1
       ? (a0 + a1) / 2
       : a0 + ((a1 - a0) * i) / (data.length - 1);
+
   // Room above the last ring for the near-upright spoke names.
   const top = Math.max(
     58,
@@ -97,30 +99,39 @@ const fanLayout = (
         16 + sansWidth(d.name, 12) * Math.cos((angleOf(i) * Math.PI) / 180)
     )
   );
+
   // Radius of the last ring: fit the quarter fan plus its outer labels. The
   // fan spans `top` of labels above the last ring down to 0.04 R above centre.
   // The ring labels reach left of the centre; each name runs out along its
   // spoke, so the width allows a radius per name and the tightest one binds.
   const leftEdge = ringLabelW + 2;
+
   const reachOf = (R: number, i: number) => {
     const rad = (angleOf(i) * Math.PI) / 180;
+
     return (R + nameRun(data[i])) * Math.sin(rad) + 7 * Math.cos(rad);
   };
+
   const fitR = Math.min(
     ...data.map((d, i) => {
       const rad = (angleOf(i) * Math.PI) / 180;
+
       return (
         (width - leftEdge - 7 * Math.cos(rad)) / Math.sin(rad) - nameRun(d)
       );
     })
   );
+
   const R = Math.max(150, Math.min((height - top - 6 - noteH) / 0.96, fitR));
   const right = Math.max(...data.map((_, i) => reachOf(R, i)));
   const r0 = R * 0.2;
+
   const sizeR = scaleSqrt()
     .domain([0, Math.max(...data.map((d) => d.size))])
     .range([0, Math.min(11, R / 30)]);
+
   const weeklyMax = Math.max(1, ...data.flatMap((d) => d.weekly ?? [0]));
+
   return {
     a0,
     a1,
@@ -142,6 +153,7 @@ const defaultPeriods = (kind: "demo" | FanUnit) => {
   if (kind === "demo") {
     return ARRIVAL_WEEKS;
   }
+
   return kind === "week" ? 20 : 24;
 };
 
@@ -150,14 +162,17 @@ const ringStep = (unit: FanUnit, periods: number) => {
   if (unit === "week") {
     return 5;
   }
+
   if (periods <= 18) {
     return 3;
   }
+
   return periods <= 48 ? 6 : 12;
 };
 
 const ringsOf = (unit: FanUnit, periods: number) => {
   const step = ringStep(unit, periods);
+
   return Array.from(
     { length: Math.floor(periods / step) },
     (_, k) => (k + 1) * step
@@ -173,11 +188,13 @@ interface RingsProps {
 const Rings = (props: RingsProps) => {
   const { a0, a1, cx, cy, ringR } = props.layout;
   const { rings } = props;
+
   return (
     <g>
       {rings.map((w, k) => {
         const r = ringR(w);
         const [lx, ly] = clock(cx, cy, r, a0 - 4);
+
         return (
           <g className="fade" key={`ring-${w}`} style={stagger(k)}>
             <path
@@ -212,11 +229,14 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
   const [bx, by] = clock(cx, cy, ringR(start), a);
   const [ex, ey] = clock(cx, cy, ringR(weeks), a);
   const [tx, ty] = clock(cx, cy, ringR(weeks) + 10, a);
+
   const since = Array.from(
     { length: Math.max(0, weeks - start) },
     (_, w) => w + 1
   );
+
   const fallback = Math.max(...(datum.weekly ?? [1])) * 0.3;
+
   return (
     <DimGroup
       dim={dim}
@@ -248,6 +268,7 @@ const Spoke = ({ datum, dim, hero, i, layout, onTip, weeks }: SpokeProps) => {
         const half = rungR(datum.weekly?.[w] ?? fallback);
         const ux = Math.cos((a * Math.PI) / 180);
         const uy = Math.sin((a * Math.PI) / 180);
+
         return (
           <g
             className="fade"
@@ -297,6 +318,7 @@ const UNIT_TAG = { month: "M", week: "W" } as const;
 const spanOf = (props: LaunchFanProps) => {
   const demo = props.data === undefined;
   const unit = props.unit ?? (demo ? "week" : "month");
+
   return {
     periodDate: props.periodDate ?? (demo ? arrivalWeekDate : undefined),
     unit,
@@ -314,28 +336,36 @@ export const LaunchFan = (props: LaunchFanProps) => {
   const data = (props.data ?? launchFanDemo).toSorted(
     (a, b) => a.launch - b.launch
   );
+
   const { periodDate, unit, weeks } = spanOf(props);
   const height = props.height ?? 460;
   const format = props.format ?? fmtShare;
   const word = UNIT_WORD[unit];
   const stamp = unit === "week" ? fmtDay : fmtMonth;
+
   const name = (n: number) =>
     periodDate === undefined ? `${UNIT_TAG[unit]}${n}` : stamp(periodDate(n));
+
   const rings = ringsOf(unit, weeks);
+
   const ringLabels =
     periodDate === undefined
       ? rings.map(name)
       : monthTickLabels(rings.map(periodDate));
+
   const ringLabelW = Math.max(0, ...ringLabels.map((l) => sansWidth(l, 11)));
   const [tip, setTip] = useState<FanTip | null>(null);
+
   const hero =
     props.highlight ?? data.at(argMax(data.map((d) => d.size)))?.name;
 
   const tipText = (t: FanTip) => {
     const d = data[t.i];
+
     if (t.week === undefined) {
       return `peak ${format(d.size)}`;
     }
+
     return `${name(d.launch + t.week)} · ${format(d.weekly?.[t.week] ?? 0)}`;
   };
 
@@ -357,6 +387,7 @@ export const LaunchFan = (props: LaunchFanProps) => {
         const layout = fanLayout(width, height, data, weeks, ringLabelW, noteH);
         // On narrow screens the fan is width-bound: drop the unused height.
         const svgH = Math.min(height, Math.round(layout.bottom + 6 + noteH));
+
         return (
           <ChartSvg
             height={svgH}

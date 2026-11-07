@@ -23,12 +23,14 @@ export const signupMonthsDemo: MonthValue[] = Array.from(
   (_, m) => {
     let total = 0;
     let days = 0;
+
     for (const d of activeDaysDemo) {
       if (d.date.getUTCMonth() === m) {
         total += d.value;
         days += 1;
       }
     }
+
     return {
       date: new Date(Date.UTC(2022, m, 1)),
       value: Math.round((total / days) * 10) / 10,

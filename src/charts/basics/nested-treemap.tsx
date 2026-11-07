@@ -63,6 +63,7 @@ const INSET = 1;
 
 /** One engraving per parent, in parent order: stipple, hatch, rules. */
 const TEXTURES = ["stipple", "hatch", "rules"] as const;
+
 type Texture = (typeof TEXTURES)[number];
 
 /** The engraving for a parent group. */
@@ -90,6 +91,7 @@ const layoutTree = (
 ): TreeLayout => {
   const narrow = width < 520;
   const squarify = treemapSquarify.ratio(1.2);
+
   // Largest first at both levels, so the biggest parent and tile lead.
   const groups = data
     .map((g) => ({
@@ -98,9 +100,11 @@ const layoutTree = (
       total: sum(g.children.map((c) => c.value)),
     }))
     .toSorted((a, b) => b.total - a.total);
+
   const root = hierarchy<TreeNode>({ children: groups, name: "root" }).sum(
     (d) => d.value ?? 0
   );
+
   const laid: Rect = treemap<TreeNode>()
     .size([width, height])
     // Wide: parents stand side by side as columns under their title bands.
@@ -115,11 +119,14 @@ const layoutTree = (
       if (n.depth === 0) {
         return narrow ? 12 : 18;
       }
+
       return narrow ? 4 : 7;
     })
     .paddingTop((n) => (n.depth === 1 ? BAND : 0))
     .round(true)(root);
+
   const total = laid.value ?? 1;
+
   const bands = (laid.children ?? []).map((g) => ({
     name: g.data.name,
     share: (g.value ?? 0) / total,
@@ -127,8 +134,10 @@ const layoutTree = (
     x: g.x0 + INSET,
     y: g.y0 + BAND - 12,
   }));
+
   const tiles = laid.leaves().map((leaf) => {
     const group = leaf.parent?.data.name ?? "";
+
     return {
       group,
       h: leaf.y1 - leaf.y0,
@@ -140,6 +149,7 @@ const layoutTree = (
       y: leaf.y0,
     };
   });
+
   return { bands, tiles };
 };
 
@@ -160,17 +170,21 @@ const tileRx = (tile: Tile) => (tile.w < 48 || tile.h < 48 ? 2 : 4);
  */
 const fitOf = (tile: Tile): Fit => {
   const nameW = sansWidth(tile.name, 12);
+
   if (tile.w >= nameW + PAD * 2 && tile.h >= LINE + PAD * 2) {
     return "across";
   }
+
   if (tile.h >= nameW + PAD * 2 && tile.w >= LINE + 4) {
     return "up";
   }
+
   return "none";
 };
 
 /** A plate's height: name and value plates stack this far apart. */
 const PLATE = 15;
+
 /** How far a label's plates sit in from the tile's top-left corner. */
 const LABEL_INSET = 8;
 
@@ -189,11 +203,14 @@ const TileLabel = (props: {
   // Bare values in every tile: the chart's name carries the unit.
   const valueText = props.format(tile.value);
   const value = sansWidth(valueText, 11);
+
   if (fit === "none") {
     return null;
   }
+
   const x = tile.x + LABEL_INSET;
   const y = tile.y + LABEL_INSET;
+
   if (fit === "up") {
     return (
       <g
@@ -212,7 +229,9 @@ const TileLabel = (props: {
       </g>
     );
   }
+
   const valueFits = tile.h >= LINE * 2 + PAD * 2 && tile.w >= value + PAD * 2;
+
   return (
     <g className="fade" style={stagger(props.index, "series")}>
       <PlateLabel
@@ -249,6 +268,7 @@ const TileMark = (props: {
   tile: Tile;
 }) => {
   const { tile } = props;
+
   const box = {
     height: tile.h - 1,
     rx: tileRx(tile),
@@ -257,6 +277,7 @@ const TileMark = (props: {
     x: tile.x + 0.5,
     y: tile.y + 0.5,
   };
+
   return (
     <>
       <rect
@@ -288,6 +309,7 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
   const hover = useHover<string>();
   const textures = useTextureIds("tree");
   const total = sum(data.flatMap((g) => g.children.map((c) => c.value)));
+
   const leaves = data.flatMap((g) =>
     g.children.map((c) => ({
       group: g.name,
@@ -296,8 +318,10 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
       value: c.value,
     }))
   );
+
   const tipped =
     hover.key === null ? undefined : leaves.find((l) => l.id === hover.key);
+
   const label = data
     .map(
       (g) =>
@@ -324,12 +348,14 @@ export const NestedTreemap = (props: NestedTreemapProps) => {
     >
       {(width) => {
         const { bands, tiles } = layoutTree(width, height, data);
+
         const hero =
           props.highlight === undefined
             ? tiles[maxIndex(tiles.map((t) => t.value))]?.id
             : tiles.find(
                 (t) => t.id === props.highlight || t.name === props.highlight
               )?.id;
+
         return (
           <ChartSvg
             height={height}

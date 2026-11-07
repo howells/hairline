@@ -10,6 +10,7 @@ import { ScaleContext, magnification } from "./scale-context";
 import { tipCard } from "./tip-card";
 
 const revealClass = (shown: boolean) => (shown ? "is-shown" : "is-hidden");
+
 /** A plot with nothing to animate carries neither class: it is simply drawn. */
 const phaseClass = (phase: "hidden" | "shown" | "still") =>
   phase === "still" ? "is-still" : revealClass(phase === "shown");
@@ -29,6 +30,7 @@ export const Chart = (props: ChartProps) => {
   const figRef = useRef<HTMLElement>(null);
   const [ref, width] = useMeasure<HTMLDivElement>();
   const shown = useReveal(figRef);
+
   return (
     <figure
       ref={figRef}
@@ -92,17 +94,21 @@ const NO_SCALE: ScaleOptions = {};
 
 export const Plot = (props: PlotProps) => {
   const fixed = props.width !== undefined;
+
   const [ref, measured] = useMeasure<HTMLDivElement>(
     props.width ?? props.initialWidth ?? 0,
     !fixed
   );
+
   const width = props.width ?? measured;
+
   // A fixed-size chart is a server or export render: drawn and ready at once
   // unless it asks to animate. The measured, responsive chart reveals on scroll.
   const entry = useEntry(ref, {
     ...props,
     animate: props.animate ?? (fixed ? "off" : "scroll"),
   });
+
   return (
     <div
       ref={ref}
@@ -148,11 +154,14 @@ export const Tooltip = (props: TooltipProps) => {
   useLayoutEffect(() => {
     const el = ref.current;
     const box = el?.offsetParent;
+
     if (el === null || !(box instanceof HTMLElement)) {
       return;
     }
+
     const frame = box.getBoundingClientRect();
     const svg = box.querySelector("svg")?.getBoundingClientRect();
+
     const spot = placeTip({
       above: place === "beside" ? undefined : TIP_GAP,
       at: { x: props.x * zoom, y: props.y * zoom },
@@ -164,10 +173,12 @@ export const Tooltip = (props: TooltipProps) => {
       clear: (props.clear ?? 0) * zoom,
       tip: { h: el.offsetHeight, w: el.offsetWidth },
     });
+
     el.style.left = `${spot.left}px`;
     el.style.top = `${spot.top}px`;
     el.style.visibility = "visible";
   });
+
   return (
     <output
       ref={ref}
@@ -192,6 +203,7 @@ interface SplitClipsProps {
  */
 export const SplitClips = (props: SplitClipsProps) => {
   const pad = 40;
+
   return (
     <defs>
       <clipPath id={`${props.id}-past`}>

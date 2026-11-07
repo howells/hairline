@@ -15,18 +15,23 @@ import type { PlanRevenue } from "./revenue-by-plan.data";
 /** Baseline of the 0–100% scale, and the rule the ticks hang from. */
 const SCALE_Y = 10;
 const RULE_Y = 24;
+
 /** The slim engraved bar under the ticks, one texture per good. */
 const BAR_Y = RULE_Y + TICK.xl + 6;
+
 /** The dimension mark: a gap under the bar, then a 1px tick down to the label. */
 const DIM_GAP = 4;
+
 /** Baselines of the label block's three lines, from the bar's foot. */
 const NAME_Y = 34;
 const SHARE_Y = 51;
 const MONEY_Y = 67;
+
 /** Growth columns: width, and the room kept over the tallest for its value. */
 const COL_W = 16;
 const COL_TOP = 112;
 const VALUE_ROOM = 20;
+
 /** Room under the growth baseline for its note. */
 const NOTE_ROOM = 22;
 
@@ -38,6 +43,7 @@ const scaleAnchor = (f: number) => {
   if (f === 0) {
     return "start";
   }
+
   return f === 1 ? "end" : "middle";
 };
 
@@ -55,6 +61,7 @@ const Textures = ({ tex }: { tex: (name: string) => string }) => (
 );
 
 const fmtShare = (v: number) => `${Math.round(v * 100)}%`;
+
 /** A price in pounds and pence ("£4.77"). */
 const fmtPounds = (v: number) => `£${v.toFixed(2)}`;
 
@@ -69,10 +76,12 @@ interface Segment extends PlanRevenue {
 const segmentsOf = (data: PlanRevenue[]): Segment[] => {
   const total = sum(data.map((d) => d.revenue));
   let start = 0;
+
   return data
     .toSorted((a, b) => b.revenue - a.revenue)
     .map((d, k) => {
       const share = d.revenue / total;
+
       const seg = {
         ...d,
         end: start + share,
@@ -81,7 +90,9 @@ const segmentsOf = (data: PlanRevenue[]): Segment[] => {
         share,
         start,
       };
+
       start += share;
+
       return seg;
     });
 };
@@ -101,6 +112,7 @@ const layoutOf = (width: number): Layout => {
   const barH = clamp(Math.round(width / 16), 28, 40);
   const base = BAR_Y + barH;
   const height = clamp(Math.round(width * 0.82), 380, 470);
+
   return {
     barH,
     base,
@@ -114,6 +126,7 @@ const layoutOf = (width: number): Layout => {
 const ticksOf = (seg: Segment, last: boolean) =>
   Array.from({ length: 101 }, (_, i) => i).filter((i) => {
     const at = (Math.min(i, 99) + 0.5) / 100;
+
     return at >= seg.start && (last || at < seg.end);
   });
 
@@ -147,6 +160,7 @@ const GrowthColumn = ({
   const top = lay.base + COL_TOP;
   const h = Math.max(4, Math.round(((lay.floor - top) * seg.growth) / gMax));
   const y = lay.floor - h;
+
   return (
     <>
       <VRule
@@ -215,15 +229,18 @@ const SegmentMarks = ({
   const left = Math.round(x(seg.start)) + (hero ? 0 : 2);
   const tone = hero ? "" : "fill-muted";
   const outline = hero ? "stroke-ink" : "stroke-l5";
+
   // A narrow last segment would run its text past the plot: end it at the edge.
   const textW = Math.max(
     sansWidth(seg.plan, 13),
     sansWidth(fmtShare(seg.share), 13),
     sansWidth(fmtPounds(seg.revenue), 13)
   );
+
   const flip = left + textW > width;
   const textX = flip ? width : left;
   const anchor = flip ? "end" : "start";
+
   return (
     <DimGroup dim={dim} onPointerEnter={onEnter}>
       <HitRect
@@ -325,12 +342,14 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
   const hover = useHover<number>();
   const tex = useTextureIds("revenue-by-plan");
   const gMax = Math.max(...segments.map((s) => s.growth));
+
   const label = segments
     .map(
       (s) =>
         `${s.plan} ${fmtShare(s.share)}, ${fmtSignedPct(s.growth * 100)} on 2014`
     )
     .join("; ");
+
   const title = `Average shop prices in 2024 as shares of the four, with the rise on 2014: ${label}`;
 
   return (
@@ -338,6 +357,7 @@ export const RevenueByPlan = (props: RevenueByPlanProps) => {
       {(width) => {
         const lay = layoutOf(width);
         const tipSeg = hover.key === null ? null : segments[hover.key];
+
         return (
           <>
             <ChartSvg

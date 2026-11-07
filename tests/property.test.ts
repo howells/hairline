@@ -131,9 +131,11 @@ const readings = upTo(
   date.chain((d) => reading.map((v) => ({ date: d, value: v }))),
   40
 );
+
 const dailyArea = readings.chain((data) =>
   size.chain((s) => emphasis.map((e) => ({ data, ...e, ...s })))
 );
+
 const dailyLine = readings.chain((data) =>
   size.chain((s) => hero.map((h) => ({ data, ...h, ...s })))
 );
@@ -148,6 +150,7 @@ const holds = <P extends object>(
   assert(
     property(payloads, (props) => {
       const html = renderToString(createElement(Chart, props));
+
       return !NOT_A_NUMBER.test(html);
     }),
     { numRuns: 400, seed: 20_261_101 }
@@ -202,6 +205,7 @@ describe("counterexamples the generators found", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("</svg>");
     expect(html).not.toMatch(NOT_A_NUMBER);
   });
@@ -216,6 +220,7 @@ describe("counterexamples the generators found", () => {
         ...sized,
       })
     );
+
     expect(html).not.toMatch(NOT_A_NUMBER);
   });
 
@@ -229,6 +234,7 @@ describe("counterexamples the generators found", () => {
         ...sized,
       })
     );
+
     expect(html).toContain("</svg>");
     expect(html).not.toMatch(NOT_A_NUMBER);
   });

@@ -17,6 +17,7 @@ const codeTheme = (
 ) => {
   const ink = token(theme, "--hl-ink");
   const quiet = token(theme, "--hl-l2");
+
   return {
     colors: {
       "editor.background": token(theme, "--hl-paper"),

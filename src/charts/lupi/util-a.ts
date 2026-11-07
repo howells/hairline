@@ -9,6 +9,7 @@ export const clock = (
   deg: number
 ): [number, number] => {
   const a = (deg * Math.PI) / 180;
+
   return [cx + r * Math.sin(a), cy - r * Math.cos(a)];
 };
 
@@ -26,6 +27,7 @@ export const sectorPath = (
   const [x1, y1] = clock(cx, cy, r1, a1);
   const [x2, y2] = clock(cx, cy, r0, a1);
   const [x3, y3] = clock(cx, cy, r0, a0);
+
   return `M${x0},${y0}A${r1},${r1} 0 ${large} 1 ${x1},${y1}L${x2},${y2}A${r0},${r0} 0 ${large} 0 ${x3},${y3}Z`;
 };
 
@@ -39,6 +41,7 @@ export const arcPath = (
 ) => {
   const [x0, y0] = clock(cx, cy, r, a0);
   const [x1, y1] = clock(cx, cy, r, a1);
+
   return `M${x0},${y0}A${r},${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1},${y1}`;
 };
 
@@ -54,6 +57,7 @@ export interface Dial {
 export const hhmm = (hour: number) => {
   const h = Math.floor(hour);
   const m = Math.round((hour - h) * 60);
+
   return `${String(h % 24).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 };
 
@@ -71,6 +75,7 @@ export const spanOf = (
   maxSize: number
 ): Span => {
   const a0 = event.hour * 15;
+
   return {
     a0,
     a1: a0 + Math.max(4, event.minutes / 4),

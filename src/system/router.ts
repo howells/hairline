@@ -14,10 +14,13 @@ export const useRoute = () => {
       setRoute(readRoute());
       window.scrollTo(0, 0);
     };
+
     window.addEventListener("hashchange", onHash);
+
     return () => {
       window.removeEventListener("hashchange", onHash);
     };
   }, []);
+
   return route;
 };

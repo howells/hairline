@@ -20,6 +20,7 @@ const fmtDaylight = (v: number) => {
   const minutes = Math.round(v * 60);
   const rest = minutes % 60;
   const hours = `${Math.floor(minutes / 60)}h`;
+
   return rest === 0 ? hours : `${hours} ${rest}m`;
 };
 

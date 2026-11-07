@@ -88,6 +88,7 @@ export const Stem = ({
   ...rest
 }: LineProps & { hero?: boolean; x: number; y0: number; y1: number }) => {
   const at = hero ? Math.round(x) : crisp(x);
+
   return (
     <line
       className={cx("shape-crisp", className)}

@@ -25,18 +25,22 @@ const bars: RungDatum[] = [
   { label: "2022", value: 11 },
   { label: "2023", value: 7 },
 ];
+
 const days = [
   { date: "2024-03-04", value: 3 },
   { date: "2024-03-05", value: 5 },
   { date: "2024-03-06", value: 4 },
 ];
+
 const sized = { height: 320, width: 480 };
 
 const ids = (html: string) =>
   [...html.matchAll(/\sid="(?<id>[^"]*)"/gu)].map((m) => m.groups?.id ?? "");
+
 const duplicates = (list: string[]) => [
   ...new Set(list.filter((id, i) => list.indexOf(id) !== i)),
 ];
+
 /** Every url(#x) reference in the html. */
 const references = (html: string) =>
   [...html.matchAll(/url\(#(?<id>[^)]+)\)/gu)].map((m) => m.groups?.id ?? "");
@@ -57,7 +61,9 @@ const root = (idPrefix?: string): string => {
     createElement(StreamRibbon, { key: "j" }),
     createElement(TickBox, { key: "k" }),
   ];
+
   const page = createElement("div", null, ...charts);
+
   return renderToString(
     idPrefix === undefined
       ? page
@@ -96,6 +102,7 @@ describe("charts sharing a page", () => {
     const html = renderToString(
       createElement(RungBars, { data: bars, idPrefix: "slide-7", ...sized })
     );
+
     const all = ids(html);
     expect(all.length).toBeGreaterThan(0);
     expect(all.every((id) => id.startsWith("slide-7-"))).toBe(true);
@@ -110,11 +117,14 @@ const files = (dir: string): string[] =>
 describe("chart source", () => {
   it("has no literal svg id", () => {
     const base = path.join(import.meta.dirname, "..", "src", "charts");
+
     const tag =
       /<(?:clipPath|mask|pattern|linearGradient|radialGradient|filter)\b[^>]*\sid="/u;
+
     const literal = files(base)
       .filter((f) => f.endsWith(".tsx"))
       .filter((f) => tag.test(readFileSync(f, "utf-8")));
+
     expect(literal).toStrictEqual([]);
   });
 });

@@ -63,9 +63,11 @@ interface Frame {
 
 const cumulativeTops = (layers: Layer[]) => {
   const tops: number[][] = [];
+
   for (const [li, layer] of layers.entries()) {
     tops.push(layer.values.map((v, i) => v + (li > 0 ? tops[li - 1][i] : 0)));
   }
+
   return tops;
 };
 
@@ -88,6 +90,7 @@ const AreaLayers = (props: {
   const { dates, idx, tops, y } = props.frame;
   const x = (i: number) => props.frame.x(dates[i]);
   const stacked = props.layers.map((layer, li) => ({ layer, top: tops[li] }));
+
   return (
     <g clipPath={`url(#${props.tex("clip")}-sweep)`}>
       {stacked.toReversed().map(({ layer, top }) => {
@@ -96,10 +99,12 @@ const AreaLayers = (props: {
             .x((i) => x(i))
             .y0(y(0))
             .y1((i) => y(top[i]))(idx) ?? "";
+
         const fill =
           layer.texture === undefined
             ? layer.fill
             : paint(props.tex(layer.texture));
+
         return <path key={layer.label} d={d} fill={fill} />;
       })}
       {stacked.map(({ layer, top }) => (
@@ -134,12 +139,14 @@ const EdgeLabels = (props: {
 }) => {
   const { height: h, m, tops, width, y } = props.frame;
   const last = props.frame.idx.length - 1;
+
   const ys = relax(
     tops.map((top, li) => y(((tops[li - 1]?.[last] ?? 0) + top[last]) / 2)),
     LABEL_GAP,
     m.top + 6,
     h - m.bottom - 6
   );
+
   return props.layers.map((layer, li) => (
     <text
       key={layer.label}
@@ -168,6 +175,7 @@ const ScrubCursor = (props: {
 }) => {
   const { cx, index } = props;
   const { height: h, m, tops, y } = props.frame;
+
   return (
     <g>
       <Cursor x={cx} y0={m.top} y1={h - m.bottom} />
@@ -198,6 +206,7 @@ const ScrubCursor = (props: {
 /** The value grid with its scale at the left: no rules at the top or sides. */
 const Gridlines = (props: { chart: StackedAreaProps; frame: Frame }) => {
   const { height: h, m, width, y } = props.frame;
+
   return (
     <ValueGrid
       floor={h - m.bottom}
@@ -214,6 +223,7 @@ const Gridlines = (props: { chart: StackedAreaProps; frame: Frame }) => {
 /** The ink baseline, drawn over the layers' foot. */
 const Baseline = (props: { frame: Frame }) => {
   const { height: h, m, width } = props.frame;
+
   return <HRule x0={m.left} x1={width - m.right} y={h - m.bottom} />;
 };
 
@@ -223,6 +233,7 @@ const DATE_CLEAR = 64;
 /** The months along the bottom, giving way to the cursor's date. */
 const Axes = (props: { frame: Frame; cursorX: number | null }) => {
   const { dates, height: h, m, x } = props.frame;
+
   const months = labelledTicks(
     monthTicks(dates[0], dates.at(-1) ?? dates[0]),
     (d) => d,
@@ -230,6 +241,7 @@ const Axes = (props: { frame: Frame; cursorX: number | null }) => {
   ).filter(
     (t) => props.cursorX === null || Math.abs(t.x - props.cursorX) > DATE_CLEAR
   );
+
   return (
     <MonthAxis ticks={months} y={h - m.bottom + 14} width={props.frame.width} />
   );
@@ -250,7 +262,9 @@ export const StackedArea = (props: StackedAreaProps) => {
           right: sideRoom(props.layers),
           top: 8,
         };
+
         const h = props.height;
+
         const frame: Frame = {
           dates: props.dates,
           height: h,
@@ -265,6 +279,7 @@ export const StackedArea = (props: StackedAreaProps) => {
             .domain(props.y.domain)
             .range([h - m.bottom, m.top]),
         };
+
         const positions = props.dates.map((d) => frame.x(d));
         const cx = positions[scrub.index];
 

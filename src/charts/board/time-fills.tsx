@@ -21,17 +21,21 @@ const ShadePattern = (props: { id: string; kind: Shade }) => {
   if (props.kind === "stipple") {
     return <Stipple id={props.id} tone="fill-l3" />;
   }
+
   if (props.kind === "rules") {
     return <Rules angle="upright" id={props.id} tone="fill-l5" />;
   }
+
   if (props.kind === "screen") {
     return <DotScreen id={props.id} r={HALFTONE_R[0]} tone="fill-l4" />;
   }
+
   return <Hatch id={props.id} tone="fill-l4" />;
 };
 
 export const Patterns = (props: { chart: TimeLinesProps; frame: Frame }) => {
   const { tex } = props.frame;
+
   return (
     <defs>
       <ShadePattern id={tex("shade")} kind={props.chart.texture ?? "hatch"} />
@@ -45,17 +49,21 @@ export const Patterns = (props: { chart: TimeLinesProps; frame: Frame }) => {
 const fillPath = (props: TimeLinesProps, frame: Frame) => {
   const [primary, secondary] = props.series;
   const { x, y } = frame;
+
   const region = area<Point>()
     .x((d) => x(d.date))
     .curve(curveOf(props));
+
   if (props.fill === "band" && secondary !== undefined) {
     return region
       .y0((_, i) => y(secondary.data[i].value))
       .y1((d) => y(d.value))(primary.data);
   }
+
   if (props.fill === "area") {
     return region.y0(y(props.y.domain[0])).y1((d) => y(d.value))(primary.data);
   }
+
   return null;
 };
 
@@ -66,15 +74,18 @@ const fillPath = (props: TimeLinesProps, frame: Frame) => {
 const GapFill = (props: { chart: TimeLinesProps; frame: Frame }) => {
   const [a, b] = props.chart.series;
   const { tex, x, y } = props.frame;
+
   if (b === undefined) {
     return null;
   }
+
   const lead = (top: LineSeries, under: LineSeries) =>
     area<Point>()
       .x((d) => x(d.date))
       .y0((_, i) => y(under.data[i].value))
       .y1((d, i) => y(Math.max(d.value, under.data[i].value)))
       .curve(curveOf(props.chart))(top.data) ?? "";
+
   return (
     <g>
       <path d={lead(a, b)} fill={paint(tex("lead-1"))} />
@@ -92,18 +103,22 @@ const MIN_BAND = 8;
  */
 export const SeasonBands = (props: { bands: Band[]; frame: Frame }) => {
   const { m, plotBottom, x } = props.frame;
+
   const refs = props.bands.map((band) => {
     const mid = (x(band.from) + x(band.to)) / 2;
+
     const half = Math.max(
       MIN_BAND / 2,
       Math.abs(x(band.to) - x(band.from)) / 2
     );
+
     return {
       from: x.invert(mid - half).getTime(),
       label: band.label,
       to: x.invert(mid + half).getTime(),
     };
   });
+
   const shared = {
     along: "x" as const,
     plane: {
@@ -115,6 +130,7 @@ export const SeasonBands = (props: { bands: Band[]; frame: Frame }) => {
     refs,
     scale: (ms: number) => x(new Date(ms)),
   };
+
   return (
     <>
       <ReferenceBands {...shared} />
@@ -126,13 +142,18 @@ export const SeasonBands = (props: { bands: Band[]; frame: Frame }) => {
 /** The shade: past the cursor it stops, unless nothing changes there. */
 export const ShadeLayer = (props: { chart: TimeLinesProps; frame: Frame }) => {
   const { chart, frame } = props;
+
   if (chart.fill === "gap") {
     return <GapFill chart={chart} frame={frame} />;
   }
+
   const shade = fillPath(chart, frame);
+
   if (shade === null || shade === undefined) {
     return null;
   }
+
   const clip = frame.future === "none" ? undefined : `url(#${frame.id}-past)`;
+
   return <path d={shade} fill={paint(frame.tex("shade"))} clipPath={clip} />;
 };

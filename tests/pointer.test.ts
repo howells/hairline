@@ -17,6 +17,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+
 /** A page that lays the chart out at 480px and has it in view. */
 class FixedWidth {
   readonly disconnect = vi.fn<() => void>();
@@ -29,8 +30,11 @@ class FixedWidth {
     };
   }
 }
+
 vi.stubGlobal("ResizeObserver", FixedWidth);
+
 vi.stubGlobal("IntersectionObserver", FixedWidth);
+
 vi.stubGlobal("matchMedia", (media: string) => ({
   addEventListener: vi.fn<() => void>(),
   matches: false,
@@ -47,6 +51,7 @@ const bars = createElement(RungBars, {
   height: 320,
   width: 480,
 });
+
 const days = createElement(HairlineLine, {
   data: [
     { date: "2024-03-04", value: 3 },
@@ -57,6 +62,7 @@ const days = createElement(HairlineLine, {
   height: 320,
   width: 480,
 });
+
 const noted = createElement(HairlineLine, {
   data: [
     { date: "2024-03-04", value: 3 },
@@ -68,6 +74,7 @@ const noted = createElement(HairlineLine, {
   notes: [{ at: "2024-03-05", title: "Launch week" }],
   width: 480,
 });
+
 const pairs = createElement(PairedRungs, {
   data: [
     { current: 12, label: "North", previous: 8 },
@@ -77,6 +84,7 @@ const pairs = createElement(PairedRungs, {
   periods: ["2011", "2021"],
   width: 480,
 });
+
 const stacks = createElement(StackedRungs, {
   data: [
     { label: "Mon", parts: [5, 3, 2] },
@@ -85,6 +93,7 @@ const stacks = createElement(StackedRungs, {
   height: 320,
   series: ["Orders", "Samples", "Returns"],
 });
+
 const points = createElement(PlumbScatter, {
   data: [
     { label: "Oak", x: 1, y: 4 },
@@ -100,8 +109,10 @@ const week = (offset: number) =>
     date: `2024-03-0${4 + i}`,
     value: value + offset,
   }));
+
 const facets = (props: ComponentProps<typeof Facets>) =>
   createElement(Facets, props);
+
 const panelled = facets({
   children: (cell) =>
     createElement(HairlineLine, {
@@ -128,6 +139,7 @@ const ranges = createElement(RangeDots, {
 });
 
 const mounted: (() => Promise<void>)[] = [];
+
 const mount = async (chart: ReactElement) => {
   const host = document.createElement("div");
   document.body.append(host);
@@ -144,18 +156,23 @@ const mount = async (chart: ReactElement) => {
     host.remove();
   });
   const svg = host.querySelector("svg");
+
   if (svg === null) {
     throw new Error("the chart drew no svg");
   }
+
   return { host, svg };
 };
 
 const tipOf = (host: HTMLElement) => {
   const tip = host.querySelector("[data-hl-tip]");
+
   return tip instanceof HTMLElement ? tip : null;
 };
+
 const tipText = (host: HTMLElement) => tipOf(host)?.textContent ?? null;
 const tipState = (host: HTMLElement) => tipOf(host)?.dataset.hlTip;
+
 const live = (host: HTMLElement) =>
   host.querySelector("output[aria-live]")?.textContent;
 
@@ -164,23 +181,28 @@ const fire = async (target: Element, event: Event) => {
     target.dispatchEvent(event);
     await Promise.resolve();
   });
+
   return event;
 };
+
 const key = async (target: Element, name: string) =>
   await fire(
     target,
     new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: name })
   );
+
 const mouse = async (target: Element, type: string, x: number, y = 100) =>
   await fire(
     target,
     new MouseEvent(type, { bubbles: true, clientX: x, clientY: y })
   );
+
 const touchmove = async (target: Element) =>
   await fire(
     target,
     new Event("touchmove", { bubbles: true, cancelable: true })
   );
+
 const wait = async (ms: number) => {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(ms);
@@ -196,7 +218,9 @@ const hoverSomewhere = async (
   if (x > 480) {
     throw new Error("no point on the chart showed a tip");
   }
+
   await mouse(svg, "pointermove", x);
+
   return tipOf(host) === null ? await hoverSomewhere(host, svg, x + 4) : x;
 };
 
@@ -214,12 +238,15 @@ const finger = (type: string, x: number, y = 100) => {
     clientX: x,
     clientY: y,
   });
+
   Object.defineProperty(event, "pointerType", { value: "touch" });
+
   return event;
 };
 
 const placed = (host: HTMLElement) => {
   const tip = tipOf(host);
+
   return {
     left: Number(tip?.style.left.replace("px", "")),
     top: Number(tip?.style.top.replace("px", "")),
@@ -465,9 +492,11 @@ describe("the pointer on real charts", () => {
       const { host, svg } = await mount(stacks);
       await key(svg, "Home");
       const text = tipText(host) ?? "";
+
       for (const word of ["Orders", "Samples", "Returns", "Total"]) {
         expect(text).toContain(word);
       }
+
       expect(text.indexOf("Returns")).toBeLessThan(text.indexOf("Total"));
     });
 
@@ -556,6 +585,7 @@ describe("the pointer on real charts", () => {
       const two = placed(host);
       await key(svg, "End");
       const three = placed(host);
+
       for (const at of [one, two, three]) {
         expect(at.visibility).toBe("visible");
         expect(at.left).toBeGreaterThanOrEqual(4);

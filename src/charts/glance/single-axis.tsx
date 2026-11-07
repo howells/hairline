@@ -67,6 +67,7 @@ const oneDp = d3format(".1f");
 /** One station: its own axis line, label and a circle per non-empty hour. */
 const Row = (p: RowProps) => {
   const y = crisp(p.grid.cy(p.i));
+
   return (
     <DimGroup dim={p.dimmed}>
       <HRule kind="rule" x0={p.x0} x1={p.x1} y={p.grid.cy(p.i)} />
@@ -132,6 +133,7 @@ const describe = (
   `Predicted tide height by hour at ${data.length} stations: ${data
     .map((d) => {
       const high = Math.max(...d.values);
+
       return `${d.label} highest ${format(high)} ${unit} at ${columns[d.values.indexOf(high)]} ${zone}`;
     })
     .join(", ")}`;
@@ -148,8 +150,10 @@ export const SingleAxis = (props: SingleAxisProps) => {
   const data = props.data ?? singleAxisDemo;
   const height = props.height ?? 400;
   const n = data[0]?.values.length ?? 24;
+
   const columns =
     props.columns ?? Array.from({ length: n }, (_, h) => hourLabel(h));
+
   const ticks = props.ticks ?? [0, 6, 12, 18];
   const format = props.format ?? oneDp;
   const unit = props.unit ?? "m";
@@ -185,15 +189,19 @@ export const SingleAxis = (props: SingleAxisProps) => {
           right: 0,
           top: 14,
         };
+
         // A circle may reach 0.95 of a step, so the last hour's overhangs its
         // column by 0.45 of a step; the axis stops short to keep it inside.
         const step = (width - m.left - m.right) / (n + 0.45);
+
         // Rows close up when the hours are narrow and the circles small.
         const pitch = Math.min(
           (height - m.top - m.bottom) / data.length,
           Math.max(28, step * 3.2)
         );
+
         const svgH = Math.round(m.top + pitch * data.length + m.bottom);
+
         const grid: Grid = {
           cx: (c) => m.left + step * (c + 0.5),
           cy: (i) => m.top + pitch * (i + 0.5),
@@ -203,6 +211,7 @@ export const SingleAxis = (props: SingleAxisProps) => {
             .range([0, Math.min(pitch * 0.46, step * 0.95)]),
           step,
         };
+
         const floor = svgH - m.bottom;
 
         return (

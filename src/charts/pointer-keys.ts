@@ -23,14 +23,17 @@ export const keyHandler =
   (e: KeyboardEvent<SVGSVGElement>) => {
     const { keys } = ctx;
     const index = ctx.key === null ? -1 : keys.indexOf(ctx.key);
+
     if (STEP_KEYS.has(e.key)) {
       e.preventDefault();
+
       if (keys.length > 0) {
         ctx.cancelLeave();
         ctx.put(keys[stepTo(keys.length, index, e.key)]);
       }
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
+
       if (ctx.pinned) {
         ctx.put(ctx.key, false);
       } else if (keys.length > 0) {

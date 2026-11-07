@@ -29,6 +29,7 @@ export interface FacetCell {
 
 /** Gap between panels, px. */
 export const FACET_GAP = 24;
+
 /** Narrowest a panel gets before the grid drops a column, px. */
 export const FACET_MIN_WIDTH = 240;
 
@@ -59,6 +60,7 @@ export const facetWidth = (
 /** A value scale's ends, rounded outward to tick values. */
 const nice = (lo: number, hi: number): [number, number] => {
   const [a, b] = scaleLinear().domain([lo, hi]).nice(4).domain();
+
   return [a, b];
 };
 
@@ -73,20 +75,24 @@ export const facetDomains = (
   if (scale === "free") {
     return panels.map((p) => nice(...p.domain));
   }
+
   const shared = nice(
     Math.min(...panels.map((p) => p.domain[0])),
     Math.max(...panels.map((p) => p.domain[1]))
   );
+
   return panels.map(() => shared);
 };
 
 /** The key of the panel reaching highest, the default hero. */
 export const highestPanel = (panels: FacetPanel[]) => {
   let [best] = panels;
+
   for (const p of panels) {
     if (p.domain[1] > best.domain[1]) {
       best = p;
     }
   }
+
   return best.key;
 };

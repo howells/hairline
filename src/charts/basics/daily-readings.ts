@@ -25,6 +25,7 @@ export const readingsOf = (data: DailyDatum[]): Reading[] =>
   data
     .flatMap((d) => {
       const date = new Date(d.date);
+
       return Number.isNaN(date.getTime())
         ? []
         : [
@@ -86,6 +87,7 @@ export const heroOf = (
   if (emphasis === undefined) {
     return fallback;
   }
+
   return emphasis === null
     ? -1
     : (live.find((i) => readings[i].key === emphasis) ?? -1);
@@ -104,7 +106,9 @@ export const heroesOf = (
   if (hero === undefined) {
     return new Set([fallback]);
   }
+
   const wanted = new Set(hero);
+
   return new Set(live.filter((i) => wanted.has(readings[i].key)));
 };
 
@@ -148,16 +152,20 @@ const lineBetween = (
   const last = xs.findLastIndex((x) => x <= x1);
   const from = Math.max(0, (first === -1 ? live.length : first) - 1);
   const to = Math.min(live.length - 1, last + 1);
+
   const ys = [
     ...live.slice(from, to + 1).map((i) => o.y(valueAt(readings, i))),
     own,
   ];
+
   const boxes: Range[] = [];
+
   for (const b of [...(o.labels ?? []), ...(o.keepOff ?? [])]) {
     if (b.x1 >= x0 && b.x0 <= x1) {
       boxes.push([b.y0 - 2, b.y1 + 2]);
     }
   }
+
   return [[Math.min(...ys) - LINE_ROOM, Math.max(...ys) + LINE_ROOM], ...boxes];
 };
 
@@ -174,6 +182,7 @@ export const readingStops = (
     const reading = readings[i];
     const py = o.y(valueAt(readings, i));
     const facts = o.facts?.(i, reading) ?? [];
+
     return {
       avoid: (x0, x1) => lineBetween(live, readings, x0, x1, o, py),
       bare: printed.some((b) => b.x1 >= o.x(i) - 8 && b.x0 <= o.x(i) + 8),

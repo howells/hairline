@@ -90,13 +90,16 @@ const segmentPaint = (
   if (frame.thin) {
     return solid(THIN[grammar][when]);
   }
+
   const tone = SOLID[grammar]?.[when] ?? null;
+
   return tone === null ? engraved(frame.tex, grammar) : solid(tone);
 };
 
 /** The engravings, one per grammar, all on paper. */
 const BarPatterns = (props: { tex: (name: string) => string }) => {
   const { tex } = props;
+
   return (
     <defs>
       <Hatch id={tex("s1")} tone="fill-l3" />
@@ -191,8 +194,10 @@ const plotMargin = (props: MonthlyBarsProps, readout: Readout): Margin => {
   if (props.compact === true) {
     return { bottom: 4, left: 2, right: 2, top: 4, ...props.margin };
   }
+
   const top = props.y.side === "right" ? 18 : 8;
   const right = sideLabelled(props, readout) ? sideRoom(props.stacks) : 2;
+
   return {
     bottom: 30,
     ...sideMargins(props.y, 12, right),
@@ -210,6 +215,7 @@ const chartTop = (
   if (props.compact === true) {
     return null;
   }
+
   if (readout === "legend") {
     return (
       <Key
@@ -222,6 +228,7 @@ const chartTop = (
       />
     );
   }
+
   return null;
 };
 
@@ -235,6 +242,7 @@ const SegmentRect = (props: {
 }) => {
   const { bottom, top, width, x } = props;
   const height = Math.max(0, bottom - top);
+
   return (
     <>
       <rect
@@ -269,6 +277,7 @@ const DivergingBar = (props: {
   const y0 = Math.round(frame.y(0));
   const yv = Math.round(frame.y(value));
   const neg = value < 0;
+
   return (
     <g className={`grow-y ${neg ? "from-top" : ""}`} style={stagger(i)}>
       <SegmentRect
@@ -292,22 +301,26 @@ interface Segment {
 const segmentsFor = (props: MonthlyBarsProps, frame: Frame, i: number) => {
   const plan = props.plan?.value;
   let acc = 0;
+
   return props.stacks.flatMap((s): Segment[] => {
     const from = acc;
     acc += s.values[i] ?? 0;
     const id = `${monthKey(frame.months, i)}-${s.tone}`;
+
     if (plan !== undefined && acc > plan) {
       return [
         { bottom: from, grammar: s.tone, id, top: plan },
         { bottom: plan, grammar: "over", id: `${id}-over`, top: acc },
       ];
     }
+
     return [{ bottom: from, grammar: s.tone, id, top: acc }];
   });
 };
 
 /** The least height an overflow cap is drawn at, px, so a sliver still shows. */
 const MIN_OVER = 3;
+
 /** A cap smaller than this either way, px, can't carry its hatch: solid ink. */
 const MIN_HATCH = 8;
 
@@ -325,11 +338,14 @@ const placeSegment = (
   // A 1px paper gap above each lower segment.
   const bottom = Math.round(frame.y(seg.bottom)) - (k > 0 ? 1 : 0);
   const top = Math.round(frame.y(seg.top));
+
   if (seg.grammar !== "over") {
     return { bottom, paint: segmentPaint(seg.grammar, tone, frame), top };
   }
+
   const capTop = Math.min(top, bottom - MIN_OVER);
   const small = bottom - capTop < MIN_HATCH || width < MIN_HATCH;
+
   return {
     bottom,
     paint: small ? solid("fill-hero") : segmentPaint("over", tone, frame),
@@ -345,6 +361,7 @@ const StackedBar = (props: {
 }) => {
   const { frame, i } = props;
   const x = barX(frame, i);
+
   return (
     <g className="grow-y" style={stagger(i, "fine")}>
       {segmentsFor(props.chart, frame, i).map((seg, k) => (
@@ -364,13 +381,17 @@ const Bars = (props: {
   cursor: number;
 }) => {
   const { chart, cursor, frame } = props;
+
   return frame.months.map((month, i) => {
     const tone = phase(i, cursor);
+
     if (chart.diverging === true) {
       const v = chart.stacks[0].values[i];
+
       if (v === null) {
         return null;
       }
+
       return (
         <DivergingBar
           key={month.toISOString()}
@@ -381,6 +402,7 @@ const Bars = (props: {
         />
       );
     }
+
     return (
       <StackedBar
         key={month.toISOString()}
@@ -397,6 +419,7 @@ const Bars = (props: {
 const PlanRule = (props: { plan: Plan; frame: Frame }) => {
   const { m, plotBottom, width, y } = props.frame;
   const { label, value } = props.plan;
+
   return (
     <ReferenceOverlay
       along="y"
@@ -416,13 +439,16 @@ const SideLabels = (props: { stacks: Stack[]; frame: Frame }) => {
   const { m, months, width, y } = props.frame;
   const last = months.length - 1;
   let acc = 0;
+
   return props.stacks.map((s) => {
     const v = s.values[last] ?? 0;
     const mid = acc + v / 2;
     acc += v;
+
     if (s.label === undefined || s.label === "") {
       return null;
     }
+
     return (
       <text
         key={s.label}
@@ -445,6 +471,7 @@ const Axes = (props: {
   ticks: number[];
 }) => {
   const { chart, frame } = props;
+
   return (
     <>
       <MonthAxis
@@ -473,18 +500,22 @@ const ValueReadout = (props: {
   scrubbing: boolean;
 }) => {
   const { chart, frame, index } = props;
+
   const value =
     chart.diverging === true
       ? (chart.stacks[0].values[index] ?? 0)
       : chart.stacks.reduce((sum, s) => sum + (s.values[index] ?? 0), 0);
+
   const end = Math.round(frame.y(value));
   const below = !props.scrubbing && value < 0;
   let y = end - VALUE_LIFT;
+
   if (props.scrubbing) {
     y = frame.m.top - 16;
   } else if (below) {
     y = end + VALUE_LIFT;
   }
+
   return (
     <Label
       anchor="middle"
@@ -509,11 +540,13 @@ const makeFrame = (
 ): Frame => {
   const m = plotMargin(chart, readout);
   const h = chart.height;
+
   const x = scaleBand<number>()
     .domain(months.map((_, i) => i))
     .range([m.left, width - m.right])
     .paddingInner(chart.compact === true ? 0.3 : 0.38)
     .paddingOuter(0.2);
+
   return {
     center: (i: number) => (x(i) ?? 0) + x.bandwidth() / 2,
     height: h,
@@ -597,8 +630,10 @@ export const MonthlyBars = (props: MonthlyBarsProps) => {
   const tex = useTextureIds("mb");
   const months = props.months ?? MONTHS;
   const scrub = useScrub(props.rest ?? 0, months, props.sync);
+
   const cursor =
     props.rest === null && !scrub.isHovering ? Infinity : scrub.index;
+
   const readout = props.readout ?? "none";
 
   return (

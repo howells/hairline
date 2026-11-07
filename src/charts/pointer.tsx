@@ -66,6 +66,7 @@ interface PointerProps<K> extends Omit<BindOptions<K>, "hoverable" | "stops"> {
 /** The column and crosshair at the active stop, and a ringed dot on each series. */
 const Marks = <K,>(props: { active: Stop<K>; bottom: number; top: number }) => {
   const { active } = props;
+
   return (
     <g pointerEvents="none">
       {active.bare === true ? null : (
@@ -93,6 +94,7 @@ const scaled = (avoid: Avoid | undefined, zoom: number): Avoid | undefined => {
   if (avoid === undefined) {
     return undefined;
   }
+
   return (x0, x1) =>
     avoid(x0 / zoom, x1 / zoom).map(
       ([lo, hi]) => [lo * zoom, hi * zoom] as const
@@ -119,9 +121,11 @@ const Tip = (props: TipProps) => {
   // never seen moving.
   useLayoutEffect(() => {
     const el = ref.current;
+
     if (el === null) {
       return;
     }
+
     const place = placeTip({
       above: stop.above === undefined ? undefined : stop.above * zoom,
       at: { x: stop.x * zoom, y: stop.y * zoom },
@@ -131,6 +135,7 @@ const Tip = (props: TipProps) => {
       side,
       tip: { h: el.offsetHeight, w: el.offsetWidth },
     });
+
     el.style.left = `${place.left}px`;
     el.style.top = `${place.top}px`;
     el.style.visibility = "visible";
@@ -142,6 +147,7 @@ const Tip = (props: TipProps) => {
       ref.current.dataset.settled = "true";
     }
   }, []);
+
   return (
     <div
       aria-hidden="true"
@@ -192,20 +198,25 @@ export const Pointer = <K,>(props: PointerProps<K>) => {
   const svg = state.bind({ ...options, hoverable: true, stops });
   const active = stops.find((s) => s.key === state.key) ?? null;
   const { pinned } = state;
+
   const handleEnter = () => {
     state.cancelLeave();
   };
+
   const handleLeave = () => {
     state.leave();
   };
+
   const marks =
     active === null || crosshair === undefined ? null : (
       <Marks active={active} bottom={crosshair.bottom} top={crosshair.top} />
     );
+
   const announced =
     active !== null && (state.via === "key" || pinned)
       ? spoken(active, pinned)
       : "";
+
   return (
     <>
       {children({ active, key: state.key, marks, pinned, svg })}

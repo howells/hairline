@@ -15,6 +15,7 @@ import { Slope } from "@howells/hairline/slope";
 import type { SlopeProps } from "@howells/hairline/slope";
 
 export { deriveTheme } from "@howells/hairline/theme";
+
 export const parts = [
   RungBars,
   DumbbellQueue,
@@ -27,8 +28,11 @@ export const parts = [
   Chart,
   Frame,
 ];
+
 export const kinds = registry.map((chart) => chart.kind);
+
 // Not `any`: a wrong key must be an error.
 // @ts-expect-error -- unknown prop
 export const bad: RungBarsProps = { nonsense: 1 };
+
 export type Slopes = SlopeProps;

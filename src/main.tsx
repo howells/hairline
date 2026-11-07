@@ -8,6 +8,7 @@ import { installTouchHover } from "./system/touch-hover";
 import "./system/app.css";
 
 const root = document.querySelector("#root");
+
 if (root === null) {
   throw new Error("Missing #root element");
 }
@@ -24,6 +25,7 @@ const render = () => {
   if (rendered) {
     return;
   }
+
   rendered = true;
   createRoot(root).render(
     <StrictMode>
@@ -37,6 +39,7 @@ const render = () => {
 // Draw once Inter is in, in both weights the page sets, so no label or caption
 // reflows after it is shown; a slow font network falls back after the wait.
 setTimeout(render, FONT_WAIT_MS);
+
 try {
   await Promise.all([
     document.fonts.load("400 13.5px Inter"),

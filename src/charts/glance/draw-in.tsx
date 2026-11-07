@@ -51,6 +51,7 @@ const useDrawClock = (
   duration: number
 ) => {
   const clock = usePlayhead({ box, end: 1, rate: duration, reduced: "end" });
+
   return {
     handleReplay: clock.handleReplay,
     p: clock.reduced ? 1 : clock.t,
@@ -151,10 +152,13 @@ const Frame = (p: FrameProps) => {
   // Every other month on a wide plot, every quarter on a phone: room for
   // the year on the first.
   const every = p.narrow ? 3 : 2;
+
   const months = utcMonth
     .range(first.date, last.date)
     .filter((d) => d.getUTCMonth() % every === 0);
+
   const labels = monthTickLabels(months);
+
   return (
     <>
       <HRule x0={p.left} x1={p.width} y={p.floor} />
@@ -203,6 +207,7 @@ const valueAt = (data: DrawInDatum[], e: number) => {
   const fi = e * (data.length - 1);
   const i0 = Math.floor(fi);
   const i1 = Math.min(data.length - 1, i0 + 1);
+
   return data[i0].value + (data[i1].value - data[i0].value) * (fi - i0);
 };
 
@@ -227,10 +232,12 @@ export const DrawIn = (props: DrawInProps) => {
   const last = data.at(-1) ?? first;
   const eased = easeTravel(clock.p);
   const tipValue = valueAt(data, eased);
+
   const caption =
     hover.at === null
       ? props.caption
       : `to ${fmtDate(data[hover.at.key].date)}`;
+
   const label = `Cumulative line from ${format(first.value)} to ${format(last.value)}${props.caption === undefined ? "" : `, ${props.caption}`}`;
 
   return (
@@ -256,6 +263,7 @@ export const DrawIn = (props: DrawInProps) => {
           const narrow = width < 480;
           // Narrow: the counter sits above the plot; leave caption room only when there is one.
           const counterH = props.caption === undefined ? 48 : 70;
+
           const m = {
             bottom: 26 + noteSpace(unitNote, width - 16, 18),
             left: 4,
@@ -263,27 +271,34 @@ export const DrawIn = (props: DrawInProps) => {
             right: 48,
             top: narrow ? counterH : 52,
           };
+
           const x = scaleUtc()
             .domain([first.date, last.date])
             .range([m.left, width - m.right]);
+
           const y = scaleLinear()
             .domain([0, last.value])
             .range([height - m.bottom, m.top]);
+
           const pts = data.map((d): [number, number] => [
             x(d.date),
             y(d.value),
           ]);
+
           const xs = pts.map((q) => q[0]);
           const tipX = m.left + (width - m.right - m.left) * eased;
+
           const handleMove = (e: PointerEvent<SVGSVGElement>) => {
             if (clock.p >= 1) {
               const i = bisectCenter(
                 xs,
                 e.clientX - e.currentTarget.getBoundingClientRect().left
               );
+
               hover.show(i, xs[i], y(data[i].value) - 10);
             }
           };
+
           return (
             <ChartSvg
               className="touch-pan-y"

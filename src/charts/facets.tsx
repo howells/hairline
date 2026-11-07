@@ -72,6 +72,7 @@ export const Facets = (props: FacetsProps) => {
     props.width ?? 0,
     props.width === undefined
   );
+
   const width = props.width ?? measured;
   const gap = props.gap ?? FACET_GAP;
   const scale = props.scale ?? "shared";
@@ -97,6 +98,7 @@ export const Facets = (props: FacetsProps) => {
           {panels.map((panel, index) => {
             const first = index % columns === 0;
             const room = first ? gutter : 0;
+
             return (
               <div className="min-w-0" key={panel.key}>
                 <Header

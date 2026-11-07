@@ -27,13 +27,16 @@ export const useInView = (
       },
       { threshold }
     );
+
     if (ref.current !== null) {
       io.observe(ref.current);
     }
+
     return () => {
       io.disconnect();
     };
   }, [ref, threshold]);
+
   return inView;
 };
 
@@ -41,6 +44,7 @@ export const useInView = (
 export const useLive = (box: RefObject<HTMLElement | null>) => {
   const revealed = useReveal(box);
   const inView = useInView(box);
+
   return revealed && inView;
 };
 
@@ -50,20 +54,24 @@ export const useFrame = (running: boolean, onFrame: (dt: number) => void) => {
   useLayoutEffect(() => {
     latest.current = onFrame;
   });
+  const prev = useRef(0);
+  const raf = useRef(0);
   useEffect(() => {
-    let raf = 0;
-    let prev = performance.now();
+    prev.current = performance.now();
+
     const tick = (now: number) => {
-      const dt = Math.min(MAX_STEP, now - prev);
-      prev = now;
+      const dt = Math.min(MAX_STEP, now - prev.current);
+      prev.current = now;
       latest.current(dt);
-      raf = requestAnimationFrame(tick);
+      raf.current = requestAnimationFrame(tick);
     };
+
     if (running) {
-      raf = requestAnimationFrame(tick);
+      raf.current = requestAnimationFrame(tick);
     }
+
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(raf.current);
     };
   }, [running]);
 };
@@ -76,11 +84,13 @@ const useBeat = (running: boolean, every: number, onBeat: () => void) => {
   });
   useEffect(() => {
     let timer = 0;
+
     if (running) {
       timer = window.setInterval(() => {
         latest.current();
       }, every);
     }
+
     return () => {
       window.clearInterval(timer);
     };
@@ -109,6 +119,7 @@ const initialPlayheadTime = (o: PlayheadOptions, reduced: boolean) => {
   if (!reduced) {
     return 0;
   }
+
   return o.reduced === "end" ? o.end : (o.start ?? 0);
 };
 
@@ -124,6 +135,7 @@ export const usePlayhead = (o: PlayheadOptions) => {
   const [initialised, setInitialised] = useState(preference !== null);
   const [t, setT] = useState(() => initialPlayheadTime(o, reduced));
   const [playing, setPlaying] = useState(() => !reduced);
+
   // Hydration uses the server's still frame. Initialise playback once the
   // client's preference arrives, before committing its first live frame.
   if (!initialised && preference !== null) {
@@ -131,6 +143,7 @@ export const usePlayhead = (o: PlayheadOptions) => {
     setT(initialPlayheadTime(o, reduced));
     setPlaying(!reduced);
   }
+
   const done = t >= o.end;
   const running = playing && live && !done;
   const unit = o.step?.unit ?? 1;
@@ -140,6 +153,7 @@ export const usePlayhead = (o: PlayheadOptions) => {
   useBeat(running && reduced, o.step?.every ?? 0, () => {
     setT((cur) => Math.min(o.end, (Math.floor(cur / unit) + 1) * unit));
   });
+
   return {
     done,
     handleReplay: () => {

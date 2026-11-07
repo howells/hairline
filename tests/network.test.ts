@@ -33,6 +33,7 @@ stubBrowser();
 
 // a - b - c - d - e - f in a line, and g on its own.
 const ids = ["a", "b", "c", "d", "e", "f", "g"];
+
 const path = [
   { source: "a", target: "b" },
   { source: "b", target: "c" },
@@ -101,6 +102,7 @@ describe("a target for tiny nodes", () => {
       { r: 30, x: 0, y: 0 },
       { r: 2, x: 33, y: 0 },
     ];
+
     expect(pickNode(mixed, 29, 0, REACH.mouse)).toBe(0);
   });
 
@@ -129,6 +131,7 @@ describe("keys", () => {
 
 const circleNodes = ids.map((id, i) => ({ id, value: 10 + i }));
 const circleLinks = path.map((l) => ({ ...l, value: 5 }));
+
 const ring = (props: { selected?: string } = {}) =>
   createElement(CircularGraph, {
     links: circleLinks,
@@ -139,6 +142,7 @@ const ring = (props: { selected?: string } = {}) =>
 /** The text inside the chart's svg. */
 const words = (host: Element) =>
   [...host.querySelectorAll("svg text")].map((t) => t.textContent);
+
 /** The classes of each link bundle, in link order. */
 const bundles = (host: Element) =>
   [...host.querySelectorAll('svg g[fill="none"]')].map(
@@ -171,10 +175,12 @@ describe(CircularGraph, () => {
     const svg = svgOf(host);
     expect(words(host)).toContain("1 direct, 1 at two steps");
     const circles = [...svg.querySelectorAll("circle")];
+
     const at = (i: number) => ({
       x: Number(circles[i].getAttribute("cx")) + 1,
       y: Number(circles[i].getAttribute("cy")),
     });
+
     await pointerAt(svg, "pointermove", at(2));
     expect(words(host)).toContain("2 direct, 2 at two steps");
     expect(host.textContent).toContain("most with");
@@ -228,6 +234,7 @@ describe(CircularBeadGraph, () => {
     const host = await mount(
       createElement(CircularBeadGraph, { data, selected })
     );
+
     return svgOf(host).querySelectorAll("circle.fill-none.stroke-ink").length;
   };
 
@@ -235,6 +242,7 @@ describe(CircularBeadGraph, () => {
     const host = await mount(
       createElement(CircularBeadGraph, { data, selected: "c" })
     );
+
     expect(words(host)).toContain("2 direct, 2 at two steps");
     const focus = svgOf(host).querySelector("g.pointer-events-none");
     expect(focus?.querySelectorAll("g.stroke-ink path")).toHaveLength(2);
@@ -267,6 +275,7 @@ describe(ForceGraph, () => {
     { id: "Three", value: 6 },
     { id: "Far", value: 3 },
   ];
+
   const links = [
     { source: "Hub", target: "One", value: 5 },
     { source: "Hub", target: "Two", value: 4 },
@@ -278,10 +287,13 @@ describe(ForceGraph, () => {
     const host = await mount(
       createElement(ForceGraph, { links, nodes, selected: "Hub" })
     );
+
     expect(words(host)).toContain("3 direct, 1 at two steps");
+
     const classes = [...host.querySelectorAll('svg g[fill="none"]')].map(
       (g) => g.getAttribute("class") ?? ""
     );
+
     expect(classes.filter((c) => c.includes("stroke-ink"))).toHaveLength(3);
     expect(classes.filter((c) => c.includes("stroke-l3"))).toHaveLength(1);
   });
@@ -312,9 +324,11 @@ describe(ForceGalaxy, () => {
     expect(host.querySelector('[aria-live="polite"]')?.textContent).toMatch(
       new RegExp(`^${start}: \\d+ direct`, "u")
     );
+
     const caption = [...svg.querySelectorAll("g[data-id]")].find(
       (g) => g.getAttribute("visibility") === "visible"
     );
+
     expect(caption?.textContent).toContain(start);
   });
 
@@ -334,14 +348,19 @@ const nameAndNote = async (selected: string) => {
   const host = await mount(
     createElement(CircularBeadGraph, { data: circularGraphDemo, selected })
   );
+
   const svg = svgOf(host);
+
   const note = [...svg.querySelectorAll("text")].find((t) =>
     t.textContent?.includes("direct")
   );
+
   const name = note?.previousElementSibling;
+
   if (note === undefined || name?.textContent !== selected) {
     throw new Error("The caption was not drawn");
   }
+
   return { discs: svg.querySelectorAll("circle"), name, note };
 };
 
@@ -350,15 +369,18 @@ describe("the ring's selection caption", () => {
     "%s: sits inside the ring and touches no node",
     async (selected) => {
       const { discs, name, note } = await nameAndNote(selected);
+
       const spot = {
         x: Number(name.getAttribute("x")),
         y:
           (Number(name.getAttribute("y")) + Number(note.getAttribute("y"))) / 2,
       };
+
       const w = Math.max(
         sansWidth(selected, 11),
         sansWidth(note.textContent ?? "", 11)
       );
+
       const touching = [...discs].filter((c) =>
         touchesDisc(spot, w, 26, {
           r: Number(c.getAttribute("r")),
@@ -366,6 +388,7 @@ describe("the ring's selection caption", () => {
           y: Number(c.getAttribute("cy")),
         })
       );
+
       expect(touching).toHaveLength(0);
     }
   );
@@ -386,12 +409,14 @@ describe(captionSpot, () => {
       { x: -60, y: 20 },
       { x: -60, y: 60 },
     ];
+
     const spot = captionSpot(
       frame,
       { h: 26, w: 60 },
       [{ r: 8, x: 0, y: 0 }],
       [wall]
     );
+
     expect(touchesDisc(spot, 60, 26, { r: 8, x: 0, y: 0 })).toBe(false);
     expect(Math.hypot(spot.x, spot.y)).toBeLessThan(90);
   });

@@ -12,13 +12,18 @@ import { describe, expect, it, vi } from "vitest";
 const nothing = () => {
   /* inert */
 };
+
 class Inert {
   disconnect = nothing;
   observe = nothing;
 }
+
 vi.stubGlobal("IntersectionObserver", Inert);
+
 vi.stubGlobal("ResizeObserver", Inert);
+
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+
 vi.stubGlobal("matchMedia", (media: string) => ({
   addEventListener: nothing,
   matches: false,
@@ -36,15 +41,18 @@ describe("hydration", () => {
       height: 320,
       width: 480,
     };
+
     const html = renderToString(createElement(RungBars, props));
     const root = document.createElement("div");
     root.innerHTML = html;
     document.body.append(root);
 
     const problems: unknown[] = [];
+
     const logged = vi.spyOn(console, "error").mockImplementation((...args) => {
       problems.push(args);
     });
+
     await act(async () => {
       hydrateRoot(root, createElement(RungBars, props), {
         onRecoverableError: (error) => {
@@ -67,6 +75,7 @@ describe("hydration", () => {
       note: "One rung = 100 rings · Source: the county survey · Rounded",
       width: 480,
     };
+
     const html = renderToString(createElement(RungBars, props));
     const root = document.createElement("div");
     root.innerHTML = html;

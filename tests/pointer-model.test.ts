@@ -58,6 +58,7 @@ describe("stepTo: where a key goes", () => {
 describe("placeTip: where the tip stands", () => {
   const bounds = { h: 300, w: 400 };
   const tip = { h: 80, w: 120 };
+
   const flips = (x: number, side: "left" | "right") =>
     placeTip({ at: { x, y: 150 }, bounds, side, tip }).side;
 
@@ -93,6 +94,7 @@ describe("placeTip: where the tip stands", () => {
       bounds,
       tip,
     });
+
     const covers = placed.top <= 160 && placed.top + tip.h >= 140;
     expect(covers).toBe(false);
   });
@@ -115,6 +117,7 @@ describe("placeTip: where the tip stands", () => {
       bounds,
       tip,
     });
+
     expect(placed).toStrictEqual({ left: 40, side: "right", top: 162 });
   });
 
@@ -124,6 +127,7 @@ describe("placeTip: where the tip stands", () => {
       168
     );
     const squat = { h: 150, w: 400 };
+
     const placed = placeTip({
       above: 12,
       at: { x: 100, y: 60 },
@@ -131,6 +135,7 @@ describe("placeTip: where the tip stands", () => {
       bounds: squat,
       tip,
     });
+
     expect(placed.left).toBe(112);
   });
 
@@ -140,6 +145,7 @@ describe("placeTip: where the tip stands", () => {
       at: { x: 300, y: 150 },
       avoid: (x0, x1) => {
         asked.push([x0, x1]);
+
         return [[0, 10]];
       },
       bounds,
@@ -150,12 +156,14 @@ describe("placeTip: where the tip stands", () => {
 
   it("flips to the other side when the preferred one would cover what it must keep off", () => {
     const label = [[0, 400]] as const;
+
     const placed = placeTip({
       at: { x: 150, y: 150 },
       avoid: (x0) => (x0 > 150 ? label : []),
       bounds,
       tip,
     });
+
     expect(placed.side).toBe("left");
   });
 
@@ -169,6 +177,7 @@ describe("placeTip: where the tip stands", () => {
       bounds,
       tip,
     });
+
     const covers = placed.top < 200 && placed.top + tip.h > 100;
     expect(covers).toBe(false);
   });
@@ -180,6 +189,7 @@ describe("placeTip: where the tip stands", () => {
       bounds: { h: 100, w: 400 },
       tip: { h: 100, w: 120 },
     });
+
     expect(placed.top).toBe(4);
   });
 });

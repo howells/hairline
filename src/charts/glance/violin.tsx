@@ -72,6 +72,7 @@ const statsOf = (g: ViolinGroup): GroupStats => {
   const sorted = g.values.toSorted((a, b) => a - b);
   const [lo = 0, hi = 0] = extent(sorted);
   const at = Array.from({ length: 48 }, (_, k) => lo + ((hi - lo) * k) / 47);
+
   return {
     at,
     dens: density(sorted, at, silverman(sorted) * 1.1),
@@ -88,6 +89,7 @@ const medianHalf = (s: GroupStats, half: number) => {
   const medK = Math.round(
     ((s.med - s.lo) / (s.hi - s.lo || 1)) * (s.at.length - 1)
   );
+
   return (s.dens[medK] / Math.max(...s.dens)) * half;
 };
 
@@ -119,9 +121,11 @@ interface FitInput {
  */
 const fitViolins = (p: FitInput) => {
   const left = labelRoom(p.ticks, "t-axis") + 8;
+
   const overhang = (right: number) => {
     const band = bandsOf(p.labels, left, p.width - right);
     const bw = band.bandwidth();
+
     return Math.max(
       ...p.labels.map(
         (l, i) =>
@@ -134,19 +138,24 @@ const fitViolins = (p: FitInput) => {
       )
     );
   };
+
   if (overhang(0) <= 0) {
     return { left, right: 0 };
   }
+
   // Overhang only falls as the margin grows: bisect for the smallest that fits.
   let [lo, hi] = [0, p.width / 2];
+
   for (let k = 0; k < 20; k += 1) {
     const mid = (lo + hi) / 2;
+
     if (overhang(mid) > 0) {
       lo = mid;
     } else {
       hi = mid;
     }
   }
+
   return { left, right: hi };
 };
 
@@ -156,12 +165,15 @@ const Figure = (p: FigureProps) => {
   // Each violin is scaled to its own peak, so shapes compare at a glance.
   const peak = Math.max(...s.dens);
   const wd = (d: number) => (d / peak) * p.half;
+
   const silhouette = area<number>()
     .curve(curveBasis)
     .y((_, k) => p.y(s.at[k]))
     .x0((_, k) => p.cx - wd(s.dens[k]))
     .x1((_, k) => p.cx + wd(s.dens[k]));
+
   const medW = medianHalf(s, p.half);
+
   return (
     <DimGroup
       dim={p.dimmed}
@@ -223,10 +235,12 @@ export const Violin = (props: ViolinProps) => {
   const unit = props.unit ?? "towers";
   const hover = useHover<number>();
   const stats = useMemo(() => data.map((g) => statsOf(g)), [data]);
+
   const order = ranks(
     stats.map((s) => s.med),
     props.lowIsBest ?? true
   );
+
   const maxV = Math.max(...stats.map((s) => s.hi));
   const heroIndex = props.highlight ?? order.indexOf(0);
   const tex = useTextureIds("violin");
@@ -252,10 +266,12 @@ export const Violin = (props: ViolinProps) => {
       {(width) => {
         const narrow = width < 480;
         const bottom = 32 + noteSpace(noteOf(props), width - 16, 20);
+
         const y = scaleLinear()
           .domain([0, maxV])
           .nice()
           .range([height - bottom, 12]);
+
         const { left, right } = fitViolins({
           format,
           labels: data.map((g) => g.label),
@@ -268,12 +284,15 @@ export const Violin = (props: ViolinProps) => {
             ),
           width,
         });
+
         const m = { bottom, left, right, top: 12 };
+
         const x = bandsOf(
           data.map((g) => g.label),
           left,
           width - right
         );
+
         const bw = x.bandwidth();
         const floor = height - m.bottom;
 

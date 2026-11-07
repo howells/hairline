@@ -37,8 +37,10 @@ interface StackedRungsProps extends NoteProps {
  */
 const RUNG_CLASSES = ["fill-l2", "fill-l4", ""];
 const ACCENT_CLASSES = ["fill-l2", "fill-l3"];
+
 /** Whole px a count-off rung reaches past its column on each side. */
 const ACCENT_REACH = 2;
+
 /** Tip swatches of the three engravings, bottom first. */
 const SWATCHES = ["bg-l2", "bg-l4", "bg-l3"];
 const pick = (list: string[], k: number) => list[Math.min(k, list.length - 1)];
@@ -80,11 +82,13 @@ interface Segment {
 const segmentsOf = (d: StackDatum, unit: number) => {
   const segments: Segment[] = [];
   let slot = 0;
+
   for (const [k, value] of d.parts.entries()) {
     const n = Math.round(value / unit);
     segments.push({ id: `${d.label}-part-${k}`, k, n, start: slot, value });
     slot += n + 1;
   }
+
   return segments;
 };
 
@@ -119,6 +123,7 @@ const Column = ({
 }: ColumnProps) => {
   const top = rungY(floor, slotsOf(datum, unit) - 1, pitch);
   const segments = segmentsOf(datum, unit);
+
   return (
     <DimGroup dim={dim}>
       {segments.map((seg) => (
@@ -190,8 +195,10 @@ export const StackedRungs = (props: StackedRungsProps) => {
   const hasNote = hasText(noteOf(props));
   const ids = useTextureIds("stack");
   const partName = (k: number) => series.at(k) ?? `#${k + 1}`;
+
   const breakdown = (d: StackDatum) =>
     d.parts.map((p, k) => `${partName(k)} ${format(p)}`).join(" · ");
+
   const label = data
     .map((d) => `${d.label} ${format(sum(d.parts))}: ${breakdown(d)}`)
     .join("; ");
@@ -201,26 +208,32 @@ export const StackedRungs = (props: StackedRungsProps) => {
       {(width) => {
         const plotW = Math.min(width - 32, data.length * 135);
         const x0 = (width - plotW) / 2;
+
         const x = scaleBand()
           .domain(data.map((d) => d.label))
           .range([x0, x0 + plotW])
           .paddingInner(0.3)
           .paddingOuter(0.3);
+
         const band = x.bandwidth();
         const labelRoom = width < 440 ? 18 : 26;
         const bw = Math.round(Math.min(56, band - labelRoom - 6));
         const notes = noteLines(noteOf(props), width - 24);
+
         const floor = Math.round(
           height -
             (hasNote ? 50 : 30) -
             Math.max(0, notes.length - 1) * NOTE_LINE
         );
+
         const pitch = rungPitch(
           floor - 52,
           Math.max(...data.map((d) => slotsOf(d, unit))),
           10
         );
+
         const hero = props.highlight ?? maxIndex(data.map((d) => sum(d.parts)));
+
         const stops = data.map((d, i) => ({
           above: 28,
           clear: (bw + labelRoom) / 2,
@@ -230,6 +243,7 @@ export const StackedRungs = (props: StackedRungsProps) => {
           x: (x(d.label) ?? 0) + band / 2,
           y: rungY(floor, slotsOf(d, unit) - 1, pitch),
         }));
+
         return (
           <Pointer
             axis="x"

@@ -28,5 +28,6 @@ export const paint = (id: string) => `url(#${id})`;
  */
 export const useTextureIds = (prefix: string) => {
   const base = useSvgId(prefix);
+
   return (name: string) => `${base}-${name}`;
 };

@@ -22,6 +22,7 @@ interface KeepOff {
 export const dailyKeepOff = (o: KeepOff): Box[] => {
   const { frame, floor } = o.notes;
   const { plane } = o.references;
+
   return [
     ...dailyNoteBoxes(o.notes),
     ...(o.forecasting

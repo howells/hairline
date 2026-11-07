@@ -69,10 +69,13 @@ const arcLayout = (
   // at 50°) need it; the last row's ends and bubbles reach 0.2 of a row below
   // its slot, then a little air and any footnote.
   const n = data.rows.length;
+
   const pitchFor = (top: number) =>
     clamp((height - top - 8 - noteH) / (n + 0.2), 22, 40);
+
   const colW = data.cols.map((c) => sansWidth(c, 11));
   const longest = Math.max(0, ...colW);
+
   // Column pitch decides the tilt, the tilt the headroom and the headroom the
   // row pitch; the composition (row names, bubbles and the last slanted name)
   // is then centred in the width.
@@ -85,31 +88,41 @@ const arcLayout = (
     const rows = pitchFor(head);
     const rad = Math.min(pitch, rows) * 0.4;
     const left = labelW + 8 + rad;
+
     const right = Math.max(
       pitch * (nC - 1) + rad,
       ...colW.map((w, c) => c * pitch + 8 + w * run + 3 * rise)
     );
+
     return { head, left, right, rows, tilt };
   };
+
   let colPitch = 44;
   let fit = columnFit(colPitch);
+
   while (colPitch > 14 && fit.left + fit.right > width) {
     colPitch -= 0.25;
     fit = columnFit(colPitch);
   }
+
   const { head: top, left, right, rows: rowPitch, tilt: colTilt } = fit;
   const spanW = colPitch * (nC - 1);
   const x0 = left + Math.max(0, (width - left - right) / 2);
   const xMid = x0 + spanW / 2;
   const bow = rowPitch * 0.5;
+
   const arcY = (r: number, x: number) => {
     const u = (x - xMid) / (spanW / 2 || 1);
+
     return top + bow + r * rowPitch + rowPitch * 0.3 - bow * (1 - u * u);
   };
+
   const radius = scaleSqrt()
     .domain([0, max])
     .range([0, Math.min(colPitch, rowPitch) * 0.4]);
+
   const steps = Array.from({ length: 41 }, (_, k) => x0 + (spanW * k) / 40);
+
   return {
     arcY,
     bottom: top + (n + 0.2) * rowPitch + 8 + noteH,
@@ -138,6 +151,7 @@ const Frame = (props: {
 }) => {
   const { arcY, colTilt, colX, curve, rowLabelX, rowPitch, x0 } = props.layout;
   const { hover } = props;
+
   return (
     <g>
       {props.data.cols.map((col, ci) => (
@@ -193,13 +207,16 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
   const format = props.format ?? ((v: number) => `${fmtInt(v)} ha`);
   const noun = props.noun ?? "of new woodland";
   const [hover, setHover] = useState<CellHover | null>(null);
+
   const cells: MatrixCell[] = data.values.flatMap((row, r) =>
     row.map((v, c) => ({ c, id: `${data.rows[r]}-${data.cols[c]}`, r, v }))
   );
+
   const max = Math.max(1, ...cells.map((d) => d.v));
   const ranked = cells.toSorted((a, b) => b.v - a.v).slice(0, props.top ?? 3);
   const topIds = new Set(ranked.map((d) => d.id));
   const heroId = ranked.at(0)?.id;
+
   const inCross = (d: MatrixCell) =>
     hover === null || hover.r === d.r || hover.c === d.c;
 
@@ -223,6 +240,7 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
         const noteH = noteSpace(noteOf(props), width - 16, 20);
         const layout = arcLayout(width, height, data, max, noteH);
         const svgH = Math.min(height, Math.round(layout.bottom));
+
         return (
           <>
             {props.glyphKey === false ? null : (
@@ -243,6 +261,7 @@ export const ArcMatrix = (props: ArcMatrixProps) => {
                 const y = layout.arcY(d.r, x);
                 const rr = layout.radius(d.v);
                 const isTop = topIds.has(d.id);
+
                 return (
                   <g
                     className={`transition-opacity ${inCross(d) ? "" : "opacity-30"}`}

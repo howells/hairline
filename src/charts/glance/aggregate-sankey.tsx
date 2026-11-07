@@ -90,10 +90,12 @@ const labelMargins = (
 ): Margins => {
   const cap = Math.max(narrow ? 84 : 128, width * 0.4);
   const room = cap - LABEL_GAP - LABEL_EDGE;
+
   const sourceLines = new Map(
     data.sources.map((name) => {
       const value = valueOf(name);
       const full = value === "" ? name : `${name} · ${value}`;
+
       const lines =
         labelWidth(full) <= room
           ? [full]
@@ -101,13 +103,16 @@ const labelMargins = (
               ...wrapWords(name, room, labelWidth),
               ...(value === "" ? [] : [value]),
             ];
+
       return [name, lines] as const;
     })
   );
+
   const widest = Math.max(
     0,
     ...[...sourceLines.values()].flat().map((l) => labelWidth(l))
   );
+
   // Target labels carry their total inline: "Free 55".
   const widestTarget = Math.max(
     0,
@@ -115,14 +120,17 @@ const labelMargins = (
       (t) => labelWidth(valueOf(t) === "" ? t : `${t} ${valueOf(t)}`) + 6
     )
   );
+
   // Each side needs its labels; any spare room is split so the ink is centred.
   const needLeft = Math.ceil(widest) + LABEL_GAP + LABEL_EDGE;
   const needRight = Math.ceil(widestTarget) + LABEL_GAP + LABEL_EDGE;
+
   const spare = Math.max(
     0,
     (narrow ? 84 : 128) - needLeft,
     (narrow ? 52 : 92) - needRight
   );
+
   return {
     left: needLeft + spare,
     right: needRight + spare,
@@ -139,6 +147,7 @@ const layoutGraph = (
   margins: Margins
 ): Graph => {
   const m = { left: margins.left, right: margins.right, top: 8 };
+
   const nodes: NodeExtra[] = [
     ...data.sources.map((name, index) => ({
       id: `s:${name}`,
@@ -153,6 +162,7 @@ const layoutGraph = (
       side: "target" as const,
     })),
   ];
+
   const links = data.flows.map((f) => ({
     from: f.from,
     source: `s:${f.from}`,
@@ -160,6 +170,7 @@ const layoutGraph = (
     to: f.to,
     value: f.value,
   }));
+
   return sankey<NodeExtra, LinkExtra>()
     .nodeId((d) => d.id)
     .nodeWidth(narrow ? 10 : 15)
@@ -175,9 +186,11 @@ const isLit = (focus: Focus | null, f: SankeyFlow, k: number) => {
   if (focus === null) {
     return true;
   }
+
   if (focus.flow !== null) {
     return focus.flow === k;
   }
+
   return f.from === focus.node || f.to === focus.node;
 };
 
@@ -189,10 +202,13 @@ const nodeLit = (
   if (focus === null || focus.node === name) {
     return true;
   }
+
   if (focus.flow === null) {
     return false;
   }
+
   const flow = data.flows[focus.flow];
+
   return flow.from === name || flow.to === name;
 };
 
@@ -211,9 +227,11 @@ interface RibbonsProps {
 /** The x of a node's right (`x1`) or left (`x0`) edge, by its id. */
 const edgeOf = (graph: Graph, id: string, edge: "x0" | "x1") => {
   const x = graph.nodes.find((n) => n.id === id)?.[edge];
+
   if (x === undefined) {
     throw new Error(`The sankey has no node ${id}`);
   }
+
   return x;
 };
 
@@ -229,9 +247,11 @@ const leads = (p: RibbonsProps, from: string, k: number) =>
  */
 const Ribbons = (p: RibbonsProps) => {
   const ribbon = sankeyLinkHorizontal<NodeExtra, LinkExtra>();
+
   const order = p.graph.links
     .map((l, k) => ({ k, l, lead: leads(p, l.from, k) }))
     .toSorted((a, b) => Number(a.lead) - Number(b.lead));
+
   return (
     <g>
       {order.map(({ l, k, lead }) => (
@@ -288,6 +308,7 @@ const SourceLabel = (p: SourceLabelProps) => {
       </Label>
     );
   }
+
   return (
     <Label
       anchor="end"
@@ -319,6 +340,7 @@ const NodeMark = (p: NodeProps) => {
   const y0 = p.node.y0 ?? 0;
   const y1 = p.node.y1 ?? 0;
   const mid = (y0 + y1) / 2;
+
   return (
     <DimGroup
       dim={!p.lit}
@@ -378,23 +400,29 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
   const unit = props.unit ?? "MPs";
   const totals = props.totals ?? true;
   const [focus, setFocus] = useState<Focus | null>(null);
+
   const srcRank = ranks(
     data.sources.map((s) =>
       data.flows.filter((f) => f.from === s).reduce((a, f) => a + f.value, 0)
     )
   );
+
   const flow = useSvgId("flow");
   const heroSource = props.highlight ?? data.sources[srcRank.indexOf(0)] ?? "";
+
   const nodeFill = (n: { name: string; side: "source" | "target" }) => {
     if (n.side === "target") {
       return "fill-l4";
     }
+
     return n.name === heroSource ? "fill-hero" : "fill-l3";
   };
+
   const total = (name: string) =>
     data.flows
       .filter((f) => f.from === name || f.to === name)
       .reduce((a, f) => a + f.value, 0);
+
   const label = `Flows from ${data.sources.join(", ")} into ${data.targets.join(", ")}`;
 
   return (
@@ -424,9 +452,11 @@ export const AggregateSankey = (props: AggregateSankeyProps) => {
       {(width) => {
         const narrow = width < 480;
         const bottom = 8 + noteSpace(noteOf(props), width - 16, 32);
+
         const margins = labelMargins(data, width, narrow, (name) =>
           totals ? format(total(name)) : ""
         );
+
         const graph = layoutGraph(data, width, height, narrow, bottom, margins);
 
         return (

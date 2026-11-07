@@ -9,8 +9,11 @@ export const KINDS = [
   "slope",
   "dumbbell-queue",
 ] as const;
+
 export const THEMES = ["dark", "light"] as const;
+
 export const SLIDE_IDS = KINDS.flatMap((kind) =>
   THEMES.map((theme) => `${kind}-${theme}`)
 );
+
 export const SLIDE_COUNT = 14;

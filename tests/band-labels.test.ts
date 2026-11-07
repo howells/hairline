@@ -32,12 +32,14 @@ describe("fitBandLabels: labels under narrow bands", () => {
 
   it("thins words to every other band when even short they touch, keeping the hero", () => {
     const words = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
     const shown = fitBandLabels(words, {
       keep: [3],
       measure,
       room: 8,
       step: 40,
     });
+
     expect(shown[3]).toBe("Thursday");
     const printed = shown.filter((l) => l !== null);
     expect(printed.length).toBeLessThan(words.length);

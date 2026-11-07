@@ -21,7 +21,9 @@ const LINK_INK = {
   "link-alert": { solid: "var(--hl-alert)", tone: "fill-alert" },
   "link-hot": { solid: "var(--hl-l3)", tone: "fill-l3" },
 } as const;
+
 type LinkKey = keyof typeof LINK_INK;
+
 const LINK_KEYS: LinkKey[] = ["link", "link-alert", "link-hot"];
 
 interface NodeIn {
@@ -30,16 +32,19 @@ interface NodeIn {
   stage: number;
   alert?: boolean;
 }
+
 interface LinkIn {
   source: string;
   target: string;
   value: number;
 }
+
 interface FunnelData {
   nodes: NodeIn[];
   links: LinkIn[];
   stages: string[];
 }
+
 /**
  * Each link keeps its endpoint ids as `from`/`to`: d3-sankey replaces
  * `source`/`target` with node objects during layout, but leaves extra fields
@@ -49,7 +54,9 @@ interface LinkEnds {
   from: string;
   to: string;
 }
+
 type FunnelNode = SankeyNode<NodeIn, LinkEnds>;
+
 type FunnelLink = SankeyLink<NodeIn, LinkEnds>;
 
 const linkKey = (l: LinkEnds) => `${l.from}>${l.to}`;
@@ -58,6 +65,7 @@ const linkTexture = (alert: boolean, hot: boolean): LinkKey => {
   if (alert) {
     return "link-alert";
   }
+
   return hot ? "link-hot" : "link";
 };
 
@@ -87,17 +95,23 @@ interface Box {
 const NAME_CHAR = 6.6;
 const VALUE_CHAR = 7.4;
 const STAGE_CHAR = 6.2;
+
 /** Clear space kept between neighbouring labels, px. */
 const LABEL_GAP = 4;
+
 /** Top margin: room for the stage headings and the labels over the top nodes. */
 const TOP = 70;
+
 /** Bottom margin, px. */
 const BOTTOM = 8;
+
 /** Crowded funnels stack headings in two rows and labels in two tiers. */
 const TOP_CROWDED = 92;
 const HEADING_Y = [12, 26];
+
 /** Baseline of the name line, from the node's top (or bottom, for "below"). */
 const NAME_DY = { above: -21, below: 15, raised: -47 };
+
 /** The value line sits this far under the name line. */
 const VALUE_DY = 14;
 
@@ -121,9 +135,11 @@ const labelBox = (n: FunnelNode, placement: Placement): Box => {
   const { x0, x1, y0, y1 } = nodeBox(n);
   const name = n.label.length * NAME_CHAR;
   const value = valueText(n).length * VALUE_CHAR;
+
   if (placement === "beside") {
     const mid = (y0 + y1) / 2;
     const left = x1 + 10;
+
     return {
       x0: left,
       x1: left + name + NAME_CHAR + value,
@@ -131,7 +147,9 @@ const labelBox = (n: FunnelNode, placement: Placement): Box => {
       y1: mid + 7,
     };
   }
+
   const nameY = (placement === "below" ? y1 : y0) + NAME_DY[placement];
+
   return {
     x0,
     x1: x0 + Math.max(name, value),
@@ -154,6 +172,7 @@ const defaultPlacement = (n: FunnelNode, lastStage: number): Placement => {
   if (isSource(n)) {
     return "raised";
   }
+
   return endsHere(n, lastStage) ? "beside" : "above";
 };
 
@@ -177,6 +196,7 @@ const headingsCollide = (stages: string[], stageX: number[]) =>
 
 const labelsCollide = (nodes: FunnelNode[], lastStage: number) => {
   const boxes = nodes.map((n) => labelBox(n, defaultPlacement(n, lastStage)));
+
   return nodes.some((n, i) =>
     collides(
       boxes[i],
@@ -195,6 +215,7 @@ const placementOptions = (n: FunnelNode, lastStage: number): Placement[] => {
   if (n.stage === lastStage) {
     return ["beside"];
   }
+
   return endsHere(n, lastStage)
     ? ["beside", "below", "above"]
     : ["above", "raised", "below"];
@@ -206,8 +227,10 @@ const placementOrder = (a: FunnelNode, b: FunnelNode, lastStage: number) => {
     if (n.stage === lastStage) {
       return -2;
     }
+
     return endsHere(n, lastStage) ? -1 : n.stage;
   };
+
   return rank(a) - rank(b) || (a.y0 ?? 0) - (b.y0 ?? 0);
 };
 
@@ -222,18 +245,23 @@ const placeLabels = (
 ) => {
   const placed: Box[] = [];
   const result = new Map<string, Placement>();
+
   for (const n of nodes.toSorted((a, b) => placementOrder(a, b, lastStage))) {
     const options = placementOptions(n, lastStage);
+
     const fits = (p: Placement) => {
       const box = labelBox(n, p);
+
       return (
         box.y0 >= 0 && box.y1 <= height && !collides(box, n, nodes, placed)
       );
     };
+
     const choice = options.find(fits) ?? options[0];
     result.set(n.id, choice);
     placed.push(labelBox(n, choice));
   }
+
   return result;
 };
 
@@ -241,17 +269,21 @@ const placeLabels = (
 const rightRoom = (data: FunnelData) => {
   const last = data.stages.length - 1;
   const texts: string[] = [];
+
   for (const n of data.nodes) {
     if (n.stage === last) {
       let value = 0;
+
       for (const l of data.links) {
         if (l.target === n.id) {
           value += l.value;
         }
       }
+
       texts.push(`${n.label} ${fmtInt(value)}`);
     }
   }
+
   return 10 + nameWidth(texts, 1);
 };
 
@@ -262,6 +294,7 @@ const layoutFunnel = (
   top: number
 ) => {
   const m = { bottom: BOTTOM, left: 4, right: rightRoom(data), top };
+
   return sankey<NodeIn, LinkEnds>()
     .nodeId((n) => n.id)
     .nodeAlign((n) => n.stage)
@@ -286,20 +319,24 @@ const FunnelLinks = (props: {
   onHover: (key: string) => void;
 }) => {
   const { hover } = props;
+
   const isLit = (l: FunnelLink) =>
     hover === null ||
     hover === linkKey(l) ||
     hover === l.from ||
     hover === l.to;
+
   const alerts = new Set(
     props.nodes.flatMap((n) => (n.alert === true ? [n.id] : []))
   );
+
   return (
     <g className="fade">
       {props.links.map((l) => {
         const alert = alerts.has(l.to);
         const lit = isLit(l);
         const key = linkKey(l);
+
         return (
           <path
             key={key}
@@ -337,8 +374,10 @@ const NodeLabel = (props: {
   const y1 = node.y1 ?? 0;
   const valueClass = VALUE;
   const name = node.label;
+
   if (placement === "beside") {
     const box = labelBox(node, "beside");
+
     return (
       <>
         {props.plate && (
@@ -363,8 +402,10 @@ const NodeLabel = (props: {
       </>
     );
   }
+
   const nameY =
     (placement === "below" ? Math.max(y0 + 2, y1) : y0) + NAME_DY[placement];
+
   return (
     <text className={`${LABEL} t-halo fade fill-text`} x={x0}>
       <tspan fill="var(--hl-muted)" y={nameY}>
@@ -382,6 +423,7 @@ const nodeFill = (n: FunnelNode, heroId: string | undefined) => {
   if (n.alert === true) {
     return "var(--hl-alert)";
   }
+
   return n.id === heroId ? "var(--hl-hero)" : "var(--hl-l3)";
 };
 
@@ -398,11 +440,13 @@ const FunnelNodes = (props: {
   onHover: (id: string) => void;
 }) => {
   const heroId = heroNode(props.nodes, props.lastStage);
+
   return props.nodes.map((n, i) => {
     const x0 = n.x0 ?? 0;
     const x1 = n.x1 ?? 0;
     const y0 = n.y0 ?? 0;
     const y1 = n.y1 ?? 0;
+
     return (
       <g
         key={n.id}
@@ -442,13 +486,17 @@ const stageXs = (data: FunnelData, nodes: FunnelNode[]) =>
 const funnelLayout = (data: FunnelData, width: number, height: number) => {
   const lastStage = data.stages.length - 1;
   const graph = layoutFunnel(data, width, height, TOP);
+
   const crowded =
     headingsCollide(data.stages, stageXs(data, graph.nodes)) ||
     labelsCollide(graph.nodes, lastStage);
+
   if (!crowded) {
     return { crowded, graph, placements: new Map<string, Placement>() };
   }
+
   const tight = layoutFunnel(data, width, height, TOP_CROWDED);
+
   return {
     crowded,
     graph: tight,
@@ -473,6 +521,7 @@ export const Sankey = (props: {
           width,
           props.height
         );
+
         const stageX = stageXs(props.data, graph.nodes);
 
         return (

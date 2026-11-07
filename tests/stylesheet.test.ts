@@ -21,10 +21,12 @@ import { describe, expect, it } from "vitest";
 
 const lib = (name: string) =>
   readFileSync(new URL(`../lib/${name}`, import.meta.url), "utf-8");
+
 const sheet = lib("hairline.css");
 const bare = sheet.replaceAll(/\/\*[\s\S]*?\*\//gu, "");
 
 const sized = { height: 320, width: 480 };
+
 const framedProps = (child: ReactElement): FrameProps => ({
   children: child,
   footnote: "A footnote",
@@ -172,6 +174,7 @@ describe("the precompiled stylesheet stays inside the Hairline root", () => {
       .flatMap((s) => s.split(","))
       .map((s) => s.trim())
       .filter((s) => !s.includes(".hl-root"));
+
     expect(rules.length).toBeGreaterThan(100);
     expect(loose).toStrictEqual([]);
   });
@@ -190,6 +193,7 @@ describe("the precompiled stylesheet stays inside the Hairline root", () => {
     const keyframes = [...bare.matchAll(/@keyframes\s+(?<name>[\w-]+)/gu)].map(
       (m) => m.groups?.name
     );
+
     expect(keyframes.length).toBeGreaterThan(0);
     expect(
       keyframes.filter((k) => k?.startsWith("hl-") !== true)

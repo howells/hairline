@@ -38,6 +38,7 @@ const ease = (t: number) => t * t * (3 - 2 * t);
 const seriesOf = (r: Region): Point[] =>
   YEAR.map((date, k) => {
     const t = k / (YEAR.length - 1);
+
     return {
       date,
       value:

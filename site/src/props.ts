@@ -52,14 +52,17 @@ const objectType = (node: Node, recur: Recur) => {
   const properties = node.properties ?? {};
   const required = new Set(node.required);
   const names = Object.keys(properties);
+
   const ordered = [
     ...names.filter((name) => required.has(name)),
     ...names.filter((name) => !required.has(name)),
   ];
+
   const fields = ordered.map(
     (name) =>
       `${name}${required.has(name) ? "" : "?"}: ${recur(properties[name] ?? {}, false)}`
   );
+
   return `{ ${fields.join("; ")} }`;
 };
 
@@ -67,12 +70,16 @@ const arrayType = (node: Node, recur: Recur) => {
   if (node.prefixItems !== undefined) {
     return `[${node.prefixItems.map((item) => recur(item, false)).join(", ")}]`;
   }
+
   if (node.items === undefined || node.items === false) {
     return "unknown[]";
   }
+
   const inner = recur(node.items, true);
+
   const isUnion =
     node.items.anyOf !== undefined || node.items.enum !== undefined;
+
   return isUnion ? `(${inner})[]` : `${inner}[]`;
 };
 
@@ -85,11 +92,13 @@ const singleType = (
   if (type === "array") {
     return arrayType(node, recur);
   }
+
   if (type === "object") {
     return expandObject && node.properties !== undefined
       ? objectType(node, recur)
       : "object";
   }
+
   return SCALARS.get(type) ?? type;
 };
 
@@ -98,13 +107,17 @@ const typeOf = (node: Node, expandObject: boolean): string => {
   if (node.enum !== undefined) {
     return node.enum.map((value) => JSON.stringify(value)).join(" | ");
   }
+
   if (node.anyOf !== undefined) {
     // Two string formats (a day, an instant) are both "string" to TypeScript.
     const options = node.anyOf.map((option) => typeOf(option, expandObject));
+
     return [...new Set(options)].join(" | ");
   }
+
   // A nullable scalar arrives as ["number", "null"].
   const types = Array.isArray(node.type) ? node.type : [node.type ?? "unknown"];
+
   return types
     .map((type) => singleType(type, node, expandObject, typeOf))
     .join(" | ");
@@ -119,6 +132,7 @@ const ObjectNode = z.looseObject({
 export const propsOf = (schema: z.ZodType): PropRow[] => {
   const root = ObjectNode.parse(z.toJSONSchema(schema, { io: "input" }));
   const required = new Set(root.required);
+
   return Object.entries(root.properties)
     .map(([name, node]) => ({
       deprecated: node.deprecated === true,

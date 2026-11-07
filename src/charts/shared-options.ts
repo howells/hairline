@@ -48,5 +48,6 @@ export const chartTable = (
 export const pointerX = (e: PointerEvent<SVGSVGElement>, width: number) => {
   const box = e.currentTarget.getBoundingClientRect();
   const offset = e.clientX - box.left;
+
   return box.width > 0 ? offset * (width / box.width) : offset;
 };

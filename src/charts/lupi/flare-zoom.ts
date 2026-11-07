@@ -10,16 +10,19 @@ const MARGIN = 10;
 
 /** How far the ring runs past the wedge's ends, as a share of its width. */
 const RING_OVERRUN = 0.5;
+
 /** The least the ring runs past each end, degrees. */
 const RING_LEAST = 6;
 
 /** Points round the wedge and the stretch of inner ring beside it, on a unit dial at the origin. */
 const outline = (span: Span, dial: Dial) => {
   const run = Math.max(RING_LEAST, (span.a1 - span.a0) * RING_OVERRUN);
+
   const angles = Array.from(
     { length: 9 },
     (_, k) => span.a0 - run + ((span.a1 - span.a0 + run * 2) * k) / 8
   );
+
   return [
     ...angles.map((a) => clock(0, 0, dial.r0, a)),
     ...angles.flatMap((a) =>
@@ -57,13 +60,16 @@ export const zoomFlare = (
   const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
   const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
   const scale = (box.size - MARGIN * 2) / Math.max(x1 - x0, y1 - y0);
+
   const dial: Dial = {
     R: scale,
     cx: box.cx - (scale * (x0 + x1)) / 2,
     cy: box.cy - (scale * (y0 + y1)) / 2,
     r0: scale * INNER,
   };
+
   const run = Math.max(RING_LEAST, (span.a1 - span.a0) * RING_OVERRUN);
+
   return {
     dial,
     ring: [span.a0 - run, span.a1 + run],

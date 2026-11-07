@@ -20,26 +20,33 @@ const MARGIN = 6;
 /** One month of the year, the warmest: its angle, its distance and a ring named. */
 export const YearKey = (props: YearKeyProps) => {
   const { data } = props;
+
   if (data.length === 0) {
     return null;
   }
+
   const values = data.map((d) => d.value);
   const peak = values.indexOf(Math.max(...values));
   const month = data[peak];
   const box = glyphBox(props.width);
   const outer = box.size / 2 - MARGIN;
+
   // The chart's own scale: zero at the centre, the niced maximum at the outer ring.
   const scale = scaleLinear()
     .domain([0, Math.max(...values)])
     .nice(3)
     .range([0, outer]);
+
   const ring = scale.ticks(3).find((v) => v > 0) ?? 0;
   const angle = angleOf(peak, data.length);
   const dot = polar(angle, scale(month.value));
+
   const at = (r: number, a: number) => {
     const p = polar(a, r);
+
     return [box.cx + p.x, box.cy + p.y] as const;
   };
+
   return (
     <GlyphKey
       box={box}

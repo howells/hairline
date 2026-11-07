@@ -263,18 +263,23 @@ const MESH: [string, string, number][] = [
 export const forceGalaxyDemo: GalaxyData = (() => {
   const nodes: GalaxyNode[] = [];
   const links: GalaxyLink[] = [];
+
   for (const [name, volume] of HUBS) {
     nodes.push({ domain: name, hub: true, id: name, volume });
   }
+
   for (const [line, id, volume] of STATIONS) {
     nodes.push({ domain: line, id, volume });
     links.push({ source: line, target: id, weight: 1 });
   }
+
   for (const [a, b, weight] of MESH) {
     links.push({ source: a, target: b, weight });
   }
+
   for (const [id, line] of CALLS) {
     links.push({ source: id, target: line, weight: 0.5 });
   }
+
   return { links, nodes };
 })();

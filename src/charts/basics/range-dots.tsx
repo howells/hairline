@@ -19,14 +19,19 @@ import { noteOf, noteSpace, sansWidth, stagger } from "../util";
 
 /** Margin kept between the ink and the svg edge, px. */
 const EDGE = 2;
+
 /** Room above the first row, px. */
 const TOP = 12;
+
 /** Room under the last row for the scale, px. */
 const SCALE_ROOM = 34;
+
 /** The height of a row when the chart sizes itself, px. */
 const ROW = 40;
+
 /** Half the height of a whisker's cap, px. */
 const CAP = 4;
+
 /** Gap between a whisker's end and the value after it, px. */
 const AFTER = 10;
 
@@ -36,6 +41,7 @@ type Format = (v: number) => string;
 const printed = (d: RangeDatum, format: Format, margin: Format) => {
   const below = d.estimate - d.low;
   const above = d.high - d.estimate;
+
   return Math.abs(below - above) <= 1e-9 * (d.high - d.low + 1)
     ? `${format(d.estimate)} ± ${margin(above)}`
     : `${format(d.estimate)}, ${format(d.low)} to ${format(d.high)}`;
@@ -62,20 +68,25 @@ const layoutOf = (
     0,
     ...data.map((d) => sansWidth(d.label, 11, props.metrics))
   );
+
   const labelW = EDGE + Math.min(size.width * 0.32, Math.ceil(longest));
+
   const widest = Math.max(
     0,
     ...texts.map((text) => sansWidth(text, 11, props.metrics))
   );
+
   const x0 = labelW + 12;
   const x1 = Math.max(x0 + 1, size.width - EDGE - AFTER - Math.ceil(widest));
   const lo = Math.min(0, ...data.map((d) => d.low));
   const hi = Math.max(...data.map((d) => d.high));
+
   const axisY = Math.round(
     size.height -
       SCALE_ROOM -
       noteSpace(noteOf(props), size.width - 16, 20, props.metrics)
   );
+
   return {
     axisY,
     labelW,
@@ -104,6 +115,7 @@ const Row = ({ datum, dim, index, layout, open, text }: RowProps) => {
   const lo = x(datum.low);
   const hi = x(datum.high);
   const tone = open ? "stroke-l4" : "stroke-l2";
+
   return (
     <DimGroup dim={dim}>
       <Label
@@ -172,11 +184,14 @@ const describe = (
   format: Format
 ) => {
   const open = data.filter((d) => isOpen(d, props.wide));
+
   const cover =
     props.coverage === undefined
       ? "an interval"
       : `a ${Math.round(props.coverage * 100)}% interval`;
+
   const [widest] = data.toSorted((a, b) => b.high - b.low - (a.high - a.low));
+
   return [
     `${plural(data.length, "estimate")}, each with ${cover}.`,
     `Widest: ${widest.label}, ${format(widest.low)} to ${format(widest.high)}.`,
@@ -192,10 +207,12 @@ const describe = (
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: RangeDatum[]) => {
   const seen = new Map<string, number>();
+
   return data.map((d) => {
     const key = keyOf(d);
     const nth = seen.get(key) ?? 0;
     seen.set(key, nth + 1);
+
     return `${key}#${nth}`;
   });
 };
@@ -224,8 +241,10 @@ const RangeSvg = ({
 }: SvgProps) => {
   const layout = layoutOf(props, data, texts, { height, width });
   const ticks = layout.x.ticks(4);
+
   const stops = data.map((d, i): Stop<number> => {
     const y = Math.round(TOP + layout.pitch * (i + 0.5));
+
     return {
       avoid: () => [[y - layout.pitch / 2, y + layout.pitch / 2]],
       key: i,
@@ -240,6 +259,7 @@ const RangeSvg = ({
       y,
     };
   });
+
   return (
     <Pointer
       axis="y"
@@ -308,24 +328,31 @@ const RangeDotsPlot = (props: RangeDotsProps) => {
       Number.isFinite(d.low) &&
       Number.isFinite(d.high)
   );
+
   const format = resolveFormat(props.format);
+
   const margin =
     props.formatMargin === undefined
       ? format
       : resolveFormat(props.formatMargin);
+
   const texts = data.map((d) => printed(d, format, margin));
   const keys = reactKeys(data);
+
   const height =
     props.height ??
     TOP +
       data.length * ROW +
       SCALE_ROOM +
       noteSpace(noteOf(props), 480, 20, props.metrics);
+
   const cover =
     props.coverage === undefined
       ? ""
       : `, ${Math.round(props.coverage * 100)}% interval`;
+
   const ranking = props.wide !== undefined;
+
   const name =
     props.title ?? `Estimates with intervals for ${plural(data.length, "row")}`;
 

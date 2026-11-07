@@ -60,15 +60,18 @@ const buildLayout = (
   const hi = Math.max(...data.flatMap((d) => [d.max, ...(d.outliers ?? [])]));
   const scale = scaleLinear().domain([0, hi]).nice(4);
   const ticks = customTicks ?? scale.ticks(4);
+
   // The tick values end 16px left of the plot.
   const tickW =
     16 + Math.max(0, ...ticks.map((t) => Math.ceil(inkWidth(format(t)))));
+
   const bandsFor = (plotW: number) =>
     scaleBand()
       .domain(data.map((d) => d.label))
       .range([0, plotW])
       .paddingInner(0.3)
       .paddingOuter(0.25);
+
   // How far the ink reaches past the plot's left and right edges: the tick
   // values, the end labels, and (when there's room beside each box) the median.
   const reach = (plotW: number) => {
@@ -77,6 +80,7 @@ const buildLayout = (
     const wide = plotW / data.length >= 110;
     let l = tickW;
     let r = 0;
+
     for (const d of data) {
       const cx = (band(d.label) ?? 0) + band.bandwidth() / 2;
       const half = Math.ceil(inkWidth(d.label)) / 2;
@@ -87,14 +91,18 @@ const buildLayout = (
         wide ? cx + boxW / 2 + 10 + inkWidth(format(d.median)) - plotW : 0
       );
     }
+
     return { l, r };
   };
+
   const cap = data.length * 160;
   let plotW = Math.min(width - EDGE * 2 - tickW, cap);
+
   for (let k = 0; k < 3; k += 1) {
     const { l, r } = reach(plotW);
     plotW = Math.min(width - EDGE * 2 - l - r, cap);
   }
+
   const { l, r } = reach(plotW);
   // Narrow: no room beside each box, so the median moves under its label.
   const narrow = plotW / data.length < 110;
@@ -103,6 +111,7 @@ const buildLayout = (
   const px0 = (width - l - plotW - r) / 2 + l;
   const x = bandsFor(plotW).range([px0, px0 + plotW]);
   const boxW = Math.min(50, x.bandwidth() * 0.55);
+
   return {
     boxW,
     cap: Math.min(14, boxW * 0.45),
@@ -123,6 +132,7 @@ const Grid = (props: {
   ticks: number[];
 }) => {
   const { layout } = props;
+
   return (
     <g>
       {props.ticks.map((t) => (
@@ -159,6 +169,7 @@ const Whiskers = (props: {
   const { cap, y } = layout;
   const capL = Math.round(cx - cap);
   const capR = Math.round(cx + cap) + 1;
+
   return (
     <g
       className="fade stroke-l3 shape-crisp"
@@ -194,6 +205,7 @@ const Group = (props: GroupProps) => {
   const boxH = Math.max(2, Math.round(y(datum.q1)) - yq3);
   const boxX = Math.round(cx - boxW / 2);
   const boxR = Math.round(boxW);
+
   return (
     <DimGroup
       dim={props.dim}
@@ -271,6 +283,7 @@ const Group = (props: GroupProps) => {
 const describe = (d: BoxDatum, format: (v: number) => string): string => {
   const n = d.outliers?.length ?? 0;
   const tail = n > 0 ? ` · ${n} outlier${n > 1 ? "s" : ""}` : "";
+
   return `median ${format(d.median)} · middle half ${format(d.q1)}–${format(d.q3)}${tail}`;
 };
 
@@ -286,9 +299,11 @@ export const TickBox = (props: TickBoxProps) => {
   const format = props.format ?? String;
   const hover = useHover<number>();
   const textures = useTextureIds("box");
+
   const [hero] = data.toSorted((a, b) =>
     props.darkest === "high" ? b.median - a.median : a.median - b.median
   );
+
   const label = data
     .map((d) => `${d.label}: ${describe(d, format)}`)
     .join("; ");
@@ -315,6 +330,7 @@ export const TickBox = (props: TickBoxProps) => {
           format,
           props.ticks
         );
+
         return (
           <ChartSvg
             height={height}

@@ -8,6 +8,7 @@ const ground = (entry: GalleryEntry) => {
   if (entry.dark === true) {
     return "surface-dark";
   }
+
   // Board charts draw their own panel; inside a cell the cell is the panel,
   // so its fill and side padding give way to the cell's.
   return entry.family === "board"
@@ -35,13 +36,16 @@ const useNear = () => {
       },
       { rootMargin: AHEAD }
     );
+
     if (ref.current !== null) {
       io.observe(ref.current);
     }
+
     return () => {
       io.disconnect();
     };
   }, []);
+
   return [ref, near] as const;
 };
 
@@ -53,6 +57,7 @@ const useNear = () => {
  */
 const Cell = (props: { entry: GalleryEntry }) => {
   const [ref, near] = useNear();
+
   return (
     <figure
       // Named for the chart alone: the caption also holds the (i) and its note.
@@ -92,6 +97,7 @@ export const KitGrid = () => <Grid entries={KIT_ENTRIES} />;
 /** One chart on its own: `#/chart/L13`. */
 export const SingleChart = (props: { id: string }) => {
   const entry = entryById(props.id);
+
   if (entry === undefined) {
     return (
       <main className="text-small text-muted p-10">
@@ -99,6 +105,7 @@ export const SingleChart = (props: { id: string }) => {
       </main>
     );
   }
+
   return (
     <main
       className={`mx-auto ${entry.span === "full" ? "max-w-wide" : "max-w-column"}`}

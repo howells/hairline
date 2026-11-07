@@ -54,6 +54,7 @@ const LINE_GAP = 4;
 const ICON_W = 18;
 const ICON_H = 24;
 const FOLD = 7.5 / 18;
+
 /** Room for the longest row name and the gap before the icons. */
 const nameRoom = (data: PictorialDatum[]) =>
   labelRoom(
@@ -92,6 +93,7 @@ const pagePaths = (w: number, h: number) => {
   const f = Math.max(2, Math.round(w * FOLD));
   const r = w - 0.5;
   const b = h - 0.5;
+
   return {
     body: `M0.5 0.5H${r - f}L${r} ${0.5 + f}V${b}H0.5Z`,
     fold: `M${r - f} 0.5V${0.5 + f}H${r}`,
@@ -115,6 +117,7 @@ interface PageGlyphProps {
  */
 const PageGlyph = (p: PageGlyphProps) => {
   const d = pagePaths(p.w, p.h);
+
   return (
     <g
       className={`${p.tone} shape-crisp`}
@@ -162,11 +165,13 @@ const PictorialRow = ({
   const top = Math.round(
     row.cy - (g.lines * g.ih + (g.lines - 1) * LINE_GAP) / 2
   );
+
   const icons = Array.from({ length: g.slots }, (_, k) => ({
     id: `${row.datum.label}-${k}`,
     x: Math.round(g.x0 + (k % g.perLine) * g.pitch + (g.pitch - g.iw) / 2),
     y: top + Math.floor(k / g.perLine) * (g.ih + LINE_GAP),
   }));
+
   return (
     <DimGroup dim={dim} onPointerEnter={onEnter}>
       <HitRect x={0} y={row.cy - g.rowH / 2} width={width} height={g.rowH} />
@@ -223,6 +228,7 @@ const PictorialRow = ({
 /** One clip per track: a rect per line of pages, cut at the value. */
 const TrackClips = (p: { g: Geometry; id: string; rows: Row[] }) => {
   const blockH = p.g.lines * p.g.ih + (p.g.lines - 1) * LINE_GAP;
+
   return (
     <>
       {p.rows.map((r) => (
@@ -259,13 +265,16 @@ export const PictorialBar = (props: PictorialBarProps) => {
   const id = useSvgId("pict");
   const tex = useTextureIds("pict");
   const hover = useHover<number>();
+
   // The biggest row in ink; every other row's filled icons at one grey.
   const tones = rankTones(
     data.map((d) => d.value),
     [0, 4]
   );
+
   const isHero = (i: number) =>
     props.highlight === undefined ? tones[i] === 0 : props.highlight === i;
+
   const slots = Math.ceil(Math.max(...data.map((d) => d.value)) / unit);
   const label = `One page = ${unit}k words. ${data.map((d) => `${d.label} ${format(d.value)}`).join(", ")}`;
 
@@ -294,12 +303,15 @@ export const PictorialBar = (props: PictorialBarProps) => {
         const x0 = rowOrigin(width, names, perLine * pitch, valueW);
         const scale = Math.min(1.1, (pitch * 0.82) / ICON_W);
         const noteH = noteSpace(noteOf(props), width - 16, 22);
+
         // Small icons on a phone sit closer together, so the rows close up.
         const rowH = Math.min(
           (height - 16 - noteH) / data.length,
           width < 460 ? 64 : Number.POSITIVE_INFINITY
         );
+
         const svgH = 16 + rowH * data.length + noteH;
+
         const g: Geometry = {
           ih: Math.round(ICON_H * scale),
           iw: Math.round(ICON_W * scale),
@@ -310,12 +322,15 @@ export const PictorialBar = (props: PictorialBarProps) => {
           slots,
           x0,
         };
+
         const rows: Row[] = data.map((datum, i) => {
           const n = datum.value / unit;
+
           return {
             cuts: Array.from({ length: lines }, (_, line) => {
               const count = Math.max(0, Math.min(perLine, n - line * perLine));
               const whole = Math.floor(count);
+
               return count >= perLine
                 ? x0 + perLine * pitch
                 : Math.round(

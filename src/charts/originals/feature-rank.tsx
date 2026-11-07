@@ -13,12 +13,15 @@ import { featureUse, QUARTERS } from "./feature-rank.data";
 import type { FeatureUse } from "./feature-rank.data";
 
 const TOP = 40;
+
 /** One rank per row: a 44px-plus touch row. */
 const ROW = 64;
 const LEFT = 20;
 const GAP = 12;
+
 /** Half a tread, as a share of its quarter's column. */
 const TREAD = 0.3;
+
 /** The thickest band, for the largest area, in whole px (even). */
 const BAND_MAX = 22;
 
@@ -44,13 +47,16 @@ interface Layout {
 
 const layoutOf = (data: FeatureUse[], width: number): Layout => {
   const nameW = Math.max(...data.map((d) => sansWidth(d.feature, 12)));
+
   const valueW = Math.max(
     ...data.map((d) => sansWidth(fmtUsers(d.weekly.at(-1) ?? 0), 12))
   );
+
   const vMax = Math.max(...data.flatMap((d) => d.weekly));
   const x0 = LEFT;
   const x1 = width - (GAP + nameW + GAP + valueW);
   const col = (x1 - x0) / QUARTERS.length;
+
   return {
     cx: (q) => x0 + (q + 0.5) * col,
     half: col * TREAD,
@@ -88,13 +94,17 @@ const bandEdge = (
     ...t,
     e: t.y + side * (lay.thick(weekly[q]) - 0.5),
   }));
+
   return ts.flatMap((t, q) => {
     const next = ts.at(q + 1);
     const tread = [`${t.a},${t.e}`, `${t.b},${t.e}`];
+
     if (next === undefined || next.y !== t.y || next.e === t.e) {
       return tread;
     }
+
     const mid = Math.round((t.b + next.a) / 2);
+
     return [...tread, `${mid},${t.e}`, `${mid},${next.e}`];
   });
 };
@@ -103,6 +113,7 @@ const bandEdge = (
 const bandPath = (rank: number[], weekly: number[], lay: Layout) => {
   const top = bandEdge(rank, weekly, lay, -1);
   const bottom = bandEdge(rank, weekly, lay, 1).toReversed();
+
   return `M${[...top, ...bottom].join(" L")}Z`;
 };
 
@@ -124,6 +135,7 @@ interface TrackProps {
 const Track = ({ datum, dim, hero, i, lay, rank, tex, width }: TrackProps) => {
   const last = rank.at(-1) ?? 0;
   const y = lay.y(last);
+
   return (
     <DimGroup dim={dim}>
       <path
@@ -218,20 +230,25 @@ export const FeatureRank = (props: FeatureRankProps) => {
       {(width) => {
         const lay = layoutOf(data, width);
         const col = (lay.x1 - lay.x0) / QUARTERS.length;
+
         const onMove = (e: PointerEvent<SVGSVGElement>) => {
           const box = e.currentTarget.getBoundingClientRect();
+
           const q = clamp(
             Math.floor((e.clientX - box.left - lay.x0) / col),
             0,
             QUARTERS.length - 1
           );
+
           const r = clamp(
             Math.round((e.clientY - box.top - TOP) / ROW),
             0,
             data.length - 1
           );
+
           setHover({ f: byQuarter[q].indexOf(r), q });
         };
+
         return (
           <>
             <ChartSvg

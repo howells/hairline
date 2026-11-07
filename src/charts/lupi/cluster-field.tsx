@@ -60,35 +60,44 @@ const fieldLayout = (
   const hubs = clusters.map((cluster, k) => {
     const core = cluster.id === coreId;
     const [fx, fy] = cluster.at ?? [k * 120, 0];
+
     return { cluster, core, fx, fy, r: frameR(cluster, core) };
   });
+
   // Labels are wider than small islands, and don't scale with the frame: each
   // hub reaches its island's radius (plus a dot) or half its label, and the
   // scale is the one at which the widest reach fills the width.
   const half = hubs.map(
     (h) => sansWidth(`${h.cluster.label} · ${h.cluster.members.length}`, 11) / 2
   );
+
   const reachAt = (s: number) => {
     const ends = hubs.map((h, k) => Math.max(h.r * s + 4, half[k]));
+
     return {
       hi: Math.max(...hubs.map((h, k) => h.fx * s + ends[k])),
       lo: Math.min(...hubs.map((h, k) => h.fx * s - ends[k])),
     };
   };
+
   let [sLo, sHi] = [0.01, 8];
+
   for (let i = 0; i < 40; i += 1) {
     const mid = (sLo + sHi) / 2;
     const span = reachAt(mid);
+
     if (span.hi - span.lo > width) {
       sHi = mid;
     } else {
       sLo = mid;
     }
   }
+
   const s = sLo;
   const { lo } = reachAt(s);
   const y0 = Math.min(...hubs.map((h) => h.fy - h.r));
   const y1 = Math.max(...hubs.map((h) => h.fy + h.r));
+
   const placed = hubs.map((h) => ({
     R: h.r * s,
     cluster: h.cluster,
@@ -96,6 +105,7 @@ const fieldLayout = (
     x: h.fx * s - lo,
     y: (h.fy - y0) * s + 4,
   }));
+
   return { height: Math.round((y1 - y0) * s + 4 + LABEL_ROOM), placed, s };
 };
 
@@ -107,9 +117,11 @@ const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
  */
 const goldenStep = (n: number) => {
   const target = Math.round(n * (1 - 2 / (1 + Math.sqrt(5))));
+
   const candidates = Array.from({ length: n }, (_, k) => k + 1).filter(
     (k) => gcd(k, n) === 1
   );
+
   return (
     candidates.toSorted(
       (a, b) => Math.abs(a - target) - Math.abs(b - target)
@@ -126,9 +138,11 @@ const members = (p: PlacedCluster) => {
   const n = p.cluster.members.length;
   const step = goldenStep(n);
   const inner = p.core ? 0.28 : 0.38;
+
   return p.cluster.members.map((size, k) => {
     const a = (((k * step) % n) / n) * 2 * Math.PI;
     const d = p.R * (inner + (1 - inner) * Math.sqrt((k + 0.5) / n));
+
     return {
       id: `${p.cluster.id}-${k}`,
       k,
@@ -151,6 +165,7 @@ interface ClusterProps {
 const Cluster = (props: ClusterProps) => {
   const { p } = props;
   const dotScale = clamp(props.s + 0.25, 0.7, 1.2);
+
   return (
     <DimGroup dim={props.dim} onPointerEnter={props.onEnter}>
       <HitCircle cx={p.x} cy={p.y} r={p.R} />
@@ -200,18 +215,22 @@ const Paths = (props: {
   placed: PlacedCluster[];
 }) => {
   const byId = new Map(props.placed.map((p) => [p.cluster.id, p]));
+
   return (
     <g className="fade">
       {props.links.map(([from, to]) => {
         const a = byId.get(from);
         const b = byId.get(to);
+
         if (a === undefined || b === undefined) {
           return null;
         }
+
         const mx = (a.x + b.x) / 2;
         const my = (a.y + b.y) / 2;
         const cx = mx - (b.y - a.y) * 0.12;
         const cy = my + (b.x - a.x) * 0.12;
+
         return (
           <path
             className="stroke-l6"
@@ -234,15 +253,18 @@ const Paths = (props: {
  */
 export const ClusterField = (props: ClusterFieldProps) => {
   const data = props.data ?? clusterFieldDemo;
+
   const core = data.clusters
     .toSorted((a, b) => b.members.length - a.members.length)
     .at(0);
+
   const coreId = core === undefined ? "" : core.id;
   const noun = props.noun ?? "variety";
   const sizeNoun = props.sizeNoun ?? "ha";
   const nouns = props.nouns ?? "varieties";
   const maxSize = Math.max(1, ...data.clusters.flatMap((c) => c.members));
   const hover = useHover<string>();
+
   const tipCluster =
     hover.key === null
       ? undefined
@@ -266,9 +288,11 @@ export const ClusterField = (props: ClusterFieldProps) => {
     >
       {(width) => {
         const layout = fieldLayout(width, data.clusters, coreId);
+
         const height =
           props.height ??
           layout.height + noteSpace(noteOf(props), width - 16, 24);
+
         return (
           <ChartSvg
             height={height}

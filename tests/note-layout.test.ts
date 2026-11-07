@@ -21,6 +21,7 @@ describe("note placement", () => {
       [{ label: "Price change", x: 200, y: 150 }],
       room
     );
+
     expect(note.side).toBe("below");
   });
 
@@ -35,6 +36,7 @@ describe("note placement", () => {
       [{ detail: "A long second line", label: "Edge", x: 390, y: 200 }],
       room
     );
+
     expect(note.anchor).toBe("end");
   });
 
@@ -51,6 +53,7 @@ describe("note placement", () => {
       ],
       room
     );
+
     expect(`${a.side}-${a.anchor}`).not.toBe(`${b.side}-${b.anchor}`);
   });
 
@@ -62,6 +65,7 @@ describe("note placement", () => {
       ],
       room
     );
+
     expect(out.map((n) => n.n)).toStrictEqual([1, 2]);
   });
 });
@@ -86,6 +90,7 @@ describe("numbered discs", () => {
       ],
       room
     );
+
     expect(b.cy).not.toBe(a.cy);
   });
 });

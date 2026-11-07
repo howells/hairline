@@ -9,18 +9,22 @@ import {
 } from "../texture";
 
 type Family = (typeof FILL_FAMILIES)[number];
+
 type Ladder = (typeof FILL_LADDERS)[number];
 
 /** One engraved pattern for a family in a tone. */
 const FamilyPattern = (props: { family: Family; id: string; tone: string }) => {
   const common = { id: props.id, tone: props.tone };
   const { family } = props;
+
   if (family.id === "hatch") {
     return <Hatch {...common} pitch={family.pitch} />;
   }
+
   if (family.id === "cross") {
     return <CrossHatch {...common} pitch={family.pitch} />;
   }
+
   if (family.id === "rules" || family.id === "upright") {
     return (
       <Rules
@@ -30,12 +34,15 @@ const FamilyPattern = (props: { family: Family; id: string; tone: string }) => {
       />
     );
   }
+
   if (family.id === "stipple" || family.id === "dense") {
     return <Stipple {...common} pitch={family.pitch} />;
   }
+
   if (family.id === "beads") {
     return <Beads {...common} ground="fill-paper" pitch={family.pitch} />;
   }
+
   // Solid needs no pattern.
   return null;
 };
@@ -48,6 +55,7 @@ const LadderPattern = (props: {
   tone: string;
 }) => {
   const common = { id: props.id, tone: props.tone };
+
   return props.ladder.id === "halftone" ? (
     <DotScreen {...common} pitch={props.step.pitch} r={props.step.r} />
   ) : (

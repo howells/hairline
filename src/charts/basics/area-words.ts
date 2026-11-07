@@ -23,6 +23,7 @@ export const describeArea = (w: Words) => {
   const { fmtDate, format, readings } = w;
   const { live } = seriesOf(readings);
   const peakAt = fmtDate(readings[w.peak].date);
+
   return {
     desc: [
       `${plural(live.length, "reading")}. Peak ${format(w.max)} on ${peakAt}.`,

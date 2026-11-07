@@ -16,11 +16,13 @@ export interface Placement {
 
 /** Margin kept between a name and the svg edge. */
 export const EDGE = 2;
+
 /** A name's reach above and below its baseline, halo included, px. */
 const NAME_RISE = 12;
 const NAME_DROP = 4;
 
 const ABOVE: Placement = { anchor: "middle", dx: 0, dy: -12 };
+
 const PLACEMENTS: Placement[] = [
   ABOVE,
   { anchor: "start", dx: 10, dy: 4 },
@@ -32,6 +34,7 @@ const extent = (place: Placement, px: number, w: number) => {
   if (place.anchor === "middle") {
     return [px - w / 2, px + w / 2];
   }
+
   return place.anchor === "start"
     ? [px + place.dx, px + place.dx + w]
     : [px + place.dx - w, px + place.dx];
@@ -52,10 +55,13 @@ const placeName = (
 ): Placement | undefined => {
   const inside = (place: Placement) => {
     const [l, r] = extent(place, self.px, self.w);
+
     return l >= EDGE && r <= width - EDGE && self.py + place.dy - 10 > 0;
   };
+
   const clear = (place: Placement) => {
     const [l, r] = extent(place, self.px, self.w);
+
     return stems.every(
       (st) =>
         st.px === self.px ||
@@ -64,11 +70,15 @@ const placeName = (
         st.py > self.py + place.dy + 2
     );
   };
+
   const clean = PLACEMENTS.find((place) => inside(place) && clear(place));
+
   if (clean !== undefined || !hero) {
     return clean;
   }
+
   const half = self.w / 2;
+
   return (
     PLACEMENTS.find(inside) ?? {
       ...ABOVE,
@@ -88,8 +98,10 @@ const nameSpots = (
   if (place === undefined) {
     return [];
   }
+
   const [l, r] = extent(place, self.px, self.w);
   const y = self.py + place.dy;
+
   return Array.from({ length: Math.ceil((r - l) / 24) + 1 }, (_, k) => ({
     x: Math.min(r, l + k * 24),
     y,
@@ -109,6 +121,7 @@ interface NamesArgs {
 /** Where each labelled point prints its name, and the spots that keeps reference labels off. */
 export const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
   const { format, heroes, labelled, metrics, width, x, y } = a;
+
   const selves = data.map((d, i) => ({
     px: x(d.x),
     py: y(d.y),
@@ -118,6 +131,7 @@ export const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
       metrics
     ),
   }));
+
   const places = selves.map((self, i) =>
     labelled.has(i)
       ? placeName(
@@ -128,19 +142,24 @@ export const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
         )
       : undefined
   );
+
   const avoid = [
     ...data.map((d) => ({ x: x(d.x), y: y(d.y) })),
     ...selves.flatMap((self, i) => nameSpots(places[i], self)),
   ];
+
   // Each printed name's box, so the tip stands off the plates it would hide.
   const names = avoidBoxes(
     selves.flatMap((self, i) => {
       const place = places[i];
+
       if (place === undefined) {
         return [];
       }
+
       const [l, r] = extent(place, self.px, self.w);
       const baseline = self.py + place.dy;
+
       return [
         {
           bottom: baseline + NAME_DROP,
@@ -151,5 +170,6 @@ export const namesOf = (data: PlumbDatum[], a: NamesArgs) => {
       ];
     })
   );
+
   return { avoid, names, places };
 };

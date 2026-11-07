@@ -68,6 +68,7 @@ type Focus =
 
 /** Room under the map for the key row. */
 const LEGEND_H = 52;
+
 /** The key row's centre, below the map. */
 const LEGEND_Y = 28;
 
@@ -81,6 +82,7 @@ const SCREENS = HALFTONE_R.map((r) => ({
   r,
   tone: "fill-l3",
 }));
+
 const SOLID = "fill-hero";
 
 /** A region's fill: the hero solid, every other region its step's screen. */
@@ -125,22 +127,29 @@ const territoriesFor = ({
     features: regions.map((r) => r.feature),
     type: "FeatureCollection",
   };
+
   const projection = project([width, mapH], outlines);
   const path = geoPath(projection);
   const bins = scaleThreshold().domain(thresholds).range([0, 1, 2, 3, 4]);
   const territories: Territory[] = [];
+
   for (const region of regions) {
     const d = path(region.feature) ?? "";
+
     if (d === "") {
       continue;
     }
+
     const value = values.get(region.key)?.value;
+
     const inside = (x: number, y: number) => {
       const point = projection.invert?.([x, y]);
+
       return point !== null && point !== undefined
         ? geoContains(region.feature, point)
         : false;
     };
+
     const bin = value === undefined ? -1 : bins(value);
     territories.push({
       anchor: mainCentroid(region.feature, path),
@@ -156,6 +165,7 @@ const territoriesFor = ({
       solid: region.key === hero && bin === SCREENS.length - 1,
     });
   }
+
   return territories;
 };
 
@@ -171,6 +181,7 @@ const RegionLayer = (props: {
   <g className="transition-opacity group-data-[focus=true]/map:opacity-30">
     {props.territories.map((t) => {
       const f = territoryFill(t, props.pid);
+
       return (
         <path
           className={`fade ${OUTLINE} ${f.className}`}
@@ -191,6 +202,7 @@ const anchorFor = (dx: number) => {
   if (dx < 0) {
     return "end";
   }
+
   return dx > 0 ? "start" : "middle";
 };
 
@@ -233,6 +245,7 @@ interface Box {
 /** Half the height of a label's plate, and the steps tried when one collides. */
 const LABEL_HALF = 8;
 const NUDGES = [0, -1, 1, -2, 2];
+
 /** A plate's padding either side of its text (PlateLabel). */
 const PLATE_PAD = 4;
 
@@ -240,6 +253,7 @@ const PLATE_PAD = 4;
 const boxOf = (p: PlacedLabel): Box => {
   const w = Math.ceil(sansWidth(p.text, 11)) + PLATE_PAD * 2;
   const shift = { end: w, middle: w / 2, start: 0 }[p.anchor];
+
   return {
     x0: p.x - shift,
     x1: p.x - shift + w,
@@ -251,6 +265,7 @@ const boxOf = (p: PlacedLabel): Box => {
 /** The glyphs' own box: the plate without its padding, x-height deep. */
 const glyphBox = (p: PlacedLabel): Box => {
   const b = boxOf(p);
+
   return {
     x0: b.x0 + PLATE_PAD,
     x1: b.x1 - PLATE_PAD,
@@ -270,6 +285,7 @@ const overlaps = (a: Box, b: Box) =>
 const keepInside = (p: PlacedLabel, width: number): PlacedLabel => {
   const box = boxOf(p);
   const dx = clamp(0, 2 - box.x0, width - 2 - box.x1);
+
   return { ...p, x: p.x + dx };
 };
 
@@ -280,6 +296,7 @@ const keepInside = (p: PlacedLabel, width: number): PlacedLabel => {
  */
 const nameOnly = (home: PlacedLabel, name: string): PlacedLabel => {
   const named = { ...home, text: name };
+
   return home.covers(glyphBox(named)) ? named : home;
 };
 
@@ -299,9 +316,11 @@ const homeLabel = (
   const dx = datum?.dx ?? 0;
   const dy = datum?.dy ?? 0;
   const offset = dx !== 0 || dy !== 0;
+
   if (t === undefined || datum === undefined || (offset && props.narrow)) {
     return null;
   }
+
   const home: PlacedLabel = {
     anchor: anchorFor(dx),
     ax: t.anchor[0],
@@ -315,9 +334,11 @@ const homeLabel = (
     x: t.anchor[0] + dx,
     y: t.anchor[1] + dy,
   };
+
   if (!props.narrow || t.covers(glyphBox(home))) {
     return home;
   }
+
   return first ? nameOnly(home, datum.label ?? key) : null;
 };
 
@@ -329,11 +350,14 @@ const homeLabel = (
 const placeLabels = (props: MapLabelsProps): PlacedLabel[] => {
   const placed: PlacedLabel[] = [];
   const byKey = new Map(props.territories.map((t) => [t.key, t]));
+
   for (const key of props.labels) {
     const base = homeLabel(key, props, byKey.get(key), placed.length === 0);
+
     if (base === null) {
       continue;
     }
+
     const spot = NUDGES.map((n) =>
       keepInside(
         {
@@ -345,10 +369,12 @@ const placeLabels = (props: MapLabelsProps): PlacedLabel[] => {
         props.width
       )
     ).find((c) => placed.every((q) => !overlaps(boxOf(c), boxOf(q))));
+
     if (spot !== undefined) {
       placed.push(spot);
     }
   }
+
   return placed;
 };
 
@@ -390,6 +416,7 @@ const LitLayer = (props: { lit: Territory[]; pid: string }) => (
   <g className="pointer-events-none">
     {props.lit.map((t) => {
       const f = territoryFill(t, props.pid);
+
       return (
         <path
           className={`stroke-ink ${f.className}`}
@@ -414,13 +441,16 @@ const MapSvg = (
   }
 ) => {
   const { focus, hover, onFocus, values, width } = props;
+
   const mapH = Math.round(
     Math.min(props.maxHeight ?? Infinity, width * props.aspect)
   );
+
   const height = mapH + LEGEND_H + noteSpace(props.note, width - 16, 18);
   const { project, regions, thresholds } = props;
   const pid = useTextureIds("map")("screen");
   const hero = props.labels.at(0);
+
   const territories = useMemo(
     () =>
       territoriesFor({
@@ -434,15 +464,18 @@ const MapSvg = (
       }),
     [hero, mapH, project, regions, thresholds, values, width]
   );
+
   // Same element between renders, so React skips the whole map on hover.
   const regionLayer = useMemo(
     () => <RegionLayer pid={pid} territories={territories} width={width} />,
     [pid, territories, width]
   );
+
   const focusBin =
     focus?.kind === "region"
       ? (territories.find((t) => t.key === focus.key)?.bin ?? null)
       : (focus?.bin ?? null);
+
   const lit =
     focus === null
       ? []
@@ -452,21 +485,28 @@ const MapSvg = (
 
   const onMove = (e: PointerEvent<SVGGElement>) => {
     const { target } = e;
+
     if (!(target instanceof SVGElement)) {
       return;
     }
+
     const { key } = target.dataset;
+
     if (key === undefined) {
       return;
     }
+
     if (focus?.kind !== "region" || focus.key !== key) {
       onFocus({ key, kind: "region" });
     }
+
     const box = (
       e.currentTarget.ownerSVGElement ?? e.currentTarget
     ).getBoundingClientRect();
+
     hover.show(key, e.clientX - box.left, e.clientY - box.top - 6);
   };
+
   const clear = () => {
     onFocus(null);
     hover.clear();
@@ -522,10 +562,12 @@ const MapSvg = (
 export const Choropleth = (props: ChoroplethProps) => {
   const [focus, setFocus] = useState<Focus>(null);
   const hover = useHover<string>();
+
   const values = useMemo(
     () => new Map(props.data.map((d) => [d.key, d])),
     [props.data]
   );
+
   const names = useMemo(
     () => new Map(props.regions.map((r) => [r.key, r.name])),
     [props.regions]
@@ -533,9 +575,11 @@ export const Choropleth = (props: ChoroplethProps) => {
 
   const tipValue = (key: string) => {
     const datum = values.get(key);
+
     if (datum === undefined) {
       return props.emptyLabel ?? "No data";
     }
+
     return `${props.format(datum.value)}${props.unit === undefined ? "" : ` ${props.unit}`}`;
   };
 

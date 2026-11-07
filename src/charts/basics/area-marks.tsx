@@ -31,14 +31,17 @@ export const DayStems = ({
   <g>
     {live.map((i) => {
       const monthly = isLongSpan(readings);
+
       if (
         !hasStem(readings, i, { hero, hover, monthly }) ||
         (i >= forecast && i !== hero)
       ) {
         return null;
       }
+
       const top = Math.round(frame.y(valueAt(readings, i)));
       const base = Math.round(frame.floor);
+
       return (
         <rect
           className={`transition-tone ${stemClass(i === hero, i === hover, clearing(i))}`}
@@ -69,23 +72,28 @@ export const MonthAxis = ({
   readings: Reading[];
 }) => {
   const every = isLongSpan(readings) ? 3 : 1;
+
   // The first reading of each month, so weekly readings get month ticks too.
   const months = readings.flatMap((r, i) =>
     r.date.getUTCMonth() % every === 0 && startsMonth(readings, i) ? [i] : []
   );
+
   const axis = months.includes(0) ? months : [0, ...months];
   const labels = monthTickLabels(axis.map((i) => readings[i].date));
   // A narrow plot (a small multiple) drops a label that would touch the last.
   const kept: { i: number; k: number }[] = [];
   let end = -Infinity;
+
   for (const [k, i] of axis.entries()) {
     const width = sansWidth(labels[k]);
     const left = k === 0 ? frame.x(i) - 6 : frame.x(i) - width / 2;
+
     if (left >= end + MONTH_GAP) {
       end = left + width;
       kept.push({ i, k });
     }
   }
+
   return (
     <g>
       {kept.map(({ i, k }) => (

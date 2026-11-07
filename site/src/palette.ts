@@ -18,8 +18,10 @@ export const DARK: ThemeProperties = deriveTheme({
 /** One token of a mode, which deriveTheme always sets. */
 export const token = (theme: ThemeProperties, name: `--hl-${string}`) => {
   const value = theme[name];
+
   if (value === undefined) {
     throw new Error(`deriveTheme set no ${name}`);
   }
+
   return value;
 };

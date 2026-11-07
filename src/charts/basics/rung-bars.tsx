@@ -37,13 +37,17 @@ import { maxIndex } from "./util-b";
  */
 const SHADOW = 10;
 const SHADOW_SHARE = 0.4;
+
 /** The long, dark rung: every tenth, reaching this far past the column. */
 const TENS = 10;
 const TENS_REACH = 3;
+
 /** Room kept between two neighbouring bar labels, px. */
 const LABEL_ROOM = 8;
+
 /** Spacing of the points a reference name keeps off over a bar, px. */
 const SPOT_STEP = 6;
+
 /** How far above a column's top its tip stands: clear of the value on top, px. */
 const LABEL_ROOM_ABOVE = 28;
 
@@ -86,6 +90,7 @@ const CastShadow = (props: {
   top: number;
 }) => {
   const { floor, right, shadow, top } = props;
+
   const points = [
     [right, top],
     [right + shadow, top + shadow],
@@ -94,6 +99,7 @@ const CastShadow = (props: {
   ]
     .map((p) => p.join(","))
     .join(" ");
+
   return (
     <polygon
       className="fade shape-crisp"
@@ -109,6 +115,7 @@ const rungTone = (props: { back: boolean; hero: boolean }) => {
   if (props.hero) {
     return { accent: "fill-hero", rung: "fill-hero" };
   }
+
   return props.back
     ? { accent: "fill-l4", rung: "fill-l5" }
     : { accent: "fill-l2", rung: "fill-l4" };
@@ -122,6 +129,7 @@ const LadderBar = (props: Ladder) => {
   const top = rungY(props.floor, props.rungs - 1, props.pitch);
   const centre = props.left + props.bandwidth / 2;
   const right = Math.round(props.left + props.bandwidth);
+
   return (
     <DimGroup dim={props.dim}>
       {props.datum.value === null ? (
@@ -197,16 +205,20 @@ const describe = (
   const shown = data.flatMap((d) =>
     d.value === null ? [] : [{ label: d.label, value: d.value }]
   );
+
   const withheld = data.length - shown.length;
   const held = withheld === 0 ? "" : ` ${hidden}: ${plural(withheld, "bar")}.`;
+
   if (shown.length === 0) {
     return data.length === 0
       ? "No data."
       : `${plural(data.length, "bar")}.${held}`;
   }
+
   const at = (i: number) => `${shown[i].label}, ${format(shown[i].value)}`;
   const hi = maxIndex(shown.map((d) => d.value));
   const lo = maxIndex(shown.map((d) => -d.value));
+
   return `${plural(data.length, "bar")}. Largest: ${at(hi)}.${
     shown.length > 1 ? ` Smallest: ${at(lo)}.` : ""
   }${held} The data table lists every bar.`;
@@ -222,10 +234,12 @@ const printed = (
 /** React keys: each datum's key, numbered when the key repeats. */
 const reactKeys = (data: RungDatum[]) => {
   const seen = new Map<string, number>();
+
   return data.map((d) => {
     const key = keyOf(d);
     const nth = seen.get(key) ?? 0;
     seen.set(key, nth + 1);
+
     return `${key}#${nth}`;
   });
 };
@@ -277,11 +291,13 @@ const bands = (
 ) => {
   const plotWidth = Math.min(width - SIDE * 2, data.length * 120);
   const x0 = (width - plotWidth) / 2;
+
   const x = scaleBand<number>()
     .domain(data.map((_, i) => i))
     .range([x0, x0 + plotWidth])
     .paddingInner(0.42)
     .paddingOuter(0.3);
+
   const shown = fitBandLabels(
     data.map((d) => d.label),
     {
@@ -291,6 +307,7 @@ const bands = (
       step: x.step(),
     }
   );
+
   return { plotWidth, shown, x, x0 };
 };
 
@@ -313,6 +330,7 @@ const layout = (o: LayoutOptions) => {
     bottom: 30 + noteSpace(o.note, o.width - 16, 20, o.metrics),
     top: 28,
   };
+
   const { plotWidth, shown, x, x0 } = bands(o.data, o.width, o.metrics, o.keep);
   const { bottom } = margin;
   const pitch = rungPitch(o.height - bottom - margin.top, o.max);
@@ -321,16 +339,19 @@ const layout = (o: LayoutOptions) => {
   // at its floor the tallest column needs more, so the plot grows.
   // A fixed-size chart keeps exactly the height it was given.
   const tallest = Math.round(o.max) * pitch;
+
   const fitted = o.fixedHeight
     ? o.height
     : Math.max(
         Math.min(o.height, margin.top + Math.ceil(o.max) * pitch + bottom),
         margin.top + tallest + bottom
       );
+
   const shadow = Math.min(
     SHADOW,
     Math.round((x.step() - x.bandwidth()) * SHADOW_SHARE)
   );
+
   return {
     fitted,
     floor: Math.round(fitted - bottom),
@@ -375,11 +396,13 @@ const barSpotsOf = (
     const rungs = Math.max(0, Math.round((datum.value ?? 0) / o.unit));
     const top = rungY(o.floor, rungs - 1, o.pitch);
     const spots = [];
+
     for (let y = top; y <= o.floor; y += SPOT_STEP) {
       for (let x = left; x <= left + o.x.bandwidth(); x += SPOT_STEP) {
         spots.push({ x, y });
       }
     }
+
     return rungs === 0 ? [] : spots;
   });
 
@@ -403,6 +426,30 @@ const valueSpotsOf = (
       ) - 14,
   }));
 
+/**
+ * The emphasised bar, by key (id, else label) so sorting never moves it;
+ * none given, the largest. A key that names no bar emphasises none (-1).
+ */
+const heroOf = (
+  data: SvgProps["data"],
+  values: readonly number[],
+  emphasis: SvgProps["props"]["emphasis"]
+) =>
+  emphasis === undefined
+    ? maxIndex(values)
+    : data.findIndex((d) => keyOf(d) === emphasis);
+
+/** The chart's description: its bars, then its references. */
+const descOf = (
+  data: SvgProps["data"],
+  format: SvgProps["format"],
+  hidden: SvgProps["hidden"],
+  references: SvgProps["props"]["references"]
+) =>
+  [describe(data, format, hidden), referenceDesc(references, format)]
+    .filter((text) => text !== "")
+    .join(" ");
+
 /** The ladder bars, their references and the floor they stand on. */
 const RungBarsSvg = ({
   data,
@@ -415,12 +462,9 @@ const RungBarsSvg = ({
   width,
 }: SvgProps) => {
   const { fixedHeight, height, largest, unit, values } = scale;
-  // Emphasis is by key (id, else label) so sorting never moves it;
-  // none given, the largest. A key that names no bar emphasises none.
-  const hero =
-    props.emphasis === undefined
-      ? maxIndex(values)
-      : data.findIndex((d) => keyOf(d) === props.emphasis);
+
+  const hero = heroOf(data, values, props.emphasis);
+
   const { fitted, floor, pitch, plotWidth, shadow, shown, x, x0 } = layout({
     data,
     fixedHeight,
@@ -431,19 +475,24 @@ const RungBarsSvg = ({
     note: noteOf(props),
     width,
   });
+
   const keys = reactKeys(data);
+
   const plane = {
     x0,
     x1: x0 + plotWidth,
     y0: 28,
     y1: floor,
   };
+
   // A value's height: one pitch for each unit, up from the floor.
   const valueY = (v: number) => floor - (v / unit) * pitch;
+
   const valueSpots = [
     ...valueSpotsOf(data, { floor, pitch, unit, x }),
     ...barSpotsOf(data, { floor, pitch, unit, x }),
   ];
+
   // A reference line that asks for ink decides each bar's tone instead.
   const standing = (index: number) =>
     clears(props.references, data[index].value ?? Number.NaN);
@@ -468,12 +517,7 @@ const RungBarsSvg = ({
     >
       {(pointer) => (
         <ChartSvg
-          desc={[
-            describe(data, format, hidden),
-            referenceDesc(props.references, format),
-          ]
-            .filter((text) => text !== "")
-            .join(" ")}
+          desc={descOf(data, format, hidden, props.references)}
           height={fitted}
           label={name}
           width={width}
@@ -538,17 +582,21 @@ const RungBarsPlot = (props: RungBarsProps) => {
   const data = (props.data ?? []).filter(
     (d) => d.value === null || Number.isFinite(d.value)
   );
+
   const values = data.map((d) => d.value ?? 0);
+
   const largest = Math.max(
     0,
     props.max ?? 0,
     ...values,
     ...referenceValues(props.references)
   );
+
   const unit = countingUnit(
     props.unit !== undefined && props.unit > 0 ? props.unit : 1,
     largest
   );
+
   const hidden = props.hidden ?? "Hidden";
   const fixedHeight = props.width !== undefined && props.height !== undefined;
   const height = props.height ?? 460;

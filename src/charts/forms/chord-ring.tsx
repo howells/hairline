@@ -21,10 +21,13 @@ const fmtBn = (v: number) => `£${(v / 1000).toFixed(1)}bn`;
 
 /** Room outside the ring for the horizontal group names. */
 const LABEL_ROOM = 66;
+
 /** Thickness of a group's ring segment. */
 const RING = 3;
+
 /** Where ribbons and threads meet the ring: just inside its inner edge. */
 const GAP = 3;
+
 /** Samples along each thread's curve; enough that 1px reads as one smooth line. */
 const SAMPLES = 40;
 
@@ -46,6 +49,7 @@ const ribbonPath = (c: Chord, r: number) => {
   const s1 = polar(c.source.endAngle, r);
   const t0 = polar(c.target.startAngle, r);
   const t1 = polar(c.target.endAngle, r);
+
   return [
     `M${s0.x} ${s0.y}`,
     `A${r} ${r} 0 ${sweep(c.source.startAngle, c.source.endAngle)} 1 ${s1.x} ${s1.y}`,
@@ -67,6 +71,7 @@ const middle = (g: { endAngle: number; startAngle: number }) =>
 const threadPath = (c: Chord, r: number, shift: number) => {
   const p = polar(middle(c.source), r);
   const q = polar(middle(c.target), r);
+
   const points = Array.from({ length: SAMPLES + 1 }, (_, k) => {
     const t = k / SAMPLES;
     // B(t) = (1-t)²P + t²Q, the control point being the centre.
@@ -75,11 +80,13 @@ const threadPath = (c: Chord, r: number, shift: number) => {
     const dx = 2 * t * q.x - 2 * (1 - t) * p.x;
     const dy = 2 * t * q.y - 2 * (1 - t) * p.y;
     const len = Math.hypot(dx, dy);
+
     return {
       x: bx - (dy / len) * shift,
       y: by + (dx / len) * shift,
     };
   });
+
   return points
     .map(
       (pt, k) => `${k === 0 ? "M" : "L"}${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`
@@ -97,9 +104,11 @@ const shifts = (n: number) =>
 
 const anchorAt = (angle: number) => {
   const s = Math.sin(angle);
+
   if (Math.abs(s) < 0.15) {
     return "middle";
   }
+
   return s > 0 ? "start" : "end";
 };
 
@@ -116,11 +125,13 @@ const layoutOf = (matrix: number[][]) =>
 const centreOf = (data: SharedWork, r: number, width: number) => {
   let lo = -r;
   let hi = r;
+
   for (const g of layoutOf(data.matrix).groups) {
     const mid = (g.startAngle + g.endAngle) / 2;
     const x = Math.sin(mid) * (r + 12);
     const w = sansWidth(data.teams[g.index], 12);
     const side = anchorAt(mid);
+
     if (side === "start") {
       hi = Math.max(hi, x + w);
     } else if (side === "end") {
@@ -130,6 +141,7 @@ const centreOf = (data: SharedWork, r: number, width: number) => {
       hi = Math.max(hi, x + w / 2);
     }
   }
+
   return Math.round((width - (hi - lo)) / 2 - lo);
 };
 
@@ -144,11 +156,13 @@ const TeamLabel = (props: {
   const p = polar(mid, props.r + 12);
   const c = Math.cos(mid);
   let dy = "0.34em";
+
   if (c > 0.85) {
     dy = "0";
   } else if (c < -0.85) {
     dy = "0.71em";
   }
+
   return (
     <Label
       anchor={anchorAt(mid)}
@@ -181,6 +195,7 @@ const geometryOf = (data: SharedWork, r: number) => {
   const chords = layoutOf(data.matrix);
   const inner = r - RING;
   const most = Math.max(...chords.map((c) => c.source.value));
+
   const pairs = chords.map((c): Pair => ({
     chord: c,
     ends: {
@@ -194,7 +209,9 @@ const geometryOf = (data: SharedWork, r: number) => {
       shift,
     })),
   }));
+
   const segment = arc<ChordGroup>().innerRadius(inner).outerRadius(r);
+
   return {
     groups: chords.groups.map((g) => ({ d: segment(g) ?? "", group: g })),
     pairs,
@@ -281,16 +298,20 @@ const Ring = (props: RingProps) => (
  */
 const teamAt = (geometry: Geometry, angle: number) => {
   const turn = (angle + Math.PI * 2) % (Math.PI * 2);
+
   const off = (g: ChordGroup) => {
     if (turn >= g.startAngle && turn <= g.endAngle) {
       return 0;
     }
+
     const d = Math.min(
       Math.abs(turn - g.startAngle),
       Math.abs(turn - g.endAngle)
     );
+
     return Math.min(d, Math.PI * 2 - d);
   };
+
   return geometry.groups
     .map(({ group }) => group)
     .toSorted((a, b) => off(a) - off(b))[0];
@@ -312,21 +333,27 @@ const ChordSvg = (props: {
   const cy = Math.round(size / 2);
   const geometry = useMemo(() => geometryOf(data, r), [data, r]);
   const label = `UK goods exports in 2025 between ${data.teams.length} partners and kinds of goods; ${data.teams[busiest]} is the largest, ${fmtBn(totals[busiest])}`;
+
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
     const dx = e.clientX - box.left - cx;
     const dy = e.clientY - box.top - cy;
+
     // Over the hub the focus holds, so crossing the middle never flickers.
     if (Math.hypot(dx, dy) < r * 0.45) {
       return;
     }
+
     const g = teamAt(geometry, Math.atan2(dx, -dy));
+
     if (g === undefined || g.index === hover.key) {
       return;
     }
+
     const p = polar(middle(g), r);
     hover.show(g.index, cx + p.x, cy + p.y - 12);
   };
+
   return (
     <ChartSvg
       className="touch-pan-y"
@@ -373,6 +400,7 @@ export const ChordRing = (props: { data?: SharedWork }) => {
   const data = props.data ?? sharedWorkDemo;
   const hover = useHover<number>();
   const totals = data.matrix.map((row) => sum(row));
+
   return (
     <Plot
       overlay={

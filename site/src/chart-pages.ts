@@ -42,12 +42,14 @@ const range = ({ max, min }: { max: number; min: number }) =>
 
 const jobs = (chart: ChartEntry) => {
   const [first, ...rest] = chart.jobs.map((job) => job.replaceAll("-", " "));
+
   return rest.length === 0 ? first : `${first}, then ${rest.join(", ")}`;
 };
 
 /** Plain-words limits: "It takes one to 24 items and one series." */
 const limits = (chart: ChartEntry) => {
   const { categories, series } = chart.limits;
+
   return categories === undefined
     ? `It takes ${range(series)} series.`
     : `It takes ${range(categories)} items and ${range(series)} series.`;
@@ -102,6 +104,7 @@ const frontmatter = (chart: ChartEntry, order: number) =>
 
 const page = (chart: ChartEntry, order: number): SourceEntry => {
   const body = chartBody(chart);
+
   return {
     body: { format: "mdx", text: body },
     data: {

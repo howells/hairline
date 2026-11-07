@@ -22,14 +22,17 @@ import { LEVELS, MEDIAN, responseTimes } from "./response-time.data";
 import type { ChannelTimes } from "./response-time.data";
 
 const TOP = 30;
+
 /** One party per row: a 44px-plus touch row. */
 const ROW = 80;
 const GAP = 16;
 const DECILE = 14;
 const MEDIAN_H = 18;
 const DOMAIN: [number, number] = [0, 60];
+
 /** The halftone: the shared ladder's dot sizes, largest where constituencies crowd. */
 const DOT_R = HALFTONE_R;
+
 /**
  * The band, centred on its row: 21px inside the outline, a whole number of
  * screen tiles and one, so the dots sit as far from the bottom as the top.
@@ -92,8 +95,10 @@ const ChannelRow = ({
   const bx = Math.round(frame.x(datum.q[0]));
   const by = Math.round(y) - BAND_UP;
   const bandW = Math.round(frame.x(datum.q.at(-1) ?? 1)) - bx;
+
   const screenEnd =
     Math.floor((bandW - 3) / TEXTURE_PITCH.screen) * TEXTURE_PITCH.screen;
+
   return (
     <DimGroup dim={dim} onPointerEnter={onEnter}>
       <HitRect height={ROW} width={width} x={0} y={y - ROW / 2} />
@@ -113,10 +118,12 @@ const ChannelRow = ({
           />
           {densities(datum.q, frame.x).map((d, i) => {
             const a = Math.max(0, Math.round(frame.x(datum.q[i])) - bx - 1);
+
             const b = Math.min(
               screenEnd,
               Math.round(frame.x(datum.q[i + 1])) - bx - 1
             );
+
             return (
               <rect
                 fill={paint(dense.tex(String(levelOf(d, dense.max))))}
@@ -223,10 +230,13 @@ export const ResponseTime = (props: ResponseTimeProps) => {
     <Plot>
       {(width) => {
         const nameW = Math.max(...data.map((d) => sansWidth(d.channel, 12)));
+
         const valueW = Math.max(
           ...medians.map((m) => sansWidth(fmtPercent(m), 12))
         );
+
         const x1 = width - valueW - GAP;
+
         const frame: Frame = {
           rowY: (k) => TOP + k * ROW + ROW / 2,
           x: scaleLinear()
@@ -234,9 +244,11 @@ export const ResponseTime = (props: ResponseTimeProps) => {
             .range([nameW + GAP, x1]),
           x1,
         };
+
         const ticks = width < 480 ? TICKS_NARROW : TICKS_WIDE;
         const max = Math.max(...data.flatMap((d) => densities(d.q, frame.x)));
         const tip = hover.key === null ? null : data[hover.key];
+
         return (
           <>
             <ChartSvg

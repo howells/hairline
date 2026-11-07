@@ -49,13 +49,17 @@ const advance = (ch: string, metrics: FontMetrics, tabular: boolean) => {
   if (tabular && metrics.tabular !== undefined && DIGIT.test(ch)) {
     return metrics.tabular;
   }
+
   const listed = metrics.advances[ch];
+
   if (listed !== undefined) {
     return listed;
   }
+
   if (metrics === INTER_METRICS && ch !== ch.toLowerCase()) {
     return UPPER_EM;
   }
+
   return metrics.fallback;
 };
 
@@ -71,8 +75,10 @@ export const textWidth = (
   tabular = false
 ) => {
   let em = 0;
+
   for (const ch of text) {
     em += advance(ch, metrics, tabular);
   }
+
   return em * size;
 };

@@ -17,6 +17,7 @@ export const contextClass = (
   if (context === "opacity") {
     return as === "fill" ? "fill-ink opacity-25" : "stroke-ink opacity-25";
   }
+
   return as === "fill" ? "fill-l5" : "stroke-l4";
 };
 

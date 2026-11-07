@@ -106,8 +106,10 @@ export const dumbbellQueueSchema = z
 
 /** One row. */
 export type DumbbellDatum = z.infer<typeof dumbbellDatumSchema>;
+
 /** The validated payload. */
 export type DumbbellQueueData = z.infer<typeof dumbbellQueueSchema>;
+
 /** What `<DumbbellQueue>` takes: the payload, with `format` also allowed as a function. */
 export type DumbbellQueueProps = SharedCallbacks &
   Omit<z.input<typeof dumbbellQueueSchema>, "format" | "note"> & {

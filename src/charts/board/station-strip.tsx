@@ -47,15 +47,18 @@ interface StationStripProps {
 const median = (values: number[]) => {
   const v = values.toSorted((a, b) => a - b);
   const mid = Math.floor(v.length / 2);
+
   return v.length % 2 === 1 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
 };
 
 /** One row per group, highest median first. */
 const groupRows = (stations: StripStation[]): GroupRow[] => {
   const names = [...new Set(stations.map((e) => e.group))];
+
   return names
     .map((name) => {
       const own = stations.filter((e) => e.group === name);
+
       return { median: median(own.map((e) => e.value)), name, stations: own };
     })
     .toSorted((a, b) => b.median - a.median);
@@ -68,21 +71,28 @@ const groupRows = (stations: StripStation[]): GroupRow[] => {
 const nearestIn = (rows: GroupRow[], frame: Frame, px: number, py: number) => {
   const row = rows.find((r) => {
     const top = frame.y(r.name) ?? 0;
+
     return py >= top && py < top + frame.y.bandwidth();
   });
+
   if (row === undefined) {
     return null;
   }
+
   const dist = (e: StripStation) => Math.abs(frame.x(e.value) - px);
+
   return row.stations.toSorted((a, b) => dist(a) - dist(b))[0].name;
 };
 
 /** Gap between a row's name and the plot, px. */
 const NAME_GAP = 20;
+
 /** Room at the right for each row's median, px. */
 const MEDIAN_W = 60;
+
 /** Room above the plot for the median column's name, px. */
 const TOP = 22;
+
 /** Half the height of a row's median tick, px. */
 const TICK_H = TICK_LEN.md;
 
@@ -117,6 +127,7 @@ const StationDot = (props: {
   const named = props.active;
   // Near the right edge the label runs leftward from the dot.
   const anchor = cx > frame.width - frame.m.right - 60 ? "end" : "middle";
+
   return (
     <g>
       <Dot
@@ -157,6 +168,7 @@ const StripRow = (props: {
   const cy = crisp(mid);
   const ps = row.stations.map((e) => e.value);
   const tone = TONE[props.tone];
+
   return (
     <DimGroup className="fade" dim={props.dim} style={stagger(props.i)}>
       <text
@@ -215,6 +227,7 @@ const StripAxes = (props: {
   medianTitle: string;
 }) => {
   const { height: h, m, width, x } = props.frame;
+
   return (
     <>
       <VGrid xs={props.ticks.map(x)} y0={m.top} y1={h - m.bottom} />
@@ -249,8 +262,10 @@ const StripAxes = (props: {
 export const StationStrip = (props: StationStripProps) => {
   const hover = useHover<string>();
   const rows = groupRows(props.stations);
+
   const hoverRow =
     props.stations.find((e) => e.name === hover.key)?.group ?? null;
+
   const tickFormat = props.tickFormat ?? props.format;
 
   return (
@@ -267,7 +282,9 @@ export const StationStrip = (props: StationStripProps) => {
           right: MEDIAN_W,
           top: TOP,
         };
+
         const h = props.height;
+
         const frame: Frame = {
           height: h,
           m,
@@ -287,12 +304,14 @@ export const StationStrip = (props: StationStripProps) => {
             leave={hover.clear}
             onPointerMove={(e: PointerEvent<SVGSVGElement>) => {
               const r = e.currentTarget.getBoundingClientRect();
+
               const name = nearestIn(
                 rows,
                 frame,
                 e.clientX - r.left,
                 e.clientY - r.top
               );
+
               hover.set(name);
             }}
             width={width}

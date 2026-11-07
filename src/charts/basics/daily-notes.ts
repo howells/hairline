@@ -21,6 +21,7 @@ export const foundNotes = (
       const index = readings.findIndex(
         (r) => r.key === n.at && r.value !== null
       );
+
       return index === -1 ? [] : [{ ...n, index }];
     })
     .toSorted((a, b) => a.index - b.index);

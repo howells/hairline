@@ -34,15 +34,18 @@ export const Rungs = (props: RungsProps) => {
   const width = Math.max(1, Math.round(props.left + props.width) - left);
   const every = props.every ?? 5;
   const reach = Math.round(props.reach ?? 0);
+
   return (
     <g>
       {Array.from({ length: props.n }, (_, r) => {
         const k = from + r;
+
         // Count off within this run, from its lowest rung.
         const accent =
           props.accent !== undefined &&
           props.accent !== "" &&
           (r + 1) % every === 0;
+
         return (
           <rect
             className={`grow-x ${accent ? props.accent : props.className}`}

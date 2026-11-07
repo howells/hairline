@@ -66,6 +66,7 @@ const rainLabels = (ticks: number[]) =>
 /** Rain bars hanging from a hairline top rule. */
 const Rain = ({ f, fmt }: { f: Frame; fmt: (v: number) => string }) => {
   const bw = f.x.bandwidth();
+
   return (
     <g>
       {rainLabels(f.inTicks).map((v) => (
@@ -118,16 +119,19 @@ const Flow = ({
     .x((_, i) => f.cx(i))
     .y((d) => f.yOut(d.output))
     .curve(curveMonotoneX);
+
   const areaGen = area<RainfallDatum>()
     .x((_, i) => f.cx(i))
     .y0(f.floor)
     .y1((d) => f.yOut(d.output))
     .curve(curveMonotoneX);
+
   // Every third day on a wide plot, every sixth on a phone; the month printed
   // on the first tick and where it changes.
   const every = narrow ? 6 : 3;
   const ticks = f.data.flatMap((d, i) => (i % every === 0 ? [{ d, i }] : []));
   const tickLabels = dayTickLabels(ticks.map((t) => t.d.date));
+
   return (
     <g>
       <path
@@ -225,22 +229,28 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
           .domain([0, Math.max(...data.map((d) => d.output))])
           .nice(6)
           .domain();
+
         const inTop = inputTicks(Math.max(...data.map((d) => d.input))).at(-1);
+
         const m = {
           bottom: 24 + noteSpace(noteOf(props), width - 16, 20),
           left: labelRoom([fIn(inTop ?? 0), fOut(outTop)], "t-axis") + 12,
           right: 0,
           top: 6,
         };
+
         const innerH = height - m.top - m.bottom;
         const floor = height - m.bottom;
+
         const x = scaleBand<number>()
           .domain(data.map((_, i) => i))
           .range([m.left, width - m.right])
           .paddingInner(0.42)
           .paddingOuter(0.1);
+
         const cx = (i: number) => (x(i) ?? 0) + x.bandwidth() / 2;
         const inTicks = inputTicks(Math.max(...data.map((d) => d.input)));
+
         const f: Frame = {
           cx,
           data,
@@ -260,11 +270,13 @@ export const RainfallDualArea = (props: RainfallDualAreaProps) => {
             .range([floor, m.top + innerH * 0.4])
             .nice(6),
         };
+
         const move = (e: PointerEvent<SVGSVGElement>) => {
           const px = e.clientX - e.currentTarget.getBoundingClientRect().left;
           const i = Math.round((px - cx(0)) / x.step());
           hover.show(Math.max(0, Math.min(data.length - 1, i)));
         };
+
         const h = hover.key === null ? undefined : data[hover.key];
 
         return (

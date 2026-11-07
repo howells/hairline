@@ -24,6 +24,7 @@ const nothing = () => {
 
 let reduced = false;
 const watching: Report[] = [];
+
 /** Stands in for both observers; only the intersection one is ever fired. */
 class Observer {
   report: Report;
@@ -35,9 +36,13 @@ class Observer {
     watching.push(this.report);
   };
 }
+
 vi.stubGlobal("IntersectionObserver", Observer);
+
 vi.stubGlobal("ResizeObserver", Observer);
+
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+
 vi.stubGlobal("matchMedia", (media: string) => ({
   addEventListener: nothing,
   matches: reduced,
@@ -60,33 +65,40 @@ const show = async (root: Root, props: RungBarsProps) => {
     await Promise.resolve();
   });
 };
+
 const mount = async (props: RungBarsProps) => {
   const host = document.createElement("div");
   document.body.append(host);
   const root = createRoot(host);
   await show(root, props);
+
   return { host, root };
 };
+
 /** One animation frame, with the effects it causes flushed, as in a browser. */
 const frame = async () => {
   await act(async () => {
     await vi.advanceTimersByTimeAsync(20);
   });
 };
+
 /** Enough frames for reveal, then settle. */
 const frames = async () => {
   await frame();
   await frame();
   await frame();
 };
+
 const scrollIntoView = async () => {
   await act(async () => {
     for (const report of watching.splice(0)) {
       report([{ isIntersecting: true }]);
     }
+
     await Promise.resolve();
   });
 };
+
 const ready = (host: HTMLElement) =>
   host.querySelector('[data-hl-ready="true"]') !== null;
 
@@ -95,24 +107,31 @@ const withoutScreenBlocks = (css: string) => {
   let rest = "";
   let depth = 0;
   let skipFrom = -1;
+
   for (let i = 0; i < css.length; i += 1) {
     const ch = css[i];
+
     if (ch === "{") {
       depth += 1;
     }
+
     if (skipFrom < 0 && css.startsWith("@media screen", i)) {
       skipFrom = depth;
     }
+
     if (skipFrom < 0) {
       rest += ch;
     }
+
     if (ch === "}") {
       depth -= 1;
+
       if (skipFrom >= 0 && depth === skipFrom) {
         skipFrom = -1;
       }
     }
   }
+
   return rest;
 };
 
@@ -132,6 +151,7 @@ describe("motion", () => {
       const html = renderToString(
         createElement(RungBars, { ...base, animate: "off" })
       );
+
       expect(html).toContain("</svg>");
       expect(html).toContain('data-hl-ready="true"');
       expect(html).not.toContain("is-hidden");
@@ -150,6 +170,7 @@ describe("motion", () => {
         const html = renderToString(
           createElement(RungBars, { ...base, animate })
         );
+
         expect(html).toContain("is-hidden");
         expect(html).not.toContain('data-hl-ready="true"');
       }
@@ -159,6 +180,7 @@ describe("motion", () => {
       const html = renderToString(
         createElement(RungBars, { data: base.data, initialWidth: 480 })
       );
+
       expect(html).toContain("is-hidden");
       expect(html).not.toContain('data-hl-ready="true"');
     });
@@ -242,12 +264,14 @@ describe("motion", () => {
 
     it("each replay calls onReady again, and an unchanged key does not", async () => {
       const onReady = vi.fn<() => void>();
+
       const props = {
         ...base,
         animate: "mount",
         onReady,
         replayKey: 1,
       } as const;
+
       const { root } = await mount(props);
       await frames();
       await show(root, { ...props });
@@ -278,9 +302,11 @@ describe("motion", () => {
         path.join(process.cwd(), "lib/theme.css"),
         "utf-8"
       );
+
       const hiding = withoutScreenBlocks(css)
         .split("\n")
         .filter((line) => line.includes("is-hidden") && !line.includes("*"));
+
       expect(css).toContain("is-hidden");
       expect(hiding).toStrictEqual([]);
     });

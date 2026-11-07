@@ -14,6 +14,7 @@ export interface Spot {
 
 /** Gap between a tip and the edge of its chart, px. */
 export const TIP_INSET = 4;
+
 /** Gap between a tip and the mark it speaks for, px. */
 export const TIP_GAP = 12;
 
@@ -21,6 +22,7 @@ const distance = (axis: Axis, a: Spot, b: Spot) => {
   if (axis === "x") {
     return Math.abs(a.x - b.x);
   }
+
   return axis === "y" ? Math.abs(a.y - b.y) : Math.hypot(a.x - b.x, a.y - b.y);
 };
 
@@ -37,13 +39,16 @@ export const nearest = <S extends Spot>(
 ): S | null => {
   let best: S | null = null;
   let bestDistance = Infinity;
+
   for (const stop of stops) {
     const d = distance(axis, stop, at);
+
     if (d < bestDistance) {
       best = stop;
       bestDistance = d;
     }
   }
+
   return bestDistance <= reach ? best : null;
 };
 
@@ -59,16 +64,21 @@ export const STEP_KEYS = new Set([...BACK, ...FORWARD, "End", "Home"]);
  */
 export const stepTo = (count: number, from: number, key: string) => {
   const last = count - 1;
+
   if (key === "Home") {
     return 0;
   }
+
   if (key === "End") {
     return last;
   }
+
   if (from < 0) {
     return FORWARD.has(key) ? 0 : last;
   }
+
   const next = from + (BACK.has(key) ? -1 : 1);
+
   return Math.max(0, Math.min(last, next));
 };
 
@@ -102,11 +112,13 @@ export const avoidBoxes =
   (boxes: readonly Box[]): Avoid =>
   (x0, x1) => {
     const ranges: Range[] = [];
+
     for (const b of boxes) {
       if (b.right >= x0 && b.left <= x1) {
         ranges.push([b.top, b.bottom]);
       }
     }
+
     return ranges;
   };
 
@@ -147,6 +159,7 @@ const edgeOf = (o: PlaceOptions, side: "left" | "right"): Edge => {
   const reach = (o.clear ?? 0) + TIP_GAP;
   const raw = side === "right" ? o.at.x + reach : o.at.x - reach - o.tip.w;
   const max = Math.max(TIP_INSET, o.bounds.w - o.tip.w - TIP_INSET);
+
   return {
     fits: raw >= TIP_INSET && raw <= max,
     left: Math.min(Math.max(raw, TIP_INSET), max),
@@ -157,20 +170,24 @@ const edgeOf = (o: PlaceOptions, side: "left" | "right"): Edge => {
 /** The value with the lowest score; the first wins a tie. */
 const lowest = <T>(values: readonly T[], score: (v: T) => number) => {
   let [best] = values;
+
   for (const v of values) {
     if (score(v) < score(best)) {
       best = v;
     }
   }
+
   return best;
 };
 
 /** How much of `top`..`top + h` lies on the ranges. */
 const covered = (top: number, h: number, ranges: readonly Range[]) => {
   let total = 0;
+
   for (const [lo, hi] of ranges) {
     total += Math.max(0, Math.min(top + h, hi) - Math.max(top, lo));
   }
+
   return total;
 };
 
@@ -181,17 +198,22 @@ const vertical = (o: PlaceOptions, left: number) => {
   const max = Math.max(min, o.bounds.h - h - TIP_INSET);
   const clamp = (y: number) => Math.min(Math.max(y, min), max);
   const centred = clamp(o.at.y - h / 2);
+
   if (o.avoid === undefined) {
     return { overlap: 0, top: centred };
   }
+
   const ranges = o.avoid(left, left + o.tip.w);
   const candidates = [centred, min, max];
+
   for (const [lo, hi] of ranges) {
     candidates.push(clamp(lo - h - TIP_GAP / 2), clamp(hi + TIP_GAP / 2));
   }
+
   const from = (top: number) => Math.abs(top + h / 2 - o.at.y);
   // Least covered first; of those equally clear, the nearest the mark.
   const top = lowest(candidates, (t) => covered(t, h, ranges) * 1000 + from(t));
+
   return { overlap: covered(top, h, ranges), top };
 };
 
@@ -200,8 +222,10 @@ const centred = (o: PlaceOptions, top: number): Placement | null => {
   if (top < TIP_INSET || top + o.tip.h > o.bounds.h - TIP_INSET) {
     return null;
   }
+
   const max = Math.max(TIP_INSET, o.bounds.w - o.tip.w - TIP_INSET);
   const left = Math.min(Math.max(o.at.x - o.tip.w / 2, TIP_INSET), max);
+
   return { left, side: o.side ?? "right", top };
 };
 
@@ -219,9 +243,11 @@ const underneath = (o: PlaceOptions) =>
  */
 export const placeTip = (o: PlaceOptions): Placement => {
   const stacked = underneath(o) ?? overhead(o);
+
   if (stacked !== null) {
     return stacked;
   }
+
   const wanted = o.side ?? "right";
   const sides = [wanted, wanted === "right" ? "left" : "right"] as const;
   const edges = sides.map((side) => edgeOf(o, side));
@@ -230,6 +256,7 @@ export const placeTip = (o: PlaceOptions): Placement => {
   const pool = fitting.length > 0 ? fitting : [roomier];
   const options = pool.map((edge) => ({ edge, ...vertical(o, edge.left) }));
   const best = lowest(options, (v) => v.overlap);
+
   return { left: best.edge.left, side: best.edge.side, top: best.top };
 };
 
@@ -241,5 +268,6 @@ export const spoken = (
   const rows = stop.rows
     .map((r) => (r.name === undefined ? r.value : `${r.name} ${r.value}`))
     .join(", ");
+
   return `${stop.lead}${rows === "" ? "" : `: ${rows}`}${pinned ? ". Pinned" : ""}`;
 };

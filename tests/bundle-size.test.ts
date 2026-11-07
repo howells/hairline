@@ -16,9 +16,11 @@ import { z } from "zod";
 const root = fileURLToPath(new URL("../", import.meta.url));
 
 const Target = z.object({ default: z.string(), types: z.string() });
+
 const Manifest = z.object({
   exports: z.record(z.string(), z.union([z.string(), Target])),
 });
+
 const manifest = Manifest.parse(
   JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"))
 );
@@ -49,12 +51,15 @@ const gzipped = async (subpath: string) => {
     configFile: false,
     logLevel: "silent",
   });
+
   const outputs = (Array.isArray(result) ? result : [result]).flatMap((item) =>
     "output" in item ? item.output : []
   );
+
   const code = outputs
     .map((chunk) => ("code" in chunk ? chunk.code : ""))
     .join("\n");
+
   return gzipSync(code).length;
 };
 

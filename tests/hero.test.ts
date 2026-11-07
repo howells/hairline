@@ -16,6 +16,7 @@ const points: PlumbDatum[] = [
   { label: "Cedar", x: 70, y: 22 },
   { label: "Elm", x: 90, y: 18 },
 ];
+
 const sized = { height: 400, width: 560 };
 
 const scatter = (props: Partial<ComponentProps<typeof PlumbScatter>>) =>
@@ -45,6 +46,7 @@ describe("PlumbScatter hero and context", () => {
     const list = circles(
       scatter({ data: points.toReversed(), hero: ["Alder"] })
     );
+
     expect(list.at(-1)).toContain("fill-hero");
   });
 
@@ -72,6 +74,7 @@ describe("PlumbScatter hero and context", () => {
       heroLabel: "Contract studios",
       table: true,
     });
+
     expect(html).toContain(">Contract studios<");
     expect(html).toContain(">2 points<");
     expect(html).toContain('class="stroke-rule"');
@@ -84,6 +87,7 @@ describe("PlumbScatter hero and context", () => {
       heroLabel: "A",
       table: true,
     });
+
     expect(html.match(/<td>Yes<\/td>/gu)).toHaveLength(2);
     expect(html.match(/<td>No<\/td>/gu)).toHaveLength(2);
   });
@@ -96,10 +100,13 @@ describe("PlumbScatter hero and context", () => {
 
   it("checks hero keys and context against the schema", () => {
     const chart = getChart("plumb-scatter");
+
     const pointers = (payload: Payload) => {
       const checked = chart.validate(payload);
+
       return checked.ok ? [] : checked.issues.map((i) => i.pointer);
     };
+
     expect(pointers({ data: points, hero: ["Alder", "nope"] })).toStrictEqual([
       "hero[1]",
     ]);
@@ -158,10 +165,12 @@ describe("HairlineLine hero and context", () => {
 
   it("checks hero against the readings", () => {
     const chart = getChart("hairline-line");
+
     const checked = chart.validate({
       data: week,
       hero: ["2024-03-05", "nope"],
     });
+
     expect(
       checked.ok ? [] : checked.issues.map((i) => i.pointer)
     ).toStrictEqual(["hero[1]"]);

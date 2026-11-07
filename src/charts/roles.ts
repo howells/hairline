@@ -11,30 +11,40 @@ export const PANEL =
 
 /** Ticks, scale labels and small secondary labels (the axis role). */
 export const TICK = "t-axis";
+
 /** Category and series names. */
 export const LABEL = "text-tick font-medium";
+
 /** Data values (the value role). */
 export const VALUE = "t-value";
+
 /** A small heading over an HTML block, in the axis voice. */
 export const CAPTION = "text-tick text-muted";
 
 /** Gridlines: solid 1px hairlines, snapped. */
 export const GRID_H = "grid-line";
 export const GRID_V = "grid-line";
+
 /** Baselines and zero rules. */
 export const RULE_ZERO = "hairline";
+
 /** A limit or plan line: the one dash, because it marks a target. */
 export const RULE_TARGET = "stroke-l3 dash-rule shape-crisp";
+
 /** The scrub cursor: a solid hairline. */
 export const CURSOR = "stroke-faint shape-crisp";
+
 /** The 1px rule around every textured fill. */
 export const OUTLINE = "fill-none stroke-l5 shape-crisp";
 
 export const LINE = "fill-none stroke-medium cap-round";
+
 /** Cursor dots sit on the cursor (no glide) and recolour across a threshold. */
 export const DOT = "transition-tone";
+
 /** Scatter points swell on hover. */
 export const POINT = "transition-radius";
+
 /** Bars recolour as the cursor passes them. */
 export const MARK = "transition-tone";
 

@@ -14,9 +14,11 @@ interface DataTableProps {
  */
 const keyed = (texts: readonly string[]) => {
   const seen = new Map<string, number>();
+
   return texts.map((text) => {
     const count = (seen.get(text) ?? 0) + 1;
     seen.set(text, count);
+
     return { key: `${text}#${count}`, text };
   });
 };
@@ -31,6 +33,7 @@ const keyed = (texts: readonly string[]) => {
 export const DataTable = (props: DataTableProps) => {
   const columns = keyed(props.columns);
   const rows = keyed(props.rows.map((row) => row.join("\u001F")));
+
   const table = (
     <table
       className={
@@ -62,9 +65,11 @@ export const DataTable = (props: DataTableProps) => {
       </tbody>
     </table>
   );
+
   if (props.visible === true) {
     return table;
   }
+
   // A table ignores the 1px box sr-only gives it and grows to its rows, which
   // lengthens the page; a block holds that box and clips the table inside.
   return <div className="sr-only">{table}</div>;

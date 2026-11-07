@@ -63,6 +63,7 @@ const rulerTick = (k: number) => {
   if ((k + 1) % 10 === 0) {
     return RULER.ten;
   }
+
   return (k + 1) % 5 === 0 ? RULER.five : RULER.one;
 };
 
@@ -80,6 +81,7 @@ const RulerRow = ({
   const n = Math.round(row.value);
   const tone = hero ? "fill-hero" : "fill-l2";
   const end = x0 + pitch * (n - 1) + 1;
+
   return (
     <>
       <HitRect height={band.h} width={band.w} x={band.x} y={band.y} />
@@ -97,6 +99,7 @@ const RulerRow = ({
         {Array.from({ length: Math.max(0, ruler - n) }, (_, j) => {
           const k = n + j;
           const h = rulerTick(k);
+
           return (
             <rect
               height={h}
@@ -112,6 +115,7 @@ const RulerRow = ({
         {Array.from({ length: n }, (_, k) => {
           // Tall ticks keep the ruler's cadence: the tens stand tallest.
           const h = tall - RULER.ten + rulerTick(k);
+
           return (
             <rect
               className="grow-y"
@@ -160,6 +164,7 @@ export const BallotTally = (props: BallotTallyProps) => {
         // Whole-pixel pitch, the widest that fits the ruler and the value
         // after its longest run; that block is centred.
         const valueW = data.map((d) => sansWidth(format(d.value), 11));
+
         const blockAt = (p: number) =>
           Math.max(
             p * (ruler - 1) + 1,
@@ -167,20 +172,26 @@ export const BallotTally = (props: BallotTallyProps) => {
               (d, i) => p * (Math.round(d.value) - 1) + 7 + (valueW[i] ?? 0)
             )
           );
+
         let pitch = Math.max(2, Math.floor((width - 1) / (ruler - 1)));
+
         while (pitch > 2 && blockAt(pitch) > width) {
           pitch -= 1;
         }
+
         const x0 = Math.round((width - blockAt(pitch)) / 2);
         const rowH = (height - noteH - 8) / Math.max(1, data.length);
         const tall = Math.round(Math.min(44, rowH * 0.42));
+
         const layoutAt = (i: number): RulerLayout => ({
           base: Math.round(rowH * (i + 1) - rowH * 0.22),
           pitch,
           tall,
           x0,
         });
+
         const tip = hover.key === null ? undefined : data[hover.key];
+
         return (
           <div className="relative">
             <ChartSvg

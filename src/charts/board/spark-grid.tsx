@@ -25,6 +25,7 @@ interface CellProps {
 
 const BarCell = (props: CellProps & { cell: SparkBarCell }) => {
   const { cell } = props;
+
   return (
     <MonthlyBars
       height={props.height}
@@ -48,6 +49,7 @@ const BarCell = (props: CellProps & { cell: SparkBarCell }) => {
 
 const LineCell = (props: CellProps & { cell: SparkLineCell }) => {
   const { cell } = props;
+
   return (
     <TimeLines
       height={props.height}
@@ -71,6 +73,7 @@ const restValue = (cell: SparkCell) => {
   const value = isLineCell(cell)
     ? cell.data[cell.rest ?? cell.data.length - 1].value
     : cell.values[cell.rest ?? cell.values.length - 1];
+
   return value === null || value === undefined ? "None" : cell.format(value);
 };
 
@@ -102,6 +105,7 @@ export const SparkGrid = (props: SparkGridProps) => {
     >
       {({ index }) => {
         const cell = cells[index];
+
         return isLineCell(cell) ? (
           <LineCell cell={cell} height={height} sync={sync} />
         ) : (

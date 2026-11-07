@@ -108,6 +108,7 @@ export const rangeDotsSchema = z
         });
       }
     }
+
     if (props.domain !== undefined && !(props.domain[0] < props.domain[1])) {
       ctx.addIssue({
         code: "custom",
@@ -119,8 +120,10 @@ export const rangeDotsSchema = z
 
 /** One row. */
 export type RangeDatum = z.infer<typeof rangeDatumSchema>;
+
 /** The validated payload. */
 export type RangeDotsData = z.infer<typeof rangeDotsSchema>;
+
 /** What `<RangeDots>` takes: the payload, with formats also allowed as functions. */
 export type RangeDotsProps = SharedCallbacks &
   Omit<z.input<typeof rangeDotsSchema>, "format" | "formatMargin" | "note"> & {

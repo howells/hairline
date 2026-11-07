@@ -20,10 +20,12 @@ export const adjacencyOf = (
   links: readonly Link[]
 ): Adjacency => {
   const next = new Map<string, string[]>(ids.map((id) => [id, []]));
+
   for (const l of links) {
     next.get(l.source)?.push(l.target);
     next.get(l.target)?.push(l.source);
   }
+
   return next;
 };
 
@@ -34,8 +36,10 @@ export const stepsFrom = (
 ): ReadonlyMap<string, Step> => {
   const steps = new Map<string, Step>([[start, 0]]);
   let ring = [start];
+
   for (const step of [1, 2] as const) {
     const out: string[] = [];
+
     for (const id of ring) {
       for (const n of adjacency.get(id) ?? []) {
         if (!steps.has(n)) {
@@ -44,8 +48,10 @@ export const stepsFrom = (
         }
       }
     }
+
     ring = out;
   }
+
   return steps;
 };
 
@@ -67,10 +73,13 @@ export const linkStepOf = (
   if (steps === null) {
     return 0;
   }
+
   const near = Math.min(stepOf(steps, a), stepOf(steps, b));
+
   if (near === 0) {
     return 1;
   }
+
   return near === 1 ? 2 : 3;
 };
 
@@ -81,6 +90,7 @@ export const STEP_FILL = [
   "fill-l3",
   "fill-l5",
 ] as const;
+
 export const STEP_STROKE = [
   "stroke-ink",
   "stroke-ink",
@@ -97,9 +107,11 @@ export const reachText = (steps: ReadonlyMap<string, Step>): string => {
   const values = [...steps.values()];
   const direct = values.filter((s) => s === 1).length;
   const second = values.filter((s) => s === 2).length;
+
   if (direct === 0) {
     return "No links";
   }
+
   return second === 0
     ? `${direct} direct`
     : `${direct} direct, ${second} at two steps`;
@@ -129,13 +141,16 @@ export const pickNode = (
   if (nodes.length === 0) {
     return -1;
   }
+
   const near = Delaunay.from(nodes.map((n) => [n.x, n.y])).find(x, y, 0);
   const gap = Math.hypot(nodes[near].x - x, nodes[near].y - y) - nodes[near].r;
   // A big node beside a small one: the pointer on its disc is on it.
   const under = nodes.findIndex((n) => Math.hypot(n.x - x, n.y - y) <= n.r);
+
   if (under !== -1) {
     return under;
   }
+
   return gap <= reach ? near : -1;
 };
 
@@ -150,24 +165,30 @@ export const nextByKey = (
 ): string | null | undefined => {
   const from = selected === null ? -1 : ids.indexOf(selected);
   const wrap = (i: number) => ids[(i + ids.length) % ids.length];
+
   switch (key) {
     case "ArrowDown":
     case "ArrowRight": {
       return wrap(from + 1);
     }
+
     case "ArrowLeft":
     case "ArrowUp": {
       return wrap(from === -1 ? -1 : from - 1);
     }
+
     case "End": {
       return wrap(-1);
     }
+
     case "Escape": {
       return null;
     }
+
     case "Home": {
       return wrap(0);
     }
+
     default: {
       return undefined;
     }

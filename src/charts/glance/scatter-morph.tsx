@@ -44,7 +44,9 @@ interface ScatterMorphProps extends NoteProps {
 }
 
 type View = "bars" | "ring" | "scatter";
+
 const VIEWS: View[] = ["scatter", "bars", "ring"];
+
 const VIEW_NAMES: Record<View, string> = {
   bars: "Bars",
   ring: "Ring",
@@ -86,6 +88,7 @@ interface Ctx {
 
 const HOLD = 3000;
 const MORPH = DURATION.long;
+
 /** Corner radius (the radius scale's small step), drawn as a round-joined stroke around an inset outline. */
 const ROUND = 2;
 
@@ -98,7 +101,9 @@ const scatterLayout = (c: Ctx): Layout => {
     Math.min(0, ...c.data.map((d) => d.y)),
     Math.max(...c.data.map((d) => d.y)),
   ];
+
   const yLabels = scaleLinear().domain(yDomain).nice(4).ticks(4).map(c.fy);
+
   // Names of the scale flush left; the axis note and the plot end flush right.
   const m = {
     bottom: 34,
@@ -106,17 +111,22 @@ const scatterLayout = (c: Ctx): Layout => {
     right: 0,
     top: 14,
   };
+
   const xs = scaleLinear()
     .domain([0, Math.max(...c.data.map((d) => d.x))])
     .nice(4)
     .range([m.left, c.width - m.right - 30]);
+
   const ys = scaleLinear()
     .domain(yDomain)
     .nice(4)
     .range([c.h - m.bottom, m.top]);
+
   const maxV = Math.max(...c.data.map((d) => d.value));
+
   const rad = (v: number) =>
     Math.max(ROUND + 3, (c.narrow ? 18 : 24) * Math.sqrt(v / maxV));
+
   const furniture = (
     <g>
       {ys.ticks(4).map((v) => (
@@ -151,6 +161,7 @@ const scatterLayout = (c: Ctx): Layout => {
       </Label>
     </g>
   );
+
   return {
     furniture,
     labels: placeNames(c.data, { left: m.left, right: c.width }, (d) => [
@@ -171,11 +182,14 @@ const barsLayout = (c: Ctx): Layout => {
   const m = { bottom: tilt ? 60 : 30, left: 6, right: 6, top: 24 };
   const bw = step * (c.narrow ? 0.7 : 0.62);
   const floor = c.h - m.bottom;
+
   const yv = scaleLinear()
     .domain([0, Math.max(...c.data.map((d) => d.value))])
     .range([floor, m.top]);
+
   const slot = new Map(c.order.map((i, k) => [i, k]));
   const cxOf = (i: number) => m.left + ((slot.get(i) ?? 0) + 0.5) * step;
+
   return {
     furniture: (
       <line
@@ -235,25 +249,32 @@ interface Seat {
 const relax = (seats: Seat[], mid: number, lo: number, hi: number) => {
   const ys = seats.map((s) => s.y);
   const top = ys.filter((y) => y < mid).length;
+
   // Top half: from its lowest label up, then back down from the top bound.
   for (let k = top - 2; k >= 0; k -= 1) {
     ys[k] = Math.min(ys[k], ys[k + 1] - LABEL_PITCH);
   }
+
   if (top > 0) {
     ys[0] = Math.max(lo, ys[0]);
   }
+
   // Then everything down from the top, which also settles the bottom half.
   for (let k = 1; k < ys.length; k += 1) {
     ys[k] = Math.max(ys[k], ys[k - 1] + LABEL_PITCH);
   }
+
   // Out of room at the bottom: pull back up from the bottom bound.
   const last = ys.length - 1;
+
   if (last >= 0 && ys[last] > hi) {
     ys[last] = hi;
+
     for (let k = last - 1; k >= 0; k -= 1) {
       ys[k] = Math.min(ys[k], ys[k + 1] - LABEL_PITCH);
     }
   }
+
   return new Map(seats.map((s, k) => [s.i, ys[k]]));
 };
 
@@ -265,22 +286,27 @@ const ringLayout = (c: Ctx): Layout => {
   const total = c.data.reduce((a, d) => a + d.value, 0);
   const angles = new Map<number, { a0: number; a1: number }>();
   let acc = 0;
+
   for (const i of c.order) {
     const a0 = (acc / total) * Math.PI * 2;
     acc += c.data[i].value;
     angles.set(i, { a0, a1: (acc / total) * Math.PI * 2 });
   }
+
   const span = (i: number) => angles.get(i) ?? { a0: 0, a1: 0 };
   const mid = (i: number) => (span(i).a0 + span(i).a1) / 2;
   const run = c.narrow ? 14 : 34;
+
   // On narrow plots the thinnest slices go unlabelled (the tooltip still names them).
   const named = c.data.flatMap((_, i) =>
     c.narrow && span(i).a1 - span(i).a0 < 0.25 ? [] : [i]
   );
+
   const elbow = (i: number): Pt => [
     cx + (r1 + 16) * Math.sin(mid(i)),
     cy - (r1 + 16) * Math.cos(mid(i)),
   ];
+
   // Each side's labels relaxed to a 14px pitch so thin neighbours never overprint.
   const side = (right: boolean) =>
     named
@@ -288,10 +314,12 @@ const ringLayout = (c: Ctx): Layout => {
         Math.sin(mid(i)) >= 0 === right ? [{ i, y: elbow(i)[1] }] : []
       )
       .toSorted((a, b) => a.y - b.y);
+
   const seatY = new Map([
     ...relax(side(true), cy, 7, c.h - 7),
     ...relax(side(false), cy, 7, c.h - 7),
   ]);
+
   return {
     furniture: null,
     labels: named.map((i): MarkLabel => {
@@ -301,6 +329,7 @@ const ringLayout = (c: Ctx): Layout => {
       const [ex] = elbow(i);
       const ly = seatY.get(i) ?? elbow(i)[1];
       const end = ex + (right ? run : -run);
+
       return {
         anchor: right ? "start" : "end",
         id: c.data[i].label,
@@ -346,9 +375,11 @@ const poseMarks = (pose: Pose, marksOf: (view: number) => Pt[][]): Pt[][] => {
   if (pose.kind === "view") {
     return marksOf(pose.view);
   }
+
   const a = poseMarks(pose.from, marksOf);
   const b = marksOf(pose.to);
   const e = easeTravel(pose.t);
+
   return a.map((pts, i) => blendPts(pts, b[i], e));
 };
 
@@ -363,10 +394,12 @@ const useMorph = (shown: boolean, reduced: boolean, paused: boolean) => {
   const [to, setTo] = useState(0);
   const [t, setT] = useState(1);
   const settled = t >= 1;
+
   const go = (k: number) => {
     if (k === to) {
       return;
     }
+
     setStart(
       settled || reduced
         ? { kind: "view", view: to }
@@ -375,6 +408,7 @@ const useMorph = (shown: boolean, reduced: boolean, paused: boolean) => {
     setTo(k);
     setT(reduced ? 1 : 0);
   };
+
   useFrame(!settled && !reduced, (dt) => {
     setT((cur) => Math.min(1, cur + dt / MORPH));
   });
@@ -382,6 +416,7 @@ const useMorph = (shown: boolean, reduced: boolean, paused: boolean) => {
   const idle = shown && !reduced && !paused && settled;
   useEffect(() => {
     let id = 0;
+
     if (idle) {
       id = window.setTimeout(() => {
         setStart({ kind: "view", view: to });
@@ -389,10 +424,12 @@ const useMorph = (shown: boolean, reduced: boolean, paused: boolean) => {
         setT(0);
       }, HOLD);
     }
+
     return () => {
       window.clearTimeout(id);
     };
   }, [idle, next, to]);
+
   return { go, settled, start, t, to };
 };
 
@@ -520,14 +557,17 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
   const morph = useMorph(shown, reduced, hover.key !== null);
   const tex = useTextureIds("morph");
   const handlePick = morph.go;
+
   // The biggest item in solid ink; the rest engraved in one hatch.
   const tones = rankTones(
     data.map((d) => d.value),
     [0, 4]
   );
+
   const order = data
     .map((_, i) => i)
     .toSorted((a, b) => data[b].value - data[a].value);
+
   const view = VIEWS[morph.to];
   const label = `${data.length} items shown as ${VIEW_NAMES[view].toLowerCase()}: ${order.map((i) => `${data[i].label} ${format(data[i].value)}`).join(", ")}`;
 
@@ -540,6 +580,7 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
         {(width) => {
           const noteH = noteSpace(noteOf(props), width - 16, 16);
           const h = height - CONTROL_SLOT_H - noteH;
+
           const ctx: Ctx = {
             data,
             fx,
@@ -551,7 +592,9 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
             xLabel: xName,
             yLabel: yName,
           };
+
           const b = LAYOUTS[view](ctx);
+
           const marks = morph.settled
             ? b.marks
             : poseMarks(
@@ -563,7 +606,9 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
                 },
                 (v) => LAYOUTS[VIEWS[v]](ctx).marks
               );
+
           const tip = hover.key === null ? undefined : b.tips[hover.key];
+
           return (
             <div className="relative">
               <ChartSvg

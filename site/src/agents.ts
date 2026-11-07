@@ -35,6 +35,7 @@ const cell = (text: string) => text.replaceAll("|", String.raw`\|`);
 /** <Props rows={…}> as a Markdown table. */
 const props: ComponentMarkdown = (context) => {
   const rows = Rows.parse(context.props.rows);
+
   return [
     "| Prop | Type | Required | Description |",
     "| --- | --- | --- | --- |",

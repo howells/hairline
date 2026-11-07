@@ -53,6 +53,7 @@ const sideLabels = (format: (v: number) => string): SideLabels => ({
 
 /** Height of a change rung. */
 const RUNG_H = 8;
+
 /** The least distance between two rungs' starts: a 2px rung and 3px of air. */
 const RUNG_PITCH = 5;
 
@@ -63,6 +64,7 @@ const RUNG_PITCH = 5;
 /** The room one unit's rung gets in the gap of the row that changed most, px. */
 const widestRoom = (data: DumbbellDatum[], layout: Layout, unit: number) => {
   let widest: DumbbellDatum | undefined;
+
   for (const d of data) {
     if (
       widest === undefined ||
@@ -71,13 +73,17 @@ const widestRoom = (data: DumbbellDatum[], layout: Layout, unit: number) => {
       widest = d;
     }
   }
+
   if (widest === undefined) {
     return Infinity;
   }
+
   const units = Math.abs(widest.before - widest.after) / unit;
+
   const room =
     Math.abs(layout.x(widest.after) - layout.x(widest.before)) -
     2 * (layout.dotR + 3);
+
   return units > 0 ? room / units : Infinity;
 };
 
@@ -87,6 +93,7 @@ const roomyUnit = (unit: number, perUnit: number) => {
       return unit * scale;
     }
   }
+
   return unit * 100;
 };
 
@@ -111,14 +118,17 @@ const ChangeRungs = (props: {
   const units = Math.round(Math.abs(datum.before - datum.after) / props.unit);
   // A gap too short to space its rungs draws none: the two dots say it.
   const count = Math.abs(gap1 - gap0) / units >= RUNG_PITCH ? units : 0;
+
   const worse =
     (props.alert === "rise" && datum.after > datum.before) ||
     (props.alert === "fall" && datum.after < datum.before);
+
   const rungs = Array.from({ length: count }, (_, k) => ({
     id: `${datum.label}-rung-${k}`,
     k,
     x: Math.round(gap0 + ((k + 0.5) / count) * (gap1 - gap0)) - MARK_WEIGHT / 2,
   }));
+
   return (
     <g className={worse ? "fill-alert" : "fill-l4"}>
       {rungs.map((b) => (
@@ -144,6 +154,7 @@ const afterTone = (clearing: boolean | undefined, hero: boolean) => {
   if (clearing !== undefined) {
     return clearing ? "fill-hero" : "fill-l5";
   }
+
   return hero ? "fill-hero" : "fill-l3";
 };
 
@@ -159,6 +170,7 @@ const RowValues = (props: RowProps) => {
   // The after label sits outside the pair on its side, the before label on the other.
   const afterLeft = xa <= xb;
   const R = layout.dotR;
+
   return (
     <DimGroup dim={props.dim}>
       <Label
@@ -190,9 +202,11 @@ const Row = (props: RowProps) => {
   const y = Math.round(layout.top + props.index * layout.pitch);
   const xa = layout.x(datum.after);
   const xb = layout.x(datum.before);
+
   const beadCount = Math.round(
     Math.abs(datum.before - datum.after) / props.unit
   );
+
   return (
     <DimGroup
       dim={props.dim}
@@ -279,18 +293,21 @@ const DumbbellSvg = ({
     props.metrics,
     referenceValues(props.references)
   );
+
   const plane = {
     x0: layout.x.range()[0],
     x1: layout.x.range()[1],
     y0: layout.top - 22,
     y1: layout.top + (data.length - 1) * layout.pitch + 18,
   };
+
   const avoid = data.flatMap((d, i) =>
     [d.before, d.after].map((v) => ({
       x: layout.x(v),
       y: layout.top + i * layout.pitch,
     }))
   );
+
   const [lowEnd, highEnd] = layout.x.domain();
   const ends = props.ends ?? [format(lowEnd), format(highEnd)];
   const endsY = height - (noteOf(props) === undefined ? 10 : 40);
@@ -298,6 +315,7 @@ const DumbbellSvg = ({
   // rungs count in the next round multiple that gives the biggest change's
   // rungs air; a gap too short for its rungs then draws none.
   const rungUnit = roomyUnit(unit, widestRoom(data, layout, unit));
+
   return (
     <ChartSvg
       desc={[summary(data, format), referenceDesc(props.references, format)]
@@ -373,21 +391,27 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
   const data = (props.data ?? []).filter(
     (d) => Number.isFinite(d.before) && Number.isFinite(d.after)
   );
+
   const height = props.height ?? 380;
   const format = resolveFormat(props.format);
+
   const unit = countingUnit(
     props.unit !== undefined && props.unit > 0 ? props.unit : 1,
     Math.max(0, ...data.map((d) => Math.abs(d.before - d.after)))
   );
+
   const alert = props.alert ?? "rise";
   const keys = reactKeys(data);
+
   // Emphasis is by key (id, else label) so reordering never moves it; none
   // given, the biggest change. A key that names no row emphasises none.
   const hero =
     props.emphasis === undefined
       ? maxIndex(data.map((d) => Math.abs(d.before - d.after)))
       : data.findIndex((d) => keyOf(d) === props.emphasis);
+
   const hover = useHover<number>();
+
   const label =
     props.title ??
     (data.length === 0

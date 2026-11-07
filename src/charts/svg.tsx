@@ -41,6 +41,7 @@ export const ChartSvg = ({
   const { fit, scale, strokes } = useContext(ScaleContext);
   const scaled = fit === true || scale !== undefined;
   const policy = strokes ?? (scaled ? "device" : "proportional");
+
   const size = scaled
     ? {
         height: fit === true ? undefined : height * (scale ?? 1),
@@ -52,6 +53,7 @@ export const ChartSvg = ({
         width: fit === true ? "100%" : width * (scale ?? 1),
       }
     : { height, style, viewBox: undefined, width };
+
   return (
     <svg
       data-hl-strokes={policy === "device" ? "device" : undefined}

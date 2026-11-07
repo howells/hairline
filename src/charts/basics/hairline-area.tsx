@@ -84,6 +84,7 @@ const AreaLayers = (p: LayersProps) => {
   const { bands, frame, hero, hover, readings, references } = p;
   const { floor } = frame;
   const { x0, x1 } = p.plane;
+
   return (
     <>
       <defs>
@@ -201,8 +202,10 @@ interface PointerProps extends Omit<LayersProps, "hover"> {
 /** The plot with its one pointer: the stops, the tip and the crosshair. */
 const AreaPointer = (p: PointerProps) => {
   const { forecast, frame, hero, plane, readings, series } = p;
+
   const labels =
     hero < 0 ? [] : [heroLabelBox(readings, frame, p.format, hero)];
+
   const stops = readingStops(series, {
     facts: dailyFacts({ bands: p.bands, forecast }, p.format),
     fmtDate: p.fmtDate,
@@ -234,6 +237,7 @@ const AreaPointer = (p: PointerProps) => {
     x: frame.x,
     y: frame.y,
   });
+
   return (
     <Pointer
       axis="x"
@@ -341,11 +345,13 @@ const HairlineAreaSvg = ({
   const series = seriesOf(readings);
   const { live } = series;
   const floor = dailyFloor(height, note, width, metrics);
+
   if (live.length === 0) {
     return (
       <DailyEmpty floor={floor} height={height} name={title} width={width} />
     );
   }
+
   const values = live.map((i) => valueAt(readings, i));
   const max = Math.max(...values);
   const reach = [...referenceValues(references), ...bandValues(bands)];
@@ -354,6 +360,7 @@ const HairlineAreaSvg = ({
   const top = notes.length > 0 ? NOTED_TOP : 40;
   const [x0, x1] = edgesOf(width, maxWidth, axis);
   const start = startOf(readings, hero, format);
+
   const frame = frameOf(readings, {
     domain,
     floor,
@@ -362,17 +369,20 @@ const HairlineAreaSvg = ({
     ticks,
     top,
   });
+
   const {
     fill,
     forecast: forecastPath,
     path,
   } = shapesOf(readings, frame, forecast.at);
+
   const forecasting = forecast.at > 0 && forecast.at < readings.length;
   const plane = { x0, x1, y0: top, y1: floor };
   const within = [x0, x1 - axisRoom(axis).right] as const;
   const clearing = (i: number) => clears(references, valueAt(readings, i));
   const avoid = avoidOf(readings, live, frame, hero);
   const axisTicks = ticks ?? frame.y.ticks(4);
+
   const { desc, label } = describeArea({
     bands,
     fmtDate,
@@ -421,15 +431,19 @@ const HairlineAreaSvg = ({
 
 const HairlineAreaPlot = (props: HairlineAreaProps) => {
   const readings = readingsOf(props.data ?? []);
+
   const format =
     props.format === undefined ? fmtInt : resolveFormat(props.format);
+
   const fmtDate = resolveDateFormat(props.dateFormat);
   const stipple = useTextureIds("daily")("stipple");
   const bands = bandsOf(props.intervals, readings);
+
   const forecast = {
     at: forecastAt(readings, props.forecast),
     label: props.forecast?.label ?? "Forecast",
   };
+
   const extra = intervalTable(
     bands,
     { at: forecast.at, shown: props.forecast !== undefined },
@@ -437,6 +451,7 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
   );
 
   const notes = foundNotes(props.notes, readings);
+
   const table = withNotes(
     ["Date", "Value", ...extra.columns],
     readingRows(readings, fmtDate, format).map((row, i) => [

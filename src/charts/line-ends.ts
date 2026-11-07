@@ -56,12 +56,14 @@ export interface EndPlacement {
 
 /** Where a leader meets its label, from the line's end, px. */
 export const LEAD = 10;
+
 /** Gap between the leader and the label, px. */
 export const TEXT_GAP = 4;
 
 /** Labels sit this far apart at the least, px. */
 const DEFAULT_GAP = 15;
 export const DEFAULT_NAMED = 4;
+
 /** A label further than this from its line's end has been nudged, px. */
 const NUDGED = 1;
 
@@ -72,20 +74,27 @@ const NUDGED = 1;
  */
 export const chooseNamed = (series: readonly EndSeries[], named: number) => {
   const chosen = new Set(series.filter((s) => s.hero === true));
+
   const rest = series
     .filter((s) => !chosen.has(s))
     .toSorted((a, b) => b.value - a.value);
+
   let top = true;
+
   while (rest.length > 1 && chosen.size < named) {
     const next = top ? rest.shift() : rest.pop();
+
     if (next !== undefined) {
       chosen.add(next);
     }
+
     top = !top;
   }
+
   if (rest.length === 1) {
     chosen.add(rest[0]);
   }
+
   return {
     folded: series.filter((s) => !chosen.has(s)),
     named: series.filter((s) => chosen.has(s)),
@@ -106,16 +115,19 @@ export const placeEndLabels = (
   options: EndOptions
 ): EndPlacement => {
   const { folded, named } = chooseNamed(series, options.named ?? DEFAULT_NAMED);
+
   const groupAt =
     folded.length === 0
       ? null
       : folded.reduce((sum, s) => sum + s.y, 0) / folded.length;
+
   const ys = relax(
     [...named.map((s) => s.y), ...(groupAt === null ? [] : [groupAt])],
     options.gap ?? DEFAULT_GAP,
     options.min,
     options.max
   );
+
   return {
     group:
       groupAt === null
@@ -166,14 +178,18 @@ export const endLabelRoom = (
   if (series.length === 0) {
     return 0;
   }
+
   const { folded, named } = chooseNamed(series, options.named ?? DEFAULT_NAMED);
+
   const lines = named.map((s) =>
     s.hero === true && s.display !== undefined
       ? `${s.name} ${s.display}`
       : s.name
   );
+
   const group =
     folded.length === 0 ? [] : [groupText(folded.length, options.others)];
+
   return (
     LEAD +
     TEXT_GAP +

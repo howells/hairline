@@ -14,6 +14,7 @@ import { sansWidth } from "./util";
 
 export const linesOf = (refs: readonly Reference[] | undefined) =>
   (refs ?? []).filter((r): r is ReferenceLine => !isBand(r));
+
 export const bandsOf = (refs: readonly Reference[] | undefined) =>
   (refs ?? []).filter((r): r is ReferenceBand => isBand(r));
 
@@ -32,9 +33,11 @@ export const clears = (
   value: number
 ): boolean | undefined => {
   const line = linesOf(refs).find((r) => r.emphasis !== undefined);
+
   if (line === undefined) {
     return undefined;
   }
+
   return line.emphasis === "above" ? value >= line.value : value <= line.value;
 };
 
@@ -65,9 +68,11 @@ export const referenceRows = (
     const axis = cells.axis === undefined ? "" : ` on ${cells.axis}`;
     const row = Array.from({ length: cells.columns }, () => "");
     row[0] = `${kind}${axis}: ${nameOf(ref)}`;
+
     for (const column of cells.values) {
       row[column] = isBand(ref) ? rangeOf(ref, format) : format(ref.value);
     }
+
     return row;
   });
 
@@ -78,16 +83,20 @@ export const referenceDesc = (
   axis?: "x" | "y"
 ) => {
   const on = axis === undefined ? "" : ` on ${axis}`;
+
   const parts = (refs ?? []).map((ref) => {
     if (isBand(ref)) {
       return `${nameOf(ref)}${on}, ${rangeOf(ref, format)}`;
     }
+
     const ink =
       ref.emphasis === undefined
         ? ""
         : `; readings ${ref.emphasis === "above" ? "at or above" : "at or below"} it are in ink`;
+
     return `${nameOf(ref)}${on}, ${format(ref.value)}${ink}`;
   });
+
   return parts.length === 0 ? "" : `${parts.join(". ")}.`;
 };
 
@@ -129,16 +138,19 @@ export const clearest = <T extends Plate>(
 ): T => {
   const score = (plate: T) => clearance(plate, avoid);
   let [best] = candidates;
+
   for (const plate of candidates) {
     if (score(plate) > score(best)) {
       best = plate;
     }
   }
+
   return best;
 };
 
 /** Room between a plate and the edge it stands against, px. */
 export const MARGIN = 4;
+
 /** A plate's height, as PlateLabel sets it, and the width it adds round its text. */
 export const PLATE_H = 15;
 export const PLATE_PAD = 8;
@@ -153,9 +165,11 @@ export const alongLinePlates = (
   across: { hi: number; lo: number }
 ): Plate[] => {
   const room = across.hi - across.lo - 2 * MARGIN - width;
+
   if (room <= 0) {
     return [];
   }
+
   return [y - 3 - PLATE_H, y + 3].flatMap((top) =>
     Array.from({ length: 9 }, (_, k) => ({
       h: PLATE_H,
@@ -173,6 +187,7 @@ export const levelBandPlates = (
   across: { hi: number; lo: number }
 ): Plate[] => {
   const room = band.end - band.start;
+
   const tops =
     room >= PLATE_H + 6
       ? [
@@ -181,6 +196,7 @@ export const levelBandPlates = (
           band.end - 3 - PLATE_H,
         ]
       : [(band.start + band.end) / 2 - PLATE_H / 2];
+
   return tops.flatMap((top) =>
     [across.hi - MARGIN - width, across.lo + MARGIN].map((left) => ({
       h: PLATE_H,
@@ -205,6 +221,7 @@ export const levelLinePlates = (
           0,
           at === "end" ? 1 : 2
         );
+
   return [y - 3 - PLATE_H, y + 3].flatMap((top) =>
     lefts.map((left) => ({ h: PLATE_H, left, top, w: width }))
   );

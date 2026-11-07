@@ -34,6 +34,7 @@ const strokeOf = (n: Circle, hot: boolean) => {
   if (hot) {
     return "stroke-ink";
   }
+
   return n.children === undefined ? "stroke-l3" : "stroke-l5";
 };
 
@@ -45,6 +46,7 @@ const fillOf = (n: Circle) => {
   if (n.depth === 0) {
     return "fill-transparent";
   }
+
   return n.children === undefined ? "fill-paper" : "";
 };
 
@@ -52,9 +54,11 @@ const fillOf = (n: Circle) => {
 const LeafLabel = (props: { hero: boolean; n: Circle }) => {
   const { n } = props;
   const fits = sansWidth(n.data.name, 11) + 8 < n.r * 2 && n.r > 13;
+
   if (!fits) {
     return null;
   }
+
   if (props.hero) {
     // Two hero plates, name over value, centred on the disc.
     return (
@@ -70,6 +74,7 @@ const LeafLabel = (props: { hero: boolean; n: Circle }) => {
       </g>
     );
   }
+
   return (
     <Label
       anchor="middle"
@@ -103,6 +108,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
   const data = props.data ?? orgDemo;
   const [hover, setHover] = useState<Hover | null>(null);
   const stipple = useTextureIds("towers")("stipple");
+
   return (
     <Plot
       overlay={
@@ -119,13 +125,16 @@ export const CirclePack = (props: { data?: OrgNode }) => {
         const nodes = root.descendants();
         const leaves = root.leaves();
         let [hero] = leaves;
+
         for (const n of leaves) {
           if ((n.value ?? 0) > (hero.value ?? 0)) {
             hero = n;
           }
         }
+
         const dx = Math.round((width - size) / 2);
         const label = `Towers with a ring of bells, by county, ${root.value} in all; most in ${hero.data.name}, ${hero.value}`;
+
         return (
           <ChartSvg
             height={size}
@@ -142,6 +151,7 @@ export const CirclePack = (props: { data?: OrgNode }) => {
               {nodes.map((n, i) => {
                 const key = keyOf(n);
                 const isHero = n === hero;
+
                 return (
                   <circle
                     className={`pop transition-tone ${isHero ? "fill-hero" : `${fillOf(n)} ${strokeOf(n, hover?.key === key)}`}`}

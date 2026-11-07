@@ -31,6 +31,7 @@ interface Spot {
 }
 
 const SAMPLES = 24;
+
 /** Clear space kept round the box, in px. */
 const MARGIN = 4;
 const STEP = 6;
@@ -39,6 +40,7 @@ const INSIDE = 0.9;
 const at = (c: Cubic, t: number): Point => {
   const u = 1 - t;
   const [a, b, d, e] = c;
+
   return {
     x: u ** 3 * a.x + 3 * u * u * t * b.x + 3 * u * t * t * d.x + t ** 3 * e.x,
     y: u ** 3 * a.y + 3 * u * u * t * b.y + 3 * u * t * t * d.y + t ** 3 * e.y,
@@ -49,6 +51,7 @@ const at = (c: Cubic, t: number): Point => {
 export const touchesDisc = (p: Point, w: number, h: number, d: Disc) => {
   const dx = Math.max(Math.abs(d.x - p.x) - w / 2, 0);
   const dy = Math.max(Math.abs(d.y - p.y) - h / 2, 0);
+
   return Math.hypot(dx, dy) < d.r + MARGIN;
 };
 
@@ -63,9 +66,11 @@ const crossings = (
   curves: readonly Cubic[]
 ) => {
   let n = 0;
+
   for (const c of curves) {
     for (let k = 0; k <= SAMPLES; k += 1) {
       const s = at(c, k / SAMPLES);
+
       if (
         Math.abs(s.x - p.x) <= w / 2 + MARGIN &&
         Math.abs(s.y - p.y) <= h / 2 + MARGIN
@@ -74,6 +79,7 @@ const crossings = (
       }
     }
   }
+
   return n;
 };
 
@@ -91,15 +97,18 @@ export const captionSpot = (
 ): Point => {
   const { w, h } = size;
   let best: Spot | null = null;
+
   for (let y = frame.cy - frame.R; y <= frame.cy + frame.R; y += STEP) {
     for (let x = frame.cx - frame.R; x <= frame.cx + frame.R; x += STEP) {
       const p = { x, y };
+
       if (
         inside(p, w, h, frame) &&
         !discs.some((d) => touchesDisc(p, w, h, d))
       ) {
         const spot = { crossings: crossings(p, w, h, curves), x, y };
         const dist = (s: Spot) => Math.hypot(s.x - frame.cx, s.y - frame.cy);
+
         if (
           best === null ||
           spot.crossings < best.crossings ||
@@ -110,5 +119,6 @@ export const captionSpot = (
       }
     }
   }
+
   return best ?? { x: frame.cx, y: frame.cy };
 };

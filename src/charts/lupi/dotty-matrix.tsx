@@ -59,12 +59,15 @@ const planeGeometry = (
 ): PlaneGeometry => {
   // Planes are halfW tall and step down 0.485 halfW each, from 16px down.
   const stack = 1 + 0.485 * (groups - 1);
+
   const halfW = clamp(
     Math.min((height - 24 - noteH) / stack, (width - 14 - labelW) / 2),
     70,
     190
   );
+
   const a = halfW / (n - 1 + 1.55);
+
   return {
     a,
     b: a / 2,
@@ -93,6 +96,7 @@ const Plane = ({ dim, g, geo, group, onHover, radius, screen }: PlaneProps) => {
   const cy = geo.top + g * gap;
   const outline = `M${cx},${cy - halfW / 2}L${cx + halfW},${cy}L${cx},${cy + halfW / 2}L${cx - halfW},${cy}Z`;
   const tone = TONES.at(g) ?? "fill-l5";
+
   return (
     <DimGroup dim={dim}>
       <g className="fade" style={stagger(g)}>
@@ -109,9 +113,11 @@ const Plane = ({ dim, g, geo, group, onHover, radius, screen }: PlaneProps) => {
         const x = cx + (j - i) * a;
         const y = cy + (i + j - (n - 1)) * b;
         const id = `${group.label}-${k}`;
+
         if (v <= 0) {
           return null;
         }
+
         return (
           <circle
             className={`pop ${tone}`}
@@ -152,10 +158,12 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
   const noun = props.noun ?? "years gained";
   const [hover, setHover] = useState<DotHover | null>(null);
   const screen = useTextureIds("plane")("screen");
+
   const n = Math.max(
     2,
     Math.round(Math.sqrt(Math.max(...data.map((d) => d.values.length))))
   );
+
   const max = Math.max(1, ...data.flatMap((d) => d.values));
 
   return (
@@ -183,12 +191,15 @@ export const DottyMatrix = (props: DottyMatrixProps) => {
           noteSpace(noteOf(props), width - 16, 20),
           Math.max(0, ...data.map((d) => sansWidth(d.label, 10.7)))
         );
+
         const scale = scaleSqrt()
           .domain([0, max])
           .range([0, geo.a * 0.3]);
+
         const radius = (v: number) => Math.max(2, scale(v));
         // Painter's order: the bottom plane first, so upper planes sit on top.
         const order = data.map((group, g) => ({ g, group })).toReversed();
+
         return (
           <ChartSvg
             height={geo.height}

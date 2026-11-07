@@ -21,12 +21,14 @@ import { z } from "zod";
 const root = fileURLToPath(new URL("../", import.meta.url));
 
 const Target = z.object({ default: z.string(), types: z.string() });
+
 const Manifest = z.object({
   dependencies: z.record(z.string(), z.string()),
   exports: z.record(z.string(), z.union([z.string(), Target])),
   license: z.string(),
   private: z.boolean().optional(),
 });
+
 const manifest = Manifest.parse(
   JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"))
 );
@@ -34,6 +36,7 @@ const manifest = Manifest.parse(
 /** The built file a subpath resolves to. */
 const entryOf = (subpath: string) => {
   const target = Target.parse(manifest.exports[subpath]);
+
   return path.join(root, target.default);
 };
 
@@ -47,17 +50,21 @@ interface Graph {
 const reach = (entry: string): Graph => {
   const graph: Graph = { bare: new Set(), bytes: 0, files: new Set() };
   const queue = [entry];
+
   for (const file of queue) {
     if (graph.files.has(file)) {
       continue;
     }
+
     graph.files.add(file);
     graph.bytes += statSync(file).size;
     const text = readFileSync(file, "utf-8");
+
     for (const match of text.matchAll(
       /(?:from|import)\s*["'](?<spec>[^"']+)["']/gu
     )) {
       const spec = match.groups?.spec ?? "";
+
       if (spec.startsWith(".")) {
         queue.push(path.resolve(path.dirname(file), spec));
       } else {
@@ -65,6 +72,7 @@ const reach = (entry: string): Graph => {
       }
     }
   }
+
   return graph;
 };
 
@@ -77,6 +85,7 @@ const CHARTS = [
   "dumbbell-queue",
   "slope",
 ];
+
 const heavy = (graph: Graph) =>
   [...graph.files].filter((file) =>
     /(?:atlas|node_modules|vendor|\.data\.js|\.tenors|\/maps\/)/u.test(file)
@@ -141,11 +150,13 @@ const packed = () => {
     ["pack", "--dry-run", "--json", "--ignore-scripts"],
     { cwd: root, encoding: "utf-8" }
   );
+
   // npm 11 and earlier print an array of packs; npm 12 keys them by name.
   const pack = z.object({ files: z.array(z.object({ path: z.string() })) });
   const packs = z.union([z.array(pack), z.record(z.string(), pack)]);
   const parsed = packs.parse(JSON.parse(out));
   const [info] = Array.isArray(parsed) ? parsed : Object.values(parsed);
+
   return (info?.files ?? []).map((file) => file.path);
 };
 
@@ -156,12 +167,15 @@ describe("exports conditions", () => {
       .parse(
         JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"))
       );
+
     const orders = Object.entries(raw.exports).flatMap(([subpath, target]) => {
       const conditions = z.record(z.string(), z.string()).safeParse(target);
+
       return conditions.success
         ? [{ keys: Object.keys(conditions.data), subpath }]
         : [];
     });
+
     expect(orders.length).toBeGreaterThan(10);
     expect(
       orders.filter(({ keys }) => keys.join(",") !== "types,default")
@@ -181,15 +195,18 @@ describe("tarball", () => {
 
   it("every exports target is in it", () => {
     const files = new Set(packed());
+
     const targets = Object.values(manifest.exports)
       .flatMap((target) => {
         const parsed = Target.safeParse(target);
+
         return parsed.success
           ? [parsed.data.default, parsed.data.types]
           : [z.string().parse(target)];
       })
       .filter((target) => !target.includes("*"))
       .map((target) => target.replace(/^\.\//u, ""));
+
     expect(targets.filter((target) => !files.has(target))).toStrictEqual([]);
   });
 });
@@ -217,6 +234,7 @@ describe("release tooling", () => {
           readFileSync(path.join(root, ".changeset/config.json"), "utf-8")
         )
       );
+
     expect(config.changelog).toBeTruthy();
     expect(config.access).toBe("public");
   });

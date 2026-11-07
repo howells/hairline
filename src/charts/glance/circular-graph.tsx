@@ -46,6 +46,7 @@ interface Placed {
 const defaultFormat = (v: number) => `${v}k moves`;
 
 const linkKey = (l: CircleLink) => `${l.source}→${l.target}`;
+
 const touches = (id: string, l: CircleLink) =>
   l.source === id || l.target === id;
 
@@ -54,9 +55,11 @@ const partnerOf = (links: CircleLink[], id: string) => {
   const [best] = links
     .filter((l) => touches(id, l))
     .toSorted((a, b) => b.value - a.value);
+
   if (best === undefined) {
     return "";
   }
+
   return best.source === id ? best.target : best.source;
 };
 
@@ -75,8 +78,10 @@ interface LinksProps {
 const linkTone = (steps: LinksProps["steps"], hero: boolean, l: CircleLink) => {
   if (steps !== null) {
     const step = linkStepOf(steps, l.source, l.target);
+
     return `${STEP_STROKE[step]} ${stepFade(step)}`;
   }
+
   return `transition-opacity ${hero ? "stroke-ink" : "stroke-l4"}`;
 };
 
@@ -86,14 +91,17 @@ const linkTone = (steps: LinksProps["steps"], hero: boolean, l: CircleLink) => {
  */
 const RingLinks = ({ links, at, cx, cy, steps, hero }: LinksProps) => {
   const maxLink = Math.max(...links.map((l) => l.value));
+
   return (
     <g>
       {links.map((l, k) => {
         const s = at.get(l.source);
         const t = at.get(l.target);
+
         if (s === undefined || t === undefined) {
           return null;
         }
+
         return (
           <LinkBundle
             key={linkKey(l)}
@@ -123,12 +131,14 @@ const nodeLook = (hero: boolean, step: Step | null) => {
   if (step === null) {
     return hero ? "fill-hero" : "fill-paper stroke-l3";
   }
+
   return step === 0 ? "fill-hero" : `fill-paper ${STEP_STROKE[step]}`;
 };
 
 /** Where a node's name starts (or ends, on the left half) and which side it sits. */
 const labelOf = (p: Placed) => {
   const right = Math.cos(p.a) > -0.2;
+
   return {
     right,
     x: p.x + Math.cos(p.a) * 4 + (right ? p.r + 8 : -p.r - 8),
@@ -138,6 +148,7 @@ const labelOf = (p: Placed) => {
 const RingNode = ({ p, hero, step }: NodeProps) => {
   const { right, x: lx } = labelOf(p);
   const solid = step === null ? hero : step === 0;
+
   return (
     <g className={step === null ? undefined : stepFade(step)}>
       <circle
@@ -213,18 +224,23 @@ export const CircularGraph = (props: CircularGraphProps) => {
   const format = props.format ?? defaultFormat;
   const sel = useNodeSelection(props.selected);
   const maxNode = Math.max(...nodes.map((n) => n.value));
+
   // The hero: the given node, else the biggest.
   const heroId =
     props.highlight ?? nodes.find((n) => n.value === maxNode)?.id ?? "";
+
   // The hero link: the hero team's strongest.
   const [heroLink] = links
     .filter((l) => touches(heroId, l))
     .toSorted((a, b) => b.value - a.value);
+
   const ids = nodes.map((n) => n.id);
+
   const steps =
     sel.selected === null
       ? null
       : stepsFrom(adjacencyOf(ids, links), sel.selected);
+
   const label = `Moves between ${nodes.length} regions: ${links.map((l) => `${l.source}–${l.target} ${format(l.value)}`).join(", ")}`;
 
   return (
@@ -233,16 +249,19 @@ export const CircularGraph = (props: CircularGraphProps) => {
         const narrow = width < 460;
         const noteH = noteSpace(noteOf(props), width - 16, 16);
         const rMax = narrow ? 18 : 26;
+
         const R0 = Math.min(
           height / 2 - rMax - 12,
           width / 2 - (narrow ? 70 : 96)
         );
+
         const ring = (cx: number, R: number, cy: number): Placed[] =>
           nodes.map((node, i) => {
             const a =
               -Math.PI / 2 +
               (i / nodes.length) * Math.PI * 2 -
               Math.PI / nodes.length;
+
             return {
               a,
               i,
@@ -252,15 +271,19 @@ export const CircularGraph = (props: CircularGraphProps) => {
               y: cy + R * Math.sin(a),
             };
           });
+
         // How far the ring and its names reach either side of the centre.
         const reachOf = (R: number) =>
           ring(width / 2, R, 0).flatMap((p) => {
             const { right, x } = labelOf(p);
+
             const end = right
               ? x + sansWidth(p.node.id, 11)
               : x - sansWidth(p.node.id, 11);
+
             return [p.x - p.r, p.x + p.r, end];
           });
+
         // Long names shrink the ring until the whole composition fits the plot.
         const span0 = Math.max(...reachOf(R0)) - Math.min(...reachOf(R0));
         const R = Math.max(40, R0 - Math.max(0, span0 - (width - 8)) / 2);
@@ -272,6 +295,7 @@ export const CircularGraph = (props: CircularGraphProps) => {
         const cx = width - (Math.min(...reach) + Math.max(...reach)) / 2;
         const placed = ring(cx, R, cy);
         const at = new Map(placed.map((p) => [p.node.id, p]));
+
         const bound = sel.bind({
           find: (x, y, within) =>
             placed[pickNode(placed, x, y, within)]?.node.id ?? null,
@@ -279,6 +303,7 @@ export const CircularGraph = (props: CircularGraphProps) => {
           ids,
           width,
         });
+
         const focus = sel.selected === null ? undefined : at.get(sel.selected);
 
         return (

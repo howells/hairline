@@ -46,9 +46,11 @@ const topRoom = (props: TimeLinesProps, readout: Readout) => {
   if (readout === "figure") {
     return 72;
   }
+
   if (readout === "value" || props.bands !== undefined) {
     return 28;
   }
+
   // A right-hand scale's top label sits above its gridline.
   return isRightAxis(props.y) ? 18 : 8;
 };
@@ -57,6 +59,7 @@ const plotMargin = (props: TimeLinesProps, readout: Readout): Margin => {
   if (props.compact === true) {
     return { bottom: 4, left: 2, right: 2, top: 4, ...props.margin };
   }
+
   const right =
     props.endLabels === undefined
       ? 2
@@ -64,6 +67,7 @@ const plotMargin = (props: TimeLinesProps, readout: Readout): Margin => {
           endSeriesOf(props, () => 0),
           props.endLabels
         );
+
   return {
     bottom: 30,
     ...sideMargins(props.y, 8, right),
@@ -80,6 +84,7 @@ const chartTop = (
   if (props.compact === true) {
     return null;
   }
+
   if (readout === "legend") {
     return (
       <Key
@@ -92,6 +97,7 @@ const chartTop = (
       />
     );
   }
+
   return null;
 };
 
@@ -100,6 +106,7 @@ const AlertClip = (props: { frame: Frame; threshold: Threshold }) => {
   const { height, id, width, y } = props.frame;
   const th = props.threshold;
   const thY = y(th.value);
+
   return (
     <defs>
       <clipPath id={`${id}-alert`}>
@@ -126,9 +133,11 @@ const verticesFrom = (
   data.slice(from).flatMap((p, k, rest) => {
     const at = { x: frame.x(p.date), y: frame.y(p.value) };
     const prev = rest[k - 1];
+
     if (!step || prev === undefined) {
       return [at];
     }
+
     return [{ x: at.x, y: frame.y(prev.value) }, at];
   });
 
@@ -142,14 +151,18 @@ const SeriesLine = (props: {
 }) => {
   const { cursor, d, frame, series: s } = props;
   const tone = LINE_TONE[s.tone];
+
   const vertices = (from: number) =>
     verticesFrom(frame, s.data, from, props.step);
+
   if (s.dashed === true) {
     return <DottedPath points={vertices(0)} tone={DOT_TONE[s.tone]} />;
   }
+
   if (frame.future === "none") {
     return <path className={LINE} d={d} stroke={tone.past} />;
   }
+
   return (
     <g>
       <path
@@ -172,12 +185,15 @@ const SeriesLayer = (props: {
 }) => {
   const { chart, frame, run } = props;
   const { id, x, y } = frame;
+
   const linePath = (data: Point[]) =>
     line<Point>()
       .x((d) => x(d.date))
       .y((d) => y(d.value))
       .curve(curveOf(chart))(data) ?? "";
+
   const [primary] = chart.series;
+
   return (
     <g clipPath={`url(#${id}-sweep)`}>
       <ShadeLayer chart={chart} frame={frame} />
@@ -206,6 +222,7 @@ const SeriesLayer = (props: {
 const ThresholdRule = (props: { frame: Frame; threshold: Threshold }) => {
   const { m, plotBottom, width, y } = props.frame;
   const { label, value } = props.threshold;
+
   return (
     <ReferenceOverlay
       along="y"
@@ -229,11 +246,13 @@ const MonthTicks = (props: {
   dateX: number | null;
 }) => {
   const { dateX, frame } = props;
+
   const months = labelledTicks(
     props.ticks,
     (d) => d,
     (d) => frame.x(d)
   ).filter((t) => dateX === null || Math.abs(t.x - dateX) > DATE_CLEAR);
+
   return (
     <MonthAxis ticks={months} y={frame.plotBottom + 14} width={frame.width} />
   );
@@ -252,6 +271,7 @@ const ScrubCursor = (props: {
   const compact = chart.compact === true;
   const lift = readout === "value" ? 6 : 0;
   const red = inRun(props.run, index);
+
   return (
     <g>
       <Cursor x={cx} y0={compact ? m.top : m.top - lift} y1={plotBottom} />
@@ -311,17 +331,22 @@ const ScrubCursor = (props: {
 const Grid = (props: { chart: TimeLinesProps; frame: Frame }) => {
   const { chart, frame } = props;
   const { m, plotBottom, width } = frame;
+
   if (chart.compact === true) {
     const ys = chart.zero === true ? [frame.y(0)] : [plotBottom];
+
     return (
       <HGrid ys={ys} x0={m.left} x1={width - m.right} className={RULE_ZERO} />
     );
   }
+
   const x1 = gridEnd(chart.y, width, m.right);
+
   const rules =
     chart.zero === true && frame.y(0) < plotBottom - 1
       ? [plotBottom, frame.y(0)]
       : [plotBottom];
+
   return (
     <>
       <ValueGrid
@@ -350,6 +375,7 @@ const makeFrame = (
   const dates = chart.series[0].data.map((d) => d.date);
   const m = plotMargin(chart, readout);
   const h = chart.height;
+
   return {
     future: chart.future ?? "dotted",
     height: h,
@@ -447,6 +473,7 @@ export const TimeLines = (props: TimeLinesProps) => {
   const tex = useTextureIds("tl");
   const dates = props.series[0].data.map((d) => d.date);
   const scrub = useScrub(props.rest, dates, props.sync);
+
   const readout =
     props.readout ??
     (props.compact === true || props.endLabels !== undefined

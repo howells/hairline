@@ -109,6 +109,7 @@ const LADDER = [
  * links overlap. Heavier links draw 1.5px, the rest 1px.
  */
 const CHORD_OPACITY = 0.14;
+
 const chordWidth = (weight: number, maxWeight: number) =>
   weight / maxWeight > 0.5 ? 1.5 : 1;
 
@@ -121,12 +122,15 @@ const HIT_MAX = 22;
 
 const groupFills = (data: RingData, strength: Map<string, number>) => {
   const totals = new Map<string, number>();
+
   for (const n of data.nodes) {
     totals.set(n.group, (totals.get(n.group) ?? 0) + (strength.get(n.id) ?? 0));
   }
+
   const ranked = [...totals.keys()].toSorted(
     (a, b) => (totals.get(b) ?? 0) - (totals.get(a) ?? 0)
   );
+
   return new Map(
     ranked.map((g, i) => [g, LADDER[Math.min(i, LADDER.length - 1)]])
   );
@@ -136,15 +140,19 @@ const hubIds = (data: RingData, highlight: string | string[] | undefined) => {
   if (highlight !== undefined) {
     return new Set([highlight].flat());
   }
+
   const hubs = new Set<string>();
+
   for (const g of new Set(data.nodes.map((n) => n.group))) {
     const members = data.nodes
       .filter((n) => n.group === g)
       .toSorted((a, b) => b.size - a.size);
+
     for (const n of members.slice(0, 2)) {
       hubs.add(n.id);
     }
   }
+
   return hubs;
 };
 
@@ -157,14 +165,18 @@ const chordCurve = (
   R: number
 ): Cubic => {
   let gap = Math.abs(a.angle - b.angle) % (Math.PI * 2);
+
   if (gap > Math.PI) {
     gap = Math.PI * 2 - gap;
   }
+
   const k = 0.18 + 0.32 * (1 - gap / Math.PI);
+
   const c = (n: Bead) => ({
     x: cx + R * k * Math.cos(n.angle),
     y: cy + R * k * Math.sin(n.angle),
   });
+
   return [a, c(a), c(b), b];
 };
 
@@ -183,6 +195,7 @@ const SMALL_MARGIN = 8;
 /** The largest radius that fits the ring and the hero's name across `room`. */
 const axisRadius = (room: number, spike: number, along: number) => {
   const a = Math.abs(along);
+
   return Math.min(
     room / 2 - SMALL_MARGIN,
     (room - SMALL_MARGIN - spike * a) / (1 + a)
@@ -194,6 +207,7 @@ const axisCentre = (room: number, spike: number, along: number, R: number) => {
   const plain = R + SMALL_MARGIN;
   const named = Math.max(plain, (R + spike) * Math.abs(along));
   const [lo, hi] = along < 0 ? [named, plain] : [plain, named];
+
   return lo + (room - lo - hi) / 2;
 };
 
@@ -209,13 +223,16 @@ const ringFrame = (
 ) => {
   if (width >= 560 || hero === null) {
     const margin = width < 560 ? SMALL_MARGIN : 84;
+
     return {
       R: Math.max(60, Math.min(width / 2, plotH / 2) - margin),
       cx: width / 2,
       cy: plotH / 2,
     };
   }
+
   const [cos, sin] = [Math.cos(hero.angle), Math.sin(hero.angle)];
+
   const R = Math.max(
     60,
     Math.min(
@@ -223,6 +240,7 @@ const ringFrame = (
       axisRadius(plotH, hero.reach, sin)
     )
   );
+
   return {
     R,
     cx: axisCentre(width, hero.reach, cos, R),
@@ -244,16 +262,20 @@ const layoutRing = (
   highlight: string | string[] | undefined
 ): RingLayout => {
   const small = width < 560;
+
   const neighbours = new Map<string, string[]>(
     data.nodes.map((n) => [n.id, []])
   );
+
   const strength = new Map<string, number>();
+
   for (const l of data.links) {
     neighbours.get(l.source)?.push(l.target);
     neighbours.get(l.target)?.push(l.source);
     strength.set(l.source, (strength.get(l.source) ?? 0) + l.weight);
     strength.set(l.target, (strength.get(l.target) ?? 0) + l.weight);
   }
+
   const fills = groupFills(data, strength);
   const hubs = hubIds(data, highlight);
   const heroId = [...strength].toSorted((a, b) => b[1] - a[1])[0]?.[0];
@@ -262,6 +284,7 @@ const layoutRing = (
   const angleAt = (i: number) => -Math.PI * 0.56 + i * step;
   const heroAt = data.nodes.findIndex((n) => n.id === heroId);
   const heroNode = data.nodes[heroAt];
+
   const { R, cx, cy } = ringFrame(
     width,
     plotH,
@@ -276,8 +299,10 @@ const layoutRing = (
             sansWidth(heroNode.id, 11),
         }
   );
+
   const beads = data.nodes.map((n, i): Bead => {
     const angle = angleAt(i);
+
     return {
       angle,
       degree: neighbours.get(n.id)?.length ?? 0,
@@ -292,13 +317,16 @@ const layoutRing = (
       y: cy + R * Math.sin(angle),
     };
   });
+
   const byId = new Map(beads.map((b) => [b.id, b]));
   const chords: Chord[] = [];
   // Light chords first, so the heavier tones sit on top.
   const links = data.links.toSorted((a, b) => a.weight - b.weight);
+
   for (const l of links) {
     const a = byId.get(l.source);
     const b = byId.get(l.target);
+
     if (a !== undefined && b !== undefined) {
       const curve = chordCurve(a, b, cx, cy, R);
       chords.push({
@@ -311,6 +339,7 @@ const layoutRing = (
       });
     }
   }
+
   return {
     R,
     beads,
@@ -329,6 +358,7 @@ const BeadLabel = (props: { bead: Bead; bright: boolean }) => {
   const left = Math.cos(bead.angle) < 0;
   const deg = (bead.angle * 180) / Math.PI + (left ? 180 : 0);
   const off = bead.r + LABEL_GAP;
+
   return (
     <Label
       anchor={left ? "end" : "start"}
@@ -353,11 +383,13 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
   const { beads, chords, cx, cy, maxWeight, R } = props.layout;
   const hero = beads.find((b) => b.hero);
   const leads = (c: Chord) => hero !== undefined && touchesBead(c, hero.id);
+
   // The hero's chords draw last, so nothing crosses over them.
   const ordered = [
     ...chords.filter((c) => !leads(c)),
     ...chords.filter((c) => leads(c)),
   ];
+
   return (
     <g className="transition-opacity group-data-[focus=true]/ring:opacity-30">
       <g className="fade" style={stagger(0)}>
@@ -366,6 +398,7 @@ const RingBase = (props: { layout: RingLayout; small: boolean }) => {
       <g className="cap-round stroke-ink" fill="none">
         {ordered.map((c, i) => {
           const lead = leads(c);
+
           return (
             <path
               className="draw"
@@ -417,26 +450,34 @@ const FocusLayer = (props: {
 }) => {
   const { beads, byId, chords } = props.layout;
   const { steps } = props;
+
   const [bead] = [...steps].flatMap(([id, step]) =>
     step === 0 ? (byId.get(id) ?? []) : []
   );
+
   if (bead === undefined) {
     return null;
   }
+
   const inRange = [...steps].flatMap(([id, step]) => {
     const b = byId.get(id);
+
     return b === undefined ? [] : [{ b, step }];
   });
+
   const direct = inRange.filter((n) => n.step === 1);
   const note = reachText(steps);
+
   const spot = captionSpot(
     props.layout,
     { h: 28, w: Math.max(sansWidth(bead.id, 11), sansWidth(note, 11)) + 8 },
     beads,
     chords.map((c) => c.curve)
   );
+
   const chordsAt = (step: Step) =>
     chords.filter((c) => linkStepOf(steps, c.source, c.target) === step);
+
   return (
     <g className="pointer-events-none">
       <g className="cap-round" fill="none">
@@ -474,6 +515,7 @@ const FocusLayer = (props: {
 const tipOf = (bead: Bead): RingTip => {
   const [cos, sin] = [Math.cos(bead.angle), Math.sin(bead.angle)];
   const inward = bead.r + TIP_INSET + TIP_REACH * Math.abs(cos);
+
   return {
     below: sin < 0,
     id: bead.id,
@@ -504,17 +546,21 @@ const RingSvg = (props: {
   const noteH = noteSpace(props.note, width - 16, 18);
   const height = Math.min(props.height, width + (small ? 60 : 168) + noteH);
   const plotH = height - noteH;
+
   const layout = useMemo(
     () => layoutRing(data, width, plotH, highlight),
     [data, width, plotH, highlight]
   );
+
   // Same element between renders, so a selection only re-renders the focus layer. The key replays the entry.
   const base = useMemo(
     () => <RingBase key={take} layout={layout} small={small} />,
     [layout, small, take]
   );
+
   const label = `Land borders: ${data.nodes.length} countries on a ring, ${data.links.length} shared borders`;
   const ids = layout.beads.map((b) => b.id);
+
   const bound = sel.bind({
     find: (x, y, reach) =>
       layout.beads[pickNode(layout.beads, x, y, reach)]?.id ?? null,
@@ -523,12 +569,15 @@ const RingSvg = (props: {
     onEmptyTap: props.onReplay,
     width,
   });
+
   const focus =
     sel.selected === null ? undefined : layout.byId.get(sel.selected);
+
   const steps =
     focus === undefined
       ? null
       : stepsFrom(adjacencyOf(ids, data.links), focus.id);
+
   const tip = focus === undefined || !sel.chosen ? null : tipOf(focus);
 
   return (

@@ -59,29 +59,37 @@ const fmtTemperature = (v: number) => (v === 0 ? "0" : fmtDegC(v));
 /** Gaussian kernel density on an even grid, plus the peak and median. */
 const toRidge = (s: RidgeSeries, d0: number, d1: number, bw: number): Ridge => {
   const step = (d1 - d0) / SAMPLES;
+
   const density = Array.from(
     { length: SAMPLES + 1 },
     (_, k): [number, number] => {
       const x = d0 + step * k;
       let sum = 0;
+
       for (const v of s.values) {
         const z = (x - v) / bw;
         sum += Math.exp(-0.5 * z * z);
       }
+
       return [x, sum / (s.values.length * bw * Math.sqrt(2 * Math.PI))];
     }
   );
+
   let k = 0;
+
   for (const [i, p] of density.entries()) {
     if (p[1] > density[k][1]) {
       k = i;
     }
   }
+
   const crest =
     k === 0 || k === SAMPLES
       ? density[k][1]
       : (density[k - 1][1] + 4 * density[k][1] + density[k + 1][1]) / 6;
+
   const sorted = s.values.toSorted((a, b) => a - b);
+
   return {
     density,
     label: s.label,
@@ -124,15 +132,18 @@ const RidgeLayer = ({
   format,
 }: RidgeLayerProps) => {
   const y = (d: number) => base - (d / maxD) * ridgeH;
+
   const crest = area()
     .x((p) => x(p[0]))
     .y0(base)
     .y1((p) => y(p[1]))
     .curve(curveBasis)(ridge.density);
+
   const outline = line()
     .x((p) => x(p[0]))
     .y((p) => y(p[1]))
     .curve(curveBasis)(ridge.density);
+
   return (
     <>
       <path d={crest ?? ""} className="fill-paper" />
@@ -199,10 +210,12 @@ interface AxisProps {
 
 const Axis = ({ x, y, ticks, format }: AxisProps) => {
   const [d0, d1] = x.domain();
+
   const values = Array.from(
     { length: ticks + 1 },
     (_, k) => d0 + ((d1 - d0) * k) / ticks
   );
+
   return (
     <g className="fade">
       {values.map((v) => (
@@ -234,9 +247,11 @@ export const Ridgeline = (props: RidgelineProps) => {
   const ticks = props.ticks ?? 4;
   const hover = useHover<number>();
   const overlap = props.overlap ?? 1.9;
+
   if (!(overlap > 0)) {
     throw new Error(`Ridgeline overlap must be above 0, got ${overlap}`);
   }
+
   const ridges = data.map((s) => toRidge(s, d0, d1, bw));
   const maxD = Math.max(...ridges.map((r) => r.top));
   const heroLabel = props.highlight ?? ridges[0]?.label;
@@ -250,23 +265,32 @@ export const Ridgeline = (props: RidgelineProps) => {
         const labelW = Math.ceil(
           18 + Math.max(...ridges.map((r) => sansWidth(r.label, 10.4)))
         );
+
         // Room right of the plot for the peak values.
         const valueW = Math.ceil(
           8 + Math.max(...ridges.map((r) => sansWidth(format(r.peak), 11)))
         );
+
         const plotW = Math.min(width - labelW - valueW, 520);
         const x0 = Math.round(labelW + (width - labelW - valueW - plotW) / 2);
+
         const x = scaleLinear()
           .domain([d0, d1])
           .range([x0, x0 + plotW]);
+
         const noteW = width - 16 - Math.abs(2 * x0 + plotW - width);
         const bottom = 34 + noteSpace(noteOf(props), noteW, 24);
+
         const rowGap =
           (height - bottom - 30) / (Math.max(1, ridges.length) - 1 + overlap);
+
         const ridgeH = rowGap * overlap;
+
         const baseOf = (i: number) =>
           height - bottom - rowGap * (ridges.length - 1 - i);
+
         const tip = hover.key === null ? undefined : ridges[hover.key];
+
         return (
           <div className="relative">
             <ChartSvg

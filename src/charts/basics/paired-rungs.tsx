@@ -71,6 +71,7 @@ const Pair = ({
   const nCur = Math.round(datum.current / unit);
   const band = bw * 2 + gap;
   const prevTop = rungY(floor, nPrev - 1, pitch);
+
   return (
     <DimGroup dim={dim}>
       {nPrev > 0 ? (
@@ -129,8 +130,10 @@ const Pair = ({
 
 /** Below this width per category, the columns give way to rows. */
 const COLUMN_ROOM = 78;
+
 /** Height of one row in the narrow layout. */
 const ROW_H = 58;
+
 /** Height of a row's current rungs, and of its earlier bar. */
 const ROW_RUNG = 12;
 const ROW_BAR = 5;
@@ -172,10 +175,12 @@ const PairRow = ({
   const pitch = unit * scale;
   const base = top + 22 + ROW_RUNG;
   const prevW = Math.round(datum.previous * scale);
+
   const rungs = Array.from({ length: n }, (_, k) => ({
     id: `${datum.label}-row-${k}`,
     k,
   }));
+
   return (
     <DimGroup dim={dim}>
       <Label muted voice="label" x={x0} y={top + 12}>
@@ -307,12 +312,15 @@ const PairRows = ({
   const x1 = width - 2;
   const max = Math.max(...data.flatMap((d) => [d.current, d.previous]));
   const notes = noteLines(note, width - 24);
+
   const rowsH =
     40 +
     data.length * ROW_H +
     (hasNote ? 30 : 0) +
     Math.max(0, notes.length - 1) * NOTE_LINE;
+
   const hero = highlight ?? maxIndex(data.map((d) => d.current));
+
   const stops: Stop<number>[] = data.map((d, i) => ({
     avoid: () => [[40 + i * ROW_H, 40 + (i + 1) * ROW_H]],
     key: i,
@@ -321,6 +329,7 @@ const PairRows = ({
     x: x0 + Math.round(d.current / unit) * unit * ((x1 - x0) / max),
     y: 40 + i * ROW_H + ROW_H / 2,
   }));
+
   return (
     <Pointer axis="y" height={rowsH} reach={ROW_H} stops={stops} width={width}>
       {(pointer) => (
@@ -378,12 +387,15 @@ const pairsLabel = (
 const columnsOf = (data: PairDatum[], width: number, unit: number) => {
   const plotW = Math.min(width - 32, data.length * 130);
   const x0 = (width - plotW) / 2;
+
   const x = scaleBand()
     .domain(data.map((d) => d.label))
     .range([x0, x0 + plotW])
     .paddingInner(0.34)
     .paddingOuter(0.2);
+
   const band = x.bandwidth();
+
   return {
     band,
     gap: Math.max(4, Math.round(band * 0.1)),
@@ -435,15 +447,19 @@ export const PairedRungs = (props: PairedRungsProps) => {
             />
           );
         }
+
         const { band, gap, max, plotW, x, x0 } = columnsOf(data, width, unit);
         const notes = noteLines(noteOf(props), width - 24);
+
         const floor = Math.round(
           height -
             (hasNote ? 50 : 30) -
             Math.max(0, notes.length - 1) * NOTE_LINE
         );
+
         const pitch = rungPitch(floor - 32, max);
         const hero = props.highlight ?? maxIndex(data.map((d) => d.current));
+
         const stops = columnStops(data, {
           band,
           curName,
@@ -455,6 +471,7 @@ export const PairedRungs = (props: PairedRungsProps) => {
           unit,
           x,
         });
+
         return (
           <Pointer
             axis="x"

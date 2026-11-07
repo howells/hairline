@@ -39,6 +39,7 @@ const InfoGlyph = (props: { anchor: string }) => (
 export const Frame = (props: FrameProps) => {
   const id = `hl-note-${useId().replaceAll(/[^\w-]/gu, "")}`;
   const hasFooter = props.source !== undefined || props.footnote !== undefined;
+
   return (
     <figure aria-label={props.name} className="m-0 flex min-w-0 flex-col gap-8">
       <figcaption className="text-text text-small flex items-center justify-between gap-4">

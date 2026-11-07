@@ -49,11 +49,13 @@ const millions = (v: number) => `${Math.round(v)}m`;
 const periodLabels = (periods: string[], shown: number[], current: number) => {
   const out = new Map<number, string>();
   let year = "";
+
   for (const k of shown) {
     const [part, y = ""] = periods[k].split(" ");
     out.set(k, y !== year || k === current ? periods[k] : part);
     year = y;
   }
+
   return out;
 };
 
@@ -63,6 +65,7 @@ const valuesAt = (data: RaceData, t: number) => {
   const i0 = Math.max(0, Math.min(last, Math.floor(t)));
   const i1 = Math.min(last, i0 + 1);
   const f = easeTravel(Math.max(0, Math.min(1, t - i0)));
+
   return data.series.map(
     (s) => s.values[i0] + (s.values[i1] - s.values[i0]) * f
   );
@@ -116,19 +119,25 @@ const narrowStops = (
   x: (k: number) => number
 ) => {
   const last = periods.length - 1;
+
   // Horizontal extent of a stop's full label as the track sets it.
   const extent = (k: number) => {
     const w = sansWidth(periods[k], 11);
     const left = k === last ? x(k) + 4 - w : x(k) - w / 2;
+
     return { left, right: left + w };
   };
+
   const here = extent(cur);
+
   const firsts = periods.flatMap((p, k) =>
     k === 0 || periods[k - 1].split(" ")[1] !== p.split(" ")[1] ? [k] : []
   );
+
   return [
     ...firsts.filter((k) => {
       const e = extent(k);
+
       return (
         k !== cur &&
         (e.right + LABEL_GAP < here.left || e.left > here.right + LABEL_GAP)
@@ -145,6 +154,7 @@ const narrowStops = (
  */
 const Track = (p: TrackProps) => {
   const last = p.periods.length - 1;
+
   // Every label is centred on its stop, so the track stops half the last
   // label short of the edge rather than pulling that label onto its neighbour.
   const x = scaleLinear()
@@ -153,7 +163,9 @@ const Track = (p: TrackProps) => {
       p.left,
       p.width - Math.max(4, sansWidth(p.periods[last] ?? "") / 2),
     ]);
+
   const cur = p.periods.indexOf(p.current);
+
   // Narrow: each year's first period and the current one, in full.
   const labels = p.narrow
     ? new Map(narrowStops(p.periods, cur, x).map((k) => [k, p.periods[k]]))
@@ -162,6 +174,7 @@ const Track = (p: TrackProps) => {
         p.periods.map((_, k) => k),
         cur
       );
+
   return (
     <g>
       <HRule kind="rule" x0={x(0)} x1={x(last)} y={p.y} />
@@ -182,16 +195,19 @@ const Track = (p: TrackProps) => {
         height={44}
         onClick={(e) => {
           const box = e.currentTarget.getBoundingClientRect();
+
           const local =
             x(0) -
             22 +
             ((e.clientX - box.left) / box.width) * (x(last) - x(0) + 44);
+
           p.onSeek(Math.max(0, Math.min(last, Math.round(x.invert(local)))));
         }}
       />
       {p.periods.map((period, k) => {
         const passed = k <= p.t;
         const text = labels.get(k);
+
         return (
           <g key={period} className="pointer-events-none">
             {passed ? (
@@ -291,9 +307,11 @@ const PlayIcon = (props: { done: boolean; playing: boolean }) => {
       />
     );
   }
+
   if (props.playing) {
     return <path d="M1 1h2.4v8H1zM5.6 1H8v8H5.6z" className="fill-current" />;
   }
+
   return <path d="M1 0.8 8.4 5 1 9.2z" className="fill-current" />;
 };
 
@@ -301,6 +319,7 @@ const buttonText = (done: boolean, playing: boolean) => {
   if (done) {
     return "Replay";
   }
+
   return playing ? "Pause" : "Play";
 };
 
@@ -344,13 +363,17 @@ export const BarRace = (props: BarRaceProps) => {
   const hover = useHover<number>();
 
   const values = valuesAt(data, clock.t);
+
   const order: Standing[] = values
     .map((v, i) => ({ i, v }))
     .toSorted((a, b) => b.v - a.v);
+
   const rank = Array.from({ length: values.length }, () => 0);
+
   for (const [r, s] of order.entries()) {
     rank[s.i] = r;
   }
+
   const period = data.periods[Math.min(last, Math.round(clock.t))];
   const label = `Bar race, ${data.periods[0]} to ${data.periods[last]}. ${period}: ${order.map((s) => `${data.series[s.i].label} ${format(s.v)}`).join(", ")}`;
   const action = buttonText(clock.done, clock.playing);
@@ -383,10 +406,13 @@ export const BarRace = (props: BarRaceProps) => {
         {(width) => {
           const m = margins(data, format);
           const pitch = (height - m.top - m.bottom) / data.series.length;
+
           const x = scaleLinear()
             .domain([0, Math.max(1, order[0]?.v ?? 1)])
             .range([0, width - m.left - m.right]);
+
           const svgH = height + noteSpace(noteOf(props), width - 16, 22);
+
           return (
             <ChartSvg
               height={svgH}

@@ -31,6 +31,7 @@ const isPaletteId = (value: string | null): value is PaletteId =>
 /** The mode chosen on a previous visit, or Pink, the house mode. */
 export const readStoredPalette = (): PaletteId => {
   const stored = window.localStorage.getItem(STORAGE_KEY);
+
   return isPaletteId(stored) ? stored : "pink";
 };
 

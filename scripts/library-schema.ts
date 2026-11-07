@@ -7,7 +7,9 @@ import { registry } from "@howells/hairline/schema";
 import { z } from "zod";
 
 const out = new URL("../lib/json-schema/", import.meta.url);
+
 mkdirSync(out, { recursive: true });
+
 for (const { kind, schema } of registry) {
   // Input side: what a caller writes (defaults optional, nothing coerced).
   const json = z.toJSONSchema(schema, { io: "input" });
@@ -16,6 +18,7 @@ for (const { kind, schema } of registry) {
     `${JSON.stringify(json, null, 2)}\n`
   );
 }
+
 writeFileSync(
   new URL("index.json", out),
   `${JSON.stringify(
@@ -28,4 +31,5 @@ writeFileSync(
     2
   )}\n`
 );
+
 console.log(`${registry.length} JSON Schemas`);

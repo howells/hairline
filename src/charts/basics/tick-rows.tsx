@@ -52,15 +52,19 @@ const labelWidth = (s: string) => inkWidth(s);
 const labelColumn = (labels: string[], width: number) => {
   const base = width < 440 ? 70 : 96;
   const widest = Math.max(0, ...labels.map((l) => labelWidth(l)));
+
   const room = Math.min(
     Math.max(base, Math.ceil(widest)),
     Math.max(base, Math.round(width * 0.34))
   );
+
   const lines = labels.map((l) =>
     labelWidth(l) <= room ? [l] : wrapWords(l, room, labelWidth)
   );
+
   // The column is as wide as its widest line, so the composition centres on ink.
   const labelW = Math.max(...lines.flat().map((l) => Math.ceil(labelWidth(l))));
+
   return { labelW, lines };
 };
 
@@ -103,6 +107,7 @@ const Row = ({
   const base = Math.round(12 + (index + 0.5) * frame.pitchY + frame.tickH / 2);
   const mid = base - frame.tickH / 2;
   const end = rungX(frame, Math.max(0, n - 1)) + RUNG;
+
   const ticks = Array.from({ length: n }, (_, k) => ({
     id: `${datum.label}-tick-${k}`,
     k,
@@ -200,15 +205,20 @@ export const TickRows = (props: TickRowsProps) => {
           data.map((d) => d.label),
           width
         );
+
         const gap = width < 440 ? 12 : 22;
+
         const maxTicks = Math.max(
           ...data.map((d) => Math.round(d.value / unit))
         );
+
         const slots = slotsFor(maxTicks);
+
         // The count at the end of the longest row, set 12px past its last rung.
         const valueW = Math.max(
           ...data.map((d) => Math.ceil(inkWidth(format(d.value))))
         );
+
         // Rungs fill what the labels and the count leave, 2px in from each edge.
         const pitch = Math.max(
           4,
@@ -220,11 +230,13 @@ export const TickRows = (props: TickRowsProps) => {
             )
           )
         );
+
         const span = (slots - 1) * pitch + 2;
         const track = slots * pitch;
         const notes = noteLines(noteOf(props), width - 24);
         const height = baseHeight + Math.max(0, notes.length - 1) * NOTE_LINE;
         const pitchY = (baseHeight - (hasNote ? 56 : 24)) / data.length;
+
         const frame: RowFrame = {
           gap,
           labelW,
@@ -236,7 +248,9 @@ export const TickRows = (props: TickRowsProps) => {
             (width - (labelW + gap + span + 12 + valueW)) / 2 + labelW + gap
           ),
         };
+
         const hero = props.highlight ?? maxIndex(data.map((d) => d.value));
+
         return (
           <ChartSvg
             height={height}

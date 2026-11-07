@@ -66,8 +66,10 @@ export const referencesShape = {
 
 /** One target line. */
 export type ReferenceLine = z.infer<typeof referenceLineSchema>;
+
 /** One band. */
 export type ReferenceBand = z.infer<typeof referenceBandSchema>;
+
 /** A line or a band. */
 export type Reference = ReferenceBand | ReferenceLine;
 

@@ -5,7 +5,9 @@ export const ladderStep = (rank: number, n: number, lightest = 5) => {
   if (n <= 1) {
     return 0;
   }
+
   const step = Math.round((rank / (n - 1)) * lightest);
+
   return Math.max(0, Math.min(lightest, step));
 };
 
@@ -23,10 +25,12 @@ const GAUSS = 1 / Math.sqrt(2 * Math.PI);
 export const density = (values: number[], at: number[], bandwidth: number) =>
   at.map((x) => {
     let s = 0;
+
     for (const v of values) {
       const u = (x - v) / bandwidth;
       s += GAUSS * Math.exp(-0.5 * u * u);
     }
+
     return s / (values.length * bandwidth);
   });
 
@@ -34,9 +38,11 @@ export const density = (values: number[], at: number[], bandwidth: number) =>
 export const silverman = (values: number[]) => {
   const n = values.length;
   const mean = values.reduce((s, v) => s + v, 0) / n;
+
   const sd = Math.sqrt(
     values.reduce((s, v) => s + (v - mean) ** 2, 0) / Math.max(1, n - 1)
   );
+
   return 1.06 * sd * n ** -0.2;
 };
 

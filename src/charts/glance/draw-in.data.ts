@@ -31,7 +31,9 @@ const DAY = 86_400_000;
  * 2024 with 25 goals.
  */
 let running = 0;
+
 export const drawInDemo: DrawInDatum[] = goals.map((n, i) => {
   running += n;
+
   return { date: new Date(START + i * DAY), value: running };
 });

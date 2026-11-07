@@ -58,8 +58,10 @@ const dotClass = (
     if (clearing) {
       return hollow ? "stroke-hero" : "fill-hero";
     }
+
     return hollow ? "stroke-l5" : "fill-l5";
   }
+
   return contextClass(context, hollow ? "stroke" : "fill");
 };
 
@@ -93,6 +95,7 @@ const Dots = ({
 }: DotsProps) => {
   const last = live.at(-1) ?? 0;
   const labels = [...new Set([...heroes, last])];
+
   return (
     <g>
       {heroLast(live, (i) => heroes.has(i)).map((i) => {
@@ -100,25 +103,32 @@ const Dots = ({
         if (i >= forecast && !heroes.has(i) && i !== last) {
           return null;
         }
+
         const hero = heroes.has(i);
         const hollow = !hero && (isWeekend(readings[i].date) || i >= forecast);
+
         const props = {
           className: "pop transition-radius",
           cx: crisp(frame.x(i)),
           cy: frame.y(valueAt(readings, i)),
           style: stagger(i, "mark"),
         };
+
         const key = reactKeyOf(readings[i], i);
         const tone = clearing(i);
+
         if (hero && tone === undefined) {
           return <HeroDot key={key} {...props} />;
         }
+
         const size: DotSize = hero || hover === i ? "md" : "sm";
+
         const dot = {
           ...props,
           className: `${props.className} ${dotClass(hollow, tone, context)}`,
           size,
         };
+
         return hollow ? (
           <Ring key={key} {...dot} />
         ) : (
@@ -164,6 +174,7 @@ const Stems = ({
     {live.map((i) => {
       const px = frame.x(i);
       const key = reactKeyOf(readings[i], i);
+
       if (heroes.has(i)) {
         return (
           <Stem
@@ -177,9 +188,11 @@ const Stems = ({
           />
         );
       }
+
       if (!isWeekend(readings[i].date) || i >= forecast) {
         return null;
       }
+
       return (
         <g className="fade" key={key} style={stagger(i, "mark")}>
           <DottedLine
@@ -229,7 +242,9 @@ const DayAxis = ({
   const mondays = readings.flatMap((r, i) =>
     r.date.getUTCDay() === 1 ? [i] : []
   );
+
   const labels = dayTickLabels(mondays.map((i) => readings[i].date));
+
   return (
     <XLabels
       ticks={mondays.map((i, k) => ({ label: labels[k], x: frame.x(i) }))}
@@ -270,6 +285,7 @@ interface LayersProps {
 const LineLayers = (p: LayersProps) => {
   const { bands, forecast, frame, heroes, hover, readings, references } = p;
   const { floor, x0, x1, y } = frame;
+
   return (
     <>
       <DailyGrid
@@ -386,6 +402,7 @@ const labelSpots = (
     x: frame.x(i),
     y: frame.y(valueAt(readings, i)) + dy,
   });
+
   return [...dots.map((i) => spot(i, 0)), ...named.map((i) => spot(i, -12))];
 };
 
@@ -400,6 +417,7 @@ const LinePointer = (p: PointerProps) => {
   const { frame, heroes, last, plane, readings, series } = p;
   const forecast = { at: p.forecast, label: p.forecastLabel };
   const facts = dailyFacts({ bands: p.bands, forecast }, p.format);
+
   const stops = readingStops(series, {
     context: p.context,
     facts: (i, r) => [...(isWeekend(r.date) ? ["weekend"] : []), ...facts(i)],
@@ -434,6 +452,7 @@ const LinePointer = (p: PointerProps) => {
     x: frame.x,
     y: frame.y,
   });
+
   return (
     <Pointer
       axis="x"
@@ -481,20 +500,24 @@ const HairlineLineSvg = ({
   const series = seriesOf(readings);
   const { live } = series;
   const floor = dailyFloor(height, note, width, metrics);
+
   if (live.length === 0) {
     return (
       <DailyEmpty floor={floor} height={height} name={title} width={width} />
     );
   }
+
   const values = live.map((i) => valueAt(readings, i));
   const peak = live[values.indexOf(Math.max(...values))];
   const trough = live[values.indexOf(Math.min(...values))];
+
   // The axis keeps room for the reference marks and the bands too.
   const reach = [
     ...values,
     ...referenceValues(references),
     ...bandValues(bands),
   ];
+
   const lo = Math.min(...reach);
   const hi = Math.max(...reach);
   const hiRead = Math.max(...values);
@@ -502,6 +525,7 @@ const HairlineLineSvg = ({
   const last = live.at(-1) ?? 0;
   const [first] = live;
   const heroes = heroesOf(readings, live, hero, { peak, trough }[extreme]);
+
   const { frame } = frameOf(readings, {
     axis,
     domain,
@@ -510,9 +534,11 @@ const HairlineLineSvg = ({
     top: notes.length > 0 ? NOTED_TOP : 40,
     width,
   });
+
   const { x0, x1 } = frame;
   const paths = linePaths(readings, frame, forecast.at);
   const forecasting = forecast.at > 0 && forecast.at < readings.length;
+
   const { desc, label } = describeLine({
     bands,
     ends: { first, last, peak, trough },
@@ -524,6 +550,7 @@ const HairlineLineSvg = ({
     readings,
     references,
   });
+
   const plane = { x0, x1, y0: notes.length > 0 ? NOTED_TOP : 40, y1: floor };
   const within = [x0, x1 - axisRoom(axis).right] as const;
   const clearing = (i: number) => clears(references, valueAt(readings, i));
@@ -564,14 +591,18 @@ const HairlineLineSvg = ({
 
 const HairlineLinePlot = (props: HairlineLineProps) => {
   const readings = readingsOf(props.data ?? []);
+
   const format =
     props.format === undefined ? fmtInt : resolveFormat(props.format);
+
   const fmtDate = resolveDateFormat(props.dateFormat);
   const bands = bandsOf(props.intervals, readings);
+
   const forecast = {
     at: forecastAt(readings, props.forecast),
     label: props.forecast?.label ?? "Forecast",
   };
+
   const extra = intervalTable(
     bands,
     { at: forecast.at, shown: props.forecast !== undefined },
@@ -579,6 +610,7 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
   );
 
   const notes = foundNotes(props.notes, readings);
+
   const table = withNotes(
     ["Date", "Value", ...extra.columns],
     readingRows(readings, fmtDate, format).map((row, i) => [

@@ -39,6 +39,7 @@ export const intlFormatSchema = z.strictObject({
 export const formatSchema = z.union([z.enum(FORMAT_PRESETS), intlFormatSchema]);
 
 export type FormatDescriptor = z.infer<typeof formatSchema>;
+
 /** What a chart prop accepts: a descriptor, or (TypeScript only) a function. */
 export type FormatInput = FormatDescriptor | ((value: number) => string);
 
@@ -49,6 +50,7 @@ export type FormatInput = FormatDescriptor | ((value: number) => string);
 const formatFunctionSchema = z
   .instanceof(Function)
   .pipe(z.custom<(value: number) => string>());
+
 const dateFunctionSchema = z
   .instanceof(Function)
   .pipe(z.custom<(date: Date) => string>());
@@ -85,22 +87,30 @@ export const resolveFormat = (
   if (input === undefined) {
     return String;
   }
+
   const custom = formatFunctionSchema.safeParse(input);
+
   if (custom.success) {
     return custom.data;
   }
+
   const preset = presetSchema.safeParse(input);
+
   if (preset.success) {
     return (value) => PRESETS[preset.data].format(value);
   }
+
   const key = JSON.stringify(input);
   let intl = built.get(key);
+
   if (intl === undefined) {
     const { locale, ...options } = intlFormatSchema.parse(input);
     intl = new Intl.NumberFormat(locale ?? "en-US", options);
     built.set(key, intl);
   }
+
   const formatter = intl;
+
   return (value) => formatter.format(value);
 };
 
@@ -121,6 +131,7 @@ export const DATE_FORMAT_PRESETS = [
 export const dateFormatSchema = z.enum(DATE_FORMAT_PRESETS);
 
 export type DateFormatDescriptor = z.infer<typeof dateFormatSchema>;
+
 /** What a chart prop accepts: a preset, or (TypeScript only) a function. */
 export type DateFormatInput = DateFormatDescriptor | ((date: Date) => string);
 
@@ -137,9 +148,12 @@ export const resolveDateFormat = (
   if (input === undefined) {
     return DATE_PRESETS["day-month"];
   }
+
   const custom = dateFunctionSchema.safeParse(input);
+
   if (custom.success) {
     return custom.data;
   }
+
   return DATE_PRESETS[dateFormatSchema.parse(input)];
 };

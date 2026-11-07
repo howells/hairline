@@ -60,15 +60,20 @@ interface Grid {
 }
 
 const DAY = 86_400_000;
+
 /** Paper between neighbouring cells; the month contour runs down its middle pixel. */
 const GUTTER = 3;
+
 /** Months per stacked band: half-years on wide screens, thirds on narrow. */
 const WIDE_MONTHS = 6;
 const NARROW_MONTHS = 4;
+
 /** Halftone dot radius per step of the day's count, quietest first: the shared ladder. */
 const RADII = HALFTONE_R;
+
 /** Smallest gap between a cell's edge and its outermost dot centre. */
 const MARGIN = 2.5;
+
 /** Where DotScreen puts its dot inside each tile. */
 const SCREEN_CENTRE = Math.floor(TEXTURE_PITCH.screen / 2) + 0.5;
 const dayLabel = utcFormat("%a %-d %b %Y");
@@ -77,14 +82,18 @@ const toDays = (data: DayDatum[], perBand: number): Day[] => {
   const first = new Date(
     Date.parse(`${data[0]?.date ?? "1970-01-01"}T00:00:00Z`)
   );
+
   const lead = (first.getUTCDay() + 6) % 7;
+
   const placed = data.map((d) => {
     const t = Date.parse(`${d.date}T00:00:00Z`);
     const at = new Date(t);
+
     const month =
       (at.getUTCFullYear() - first.getUTCFullYear()) * 12 +
       at.getUTCMonth() -
       first.getUTCMonth();
+
     return {
       ...d,
       band: Math.floor(month / perBand),
@@ -94,21 +103,27 @@ const toDays = (data: DayDatum[], perBand: number): Day[] => {
       t,
     };
   });
+
   // Each band starts at its own first week, so a week split across two
   // bands shows its first days in one and the rest in the next.
   const start = new Map<number, number>();
+
   for (const d of placed) {
     start.set(d.band, Math.min(start.get(d.band) ?? d.col, d.col));
   }
+
   return placed.map((d) => ({ ...d, col: d.col - (start.get(d.band) ?? 0) }));
 };
 
 const keyOf = (band: number, col: number, dow: number) =>
   `${band}:${col}:${dow}`;
+
 const cellX = (g: Grid, d: Day) => g.x0 + g.pitch * d.col;
 const cellY = (g: Grid, d: Day) => g.top + d.band * g.bandH + g.pitch * d.dow;
+
 /** The gutter's middle pixel left of column `col` / above row `row`. */
 const lineX = (g: Grid, col: number) => g.x0 + g.pitch * col - 2;
+
 const lineY = (g: Grid, band: number, row: number) =>
   g.top + band * g.bandH + g.pitch * row - 2;
 
@@ -117,9 +132,11 @@ const stepOf = (g: Grid, v: number) => {
   if (v <= 0) {
     return -1;
   }
+
   if (v >= g.max) {
     return RADII.length;
   }
+
   return Math.min(RADII.length - 1, Math.floor((v / g.max) * RADII.length));
 };
 
@@ -146,21 +163,26 @@ const Screens = ({ ids }: { ids: (name: string) => string }) => (
 /** Fill and rule for one day's cell; a day with none is left as paper. */
 const lookOf = (g: Grid, d: Day, ids: (name: string) => string) => {
   const step = stepOf(g, d.value);
+
   if (step < 0) {
     return null;
   }
+
   if (step >= RADII.length) {
     return { fill: paint(ids("peak")), rule: "stroke-ink" };
   }
+
   return { fill: paint(ids(screenId(d.dow >= 5, step))), rule: "" };
 };
 
 const Cell = (props: { d: Day; g: Grid; ids: (name: string) => string }) => {
   const { d, g } = props;
   const look = lookOf(g, d, props.ids);
+
   if (look === null) {
     return null;
   }
+
   return (
     <g
       transform={`translate(${cellX(g, d) - g.inset} ${cellY(g, d) - g.inset})`}
@@ -191,17 +213,21 @@ const contours = (days: Day[], g: Grid) => {
   const monthAt = new Map(days.map((d) => [keyOf(d.band, d.col, d.dow), d]));
   const seen = new Set<string>();
   const paths = new Map<number, string[]>();
+
   const edge = (d: Day, name: string, path: string) => {
     if (!seen.has(name)) {
       seen.add(name);
       paths.set(d.month, [...(paths.get(d.month) ?? []), path]);
     }
   };
+
   for (const d of days) {
     const differs = (col: number, dow: number) =>
       monthAt.get(keyOf(d.band, col, dow))?.month !== d.month;
+
     const x = (c: number) => lineX(g, c);
     const y = (r: number) => lineY(g, d.band, r);
+
     for (const c of [d.col, d.col + 1]) {
       if (differs(c === d.col ? c - 1 : c, d.dow)) {
         edge(
@@ -211,6 +237,7 @@ const contours = (days: Day[], g: Grid) => {
         );
       }
     }
+
     for (const r of [d.dow, d.dow + 1]) {
       if (differs(d.col, r === d.dow ? r - 1 : r)) {
         edge(
@@ -221,6 +248,7 @@ const contours = (days: Day[], g: Grid) => {
       }
     }
   }
+
   return [...paths.entries()].map(([month, runs]) => ({
     d: runs.join(""),
     month,
@@ -230,11 +258,14 @@ const contours = (days: Day[], g: Grid) => {
 const Frame = ({ days, g }: { days: Day[]; g: Grid }) => {
   // Each month is named over the top-left corner of its contour.
   const mondays = days.filter((d) => d.dow === 0);
+
   const heads = mondays.filter(
     (d, i) => mondays.findIndex((e) => e.month === d.month) === i
   );
+
   const months = monthTickLabels(heads.map((d) => new Date(d.t)));
   const bands = Math.max(...days.map((d) => d.band)) + 1;
+
   return (
     <g>
       {heads.map((d, k) => (
@@ -283,6 +314,7 @@ const dayAt = (
   const band = Math.floor(y / g.bandH);
   const col = Math.floor((e.clientX - box.left - g.x0 + 2) / g.pitch);
   const row = Math.floor((y - band * g.bandH) / g.pitch);
+
   return index.get(keyOf(band, col, row)) ?? null;
 };
 
@@ -312,6 +344,7 @@ const layout = (
   const cell = pitch - GUTTER;
   const dots = Math.floor((cell - 2 * MARGIN) / TEXTURE_PITCH.screen) + 1;
   const margin = (cell - TEXTURE_PITCH.screen * (dots - 1)) / 2;
+
   return {
     bandH: pitch * 7 + gap,
     cell,
@@ -345,10 +378,13 @@ export const CalendarHeat = (props: CalendarHeatProps) => {
         const peak = days.find((d) => d.value === max);
         const extra = 6 + noteSpace(noteOf(props), width - 16, 24);
         const g = layout(width, days, max, extra, props.height);
+
         const index = new Map(
           days.map((d, i) => [keyOf(d.band, d.col, d.dow), i])
         );
+
         const hovered = hover.key === null ? undefined : days[hover.key];
+
         return (
           <div className="relative">
             <ChartSvg

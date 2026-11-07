@@ -21,10 +21,13 @@ import type { DayCount } from "./daily-users.data";
 import { Key } from "./key";
 
 const fmtDay = utcFormat("%a %-d %b");
+
 const fmtSigned = (v: number) => {
   const t = Math.abs(v).toFixed(1);
+
   return `${v < 0 && t !== "0.0" ? "−" : "+"}${t} °C`;
 };
+
 /** Value rules at whole degrees need no decimal ("30 °C"). */
 const fmtTick = (v: number) => fmtDegC(v).replace(".0 °C", " °C");
 
@@ -48,6 +51,7 @@ const stemClass = (hero: boolean, hover: boolean) => {
   if (hero) {
     return "stroke-ink";
   }
+
   return hover ? "stroke-l1" : "stroke-l4";
 };
 
@@ -56,6 +60,7 @@ const Stems = ({ data, frame, hero, hover, mean }: StemsProps) => (
   <g>
     {data.map((d, i) => {
       const above = d.value >= mean[i];
+
       return (
         <Stem
           className={cx(
@@ -94,12 +99,14 @@ const Excursions = ({ frame, mean, tex, values }: ExcursionProps) => {
     .y0((_, i) => frame.y(mean[i]))
     .y1((v) => frame.y(v))
     .curve(curveMonotoneX)(values);
+
   const side = (edge: number) =>
     d3area<number>()
       .x((_, i) => frame.x(i))
       .y0((m) => frame.y(m))
       .y1(edge)
       .curve(curveMonotoneX)(mean) ?? "";
+
   return (
     <g className="fade" style={stagger(4)}>
       <defs>
@@ -144,6 +151,7 @@ interface AxesProps {
 const Axes = ({ data, frame, width }: AxesProps) => {
   const firsts = data.flatMap((d, i) => (d.date.getUTCDate() === 1 ? [i] : []));
   const months = monthTickLabels(firsts.map((i) => data[i].date));
+
   return (
     <g>
       <ValueGrid
@@ -205,6 +213,7 @@ const makeFrame = (data: DayCount[], width: number, height: number) => {
   const x1 = width - MARGIN.right;
   const floor = height - MARGIN.bottom;
   const pitch = (x1 - x0) / data.length;
+
   return {
     floor,
     x: (i: number) => x0 + (i + 0.5) * pitch,
@@ -230,11 +239,13 @@ const DailyUsersSvg = ({ data, height, scrub, width }: SvgProps) => {
   const values = data.map((d) => d.value);
   const hero = values.indexOf(Math.max(...values));
   const hover = scrub.isHovering ? scrub.index : null;
+
   const path =
     d3line<number>()
       .x((_, i) => frame.x(i))
       .y((m) => frame.y(m))
       .curve(curveMonotoneX)(mean) ?? "";
+
   const label = `Daily maximum temperature, ${fmtDay(data[0].date)} to ${fmtDay(data.at(-1)?.date ?? data[0].date)}: hottest ${fmtDegC(values[hero])} on ${fmtDay(data[hero].date)}`;
 
   return (
@@ -321,6 +332,7 @@ interface DailyUsersProps {
 export const DailyUsers = (props: DailyUsersProps) => {
   const data = props.data ?? dailyUsers;
   const height = props.height ?? 460;
+
   const scrub = useScrub(
     0,
     data.map((d) => d.date)

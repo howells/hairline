@@ -83,6 +83,7 @@ const HUB_Y = -6;
 const labelLeft = (n: SimNode) => {
   const dx = n.x ?? 0;
   const dy = (n.y ?? 0) - HUB_Y;
+
   return !n.hub && dx < -0.4 * Math.hypot(dx, dy);
 };
 
@@ -92,14 +93,17 @@ const defaultFormat = (v: number) => `${v.toFixed(1)} m³/s`;
 const buildGraph = (nodes: ForceNode[], links: ForceLink[]): Graph => {
   const maxV = Math.max(...nodes.map((n) => n.value));
   let hubId = nodes[0].id;
+
   for (const n of nodes) {
     if (n.value === maxV) {
       hubId = n.id;
     }
   }
+
   const sim: SimNode[] = nodes.map((datum, i) => {
     const a = (i / nodes.length) * Math.PI * 2;
     const hub = datum.id === hubId;
+
     // The hub is pinned to the centre; satellites settle around it.
     return {
       datum,
@@ -111,10 +115,13 @@ const buildGraph = (nodes: ForceNode[], links: ForceLink[]): Graph => {
       y: Math.sin(a) * 12,
     };
   });
+
   const byId = new Map(sim.map((n) => [n.datum.id, n]));
+
   const edges = links.flatMap((l) => {
     const s = byId.get(l.source);
     const t = byId.get(l.target);
+
     return s === undefined || t === undefined
       ? []
       : [
@@ -127,6 +134,7 @@ const buildGraph = (nodes: ForceNode[], links: ForceLink[]): Graph => {
           },
         ];
   });
+
   return { edges, maxLink: Math.max(...links.map((l) => l.value)), nodes: sim };
 };
 
@@ -138,6 +146,7 @@ const clearance = (hub: boolean, scale: number) => {
   if (scale < 1) {
     return hub ? 16 : 34;
   }
+
   return hub ? 44 : 40;
 };
 
@@ -146,6 +155,7 @@ const makeSimulation = (g: Graph, scale: number) => {
     source: e.s,
     target: e.t,
   }));
+
   return (
     forceSimulation<SimNode>(g.nodes)
       .force(
@@ -153,6 +163,7 @@ const makeSimulation = (g: Graph, scale: number) => {
         forceLink<SimNode, SimulationLinkDatum<SimNode>>(links)
           .distance((_, i) => {
             const e = g.edges[i];
+
             return (e.hub ? 118 + (e.s.r + e.t.r) * 0.9 : 80) * scale;
           })
           .strength((_, i) => (g.edges[i].hub ? 0.7 : 0.22))
@@ -195,6 +206,7 @@ const useForce = (
     sim.on("tick", () => {
       setFrame((f) => f + 1);
     });
+
     if (shown && reduced) {
       // Settle off-screen, then one last (async) tick draws the result.
       sim.alpha(1);
@@ -203,15 +215,18 @@ const useForce = (
     } else if (shown) {
       sim.alpha(1).restart();
     }
+
     return () => {
       sim.stop();
       sim.on("tick", null);
       simRef.current = null;
     };
   }, [graph, scale, shown, reduced]);
+
   const redraw = () => {
     setFrame((f) => f + 1);
   };
+
   return { redraw, simRef };
 };
 
@@ -226,8 +241,10 @@ interface LinksProps {
 const linkTone = (steps: LinksProps["steps"], e: Edge, hero: boolean) => {
   if (steps !== null) {
     const step = linkStepOf(steps, e.s.datum.id, e.t.datum.id);
+
     return `${STEP_STROKE[step]} ${stepFade(step)}`;
   }
+
   return `transition-opacity ${hero ? "stroke-ink" : "stroke-l4"}`;
 };
 
@@ -238,6 +255,7 @@ const heroEdge = (graph: Graph) =>
 /** Each link engraved as a bundle of 1–4 hairlines by strength. */
 const ForceLinks = ({ graph, steps, at }: LinksProps) => {
   const hero = heroEdge(graph);
+
   return (
     <g>
       {graph.edges.map((e) => (
@@ -271,6 +289,7 @@ const labelX = (hub: boolean, left: boolean, x: number, r: number) => {
   if (hub) {
     return x;
   }
+
   return left ? x - r - 7 : x + r + 7;
 };
 
@@ -278,6 +297,7 @@ const labelAnchor = (hub: boolean, left: boolean) => {
   if (hub) {
     return "middle";
   }
+
   return left ? "end" : "start";
 };
 
@@ -290,6 +310,7 @@ const nodeLook = (hub: boolean, step: Step | null) => {
   if (step === null) {
     return hub ? "fill-hero" : "fill-paper stroke-l3";
   }
+
   return step === 0 ? STEP_FILL[0] : `fill-paper ${STEP_STROKE[step]}`;
 };
 
@@ -341,6 +362,7 @@ const reach = (n: SimNode, scale: number) => {
   const r = n.r * scale;
   const name = n.hub ? 0 : LABEL_GAP + textWidth(n.datum.id, "t-label");
   const left = labelLeft(n);
+
   return { left: r + (left ? name : 0), right: r + (left ? 0 : name) };
 };
 
@@ -352,20 +374,24 @@ const centring = (
 ) => {
   let min = Infinity;
   let max = -Infinity;
+
   for (const n of nodes) {
     const { left, right } = reach(n, scale);
     min = Math.min(min, at(n) - left);
     max = Math.max(max, at(n) + right);
   }
+
   return -(min + max) / 2;
 };
 
 /** The chart's accessible name: the hub and every satellite with its flow. */
 const describe = (graph: Graph, format: (v: number) => string) => {
   const hub = graph.nodes.find((n) => n.hub);
+
   const rest = graph.nodes.flatMap((n) =>
     n.hub ? [] : [`${n.datum.id} ${format(n.datum.value)}`]
   );
+
   return `${hub?.datum.id ?? "Hub"} linked to ${graph.nodes.length - 1} tributaries: ${rest.join(", ")}. Drag a node to move it.`;
 };
 
@@ -408,38 +434,51 @@ const ForceField = (props: FieldProps) => {
   const sel = useNodeSelection(props.selected);
   const [dragging, setDragging] = useState<SimNode | null>(null);
   const scale = width < 460 ? 0.78 : 1;
+
   const graph = useMemo(
     () => buildGraph(props.nodes, props.links),
     [props.nodes, props.links]
   );
+
   const { redraw, simRef } = useForce(graph, scale, shown, reduced);
   const cx = width / 2;
   const cy = height / 2 - noteSpace(props.note, width - 16, 16) / 2;
+
   const clampX = (n: SimNode, x: number) => {
     const { left, right } = reach(n, scale);
+
     return Math.max(-cx + left, Math.min(cx - right, x));
   };
+
   const clampY = (y: number, r: number) =>
     Math.max(-cy + r + 8, Math.min(height - cy - r - 8, y));
+
   // Centre the laid-out graph, names included, in the width. Held still while dragging.
   const [held, setHeld] = useState<number | null>(null);
+
   const shift =
     held ?? centring(graph.nodes, scale, (n) => clampX(n, n.x ?? 0));
+
   const place = (n: SimNode) => ({
     x: cx + shift + clampX(n, n.x ?? 0),
     y: cy + clampY(n.y ?? 0, n.r * scale),
   });
+
   const pin = (n: SimNode, e: PointerEvent<SVGGElement>) => {
     const box = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+
     if (box === undefined) {
       return;
     }
+
     n.fx = clampX(n, e.clientX - box.left - cx - shift);
     n.fy = clampY(e.clientY - box.top - cy, n.r * scale);
   };
+
   const focusId = dragging === null ? sel.selected : dragging.datum.id;
   const focus = graph.nodes.find((n) => n.datum.id === focusId) ?? null;
   const steps = stepsAround(graph, focusId);
+
   const bound = sel.bind({
     find: (x, y, within) => pickAt(graph, place, scale, { within, x, y }),
     height,
@@ -536,6 +575,7 @@ export const ForceGraph = (props: ForceGraphProps) => {
   const nodes = props.nodes ?? forceGraphDemo.nodes;
   const links = props.links ?? forceGraphDemo.links;
   const format = props.format ?? defaultFormat;
+
   return (
     <Plot>
       {(width) => (

@@ -37,6 +37,7 @@ describe("PairedRungs at a given width", () => {
     expect(html.match(/height="5"/gu) ?? []).toHaveLength(data.length);
     // The chart grows to hold its rows rather than keeping the column height.
     expect(svgHeight(html)).toBeGreaterThan(360);
+
     for (const { label } of data) {
       expect(html).toContain(label);
     }

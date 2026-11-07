@@ -74,6 +74,7 @@ const lean = (row: SpectrumRow, v: number) =>
 
 /** Stops on every rail's ruler: both ends, the centre and two between each. */
 const STOPS = 7;
+
 /** Half-height of the gap bar, so it spans 7 whole pixels on the rail. */
 const GAP_HALF = 3;
 
@@ -91,6 +92,7 @@ const spectrumAxis = (width: number, data: SpectrumRow[]): SpectrumAxis => {
   const leftW = Math.max(0, ...data.map((r) => sansWidth(r.left, 11)));
   const rightW = Math.max(0, ...data.map((r) => sansWidth(r.right, 11)));
   const x0 = Math.round((width - axisW + (narrow ? 0 : leftW - rightW)) / 2);
+
   return { narrow, x0, x1: x0 + axisW };
 };
 
@@ -98,6 +100,7 @@ const spectrumAxis = (width: number, data: SpectrumRow[]): SpectrumAxis => {
 const Ruler = (props: { x0: number; x1: number; y: number }) => {
   const pitch = (props.x1 - props.x0) / (STOPS - 1);
   const y = Math.floor(props.y);
+
   return (
     <g className="fade stroke-l4">
       {Array.from({ length: STOPS }, (_, k) => {
@@ -106,6 +109,7 @@ const Ruler = (props: { x0: number; x1: number; y: number }) => {
         // Centred on the rail's pixel row: half the length either side.
         const top = Math.floor(y + 0.5 - len / 2);
         const x = props.x0 + pitch * k;
+
         return <Stem key={`stop-${crisp(x)}`} x={x} y0={top} y1={top + len} />;
       })}
     </g>
@@ -124,6 +128,7 @@ const spectrumLayout = (
 ): SpectrumLayout => {
   const top = 44 + (axis.narrow ? 14 : 0);
   const pitch = clamp((height - top - footH) / Math.max(1, rows - 1), 56, 90);
+
   return {
     ...axis,
     height: Math.round(top + (rows - 1) * pitch + footH),
@@ -147,6 +152,7 @@ interface GapBarProps {
 const GapBar = ({ fill, from, lit, r, to, y }: GapBarProps) => {
   const a = Math.round(Math.min(from, to));
   const b = Math.round(Math.max(from, to));
+
   return (
     <g className={dimClass(!lit)}>
       <EngravedRect
@@ -179,6 +185,7 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
   const at = (v: number) => x0 + (x1 - x0) * clamp(v, 0, 1);
   const lit = (series: number) => hover === null || hover.series === series;
   const ly = narrow ? y - 16 : y;
+
   const marks = [
     ...row.others.map((v, k) => ({
       id: `${row.left}-c${k}`,
@@ -187,6 +194,7 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
     })),
     { id: `${row.left}-us`, series: 0, v: row.us },
   ];
+
   return (
     <g>
       <HRule
@@ -229,6 +237,7 @@ const AxisRow = ({ gap, hover, layout, onHover, r, row }: AxisRowProps) => {
       {marks.map((m) => {
         const us = m.series === 0;
         const cx = at(m.v);
+
         return (
           <DimGroup
             dim={!lit(m.series)}
@@ -289,16 +298,21 @@ const keyEntries = (
     { name: "Others", tone: "fill-paper" },
     { fill: paint(gap), name: gapLabel },
   ];
+
   let cx = 0;
   let line = 0;
+
   return items.map((item) => {
     const w = entryWidth(item.name);
+
     if (cx > 0 && cx + w - KEY.entryGap > span) {
       cx = 0;
       line += 1;
     }
+
     const at = { ...item, dx: cx, line };
     cx += w;
+
     return at;
   });
 };
@@ -345,10 +359,13 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
   const height = props.height ?? 440;
   const [hover, setHover] = useState<SpectrumHover | null>(null);
   const gap = useTextureIds("brand")("gap");
+
   const seriesName = (s: number) =>
     s === 0 ? usName : (competitors.at(s - 1) ?? `Other ${s}`);
+
   const tipValue = (h: SpectrumHover) => {
     const row = data[h.row];
+
     return describe(
       row,
       h.series === 0 ? row.us : (row.others.at(h.series - 1) ?? 0.5)
@@ -372,13 +389,16 @@ export const BrandSpectrum = (props: BrandSpectrumProps) => {
         const axis = spectrumAxis(width, data);
         // The key starts under the rail and may run on under the right-hand labels.
         const key = keyEntries(gap, usName, gapLabel, width - axis.x0 - 8);
+
         const footH =
           54 +
           10 +
           (key.at(-1)?.line ?? 0) * KEY_LINE +
           noteSpace(noteOf(props), width - 16, 18);
+
         const layout = spectrumLayout(axis, height, data.length, footH);
         const legendY = layout.rowY(data.length - 1) + 54;
+
         return (
           <ChartSvg
             height={layout.height}
