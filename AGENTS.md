@@ -25,7 +25,7 @@ Don't overwrite others' uncommitted work.
 
 ### Issue tracker
 
-Issues live in Linear (howells, HAI). See `docs/agents/issue-tracker.md`.
+Linear, workspace `howells`, team `HAI`. See `~/Sites/home/docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
