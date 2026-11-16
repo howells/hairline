@@ -1,5 +1,11 @@
 # @howells/hairline
 
+## 0.5.1
+
+### Patch Changes
+
+- 9329208: Internal: linted with @howells/lint 3.10.2. Settle and playback timers keep their state in refs rather than reassigning render-time locals; no change to what charts draw.
+
 ## 0.5.0
 
 ### Minor Changes
