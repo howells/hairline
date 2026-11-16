@@ -1,4 +1,4 @@
-// Seam 2: Wiredeck's acceptance test. A host page of twelve 1920x1080 slides
+// Seam 2: the slide-deck host acceptance test. A host page of twelve 1920x1080 slides
 // (six charts, dark and light) goes through headless Chromium at device pixel
 // ratios 1, 2 and 3. Baselines carry no platform suffix because only Linux
 // compares them; acceptance/README.md says how to regenerate them. The stroke

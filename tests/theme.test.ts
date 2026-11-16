@@ -233,9 +233,9 @@ describe("deriveTheme reproduces the house palettes", () => {
 });
 
 describe("a host themes charts with three colours", () => {
-  // Wiredeck's mapping: ground to paper, ink to ink, clay accent to hero,
+  // A dark deck theme: ground to paper, ink to ink, clay accent to hero,
   // hairline to grid and rule.
-  const wiredeck = deriveTheme({
+  const deckTheme = deriveTheme({
     grid: "#3a3631",
     hero: "#c4694a",
     ink: "#efe9df",
@@ -245,16 +245,16 @@ describe("a host themes charts with three colours", () => {
   });
 
   it("maps ground, ink, accent and hairline onto the tokens", () => {
-    expect(wiredeck["--hl-paper"]).toBe("#1a1815");
-    expect(wiredeck["--hl-ink"]).toBe("#efe9df");
-    expect(wiredeck["--hl-hero"]).toBe("#c4694a");
-    expect(wiredeck["--hl-grid"]).toBe("#3a3631");
-    expect(wiredeck["--hl-rule"]).toBe("#3a3631");
+    expect(deckTheme["--hl-paper"]).toBe("#1a1815");
+    expect(deckTheme["--hl-ink"]).toBe("#efe9df");
+    expect(deckTheme["--hl-hero"]).toBe("#c4694a");
+    expect(deckTheme["--hl-grid"]).toBe("#3a3631");
+    expect(deckTheme["--hl-rule"]).toBe("#3a3631");
   });
 
   it("every property it returns is hl-prefixed", () => {
     expect(
-      Object.keys(wiredeck).filter((k) => !k.startsWith("--hl-"))
+      Object.keys(deckTheme).filter((k) => !k.startsWith("--hl-"))
     ).toStrictEqual([]);
   });
 
@@ -266,7 +266,7 @@ describe("a host themes charts with three colours", () => {
     });
 
     const html = renderToString(
-      createElement("main", null, root(wiredeck, "one"), root(pink, "two"))
+      createElement("main", null, root(deckTheme, "one"), root(pink, "two"))
     );
 
     const styleOf = (id: string) =>

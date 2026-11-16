@@ -1,4 +1,4 @@
-// The host page, as Wiredeck builds it: look a chart up by kind, validate the
+// The host page, as a slide-deck host builds it: look a chart up by kind, validate the
 // JSON payload against the registry, theme a slide with deriveTheme, and draw
 // the chart at its logical size, shown 2.5 times larger by `scale`. No JSX and
 // no Tailwind: the same module renders on the server and hydrates in the page.
@@ -23,7 +23,7 @@ type Animate = DeckConfig["animate"];
 
 const FONT = '"Inter", ui-sans-serif, system-ui, sans-serif';
 
-// A Wiredeck-like mapping: the deck's ground is the paper, its text the ink,
+// A dark and light deck mapping: the deck's ground is the paper, its text the ink,
 // and the clay accent the hero.
 const THEMES = {
   dark: { hero: "#d9825f", ink: "#efe9de", mode: "dark", paper: "#161412" },

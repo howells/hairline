@@ -1,4 +1,4 @@
-// The payloads Wiredeck's agent would send: plain JSON keyed by chart kind,
+// The payloads a deck-building agent would send: plain JSON keyed by chart kind,
 // each checked by the registry before it is drawn. Dates are generated from a
 // fixed formula so every run draws the same marks.
 const DAY = 86_400_000;

@@ -1,5 +1,5 @@
 // React-free. The registry: what each chart is for, in a form an agent reads.
-// Wiredeck's MCP picks a chart by `job`, writes `data` to the `shape`, and
+// An agent or host picks a chart by `job`, writes `data` to the `shape`, and
 // checks it with `validate`. Add one entry per chart, in kind order.
 import type { ZodType } from "zod";
 

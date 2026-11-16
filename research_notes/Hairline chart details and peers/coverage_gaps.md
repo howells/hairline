@@ -122,7 +122,7 @@ Ranked gap list (missing or only partly covered). Tiers: A = commonly needed in 
 
 ### Inferences
 
-- The ordering follows (a) presence in the newsroom-centred taxonomies (FT, Datawrapper) over generic BI libraries, (b) whether Hairline can build it as a thin variant of an existing chart, and (c) the fact that product work (Wiredeck consumers, per earlier notes) leans on funnel/bullet/target forms that editorial taxonomies underweight. These weights are my judgement.
+- The ordering follows (a) presence in the newsroom-centred taxonomies (FT, Datawrapper) over generic BI libraries, (b) whether Hairline can build it as a thin variant of an existing chart, and (c) the fact that product work (slide-deck consumers, per earlier notes) leans on funnel/bullet/target forms that editorial taxonomies underweight. These weights are my judgement.
 - Arrow plot, bullet, range/error bars, pyramid and fan chart are cheap wins because they reuse DumbbellQueue, TickGauge, DivergingBar and AreaDifference geometry.
 
 ### Gaps
