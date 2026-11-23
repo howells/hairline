@@ -329,6 +329,26 @@ describe("sizing", () => {
   });
 });
 
+describe("entry", () => {
+  it("staggers the stems one after another, not by their day", () => {
+    const year = Array.from({ length: 365 }, (_, i) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+      value: 12 + 10 * Math.sin((i / 365) * 2 * Math.PI),
+    }));
+
+    const steps = [
+      ...render({ data: year, ...sized }).matchAll(
+        /<rect class="[^"]*\bgrow-y\b[^"]*"[^>]*style="--hl-i:(?<i>\d+)/gu
+      ),
+    ].map((m) => Number(m.groups?.i));
+
+    expect(steps.length).toBeGreaterThan(1);
+    expect(steps.toSorted((a, b) => a - b)).toStrictEqual(
+      steps.map((_, i) => i)
+    );
+  });
+});
+
 describe("two charts on one page", () => {
   it("do not share a texture id", () => {
     const page = renderToString(
@@ -384,5 +404,9 @@ describe("value-axis labels", () => {
     );
 
     expect(new Set(labels).size).toBeLessThan(labels.length);
+  });
+
+  it("set the precision of the peak's value", () => {
+    expect(hero({ data: small, ticks: [0, 0.25, 0.5, 0.75, 1] })).toBe("0.55");
   });
 });

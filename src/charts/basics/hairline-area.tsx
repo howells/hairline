@@ -1,6 +1,6 @@
 import { scaleLinear } from "d3-scale";
 
-import { fmtInt } from "../../lib/format";
+import { valueFormat } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
 import { resolveDateFormat, resolveFormat } from "../../schema/format";
 import type { HairlineAreaProps } from "../../schema/hairline-area";
@@ -74,7 +74,6 @@ interface LayersProps {
   references: HairlineAreaProps["references"];
   series: Series;
   stipple: string;
-  wholeNumbers: boolean;
   width: number;
   within: readonly [number, number];
 }
@@ -96,7 +95,6 @@ const AreaLayers = (p: LayersProps) => {
         floor={floor}
         format={p.format}
         ticks={p.axisTicks}
-        wholeNumbers={p.wholeNumbers}
         x0={x0}
         x1={x1}
         y={frame.y}
@@ -262,6 +260,24 @@ const AreaPointer = (p: PointerProps) => {
   );
 };
 
+/** How many ticks the value axis asks for when none are given. */
+const AREA_TICKS = 4;
+
+/** What the value axis must cover: the readings, the reference marks and the bands. */
+const extentOf = (
+  values: number[],
+  references: HairlineAreaProps["references"],
+  bands: Band[]
+) => {
+  const reach = [
+    ...values,
+    ...referenceValues(references),
+    ...bandValues(bands),
+  ];
+
+  return { hi: Math.max(...reach), lo: Math.min(...reach) };
+};
+
 interface SvgProps {
   axis: ValueAxis;
   bands: Band[];
@@ -281,8 +297,6 @@ interface SvgProps {
   references: HairlineAreaProps["references"];
   title: string | undefined;
   ticks: number[] | undefined;
-  /** The format is the default whole number, which the axis may refine. */
-  wholeNumbers: boolean;
   width: number;
 }
 
@@ -339,7 +353,6 @@ const HairlineAreaSvg = ({
   references,
   title,
   ticks,
-  wholeNumbers,
   width,
 }: SvgProps) => {
   const series = seriesOf(readings);
@@ -354,7 +367,6 @@ const HairlineAreaSvg = ({
 
   const values = live.map((i) => valueAt(readings, i));
   const max = Math.max(...values);
-  const reach = [...referenceValues(references), ...bandValues(bands)];
   const peak = live[values.indexOf(max)];
   const hero = heroOf(readings, live, emphasis, peak);
   const top = notes.length > 0 ? NOTED_TOP : 40;
@@ -364,7 +376,7 @@ const HairlineAreaSvg = ({
   const frame = frameOf(readings, {
     domain,
     floor,
-    reach: { hi: Math.max(max, ...reach), lo: Math.min(...values, ...reach) },
+    reach: extentOf(values, references, bands),
     span: [x0 + start, x1 - axisRoom(axis).right],
     ticks,
     top,
@@ -381,7 +393,7 @@ const HairlineAreaSvg = ({
   const within = [x0, x1 - axisRoom(axis).right] as const;
   const clearing = (i: number) => clears(references, valueAt(readings, i));
   const avoid = avoidOf(readings, live, frame, hero);
-  const axisTicks = ticks ?? frame.y.ticks(4);
+  const axisTicks = ticks ?? frame.y.ticks(AREA_TICKS);
 
   const { desc, label } = describeArea({
     bands,
@@ -422,7 +434,6 @@ const HairlineAreaSvg = ({
       references={references}
       series={series}
       stipple={stipple}
-      wholeNumbers={wholeNumbers}
       width={width}
       within={within}
     />
@@ -431,13 +442,25 @@ const HairlineAreaSvg = ({
 
 const HairlineAreaPlot = (props: HairlineAreaProps) => {
   const readings = readingsOf(props.data ?? []);
+  const bands = bandsOf(props.intervals, readings);
+  const values = seriesOf(readings).live.map((i) => valueAt(readings, i));
 
+  // Unset, values print with the decimals the value axis needs, so a label
+  // never reads more coarsely than the axis it sits on.
   const format =
-    props.format === undefined ? fmtInt : resolveFormat(props.format);
+    props.format === undefined
+      ? valueFormat(
+          props.ticks ??
+            (values.length === 0
+              ? []
+              : valueScale(extentOf(values, props.references, bands), 0, 1, {
+                  domain: props.domain,
+                }).ticks(AREA_TICKS))
+        )
+      : resolveFormat(props.format);
 
   const fmtDate = resolveDateFormat(props.dateFormat);
   const stipple = useTextureIds("daily")("stipple");
-  const bands = bandsOf(props.intervals, readings);
 
   const forecast = {
     at: forecastAt(readings, props.forecast),
@@ -494,7 +517,6 @@ const HairlineAreaPlot = (props: HairlineAreaProps) => {
             references={props.references}
             title={props.title}
             ticks={props.ticks}
-            wholeNumbers={props.format === undefined}
             width={width}
           />
           <DailyNoteList notes={notes} width={width} />

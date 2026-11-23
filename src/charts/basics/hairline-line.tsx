@@ -1,6 +1,6 @@
-import { dayTickLabels, fmtInt } from "../../lib/format";
+import { dayTickLabels } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
-import { resolveDateFormat, resolveFormat } from "../../schema/format";
+import { resolveDateFormat } from "../../schema/format";
 import type { HairlineLineProps } from "../../schema/hairline-line";
 import type { HeroContext } from "../../schema/hero";
 import type { FontMetrics } from "../../schema/metrics";
@@ -13,7 +13,7 @@ import type { DotSize } from "../marks";
 import { NOTED_TOP } from "../note-layout";
 import { FootNote } from "../plot-note";
 import { Pointer } from "../pointer";
-import { clears, referenceRows, referenceValues } from "../reference-marks";
+import { clears, referenceRows } from "../reference-marks";
 import type { Spot } from "../reference-marks";
 import type { Plane } from "../reference-plates";
 import { ReferenceBands, ReferenceOverlay } from "../references";
@@ -41,9 +41,16 @@ import {
 } from "./daily-readings";
 import type { Reading, Series } from "./daily-readings";
 import { ForecastRule, IntervalBands, IntervalNames } from "./interval-marks";
-import { bandValues, bandsOf, forecastAt, intervalTable } from "./intervals";
+import { bandsOf, forecastAt, intervalTable } from "./intervals";
 import type { Band } from "./intervals";
-import { frameOf, linePaths, valueLabelBoxes } from "./line-frame";
+import {
+  LINE_TICKS,
+  frameOf,
+  lineFormat,
+  linePaths,
+  reachOf,
+  valueLabelBoxes,
+} from "./line-frame";
 import type { Frame } from "./line-frame";
 import { describeLine } from "./line-words";
 import { axisRoom, dailyFloor, isWeekend } from "./util-a";
@@ -226,8 +233,6 @@ interface SvgProps {
   readings: Reading[];
   references: HairlineLineProps["references"];
   title: string | undefined;
-  /** The format is the default whole number, which the axis may refine. */
-  wholeNumbers: boolean;
   width: number;
 }
 
@@ -276,7 +281,6 @@ interface LayersProps {
   readings: Reading[];
   references: HairlineLineProps["references"];
   series: Series;
-  wholeNumbers: boolean;
   width: number;
   within: readonly [number, number];
 }
@@ -295,8 +299,7 @@ const LineLayers = (p: LayersProps) => {
         ])}
         floor={floor}
         format={p.format}
-        ticks={y.ticks(5)}
-        wholeNumbers={p.wholeNumbers}
+        ticks={y.ticks(LINE_TICKS)}
         x0={x0}
         x1={x1}
         y={y}
@@ -494,7 +497,6 @@ const HairlineLineSvg = ({
   readings,
   references,
   title,
-  wholeNumbers,
   width,
 }: SvgProps) => {
   const series = seriesOf(readings);
@@ -511,15 +513,7 @@ const HairlineLineSvg = ({
   const peak = live[values.indexOf(Math.max(...values))];
   const trough = live[values.indexOf(Math.min(...values))];
 
-  // The axis keeps room for the reference marks and the bands too.
-  const reach = [
-    ...values,
-    ...referenceValues(references),
-    ...bandValues(bands),
-  ];
-
-  const lo = Math.min(...reach);
-  const hi = Math.max(...reach);
+  const [lo, hi] = reachOf(values, references, bands);
   const hiRead = Math.max(...values);
   const loRead = Math.min(...values);
   const last = live.at(-1) ?? 0;
@@ -582,7 +576,6 @@ const HairlineLineSvg = ({
       readings={readings}
       references={references}
       series={series}
-      wholeNumbers={wholeNumbers}
       width={width}
       within={within}
     />
@@ -591,12 +584,17 @@ const HairlineLineSvg = ({
 
 const HairlineLinePlot = (props: HairlineLineProps) => {
   const readings = readingsOf(props.data ?? []);
+  const bands = bandsOf(props.intervals, readings);
+  const values = seriesOf(readings).live.map((i) => valueAt(readings, i));
 
-  const format =
-    props.format === undefined ? fmtInt : resolveFormat(props.format);
+  const format = lineFormat(props.format, {
+    bands,
+    domain: props.domain,
+    references: props.references,
+    values,
+  });
 
   const fmtDate = resolveDateFormat(props.dateFormat);
-  const bands = bandsOf(props.intervals, readings);
 
   const forecast = {
     at: forecastAt(readings, props.forecast),
@@ -652,7 +650,6 @@ const HairlineLinePlot = (props: HairlineLineProps) => {
             readings={readings}
             references={props.references}
             title={props.title}
-            wholeNumbers={props.format === undefined}
             width={width}
           />
           <DailyNoteList notes={notes} width={width} />

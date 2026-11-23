@@ -27,35 +27,42 @@ export const DayStems = ({
   hover,
   live,
   readings,
-}: DayStemsProps) => (
-  <g>
-    {live.map((i) => {
-      const monthly = isLongSpan(readings);
+}: DayStemsProps) => {
+  const monthly = isLongSpan(readings);
 
-      if (
-        !hasStem(readings, i, { hero, hover, monthly }) ||
-        (i >= forecast && i !== hero)
-      ) {
-        return null;
-      }
+  const stands = (i: number, at: number | null) =>
+    hasStem(readings, i, { hero, hover: at, monthly }) &&
+    (i < forecast || i === hero);
 
-      const top = Math.round(frame.y(valueAt(readings, i)));
-      const base = Math.round(frame.floor);
+  // The entry runs stem by stem, so a year of monthly stems takes as long as a
+  // month of daily ones. Ranked without the hover, which only comes later.
+  const order = live.filter((i) => stands(i, null));
 
-      return (
-        <rect
-          className={`transition-tone ${stemClass(i === hero, i === hover, clearing(i))}`}
-          height={Math.max(0, base - top)}
-          key={reactKeyOf(readings[i], i)}
-          style={stagger(i, "fine")}
-          width={MARK_WEIGHT}
-          x={Math.round(frame.x(i)) - MARK_WEIGHT / 2}
-          y={top}
-        />
-      );
-    })}
-  </g>
-);
+  return (
+    <g>
+      {live.map((i) => {
+        if (!stands(i, hover)) {
+          return null;
+        }
+
+        const top = Math.round(frame.y(valueAt(readings, i)));
+        const base = Math.round(frame.floor);
+
+        return (
+          <rect
+            className={`transition-tone ${stemClass(i === hero, i === hover, clearing(i))}`}
+            height={Math.max(0, base - top)}
+            key={reactKeyOf(readings[i], i)}
+            style={stagger(Math.max(0, order.indexOf(i)), "fine")}
+            width={MARK_WEIGHT}
+            x={Math.round(frame.x(i)) - MARK_WEIGHT / 2}
+            y={top}
+          />
+        );
+      })}
+    </g>
+  );
+};
 
 /** Room kept between two month labels, px. */
 const MONTH_GAP = 6;

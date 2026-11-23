@@ -232,7 +232,7 @@ describe("hero", () => {
       hero({ data: twins, hero: ["a"] }),
       hero({ data: twins.toReversed(), hero: ["a"] }),
       hero({ data: twins, hero: ["b"] }),
-    ]).toStrictEqual(["3", "3", "5"]);
+    ]).toStrictEqual(["3.0", "3.0", "5.0"]);
   });
 });
 
@@ -331,6 +331,21 @@ describe("value-axis labels", () => {
     );
 
     expect(new Set(labels).size).toBeLessThan(labels.length);
+  });
+
+  it("set the precision of the values printed beside them", () => {
+    const narrow = week.map((d, i) => ({
+      ...d,
+      value: [7.81, 7.4, 6.6, 5.96, 6.4, 6.9, 7.2][i],
+    }));
+
+    const labels = axisLabels(render({ data: narrow, ...sized }));
+    const decimals = labels[0].split(".")[1]?.length ?? 0;
+
+    expect(decimals).toBeGreaterThan(0);
+    expect(hero({ data: narrow, extreme: "trough" })).toBe(
+      (5.96).toFixed(decimals)
+    );
   });
 });
 

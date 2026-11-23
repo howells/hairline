@@ -2,6 +2,7 @@ import { format, precisionFixed } from "d3-format";
 import { utcFormat } from "d3-time-format";
 
 export const fmtInt = format(",.0f");
+
 /** Thousands-grouped, to a fixed number of decimals. */
 export const fixedFormat = (decimals: number) => format(`,.${decimals}f`);
 
@@ -10,30 +11,30 @@ const MAX_AXIS_DECIMALS = 6;
 
 /** Whether every tick prints exactly at this many decimals. */
 const exactAt = (ticks: number[], decimals: number, step: number) =>
-  ticks.every(
-    (t) => Math.abs(Number(t.toFixed(decimals)) - t) <= step * 1e-9
-  );
+  ticks.every((t) => Math.abs(Number(t.toFixed(decimals)) - t) <= step * 1e-9);
 
 /**
- * A value axis's labels: the chart's format, or, when it is the default whole
- * number, one with just the decimals the ticks need, so a narrow range does
- * not print 8, 8, 7, 7 and a tick at 0.25 does not round to 0.3.
+ * The default format for a value axis and every value printed beside it:
+ * whole numbers, or just the decimals the ticks need, so a narrow range does
+ * not print 8, 8, 7, 7, a tick at 0.25 does not round to 0.3, and a value
+ * labelled on a 0.5 axis does not round 5.96 to 6.
  */
-export const axisFormat = (
-  fmt: (v: number) => string,
-  whole: boolean,
-  ticks: number[]
-) => {
+export const valueFormat = (ticks: number[]) => {
   const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : 1;
-  if (!whole || step >= 1) {
-    return fmt;
+
+  if (step >= 1) {
+    return fmtInt;
   }
+
   let decimals = Math.min(precisionFixed(step), MAX_AXIS_DECIMALS);
+
   while (decimals < MAX_AXIS_DECIMALS && !exactAt(ticks, decimals, step)) {
     decimals += 1;
   }
+
   return fixedFormat(decimals);
 };
+
 export const fmtMs = (v: number) => `${fmtInt(v)} ms`;
 export const fmtK = (v: number) => `${format(".1f")(v / 1000)}k`;
 export const fmtKInt = (v: number) => `${fmtInt(v / 1000)}k`;
@@ -45,16 +46,20 @@ export const fmtKInt = (v: number) => `${fmtInt(v / 1000)}k`;
 export const fmtMoney = (v: number) => {
   const a = Math.abs(v);
   const sign = v < 0 ? "−" : "";
+
   if (a >= 1e6) {
     const m = a / 1e6;
+
     return `${sign}$${m >= 10 ? m.toFixed(1) : m.toFixed(2)}m`.replace(
       /\.?0+m$/u,
       "m"
     );
   }
+
   if (a >= 1e3) {
     return `${sign}$${Math.round(a / 1e3)}k`;
   }
+
   return `${sign}$${Math.round(a)}`;
 };
 
@@ -65,10 +70,12 @@ export const fmtPrice = (v: number) =>
 /** Signed percent with a true minus sign: +4%, −10%, 0%. */
 export const fmtSignedPct = (v: number, digits = 0) => {
   const t = Math.abs(v).toFixed(digits);
+
   // A change that rounds to nothing is no change: "0%", never "−0%".
   if (Number(t) === 0) {
     return `${(0).toFixed(digits)}%`;
   }
+
   return `${v > 0 ? "+" : "−"}${t}%`;
 };
 
@@ -92,8 +99,10 @@ const yearShort = utcFormat("%y");
 export const monthTickLabels = (dates: readonly Date[]) =>
   dates.map((d, i) => {
     const prev = dates[i - 1];
+
     const newYear =
       prev === undefined || prev.getUTCFullYear() !== d.getUTCFullYear();
+
     return newYear ? monthYear(d) : monthOnly(d);
   });
 
@@ -116,16 +125,19 @@ const dayOnly = utcFormat("%-d");
 export const dayTickLabels = (dates: readonly Date[]) =>
   dates.map((d, i) => {
     const prev = dates[i - 1];
+
     const newMonth =
       prev === undefined ||
       prev.getUTCMonth() !== d.getUTCMonth() ||
       prev.getUTCFullYear() !== d.getUTCFullYear();
+
     return newMonth ? dayAndMonth(d) : dayOnly(d);
   });
 
 /** Temperature in degrees Celsius to one decimal place ("12.3 °C", "−2.2 °C"). */
 export const fmtDegC = (v: number) => {
   const t = Math.abs(v).toFixed(1);
+
   return `${v < 0 && t !== "0.0" ? "−" : ""}${t} °C`;
 };
 

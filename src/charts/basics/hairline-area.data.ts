@@ -1,5 +1,4 @@
 import type { DailyDatum } from "../../schema/daily";
-import { dayAfter } from "./util-a";
 
 /**
  * F3 Daylight in Tromsø. Minutes the sun is above the horizon in Tromsø,
@@ -52,6 +51,6 @@ const minutes = [
 ];
 
 export const hairlineAreaDemo: DailyDatum[] = minutes.map((m, i) => ({
-  date: dayAfter("2026-01-01", i).toISOString().slice(0, 10),
+  date: new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
   value: m / 60,
 }));

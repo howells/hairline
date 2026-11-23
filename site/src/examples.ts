@@ -1,6 +1,9 @@
 // React-free. One small, valid payload per chart: it is the live example on a
 // chart's page, the code beside it, and a test checks each against the
 // chart's schema. The figures are rounded public numbers, for illustration.
+// Temperatures are 1991–2020 daily means (January, July) from each city's
+// climate table on Wikipedia; day lengths are London's, sunrise to sunset,
+// from the NOAA solar declination with the sun's centre at −0.833°.
 import type { ChartKind } from "@howells/hairline/schema";
 import { z } from "zod";
 
@@ -19,38 +22,43 @@ export type Payload = Record<string, z.infer<ReturnType<typeof z.json>>>;
 export const EXAMPLES: Record<ChartKind, Payload> = {
   "dumbbell-queue": {
     data: [
-      { after: 19, before: 0, label: "Reykjavik" },
-      { after: 19, before: -4, label: "Moscow" },
+      { after: 12, before: 1, label: "Reykjavik" },
+      { after: 20, before: -6, label: "Moscow" },
       { after: 19, before: 5, label: "London" },
-      { after: 25, before: 6, label: "Madrid" },
-      { after: 28, before: 14, label: "Cairo" },
+      { after: 26, before: 7, label: "Madrid" },
+      { after: 29, before: 14, label: "Cairo" },
     ],
     emphasis: "Moscow",
     ends: ["Colder", "Warmer"],
     unit: 2,
-    unitNote: "One rung = 2 °C",
+    unitNote: "Mean temperature, January to July. One rung = 2 °C",
   },
   "hairline-area": {
     data: daily(
       "2025-12-01",
       [
-        7.5, 7.4, 7.3, 7.2, 7.1, 7.05, 7, 6.95, 6.9, 6.88, 6.86, 6.85, 6.84,
-        6.83, 6.83, 6.83, 6.84, 6.85, 6.86, 6.88, 6.9, 6.93, 6.96, 7, 7.04,
-        7.08, 7.12, 7.17,
+        8.2, 8.17, 8.13, 8.1, 8.07, 8.05, 8.02, 8, 7.97, 7.95, 7.93, 7.91, 7.9,
+        7.88, 7.87, 7.86, 7.85, 7.84, 7.83, 7.83, 7.83, 7.83, 7.83, 7.83, 7.84,
+        7.84, 7.85, 7.86,
       ]
     ),
     format: { maximumFractionDigits: 1 },
-    ticks: [0, 2, 4, 6, 8],
-    unitNote: "Hours of daylight",
+    ticks: [0, 3, 6, 9],
+    unitNote: "Hours of daylight in London, December 2025",
   },
   "hairline-line": {
     data: daily(
-      "2025-12-08",
-      [7.05, 6.97, 6.9, 6.86, 6.84, 6.83, 6.83, 6.83, 6.84, 6.86, 6.9]
+      "2025-12-14",
+      [
+        7.88, 7.87, 7.86, 7.85, 7.84, 7.83, 7.83, 7.83, 7.83, 7.83, 7.83, 7.84,
+        7.84, 7.85, 7.86,
+      ]
     ),
-    extreme: "trough",
     format: { maximumFractionDigits: 2, minimumFractionDigits: 2 },
-    unitNote: "Hours of daylight",
+    // The solstice: rounded, five days tie, so name the shortest rather than
+    // asking for the trough, which would take the first of them.
+    hero: ["2025-12-21"],
+    unitNote: "Hours of daylight in London, December 2025",
   },
   "plumb-scatter": {
     // Degrees north, and hours from sunrise to sunset on 21 December.
@@ -71,7 +79,7 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
     yLabel: "Hours of daylight, 21 December",
   },
   "range-dots": {
-    // Rounded survey shares, with their 90% intervals.
+    // Illustrative shares, with their 90% intervals: no survey stands behind them.
     coverage: 0.9,
     data: [
       { estimate: 42, high: 46, label: "Paint", low: 38 },

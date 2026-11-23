@@ -1,7 +1,6 @@
 import type { ScaleLinear } from "d3-scale";
 import type { CSSProperties } from "react";
 
-import { axisFormat } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
 import type { Box } from "../label-box";
 import { ValueGrid } from "../value-grid";
@@ -14,8 +13,6 @@ interface Props {
   floor: number;
   format: (v: number) => string;
   ticks: number[];
-  /** The format is the default whole number, which the axis may refine. */
-  wholeNumbers: boolean;
   x0: number;
   x1: number;
   y: ScaleLinear<number, number>;
@@ -26,7 +23,7 @@ export const DailyGrid = (props: Props) => (
   <ValueGrid
     clear={props.clear}
     floor={props.floor}
-    format={axisFormat(props.format, props.wholeNumbers, props.ticks)}
+    format={props.format}
     labelFloor
     labels={props.axis !== "none"}
     side={props.axis === "left" ? "left" : "right"}

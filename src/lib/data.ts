@@ -71,9 +71,9 @@
  *  - The flow chart's figures are read from the PDF's text layer (pdftotext -bbox).
  */
 
-import grid from "./grid.json";
-import regionTable from "./regions.json";
-import stationTable from "./stations.json";
+import grid from "./grid.json" with { type: "json" };
+import regionTable from "./regions.json" with { type: "json" };
+import stationTable from "./stations.json" with { type: "json" };
 
 export interface Point {
   date: Date;
@@ -147,10 +147,12 @@ export const STORMS = [
  */
 const FIRST_OF_2024 = weekIndex("2024-01-08");
 const YEAR_WEEKS = 50;
+
 export const demand2024 = weeklyDemand.slice(
   FIRST_OF_2024,
   FIRST_OF_2024 + YEAR_WEEKS
 );
+
 export const demand2023 = weeklyDemand
   .slice(FIRST_OF_2024 - 52, FIRST_OF_2024 - 52 + YEAR_WEEKS)
   .map((p, i) => ({ date: demand2024[i].date, value: p.value }));
@@ -162,6 +164,7 @@ export const HALF_YEAR_WEEKS = WEEKS.slice(weekIndex("2024-07-01"));
 export const halfYearGeneration = (() => {
   const from = weekIndex("2024-07-01");
   const cut = (values: number[]) => values.slice(from);
+
   return {
     gas: cut(grid.weekly.gas),
     imports: cut(grid.weekly.imports),
@@ -255,14 +258,17 @@ const HEAT_REGIONS = [
   "South West England",
   "South Wales",
 ];
+
 export const HEAT_ROWS = HEAT_REGIONS;
 
 /** Mean carbon intensity by region and UTC hour of the day, 2023 and 2024, g CO2 per kWh. */
 export const hourlyIntensity: number[][] = HEAT_REGIONS.map((name) => {
   const region = rounded.find((r) => r.name === name);
+
   if (region === undefined) {
     throw new Error(`No region called ${name}`);
   }
+
   return region.hourly;
 });
 

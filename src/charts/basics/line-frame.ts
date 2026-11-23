@@ -1,12 +1,18 @@
 import { scaleLinear } from "d3-scale";
 import type { ScaleLinear } from "d3-scale";
 
+import { valueFormat } from "../../lib/format";
 import type { ValueAxis } from "../../schema/daily";
+import { resolveFormat } from "../../schema/format";
+import type { FormatInput } from "../../schema/format";
+import type { HairlineLineProps } from "../../schema/hairline-line";
 import { crisp } from "../axes";
 import { labelBox } from "../label-box";
+import { referenceValues } from "../reference-marks";
 import { valueAt } from "./daily-readings";
 import type { Reading } from "./daily-readings";
-import { pathBetween } from "./intervals";
+import { bandValues, pathBetween } from "./intervals";
+import type { Band } from "./intervals";
 import { axisRoom } from "./util-a";
 
 export interface Frame {
@@ -62,6 +68,70 @@ export const valueLabelBoxes = (
     )
   );
 
+/** How many ticks the value axis asks for. */
+export const LINE_TICKS = 5;
+
+/**
+ * The value scale over a reach, before it is given a range: the domain if one
+ * is given, else the reach with a quarter of its span below it, made nice.
+ */
+export const lineScale = (
+  reach: [number, number],
+  domain: [number, number] | undefined
+) => {
+  if (domain !== undefined) {
+    return scaleLinear().domain(domain);
+  }
+
+  const [lo, hi] = reach;
+  const span = hi - lo;
+
+  return scaleLinear()
+    .domain(span < FLAT_SPAN ? [lo - 1, hi + 1] : [lo - span * 0.25, hi])
+    .nice(LINE_TICKS);
+};
+
+/** What the value axis must cover: the readings, the reference marks and the bands. */
+export const reachOf = (
+  values: number[],
+  references: HairlineLineProps["references"],
+  bands: Band[]
+): [number, number] => {
+  const reach = [
+    ...values,
+    ...referenceValues(references),
+    ...bandValues(bands),
+  ];
+
+  return [Math.min(...reach), Math.max(...reach)];
+};
+
+/**
+ * How values print: the given format, else whole numbers or the decimals the
+ * value axis needs, so a label never reads more coarsely than its axis.
+ */
+export const lineFormat = (
+  input: FormatInput | undefined,
+  at: {
+    bands: Band[];
+    domain: [number, number] | undefined;
+    references: HairlineLineProps["references"];
+    values: number[];
+  }
+) => {
+  if (input !== undefined) {
+    return resolveFormat(input);
+  }
+
+  return valueFormat(
+    at.values.length === 0
+      ? []
+      : lineScale(reachOf(at.values, at.references, at.bands), at.domain).ticks(
+          LINE_TICKS
+        )
+  );
+};
+
 /**
  * The frame: the value axis over the reach of the readings (and the marks
  * that need room), and the days across the plot, kept clear of the value
@@ -82,19 +152,7 @@ export const frameOf = (
   const frameW = Math.min(at.width - 16, 680 + room.left);
   const x0 = Math.round((at.width - frameW) / 2) + room.left;
   const x1 = x0 + frameW - room.left;
-  const [lo, hi] = at.reach;
-  const span = hi - lo;
-
-  const y = scaleLinear()
-    .domain(
-      at.domain ??
-        (span < FLAT_SPAN ? [lo - 1, hi + 1] : [lo - span * 0.25, hi])
-    )
-    .range([at.floor, at.top]);
-
-  if (at.domain === undefined) {
-    y.nice(5);
-  }
+  const y = lineScale(at.reach, at.domain).range([at.floor, at.top]);
 
   const start = readings[0].date.getTime();
 
