@@ -39,7 +39,7 @@ pnpm --filter @howells/hairline-worker test   # the Worker's MCP and render test
 ## Boundaries
 
 - **Always:** run the checks above before calling a change done; add a changeset (`pnpm changeset`) for a user-visible library change.
-- **Ask first:** adding a dependency; changing the `exports` map in `package.json`; deploying the Worker (`pnpm --filter @howells/hairline-worker deploy`).
+- **Ask first:** adding a dependency; changing the `exports` map in `package.json`; deploying the Worker (`pnpm --filter @howells/hairline-worker run deploy`).
 - **Never:** publish to npm, bump versions or cut a release without Daniel's go-ahead; regenerate `acceptance/baselines/` from macOS (use `pnpm generate:baselines`, which runs in Docker); overwrite others' uncommitted work.
 
 ## Releases

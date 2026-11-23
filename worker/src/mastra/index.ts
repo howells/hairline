@@ -15,7 +15,7 @@ export const mastra = new Mastra({
     ai: { binding: "AI" },
     name: "hairline-mcp",
     vars: {
-      HAIRLINE_PUBLIC_URL: "https://hairline-mcp.danielhowells.workers.dev",
+      HAIRLINE_PUBLIC_URL: "https://hairline-mcp.daniel-0c0.workers.dev",
     },
   }),
   // Built here, not at module scope: see hairlineServer.

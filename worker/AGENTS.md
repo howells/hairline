@@ -9,7 +9,7 @@ pnpm build:lib                                   # at the root, first: the Worke
 pnpm --filter @howells/hairline-worker typecheck
 pnpm --filter @howells/hairline-worker test      # MCP protocol and render tests, in Node
 pnpm --filter @howells/hairline-worker dev       # build, then wrangler dev on :8787
-pnpm --filter @howells/hairline-worker deploy    # ask first
+pnpm --filter @howells/hairline-worker run deploy    # ask first
 ```
 
 `dev` and `deploy` run `mastra build`, which writes `.mastra/output/` (with its `wrangler.json`) and `src/generated/hairline-css.ts`. Both are generated; don't edit them.
