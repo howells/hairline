@@ -79,17 +79,20 @@ export const EXAMPLES: Record<ChartKind, Payload> = {
     yLabel: "Hours of daylight, 21 December",
   },
   "range-dots": {
-    // Illustrative shares, with their 90% intervals: no survey stands behind them.
-    coverage: 0.9,
+    // Percent of adults using e-cigarettes in 2023, with 95% intervals:
+    // CDC BRFSS prevalence data (data.cdc.gov, dttw-5yxu), as published.
+    coverage: 0.95,
     data: [
-      { estimate: 42, high: 46, label: "Paint", low: 38 },
-      { estimate: 35, high: 41, label: "Tile", low: 29 },
-      { estimate: 31, high: 40, label: "Flooring", low: 22 },
-      { estimate: 19, high: 30, label: "Stone", low: 8 },
+      { estimate: 17.1, high: 20.9, label: "Guam", low: 13.2 },
+      { estimate: 11.3, high: 12.4, label: "Oklahoma", low: 10.2 },
+      { estimate: 9.1, high: 11.1, label: "South Dakota", low: 7.1 },
+      { estimate: 7.2, high: 7.7, label: "Washington", low: 6.8 },
     ],
-    domain: [0, 60],
-    unitNote: "Estimate and 90% interval",
-    wide: 15,
+    domain: [0, 25],
+    format: { maximumFractionDigits: 1 },
+    formatMargin: { maximumFractionDigits: 1, minimumFractionDigits: 1 },
+    unitNote: "Percent of adults, estimate and 95% interval",
+    wide: 3.5,
   },
   "rung-bars": {
     data: [

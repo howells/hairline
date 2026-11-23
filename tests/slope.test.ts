@@ -156,6 +156,7 @@ describe("the registry", () => {
       "strokes",
       "table",
       "title",
+      "unitNote",
       "width",
     ]);
   });
@@ -256,6 +257,26 @@ describe("degenerate data", () => {
     const html = render({ labels, rows: cases.nan, ...sized });
     expect(html).toContain(">y");
     expect(html).not.toContain("x ");
+  });
+});
+
+describe("unitNote", () => {
+  it("prints under the columns, which stop above it", () => {
+    const html = drawn(
+      render({ labels, rows, unitNote: "Grams of CO2 a kWh", ...sized })
+    );
+
+    const y1 = [...html.matchAll(/<line[^>]*y2="(?<y>[\d.]+)"/gu)].map((m) =>
+      Number(m.groups?.y)
+    );
+
+    const noteY = Number(
+      /<text[^>]*y="(?<y>[\d.]+)"[^>]*>Grams of CO2 a kWh</u.exec(html)?.groups
+        ?.y
+    );
+
+    expect(noteY).toBeGreaterThan(0);
+    expect(Math.max(...y1)).toBeLessThan(noteY - 12);
   });
 });
 

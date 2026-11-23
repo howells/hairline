@@ -11,12 +11,13 @@ import { DimGroup } from "../hover";
 import { nudge } from "../line-ends";
 import type { Nudged } from "../line-ends";
 import { Dot, Ring } from "../markers";
+import { FootNote } from "../plot-note";
 import { VALUE } from "../roles";
 import { VRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
 import { ChartSvg } from "../svg";
 import { Label } from "../text";
-import { stagger } from "../util";
+import { noteSpace, stagger } from "../util";
 import { nameWidth } from "./room";
 
 type Row = RowData;
@@ -219,6 +220,29 @@ const summary = (
   return `${plural(rows.length, "line")} from ${labels[0]} to ${labels[1]}. Biggest rise: ${up.name}, ${format(up.from)} to ${format(up.to)}. Biggest fall: ${down.name}, ${format(down.from)} to ${format(down.to)}. The data table lists every line.`;
 };
 
+/** Where the two columns stand: each side's labels run out to the edge, the columns just inside. */
+const columnXs = (
+  rows: RowData[],
+  format: (v: number) => string,
+  width: number,
+  metrics: SlopeProps["metrics"]
+): [number, number] => [
+  LABEL_GAP +
+    nameWidth(
+      rows.map((r) => `${r.name} ${format(r.from)}`),
+      LABEL_SHAVE,
+      metrics
+    ),
+  width -
+    LABEL_GAP -
+    3 -
+    nameWidth(
+      rows.map((r) => `${format(r.to)} ${r.name}`),
+      LABEL_SHAVE,
+      metrics
+    ),
+];
+
 const SlopePlot = (props: SlopeProps) => {
   const rows = (props.rows ?? []).filter(
     (r) => Number.isFinite(r.from) && Number.isFinite(r.to)
@@ -248,25 +272,18 @@ const SlopePlot = (props: SlopeProps) => {
       {(width) => {
         const format = width < NARROW ? narrow : wide;
         const top = 40;
-        const bottom = 24;
 
-        // Each side's labels run out to the edge: the columns sit just inside.
-        const xs: [number, number] = [
-          LABEL_GAP +
-            nameWidth(
-              rows.map((r) => `${r.name} ${format(r.from)}`),
-              LABEL_SHAVE,
-              props.metrics
-            ),
-          width -
-            LABEL_GAP -
-            3 -
-            nameWidth(
-              rows.map((r) => `${format(r.to)} ${r.name}`),
-              LABEL_SHAVE,
-              props.metrics
-            ),
-        ];
+        // The note sits under the columns, which stop short of it.
+        const noteRoom = noteSpace(
+          props.unitNote,
+          width - 16,
+          26,
+          props.metrics
+        );
+
+        const bottom = 24 + noteRoom;
+
+        const xs = columnXs(rows, format, width, props.metrics);
 
         const y = scaleLinear()
           .domain(domain)
@@ -276,14 +293,14 @@ const SlopePlot = (props: SlopeProps) => {
           rows.map((r) => y(r.from)),
           15,
           top + 8,
-          h - 8
+          h - bottom + 16
         );
 
         const rys = nudge(
           rows.map((r) => y(r.to)),
           15,
           top + 8,
-          h - 8
+          h - bottom + 16
         );
 
         const seen = new Map<string, number>();
@@ -325,7 +342,12 @@ const SlopePlot = (props: SlopeProps) => {
             leave={hover.clear}
             width={width}
           >
-            <Columns xs={xs} labels={props.labels} top={top} height={h} />
+            <Columns
+              xs={xs}
+              labels={props.labels}
+              top={top}
+              height={h - noteRoom}
+            />
             {rows.map((r, i) => (
               <SlopeRow
                 key={keys[i]}
@@ -342,6 +364,12 @@ const SlopePlot = (props: SlopeProps) => {
                 }}
               />
             ))}
+            <FootNote
+              height={h}
+              metrics={props.metrics}
+              text={props.unitNote}
+              width={width}
+            />
           </ChartSvg>
         );
       }}

@@ -1,8 +1,7 @@
 // The payloads a deck-building agent would send: plain JSON keyed by chart kind,
 // each checked by the registry before it is drawn. The data is the gallery's
 // own, imported from its data files, where each set names its source, the date
-// it was fetched and how it was transformed. The one exception is range-dots,
-// whose shares are illustrative, as they are in the gallery.
+// it was fetched and how it was transformed.
 import { dumbbellQueueDemo } from "../../src/charts/basics/dumbbell-queue.data.ts";
 import { hairlineAreaDemo } from "../../src/charts/basics/hairline-area.data.ts";
 import { hairlineLineDemo } from "../../src/charts/basics/hairline-line.data.ts";
@@ -53,12 +52,16 @@ export const PAYLOADS = {
     xLabels: ["Smaller orchards", "Larger orchards"],
     yLabel: "Tonnes of apples a hectare",
   },
+  // Adults who use e-cigarettes in 2023, CDC BRFSS (R6).
   "range-dots": {
-    coverage: 0.9,
+    coverage: 0.95,
     data: rangeDemo,
-    domain: [0, 60],
-    unitNote: "Illustrative shares, estimate and 90% interval",
-    wide: 15,
+    domain: [0, 25],
+    format: { maximumFractionDigits: 1 },
+    formatMargin: { maximumFractionDigits: 1, minimumFractionDigits: 1 },
+    unitNote:
+      "Percent of adults using e-cigarettes, 2023 · Estimate and 95% interval",
+    wide: 3.5,
   },
   // Earthquakes of magnitude 7 or more a year, USGS (F1).
   "rung-bars": {
@@ -70,5 +73,6 @@ export const PAYLOADS = {
     domain: [60, 300],
     labels: ["Jan 2023", "Dec 2024"],
     rows: cleanerRegions,
+    unitNote: "Mean carbon intensity, grams of CO₂ a kWh",
   },
 };

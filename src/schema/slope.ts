@@ -7,7 +7,7 @@ import { z } from "zod";
 import { formatSchema } from "./format";
 import type { FormatInput } from "./format";
 import { keyOf } from "./key";
-import { sharedShape } from "./options";
+import { noteShape, sharedShape } from "./options";
 import type { SharedCallbacks } from "./options";
 
 /** One line: a name and its values at the two points. */
@@ -89,6 +89,8 @@ export const slopeSchema = z
       ),
     /** The rows, 1 to 12. */
     rows: z.array(slopeRowSchema).min(1).max(12).describe("The rows, 1 to 12."),
+    /** The in-plot key under the columns, such as the unit. */
+    unitNote: noteShape.unitNote,
     /** Fixed width in px. Giving it turns measuring off. */
     width: z
       .number()

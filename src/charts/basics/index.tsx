@@ -184,16 +184,16 @@ const marks: GalleryEntry[] = [
   {
     family: "basics",
     id: "R6",
-    name: "Households buying",
+    name: "Adults who vape",
     render: () => (
       <RangeDots
-        coverage={0.9}
+        coverage={0.95}
         data={rangeDemo}
-        domain={[0, 60]}
-        format={percent}
-        formatMargin={String}
-        unitNote="Estimate and 90% interval"
-        wide={15}
+        domain={[0, 25]}
+        format={{ maximumFractionDigits: 1 }}
+        formatMargin={{ maximumFractionDigits: 1, minimumFractionDigits: 1 }}
+        unitNote="Percent of adults using e-cigarettes, 2023 · Estimate and 95% interval"
+        wide={3.5}
       />
     ),
   },

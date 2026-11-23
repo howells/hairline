@@ -56,12 +56,22 @@ export const forecastIntervals: Interval[] = [
 /** The last observed day: the forecast starts after it. */
 export const forecastFrom = dayAfter(START, OBSERVED - 1);
 
-/** Shares of households that bought each kind of material, with 90% intervals. */
+/**
+ * R6 Adults who vape. Percent of adults who currently use e-cigarettes, 2023,
+ * crude prevalence with its 95% confidence interval, for six of the 54 states
+ * and territories: the highest and lowest, and four between with narrow and
+ * wide intervals. A small sample (Guam, South Dakota) widens the interval.
+ *
+ * Source: CDC, Behavioral Risk Factor Surveillance System, "BRFSS Prevalence
+ * Data (2011 to present)", data.cdc.gov dataset dttw-5yxu, question _CURECI2,
+ * break-out Overall, response "Current E-cigarette user". Fetched 2026-11-23;
+ * values as published.
+ */
 export const rangeDemo: RangeDatum[] = [
-  { estimate: 42, high: 46, label: "Paint", low: 38 },
-  { estimate: 35, high: 41, label: "Tile", low: 29 },
-  { estimate: 31, high: 40, label: "Flooring", low: 22 },
-  { estimate: 24, high: 27, label: "Textiles", low: 21 },
-  { estimate: 19, high: 30, label: "Stone", low: 8 },
-  { estimate: 14, high: 19, label: "Wood", low: 9 },
+  { estimate: 17.1, high: 20.9, label: "Guam", low: 13.2 },
+  { estimate: 11.3, high: 12.4, label: "Oklahoma", low: 10.2 },
+  { estimate: 9.1, high: 11.1, label: "South Dakota", low: 7.1 },
+  { estimate: 7.2, high: 7.7, label: "Washington", low: 6.8 },
+  { estimate: 5.6, high: 6.9, label: "District of Columbia", low: 4.2 },
+  { estimate: 2.6, high: 3.3, label: "Puerto Rico", low: 1.8 },
 ];
