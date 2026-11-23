@@ -4,7 +4,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const css = readFileSync(require.resolve("@howells/hairline/hairline.css"), "utf-8");
+
+const css = readFileSync(
+  require.resolve("@howells/hairline/hairline.css"),
+  "utf-8"
+);
 
 writeFileSync(
   new URL("../src/generated/hairline-css.ts", import.meta.url),

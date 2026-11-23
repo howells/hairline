@@ -15,7 +15,25 @@ import { RungBars } from "./charts/basics/rung-bars";
 import { Slope } from "./charts/board/slope";
 import { charts } from "./schema/registry";
 import type { ChartEntry } from "./schema/registry";
-import type { Payload } from "./schema/validate";
+import type { Issue, Payload } from "./schema/validate";
+
+/**
+ * A payload that failed its chart's schema. `issues` are the same
+ * path-specific issues `validate` returns, so a host can report each field.
+ */
+export class ChartValidationError extends Error {
+  readonly issues: readonly Issue[];
+  readonly kind: string;
+
+  constructor(kind: string, issues: readonly Issue[]) {
+    super(
+      `${kind}: ${issues.map((issue) => `${issue.pointer} ${issue.message}`).join("; ")}`
+    );
+    this.name = "ChartValidationError";
+    this.issues = issues;
+    this.kind = kind;
+  }
+}
 
 /** Check a payload against the chart's registry entry, then draw it. */
 const drawer = <T extends object>(
@@ -26,9 +44,7 @@ const drawer = <T extends object>(
     const checked = entry.validate(payload);
 
     if (!checked.ok) {
-      throw new Error(
-        `${entry.kind}: ${checked.issues.map((issue) => `${issue.pointer} ${issue.message}`).join("; ")}`
-      );
+      throw new ChartValidationError(entry.kind, checked.issues);
     }
 
     return createElement(Component, { ...checked.value, ...extra });
@@ -36,7 +52,7 @@ const drawer = <T extends object>(
 
 /**
  * Every chart by kind: `drawers.slope(payload)` validates the payload and
- * returns the element, or throws with the issues. The second argument is
+ * returns the element, or throws a ChartValidationError with the issues. The second argument is
  * props a host adds to the payload (a first-render width, say).
  */
 export const drawers = {

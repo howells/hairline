@@ -85,7 +85,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && pnpm build:docs",
-    "build:docs": "pnpm --filter @howells/hairline-site build && rm -rf dist/docs && cp -R site/dist dist/docs",
+    "build:docs": "pnpm --filter @howells/hairline-site build && rm -rf dist/docs && cp -R site/dist dist/docs && cp dist/docs/robots.txt dist/docs/sitemap.xml dist/docs/llms.txt dist/",
     "preview": "vite preview",
     "typecheck": "tsc -b && tsc -p scripts && tsc -p acceptance && tsc -p site",
     "lint": "howells-check .",

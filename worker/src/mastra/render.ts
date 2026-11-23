@@ -20,7 +20,7 @@ export interface RenderRequest {
   chart: ChartEntry;
   format: Format;
   height: number;
-  /** Already validated against the chart's schema by the tool's inputSchema. */
+  /** Already validated against the chart's schema. */
   payload: Payload;
   theme: ThemeInput;
   title?: string;
@@ -31,15 +31,27 @@ export interface RenderRequest {
 export const STYLESHEET_PATH = "/hairline.css";
 
 export type Rendered =
-  | { format: "document"; html: string; ok: true }
-  | { format: "fragment"; html: string; ok: true; stylesheet: string }
-  | { code: string; format: "react"; install: string; ok: true };
+  | { format: "document"; html: string }
+  | { format: "fragment"; html: string; stylesheet: string }
+  | { code: string; format: "react"; install: string };
 
 const escapeHtml = (text: string) =>
-  text.replace(/[&<>"]/g, (c) => `&${{ '"': "quot", "&": "amp", "<": "lt", ">": "gt" }[c]};`);
+  text.replaceAll(
+    /[&<>"]/gu,
+    (c) => `&${{ '"': "quot", "&": "amp", "<": "lt", ">": "gt" }[c]};`
+  );
+
+const isDrawerKind = (kind: string): kind is keyof typeof drawers =>
+  Object.hasOwn(drawers, kind);
 
 const markup = (request: RenderRequest) => {
-  const chart = drawers[request.chart.kind as keyof typeof drawers](request.payload, {
+  const { kind } = request.chart;
+
+  if (!isDrawerKind(kind)) {
+    throw new Error(`No drawer for chart kind "${kind}".`);
+  }
+
+  const chart = drawers[kind](request.payload, {
     animate: "off",
     height: request.height,
     idPrefix: "hl",
@@ -47,7 +59,11 @@ const markup = (request: RenderRequest) => {
   });
 
   return renderToString(
-    createElement("div", { className: "hl-root", style: deriveTheme(request.theme) }, chart)
+    createElement(
+      "div",
+      { className: "hl-root", style: deriveTheme(request.theme) },
+      chart
+    )
   );
 };
 
@@ -93,12 +109,16 @@ const INSTALL =
 
 export const render = (request: RenderRequest, origin: string): Rendered => {
   if (request.format === "react") {
-    return { code: react(request), format: "react", install: INSTALL, ok: true };
+    return { code: react(request), format: "react", install: INSTALL };
   }
 
   const body = markup(request);
 
   return request.format === "document"
-    ? { format: "document", html: document(request, body), ok: true }
-    : { format: "fragment", html: body, ok: true, stylesheet: new URL(STYLESHEET_PATH, origin).href };
+    ? { format: "document", html: document(request, body) }
+    : {
+        format: "fragment",
+        html: body,
+        stylesheet: new URL(STYLESHEET_PATH, origin).href,
+      };
 };

@@ -31,6 +31,9 @@ export default defineConfig({
     ui: { "en-GB": { actions: { copied: "Copied" } } },
   },
   integrations: [hairlineTheme()],
+  // Dates each page by its last commit: the "Last updated" line, the
+  // sitemap's lastmod and the structured data's dateModified.
+  lastModified: "git",
   logo: { text: "Hairline" },
   markdown: { code: { icons: false, theme: CODE_THEME, wrap: true } },
   theme: {

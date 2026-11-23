@@ -1,0 +1,51 @@
+---
+title: Errors
+description: The problem documents the chart API returns over HTTP and MCP, and what to do about each.
+sidebar:
+  order: 5
+---
+
+The chart API (the Hairline Worker, over MCP and HTTP) reports every failure as one [problem document](https://www.rfc-editor.org/rfc/rfc9457), served as `application/problem+json` over HTTP and as an `isError` tool result over MCP:
+
+```json
+{
+  "type": "https://hairline.danielhowells.com/docs/errors#invalid-input",
+  "title": "The input does not match the schema",
+  "status": 422,
+  "detail": "input.payload.data[0].value Invalid input: expected number, received string",
+  "invalid_fields": [
+    {
+      "pointer": "input.payload.data[0].value",
+      "code": "invalid_type",
+      "message": "Invalid input: expected number, received string"
+    }
+  ],
+  "is_retriable": false,
+  "suggestions": [
+    "Fix the fields in invalid_fields and call render-chart again."
+  ],
+  "trace_id": "8a353afe-89fe-496c-bc5f-203b6318da70"
+}
+```
+
+`is_retriable` says whether the same call can succeed if repeated. `suggestions` say what to do next. Quote `trace_id` when reporting a failure.
+
+## invalid-input
+
+Status 422. The input does not match the chart's schema. `invalid_fields` lists each field at fault, by path. Fix those fields and call again; repeating the same call fails the same way.
+
+## chart-not-found
+
+Status 404. No chart of that kind. Call `list-charts` for the kinds.
+
+## not-found
+
+Status 404. No tool or route at that path. `GET /api/tools` lists the tools.
+
+## suggestion-failed
+
+Status 502. `suggest-chart` asked a model for a chart, and the payload it wrote does not validate. Call it again, or choose the chart yourself with `list-charts` and `get-chart-tool`.
+
+## internal-error
+
+Status 500. The Worker failed. Retry once; if it fails again, report the `trace_id`.

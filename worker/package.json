@@ -6,7 +6,8 @@
     "dev": "pnpm build && wrangler dev --cwd .mastra/output",
     "build": "node scripts/embed-css.mjs && mastra build",
     "deploy": "pnpm build && wrangler deploy --cwd .mastra/output",
-    "typecheck": "node scripts/embed-css.mjs && tsc -p ."
+    "typecheck": "node scripts/embed-css.mjs && tsc -p .",
+    "test": "node scripts/embed-css.mjs && vitest run"
   },
   "dependencies": {
     "@ai-sdk/provider": "^4",
@@ -17,6 +18,7 @@
     "@modelcontextprotocol/server": "2.4.0",
     "agents": "0.34.0",
     "ai": "^7",
+    "hono": "^4.13.21",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "zod": "^4.6.7"
@@ -28,6 +30,7 @@
     "@types/react-dom": "^19.3.0",
     "mastra": "^1.40.1",
     "typescript": "^7.0.2",
+    "vitest": "^5.0.5",
     "wrangler": "^4.166.0"
   }
 }

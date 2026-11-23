@@ -1,10 +1,17 @@
 // The Worker's public address, for the links it hands back (the stylesheet).
-export const publicOrigin = () => {
-  const origin = process.env.HAIRLINE_PUBLIC_URL;
+import { env } from "cloudflare:workers";
+import { z } from "zod";
 
-  if (origin === undefined || origin === "") {
-    throw new Error("HAIRLINE_PUBLIC_URL is not set: the Worker's public URL, e.g. https://hairline-mcp.example.workers.dev");
+const envSchema = z.object({ HAIRLINE_PUBLIC_URL: z.string().min(1) });
+
+export const publicOrigin = () => {
+  const parsed = envSchema.safeParse(env);
+
+  if (!parsed.success) {
+    throw new Error(
+      "HAIRLINE_PUBLIC_URL is not set: the Worker's public URL, e.g. https://hairline-mcp.example.workers.dev"
+    );
   }
 
-  return origin;
+  return parsed.data.HAIRLINE_PUBLIC_URL;
 };

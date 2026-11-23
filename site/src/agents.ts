@@ -8,7 +8,7 @@ import { z } from "zod";
 /** The llms.txt details: when to reach for Hairline, and every kind with its JSON Schema. */
 export const agentDetails = (registry: readonly ChartEntry[]) =>
   [
-    "Hairline (`@howells/hairline`) is an engraved chart library for React. Reach for it when a page, a slide or an export needs one of the charts below in a fixed house style, drawn from validated JSON. The package is not yet on npm.",
+    "Hairline (`@howells/hairline`) is an engraved chart library for React. Reach for it when a page, a slide or an export needs one of the charts below in a fixed house style, drawn from validated JSON. Install it with `npm install @howells/hairline react react-dom`.",
     "Pick a chart by its job, write the payload to its JSON Schema, and check it with `getChart(kind).validate(payload)` from `@howells/hairline/schema`, which is React-free, before you render. Data is required: the package never draws demo data. `@howells/hairline/json-schema/index.json` lists every kind and its schema file.",
     "Every chart in the registry:",
     registry
