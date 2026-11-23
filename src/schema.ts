@@ -7,16 +7,20 @@ export {
   dailyDatumSchema,
   valueAxisSchema,
 } from "./schema/daily";
+
 export type { DailyDatum, ValueAxis } from "./schema/daily";
+
 export {
   dumbbellDatumSchema,
   dumbbellQueueSchema,
 } from "./schema/dumbbell-queue";
+
 export type {
   DumbbellDatum,
   DumbbellQueueData,
   DumbbellQueueProps,
 } from "./schema/dumbbell-queue";
+
 export {
   FORMAT_PRESETS,
   intlFormatSchema,
@@ -26,24 +30,32 @@ export {
   dateFormatSchema,
   resolveDateFormat,
 } from "./schema/format";
+
 export type {
   FormatDescriptor,
   FormatInput,
   DateFormatDescriptor,
   DateFormatInput,
 } from "./schema/format";
+
 export { hairlineAreaSchema } from "./schema/hairline-area";
+
 export type {
   HairlineAreaData,
   HairlineAreaProps,
 } from "./schema/hairline-area";
+
 export { hairlineLineSchema } from "./schema/hairline-line";
+
 export type {
   HairlineLineData,
   HairlineLineProps,
 } from "./schema/hairline-line";
+
 export { contextSchema, heroShape, heroLabelShape } from "./schema/hero";
+
 export type { HeroContext } from "./schema/hero";
+
 export {
   intervalPointSchema,
   intervalSchema,
@@ -52,34 +64,50 @@ export {
   intervalLabel,
   intervalIssues,
 } from "./schema/intervals";
+
 export type { IntervalPoint, Interval, Forecast } from "./schema/intervals";
+
 export { keyOf } from "./schema/key";
+
 export type { Keyed } from "./schema/key";
+
 export { fontMetricsSchema, INTER_METRICS, textWidth } from "./schema/metrics";
+
 export type { FontMetrics } from "./schema/metrics";
+
 export { motionShape } from "./schema/motion";
+
 export type { MotionCallbacks } from "./schema/motion";
+
 export {
   dailyNoteSchema,
   dailyNotesSchema,
   notesNameData,
   NOTES_NAME_DATA,
 } from "./schema/notes";
+
 export type { DailyNote } from "./schema/notes";
+
 export { sharedShape, noteShape } from "./schema/options";
+
 export type { NoteNames, NoteProps, SharedCallbacks } from "./schema/options";
+
 export { plumbDatumSchema, plumbScatterSchema } from "./schema/plumb-scatter";
+
 export type {
   PlumbDatum,
   PlumbScatterData,
   PlumbScatterProps,
 } from "./schema/plumb-scatter";
+
 export { rangeDatumSchema, rangeDotsSchema } from "./schema/range-dots";
+
 export type {
   RangeDatum,
   RangeDotsData,
   RangeDotsProps,
 } from "./schema/range-dots";
+
 export {
   referenceLineSchema,
   referenceBandSchema,
@@ -87,22 +115,33 @@ export {
   referencesShape,
   isBand,
 } from "./schema/references";
+
 export type {
   ReferenceLine,
   ReferenceBand,
   Reference,
 } from "./schema/references";
+
 export { charts, registry, getChart } from "./schema/registry";
+
 export type { Job, ChartEntry, ChartKind } from "./schema/registry";
+
 export { rungDatumSchema, rungBarsSchema } from "./schema/rung-bars";
+
 export type {
   RungDatum,
   RungBarsData,
   RungBarsProps,
 } from "./schema/rung-bars";
+
 export { scaleShape } from "./schema/scale";
+
 export type { ScaleOptions } from "./schema/scale";
+
 export { slopeRowSchema, slopeSchema } from "./schema/slope";
+
 export type { SlopeRow, SlopeData, SlopeProps } from "./schema/slope";
+
 export { pointerOf, validate } from "./schema/validate";
+
 export type { Issue, Payload, Validated } from "./schema/validate";
