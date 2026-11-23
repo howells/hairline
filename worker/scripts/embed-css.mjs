@@ -1,6 +1,6 @@
 // Copies the library's precompiled stylesheet into a module the Worker bundles,
 // so a rendered document carries its styles with no request back to us.
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -9,6 +9,8 @@ const css = readFileSync(
   require.resolve("@howells/hairline/hairline.css"),
   "utf-8"
 );
+
+mkdirSync(new URL("../src/generated/", import.meta.url), { recursive: true });
 
 writeFileSync(
   new URL("../src/generated/hairline-css.ts", import.meta.url),
