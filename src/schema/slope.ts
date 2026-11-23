@@ -31,6 +31,18 @@ export const slopeRowSchema = z.strictObject({
 export const slopeSchema = z
   .strictObject({
     ...sharedShape,
+    /**
+     * Which direction of change is bad news: its biggest change is drawn in
+     * the alert colour, and the other direction's biggest in the hero colour.
+     * "none" draws no alert and inks the biggest change either way. Defaults
+     * to a rise.
+     */
+    alert: z
+      .enum(["fall", "none", "rise"])
+      .optional()
+      .describe(
+        'Which direction of change is bad news: its biggest change is drawn in the alert colour, and the other direction\'s biggest in the hero colour. "none" draws no alert and inks the biggest change either way. Defaults to a rise, so set "fall" when a rise is good news (visits, revenue).'
+      ),
     /** The y range as [lowest, highest]. Defaults to the extent of the rows. */
     domain: z
       .tuple([z.number(), z.number()])
@@ -41,12 +53,12 @@ export const slopeSchema = z
       .describe(
         "The y range as [lowest, highest]. Defaults to the extent of the rows."
       ),
-    /** The row to draw in the hero colour, by key. Defaults to the biggest fall. */
+    /** The one row to draw in the hero colour, by key; the rest go grey. Without it, `alert` picks the rows. */
     emphasis: z
       .string()
       .optional()
       .describe(
-        "The row to draw in the hero colour, by key. Defaults to the biggest fall."
+        "The one row to draw in the hero colour, by key; the rest go grey. Without it, `alert` picks the rows."
       ),
     /** How values print: a preset name or Intl number-format options. */
     format: formatSchema

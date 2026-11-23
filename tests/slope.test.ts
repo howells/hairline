@@ -138,6 +138,7 @@ describe("the registry", () => {
 
     expect(json.required.toSorted()).toStrictEqual(["labels", "rows"]);
     expect(Object.keys(json.properties).toSorted()).toStrictEqual([
+      "alert",
       "animate",
       "domain",
       "emphasis",
@@ -192,6 +193,46 @@ describe("formatters are data", () => {
     // The data table always carries the full format; the drawing narrows.
     expect(drawn(render({ ...props, width: 400 }))).not.toContain(">280 g<");
     expect(drawn(render({ ...props, width: 600 }))).toContain(">280 g<");
+  });
+});
+
+/** The row names inside the first group drawn in a tone. */
+const toneRow = (html: string, tone: "alert" | "hero") => {
+  const group =
+    new RegExp(`fill-${tone}[^]*?</g>`, "u").exec(drawn(html))?.[0] ?? "";
+
+  return ["North", "South", "East"].find((name) => group.includes(name));
+};
+
+describe("alert", () => {
+  // North falls most (-160), South rises most (+40).
+  it("by default draws the biggest rise in the alert colour and inks the biggest fall", () => {
+    const html = render({ labels, rows, ...sized });
+
+    expect([toneRow(html, "alert"), toneRow(html, "hero")]).toStrictEqual([
+      "South",
+      "North",
+    ]);
+  });
+
+  it("turns round when a fall is the bad news", () => {
+    const html = render({ alert: "fall", labels, rows, ...sized });
+
+    expect([toneRow(html, "alert"), toneRow(html, "hero")]).toStrictEqual([
+      "North",
+      "South",
+    ]);
+  });
+
+  it("draws no alert with none, and inks the biggest change", () => {
+    const html = render({ alert: "none", labels, rows, ...sized });
+
+    expect(count(drawn(html), /(?:fill|stroke)-alert/gu)).toBe(0);
+    expect(toneRow(html, "hero")).toBe("North");
+  });
+
+  it("rejects a direction it does not know", () => {
+    expect(pointers({ alert: "up", labels, rows })).toStrictEqual(["alert"]);
   });
 });
 

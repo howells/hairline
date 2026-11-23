@@ -41,7 +41,8 @@ const flatten = (tree: ErrorTree, path: string[]): InvalidField[] => [
   ),
 ];
 
-const respond = (details: Problem) =>
+/** A problem document as an HTTP response. */
+export const respond = (details: Problem) =>
   Response.json(details, {
     headers: { "content-type": "application/problem+json" },
     status: details.status,

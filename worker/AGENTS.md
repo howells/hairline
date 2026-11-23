@@ -1,6 +1,6 @@
 # Hairline Worker
 
-A Mastra app deployed to Cloudflare Workers. It gives agents the library's charts over MCP (`/api/mcp/hairline/mcp`) and over Mastra's HTTP routes (`/api/tools/<id>/execute`). Rendering costs nothing; only `suggest-chart` calls a model (Workers AI, through the `AI` binding).
+A Mastra app deployed to Cloudflare Workers. It gives agents the library's charts over MCP (`/api/mcp/hairline/mcp`) and over Mastra's HTTP routes (`/api/tools/<id>/execute`), and draws each chart as a page at a stateless view link. Rendering costs nothing; only `suggest-chart` calls a model (Workers AI, through the `AI` binding).
 
 ## Commands
 
@@ -21,6 +21,7 @@ pnpm --filter @howells/hairline-worker run deploy    # ask first
 - `src/mastra/tools/charts.ts`: `list-charts`, and one `render-<kind>` tool per registry chart whose `inputSchema` is that chart's Zod schema.
 - `src/mastra/tools/catalogue.ts`: `get-chart-tool` and `render-chart`, which lazy-load a render tool's schema and call it, so MCP clients don't receive every chart's schema up front.
 - `src/mastra/render.ts`: draws a chart as a document, a fragment or a React snippet.
+- `src/mastra/view-link.ts` and `view.ts`: the `/view/<kind>/<token>` link every render returns. The token is the render input, deflated and base64url-encoded, so links need no storage; inputs too big for an 8000-character URL get no link.
 - `src/mastra/problem.ts`: the one error shape (RFC 9457 problem details) for HTTP and MCP.
 - `src/mastra/agents/chartist.ts`: the optional `suggest-chart` agent.
 

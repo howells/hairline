@@ -70,9 +70,11 @@ const Leader = (props: {
 
 type Role = "lead" | "worst" | "rest";
 
+type Alert = NonNullable<SlopeProps["alert"]>;
+
 /**
- * The biggest fall in the hero tone, the single biggest rise in red, every other
- * row grey. Values stay in text tones: ink for the two marked rows.
+ * The biggest change against the alert direction in the hero tone, the biggest
+ * change in it in red, every other row grey. Values stay in text tones: ink for the two marked rows.
  */
 const ROW_TONE: Record<
   Role,
@@ -106,7 +108,7 @@ const SlopeRow = (props: {
   labelYs: [Nudged, Nudged];
   y: ScaleLinear<number, number>;
   dim: boolean;
-  /** The biggest fall, the biggest rise, or neither. */
+  /** The hero row, the alert row, or neither. */
   role: Role;
   format: (v: number) => string;
   onHover: () => void;
@@ -173,17 +175,30 @@ const SlopeRow = (props: {
   );
 };
 
-/** The row's role: the biggest fall, the biggest rise, or neither. */
-const roleOf = (row: Row, rows: Row[]): Role => {
+/**
+ * The row's role. The biggest change in the `alert` direction is the alert
+ * ("worst"), the biggest change the other way is the hero ("lead"); with no
+ * alert direction, the biggest change either way is the hero.
+ */
+const roleOf = (row: Row, rows: Row[], alert: Alert): Role => {
   const change = (r: Row) => r.to - r.from;
-  const best = Math.min(...rows.map(change));
-  const worst = Math.max(...rows.map(change));
 
-  if (best < 0 && change(row) === best) {
+  if (alert === "none") {
+    const biggest = Math.max(...rows.map((r) => Math.abs(change(r))));
+
+    return biggest > 0 && Math.abs(change(row)) === biggest ? "lead" : "rest";
+  }
+
+  // Signed so that the alert direction is positive.
+  const bad = (r: Row) => (alert === "rise" ? change(r) : -change(r));
+  const best = Math.min(...rows.map(bad));
+  const worst = Math.max(...rows.map(bad));
+
+  if (best < 0 && bad(row) === best) {
     return "lead";
   }
 
-  return worst > 0 && change(row) === worst ? "worst" : "rest";
+  return worst > 0 && bad(row) === worst ? "worst" : "rest";
 };
 
 /** The lowest and highest value of any row; a flat set is given some room. */
@@ -315,7 +330,7 @@ const SlopePlot = (props: SlopeProps) => {
 
         const roleAt = (r: Row, i: number): Role => {
           if (props.emphasis === undefined) {
-            return roleOf(r, rows);
+            return roleOf(r, rows, props.alert ?? "rise");
           }
 
           // The first row of that key leads, should the key repeat.
@@ -378,8 +393,9 @@ const SlopePlot = (props: SlopeProps) => {
 };
 
 /**
- * Before/after slope chart, the bare plot: the biggest fall inked, the biggest
- * rise red, or the `emphasis` row inked alone. Name, source and notes belong
+ * Before/after slope chart, the bare plot: by default the biggest fall inked
+ * and the biggest rise red (`alert` turns that round, or off), or the
+ * `emphasis` row inked alone. Name, source and notes belong
  * to the host.
  *
  * Props are the `slopeSchema` payload (src/schema/slope.ts); `rows` is

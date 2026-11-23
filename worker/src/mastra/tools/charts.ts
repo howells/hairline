@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { publicOrigin } from "../origin";
 import { render, THEMES } from "../render";
+import { viewUrl } from "../view-link";
 
 const JOBS = [
   "change-over-time",
@@ -84,7 +85,7 @@ const renderOptions = {
     .enum(["fragment", "document", "react"])
     .default("fragment")
     .describe(
-      "fragment (default): the chart's HTML and SVG, and the URL of the stylesheet it needs, to place in your own page. document: a standalone HTML page with the stylesheet inlined (about 35 KB more). react: a component snippet and install steps."
+      "fragment (default): the chart's HTML and SVG, and the URL of the stylesheet it needs, to place in your own page. document: a standalone HTML page with the stylesheet inlined (about 35 KB more). react: a component snippet and install steps. Every format also returns url, a link to the chart as a page: to show a person the chart, share url instead of copying the HTML."
     ),
   height: z
     .number()
@@ -129,7 +130,9 @@ const renderOptions = {
     .min(240)
     .max(2400)
     .default(720)
-    .describe("Width in CSS pixels, 240 to 2400. Default 720."),
+    .describe(
+      "Largest width in CSS pixels, 240 to 2400. Default 720. The chart shrinks to fit a narrower container, keeping its aspect ratio."
+    ),
 };
 
 /** What a render tool takes: the chart's own payload schema, and how to draw it. */
@@ -152,24 +155,43 @@ export const renderedSchema = z.discriminatedUnion("format", [
     stylesheet: z
       .string()
       .describe("The URL of the stylesheet the fragment needs, once per page."),
+    url: z
+      .string()
+      .optional()
+      .describe(
+        "A link that opens the chart as a web page. Give a person this link rather than copying the HTML. Absent when the data is too large for a link."
+      ),
   }),
   z.object({
     format: z.literal("document"),
     html: z.string().describe("A standalone HTML page."),
+    url: z
+      .string()
+      .optional()
+      .describe(
+        "A link that opens the chart as a web page. Give a person this link rather than copying the HTML. Absent when the data is too large for a link."
+      ),
   }),
   z.object({
     code: z.string().describe("A React component that draws the chart."),
     format: z.literal("react"),
     install: z.string().describe("How to install and set up the package."),
+    url: z
+      .string()
+      .optional()
+      .describe(
+        "A link that opens the chart as a web page. Give a person this link rather than copying the HTML. Absent when the data is too large for a link."
+      ),
   }),
 ]);
 
-/** Draw a validated render input. */
-export const drawChart = (chart: ChartEntry, input: RenderInput) => {
+/** Draw a validated render input, with a link that opens it as a page. */
+export const drawChart = async (chart: ChartEntry, input: RenderInput) => {
   // The chart's schema already accepted it; this proves it is JSON, which the drawer takes.
   const payload = z.json().parse(input.payload);
+  const origin = publicOrigin();
 
-  return render(
+  const drawn = render(
     {
       chart,
       format: input.format,
@@ -182,14 +204,18 @@ export const drawChart = (chart: ChartEntry, input: RenderInput) => {
       title: input.title,
       width: input.width,
     },
-    publicOrigin()
+    origin
   );
+
+  const url = await viewUrl(chart.kind, input, origin);
+
+  return { ...drawn, url };
 };
 
 const renderTool = (chart: ChartEntry) =>
   createTool({
     description: `Draw a ${chart.component} chart. Use it for: ${chart.whenToUse} Not for: ${chart.whenNotToUse} For other data, call list-charts to find a better chart.`,
-    execute: async (input) => drawChart(chart, input),
+    execute: async (input) => await drawChart(chart, input),
     id: renderToolId(chart),
     inputSchema: renderInputSchema(chart),
     mcp: {

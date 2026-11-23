@@ -51,8 +51,11 @@ const markup = (request: RenderRequest) => {
     throw new Error(`No drawer for chart kind "${kind}".`);
   }
 
+  // fit: the chart shrinks with a narrow container instead of being cut off;
+  // maxWidth: it never grows past the width asked for.
   const chart = drawers[kind](request.payload, {
     animate: "off",
+    fit: true,
     height: request.height,
     idPrefix: "hl",
     width: request.width,
@@ -61,7 +64,13 @@ const markup = (request: RenderRequest) => {
   return renderToString(
     createElement(
       "div",
-      { className: "hl-root", style: deriveTheme(request.theme) },
+      {
+        className: "hl-root",
+        style: {
+          ...deriveTheme(request.theme),
+          maxWidth: `${request.width}px`,
+        },
+      },
       chart
     )
   );
@@ -74,7 +83,7 @@ const document = (request: RenderRequest, body: string) => `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(request.title ?? `Hairline ${request.chart.kind}`)}</title>
 <style>${HAIRLINE_CSS}
-body { margin: 0; padding: 24px; background: ${request.theme.paper}; font-family: ui-sans-serif, system-ui, sans-serif; }
+body { margin: 0; padding: 24px; box-sizing: border-box; background: ${request.theme.paper}; font-family: ui-sans-serif, system-ui, sans-serif; }
 </style>
 </head>
 <body>

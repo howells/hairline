@@ -134,7 +134,7 @@ export const charts = {
   slope: entry({
     component: "Slope",
     dataShape:
-      "rows: { name: string; from: number; to: number; id?: string }[], one line each; labels: [string, string] naming the two points; optional emphasis (a row's id or name), domain ([low, high]), format and narrowFormat, unitNote, label (accessible name).",
+      "rows: { name: string; from: number; to: number; id?: string }[], one line each; labels: [string, string] naming the two points; optional alert (rise, fall or none: which direction is bad news and drawn in the alert colour; defaults to rise, so set fall when a rise is good), emphasis (a row's id or name), domain ([low, high]), format and narrowFormat, unitNote, label (accessible name).",
     jobs: ["change-over-time", "ranking"],
     kind: "slope",
     limits: { categories: { max: 12, min: 1 }, series: { max: 1, min: 1 } },

@@ -74,7 +74,7 @@ export const getChartTool = createTool({
 
 export const renderChart = createTool({
   description:
-    "Draw a chart. `input` must match the schema get-chart-tool returns for `kind`: { payload, format?, theme?, width?, height?, title? }. A mismatch is an error naming each field at fault; fix those and call again.",
+    "Draw a chart. `input` must match the schema get-chart-tool returns for `kind`: { payload, format?, theme?, width?, height?, title? }. A mismatch is an error naming each field at fault; fix those and call again. The result includes url, a link to the chart as a web page: to show a person the chart, give them url rather than copying the HTML.",
   execute: async ({ input, kind }) => {
     const chart = chartOf(kind);
 
@@ -103,7 +103,7 @@ export const renderChart = createTool({
       };
     }
 
-    return drawChart(chart, parsed.data);
+    return await drawChart(chart, parsed.data);
   },
   id: "render-chart",
   inputSchema: z.object({
