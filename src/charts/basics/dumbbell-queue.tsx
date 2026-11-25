@@ -4,13 +4,12 @@ import type {
 } from "../../schema/dumbbell-queue";
 import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
-import { Plot } from "../core";
-import { DimGroup } from "../hover";
+import { Plot, Tooltip } from "../core";
+import { useHover } from "../hooks";
+import { DimGroup, HitRect, TipText } from "../hover";
 import { Dot, Ring } from "../markers";
 import { MARK_WEIGHT } from "../marks";
 import { FootNote } from "../plot-note";
-import { Pointer } from "../pointer";
-import type { Stop } from "../pointer";
 import {
   clears,
   referenceDesc,
@@ -34,18 +33,13 @@ interface RowProps {
   clearing: boolean | undefined;
   datum: DumbbellDatum;
   dim: boolean;
+  format: (v: number) => string;
   hero: boolean;
   index: number;
   layout: Layout;
+  onHover: (x: number, y: number) => void;
   unit: number;
-}
-
-interface RowValuesProps {
-  datum: DumbbellDatum;
-  dim: boolean;
-  format: (v: number) => string;
-  index: number;
-  layout: Layout;
+  width: number;
 }
 
 /**
@@ -168,7 +162,7 @@ const afterTone = (clearing: boolean | undefined, hero: boolean) => {
  * The values beside a row's dots, drawn over the reference lines so a line
  * through a label is cut away by the label's halo.
  */
-const RowValues = (props: RowValuesProps) => {
+const RowValues = (props: RowProps) => {
   const { datum, layout } = props;
   const y = Math.round(layout.top + props.index * layout.pitch);
   const xa = layout.x(datum.after);
@@ -214,7 +208,18 @@ const Row = (props: RowProps) => {
   );
 
   return (
-    <DimGroup dim={props.dim}>
+    <DimGroup
+      dim={props.dim}
+      onPointerEnter={() => {
+        props.onHover((xa + xb) / 2, y - 16);
+      }}
+    >
+      <HitRect
+        height={layout.pitch}
+        width={props.width}
+        x={0}
+        y={y - layout.pitch / 2}
+      />
       <HRule
         kind="rule"
         x0={Math.round(layout.x(0))}
@@ -256,35 +261,13 @@ interface SvgProps {
   format: (v: number) => string;
   height: number;
   hero: number;
+  hover: ReturnType<typeof useHover<number>>;
   keys: string[];
   label: string;
   props: DumbbellQueueProps;
   unit: number;
   width: number;
 }
-
-const stopsOf = (
-  data: DumbbellDatum[],
-  layout: Layout,
-  format: (v: number) => string
-): Stop<number>[] =>
-  data.map((d, i) => {
-    const y = Math.round(layout.top + i * layout.pitch);
-    const xa = layout.x(d.after);
-    const xb = layout.x(d.before);
-
-    return {
-      avoid: () => [[y - 16, y + 16]],
-      key: i,
-      lead: d.label,
-      rows: [
-        { value: `${format(d.before)} → ${format(d.after)}` },
-        { muted: true, value: describe(d, format) },
-      ],
-      x: (xa + xb) / 2,
-      y,
-    };
-  });
 
 /** The references, one row for each pair and the ends of the scale. */
 const DumbbellSvg = ({
@@ -293,6 +276,7 @@ const DumbbellSvg = ({
   format,
   height,
   hero,
+  hover,
   keys,
   label,
   props,
@@ -332,77 +316,74 @@ const DumbbellSvg = ({
   // rungs air; a gap too short for its rungs then draws none.
   const rungUnit = roomyUnit(unit, widestRoom(data, layout, unit));
 
-  const stops = stopsOf(data, layout, format);
-
   return (
-    <Pointer
-      axis="y"
+    <ChartSvg
+      desc={[summary(data, format), referenceDesc(props.references, format)]
+        .filter((text) => text !== "")
+        .join(" ")}
       height={height}
-      reach={layout.pitch}
-      stops={stops}
+      label={label}
+      leave={hover.clear}
       width={width}
     >
-      {(pointer) => (
-        <ChartSvg
-          desc={[summary(data, format), referenceDesc(props.references, format)]
-            .filter((text) => text !== "")
-            .join(" ")}
-          height={height}
-          label={label}
+      <ReferenceBands
+        along="x"
+        plane={plane}
+        refs={props.references}
+        scale={layout.x}
+      />
+      {data.map((d, i) => (
+        <Row
+          alert={alert}
+          clearing={clears(props.references, d.after)}
+          datum={d}
+          dim={hover.dim(i)}
+          format={format}
+          hero={hero === i}
+          index={i}
+          key={keys[i]}
+          layout={layout}
+          onHover={hover.showAt(i)}
+          unit={rungUnit}
           width={width}
-          {...pointer.svg}
-        >
-          <ReferenceBands
-            along="x"
-            plane={plane}
-            refs={props.references}
-            scale={layout.x}
-          />
-          {data.map((d, i) => (
-            <Row
-              alert={alert}
-              clearing={clears(props.references, d.after)}
-              datum={d}
-              dim={pointer.key !== null && pointer.key !== i}
-              hero={hero === i}
-              index={i}
-              key={keys[i]}
-              layout={layout}
-              unit={rungUnit}
-            />
-          ))}
-          <ReferenceOverlay
-            along="x"
-            avoid={avoid}
-            plane={plane}
-            refs={props.references}
-            scale={layout.x}
-          />
-          {data.map((d, i) => (
-            <RowValues
-              datum={d}
-              dim={pointer.key !== null && pointer.key !== i}
-              format={format}
-              index={i}
-              key={keys[i]}
-              layout={layout}
-            />
-          ))}
-          <Label voice="axis" x={layout.x.range()[0]} y={endsY}>
-            {ends[0]}
-          </Label>
-          <Label anchor="end" voice="axis" x={layout.x.range()[1]} y={endsY}>
-            {ends[1]}
-          </Label>
-          <FootNote
-            height={height}
-            metrics={props.metrics}
-            text={noteOf(props)}
-            width={width}
-          />
-        </ChartSvg>
-      )}
-    </Pointer>
+        />
+      ))}
+      <ReferenceOverlay
+        along="x"
+        avoid={avoid}
+        plane={plane}
+        refs={props.references}
+        scale={layout.x}
+      />
+      {data.map((d, i) => (
+        <RowValues
+          alert={alert}
+          clearing={undefined}
+          datum={d}
+          dim={hover.dim(i)}
+          format={format}
+          hero={hero === i}
+          index={i}
+          key={keys[i]}
+          layout={layout}
+          onHover={hover.showAt(i)}
+          unit={rungUnit}
+          width={width}
+        />
+      ))}
+      <Label voice="axis" x={layout.x.range()[0]} y={endsY}>
+        {ends[0]}
+      </Label>
+      <Label anchor="end" voice="axis" x={layout.x.range()[1]} y={endsY}>
+        {ends[1]}
+      </Label>
+      <FootNote
+        height={height}
+        metrics={props.metrics}
+        text={noteOf(props)}
+        width={width}
+      />
+    </ChartSvg>
   );
 };
 
@@ -429,6 +410,9 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
       ? maxIndex(data.map((d) => Math.abs(d.before - d.after)))
       : data.findIndex((d) => keyOf(d) === props.emphasis);
 
+  const hover = useHover<number>();
+  const hovered = hover.at === null ? undefined : data[hover.at.key];
+
   const label =
     props.title ??
     (data.length === 0
@@ -454,6 +438,19 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
         ]
       )}
       width={props.width}
+      overlay={
+        hover.at === null || hovered === undefined ? null : (
+          <Tooltip x={hover.at.x} y={hover.at.y}>
+            <TipText
+              facts={[
+                `${format(hovered.before)} → ${format(hovered.after)}`,
+                describe(hovered, format),
+              ]}
+              lead={hovered.label}
+            />
+          </Tooltip>
+        )
+      }
     >
       {(width) => (
         <DumbbellSvg
@@ -462,6 +459,7 @@ const DumbbellQueuePlot = (props: DumbbellQueueProps) => {
           format={format}
           height={height}
           hero={hero}
+          hover={hover}
           keys={keys}
           label={label}
           props={props}

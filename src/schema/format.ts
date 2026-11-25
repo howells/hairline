@@ -35,19 +35,15 @@ export const intlFormatSchema = z
     unit: z.string().optional(),
     useGrouping: z.boolean().optional(),
   })
-  .superRefine(({ locale, ...options }, ctx) => {
+  .refine((o) => {
     try {
-      Intl.NumberFormat(locale ?? "en-US", options);
-    } catch (error) {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          error instanceof Error
-            ? error.message
-            : "invalid Intl.NumberFormat options",
-      });
+      Intl.NumberFormat(o.locale, o);
+
+      return true;
+    } catch {
+      return false;
     }
-  });
+  }, "invalid number format");
 
 /** A formatter as data: a preset name or Intl number-format options. */
 export const formatSchema = z.union([z.enum(FORMAT_PRESETS), intlFormatSchema]);
