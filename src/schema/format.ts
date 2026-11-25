@@ -22,18 +22,32 @@ export const FORMAT_PRESETS = [
 ] as const;
 
 /** The Intl.NumberFormat options a descriptor may carry (plus `locale`). */
-export const intlFormatSchema = z.strictObject({
-  compactDisplay: z.enum(["short", "long"]).optional(),
-  currency: z.string().length(3).optional(),
-  locale: z.string().min(2).optional(),
-  maximumFractionDigits: z.number().int().min(0).max(20).optional(),
-  minimumFractionDigits: z.number().int().min(0).max(20).optional(),
-  notation: z.enum(["standard", "compact"]).optional(),
-  signDisplay: z.enum(["auto", "always", "exceptZero", "never"]).optional(),
-  style: z.enum(["decimal", "percent", "currency", "unit"]).optional(),
-  unit: z.string().optional(),
-  useGrouping: z.boolean().optional(),
-});
+export const intlFormatSchema = z
+  .strictObject({
+    compactDisplay: z.enum(["short", "long"]).optional(),
+    currency: z.string().length(3).optional(),
+    locale: z.string().min(2).optional(),
+    maximumFractionDigits: z.number().int().min(0).max(20).optional(),
+    minimumFractionDigits: z.number().int().min(0).max(20).optional(),
+    notation: z.enum(["standard", "compact"]).optional(),
+    signDisplay: z.enum(["auto", "always", "exceptZero", "never"]).optional(),
+    style: z.enum(["decimal", "percent", "currency", "unit"]).optional(),
+    unit: z.string().optional(),
+    useGrouping: z.boolean().optional(),
+  })
+  .superRefine(({ locale, ...options }, ctx) => {
+    try {
+      Intl.NumberFormat(locale ?? "en-US", options);
+    } catch (error) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          error instanceof Error
+            ? error.message
+            : "invalid Intl.NumberFormat options",
+      });
+    }
+  });
 
 /** A formatter as data: a preset name or Intl number-format options. */
 export const formatSchema = z.union([z.enum(FORMAT_PRESETS), intlFormatSchema]);
