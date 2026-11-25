@@ -7,7 +7,7 @@ import { chartist, suggestChart } from "./agents/chartist";
 import { catalogueTools, hairlineServer } from "./mcp";
 import { problemResponses, respond } from "./problem-responses";
 import { STYLESHEET_PATH } from "./render";
-import { drawChart, renderTools } from "./tools/charts";
+import { drawDocument, renderTools } from "./tools/charts";
 import { readView } from "./view";
 import { VIEW_PATH } from "./view-link";
 
@@ -50,15 +50,9 @@ export const mastra = new Mastra({
             return respond(view.problem);
           }
 
-          const drawn = await drawChart(view.chart, view.input);
+          const html = drawDocument(view.chart, view.input);
 
-          if (drawn.format !== "document") {
-            throw new Error(
-              `A view link drew format ${drawn.format}, not document.`
-            );
-          }
-
-          return c.html(drawn.html, 200, {
+          return c.html(html, 200, {
             "cache-control": "public, max-age=86400, immutable",
           });
         },

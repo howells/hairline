@@ -7,7 +7,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
 import { publicOrigin } from "../origin";
-import { render, THEMES } from "../render";
+import { render, renderDocument, THEMES } from "../render";
 import { viewUrl } from "../view-link";
 
 const JOBS = [
@@ -185,6 +185,23 @@ export const renderedSchema = z.discriminatedUnion("format", [
   }),
 ]);
 
+const resolveTheme = (theme: RenderInput["theme"]) =>
+  theme === "light" || theme === "dark" ? THEMES[theme] : theme;
+
+/** Draw a validated render input as a standalone HTML document (used by /view). */
+export const drawDocument = (chart: ChartEntry, input: RenderInput) => {
+  const payload = z.json().parse(input.payload);
+
+  return renderDocument({
+    chart,
+    height: input.height,
+    payload,
+    theme: resolveTheme(input.theme),
+    title: input.title,
+    width: input.width,
+  });
+};
+
 /** Draw a validated render input, with a link that opens it as a page. */
 export const drawChart = async (chart: ChartEntry, input: RenderInput) => {
   // The chart's schema already accepted it; this proves it is JSON, which the drawer takes.
@@ -197,10 +214,7 @@ export const drawChart = async (chart: ChartEntry, input: RenderInput) => {
       format: input.format,
       height: input.height,
       payload,
-      theme:
-        input.theme === "light" || input.theme === "dark"
-          ? THEMES[input.theme]
-          : input.theme,
+      theme: resolveTheme(input.theme),
       title: input.title,
       width: input.width,
     },

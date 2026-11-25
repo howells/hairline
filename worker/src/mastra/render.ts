@@ -116,6 +116,12 @@ export function Chart() {
 const INSTALL =
   "npm install @howells/hairline react react-dom. Import @howells/hairline/hairline.css once (or @howells/hairline/theme.css in a Tailwind v4 app). The chart fills its container's width; pass width and height to fix its size.";
 
+export const renderDocument = (request: Omit<RenderRequest, "format">) =>
+  document(
+    { ...request, format: "document" },
+    markup({ ...request, format: "document" })
+  );
+
 export const render = (request: RenderRequest, origin: string): Rendered => {
   if (request.format === "react") {
     return { code: react(request), format: "react", install: INSTALL };

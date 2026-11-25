@@ -3,7 +3,11 @@
 import { getChart } from "@howells/hairline/schema";
 import { describe, expect, it } from "vitest";
 
-import { drawChart, renderInputSchema } from "../src/mastra/tools/charts";
+import {
+  drawChart,
+  drawDocument,
+  renderInputSchema,
+} from "../src/mastra/tools/charts";
 import { readView } from "../src/mastra/view";
 import { viewUrl } from "../src/mastra/view-link";
 
@@ -57,6 +61,40 @@ describe("view links", () => {
     await expect(
       viewUrl("rung-bars", big, "https://hairline.test")
     ).resolves.toBeUndefined();
+  });
+
+  it("rejects tokens that exceed the URL length cap", async () => {
+    const view = await readView("rung-bars", "A".repeat(8001));
+
+    expect(view).toMatchObject({ problem: { status: 422 } });
+  });
+
+  it("rejects decompression bombs past the decompressed byte ceiling", async () => {
+    const bomb = new Uint8Array(256 * 1024);
+
+    const compressed = new Uint8Array(
+      await new Response(
+        new Blob([bomb])
+          .stream()
+          .pipeThrough(new CompressionStream("deflate-raw"))
+      ).arrayBuffer()
+    );
+
+    const token = btoa(String.fromCodePoint(...compressed))
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .replaceAll("=", "");
+
+    const view = await readView("rung-bars", token);
+
+    expect(view).toMatchObject({ problem: { status: 422 } });
+  });
+
+  it("draws a document directly without re-encoding a view URL", () => {
+    const html = drawDocument(chart, input);
+
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("max-width:600px");
   });
 });
 
