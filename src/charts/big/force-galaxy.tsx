@@ -113,11 +113,12 @@ const useGalaxySimulation = (
         })
       : null;
 
-    sim.current = simulation;
-
     if (simulation !== null && reduced) {
       settle(galaxy, simulation);
       drawGalaxy(galaxy, handles);
+      sim.current = null;
+    } else {
+      sim.current = simulation;
     }
 
     return () => {
@@ -280,7 +281,9 @@ const GalaxyMarks = (props: {
             className={`${EDGE_CLASS[e.kind]} ${EDGE_STEP}`}
             key={e.id}
             ref={(el) => {
-              if (el !== null) {
+              if (el === null) {
+                handles.edges.delete(e.id);
+              } else {
                 handles.edges.set(e.id, el);
               }
             }}
@@ -307,7 +310,9 @@ const GalaxyMarks = (props: {
               key={s.id}
               r={s.r}
               ref={(el) => {
-                if (el !== null) {
+                if (el === null) {
+                  handles.stars.delete(s.id);
+                } else {
                   handles.stars.set(s.id, el);
                 }
               }}
@@ -329,7 +334,9 @@ const GalaxyMarks = (props: {
               data-plate={String(labelOnEngraving(galaxy, ring, spot))}
               key={ring.hub.id}
               ref={(el) => {
-                if (el !== null) {
+                if (el === null) {
+                  handles.labels.delete(ring.hub.id);
+                } else {
                   handles.labels.set(ring.hub.id, el);
                 }
               }}
@@ -358,7 +365,9 @@ const GalaxyMarks = (props: {
       <g
         className="pointer-events-none"
         ref={(el) => {
-          if (el !== null) {
+          if (el === null) {
+            handles.caption.delete("root");
+          } else {
             handles.caption.set("root", el);
           }
         }}

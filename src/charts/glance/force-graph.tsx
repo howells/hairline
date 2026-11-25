@@ -395,21 +395,6 @@ const describe = (graph: Graph, format: (v: number) => string) => {
   return `${hub?.datum.id ?? "Hub"} linked to ${graph.nodes.length - 1} tributaries: ${rest.join(", ")}. Drag a node to move it.`;
 };
 
-/** Steps out from a node, over the graph's links; null with no node. */
-const stepsAround = (graph: Graph, id: string | null) =>
-  id === null
-    ? null
-    : stepsFrom(
-        adjacencyOf(
-          graph.nodes.map((n) => n.datum.id),
-          graph.edges.map((e) => ({
-            source: e.s.datum.id,
-            target: e.t.datum.id,
-          }))
-        ),
-        id
-      );
-
 /** The node under a point, or within `within` px of its edge, as the graph is drawn. */
 const pickAt = (
   graph: Graph,
@@ -477,7 +462,23 @@ const ForceField = (props: FieldProps) => {
 
   const focusId = dragging === null ? sel.selected : dragging.datum.id;
   const focus = graph.nodes.find((n) => n.datum.id === focusId) ?? null;
-  const steps = stepsAround(graph, focusId);
+
+  const adjacency = useMemo(
+    () =>
+      adjacencyOf(
+        graph.nodes.map((n) => n.datum.id),
+        graph.edges.map((e) => ({
+          source: e.s.datum.id,
+          target: e.t.datum.id,
+        }))
+      ),
+    [graph]
+  );
+
+  const steps = useMemo(
+    () => (focusId === null ? null : stepsFrom(adjacency, focusId)),
+    [adjacency, focusId]
+  );
 
   const bound = sel.bind({
     find: (x, y, within) => pickAt(graph, place, scale, { within, x, y }),
@@ -513,21 +514,36 @@ const ForceField = (props: FieldProps) => {
               setHeld(shift);
               pin(n, e);
               setDragging(n);
-              simRef.current?.alphaTarget(0.3).restart();
+
+              if (!reduced) {
+                simRef.current?.alphaTarget(0.3).restart();
+              }
             }}
             onPointerMove={(e) => {
               if (dragging === n) {
                 pin(n, e);
+
+                if (reduced) {
+                  n.x = n.fx ?? n.x;
+                  n.y = n.fy ?? n.y;
+                }
+
                 redraw();
               }
             }}
             onPointerUp={(e) => {
-              e.currentTarget.releasePointerCapture(e.pointerId);
+              if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              }
+
               n.fx = n.hub ? 0 : null;
               n.fy = n.hub ? HUB_Y : null;
               setDragging(null);
               setHeld(null);
-              simRef.current?.alphaTarget(0);
+
+              if (!reduced) {
+                simRef.current?.alphaTarget(0);
+              }
             }}
           />
         ))}
