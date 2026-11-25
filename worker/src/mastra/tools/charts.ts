@@ -189,18 +189,15 @@ const resolveTheme = (theme: RenderInput["theme"]) =>
   theme === "light" || theme === "dark" ? THEMES[theme] : theme;
 
 /** Draw a validated render input as a standalone HTML document (used by /view). */
-export const drawDocument = (chart: ChartEntry, input: RenderInput) => {
-  const payload = z.json().parse(input.payload);
-
-  return renderDocument({
+export const drawDocument = (chart: ChartEntry, input: RenderInput) =>
+  renderDocument({
     chart,
     height: input.height,
-    payload,
+    payload: z.json().parse(input.payload),
     theme: resolveTheme(input.theme),
     title: input.title,
     width: input.width,
   });
-};
 
 /** Draw a validated render input, with a link that opens it as a page. */
 export const drawChart = async (chart: ChartEntry, input: RenderInput) => {

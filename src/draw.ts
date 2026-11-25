@@ -14,7 +14,7 @@ import { RangeDots } from "./charts/basics/range-dots";
 import { RungBars } from "./charts/basics/rung-bars";
 import { Slope } from "./charts/board/slope";
 import { charts } from "./schema/registry";
-import type { ChartEntry } from "./schema/registry";
+import type { ChartEntry, ChartKind } from "./schema/registry";
 import type { Issue, Payload } from "./schema/validate";
 
 /**
@@ -36,8 +36,8 @@ export class ChartValidationError extends Error {
 }
 
 /** Check a payload against the chart's registry entry, then draw it. */
-const drawer = <T extends object>(
-  entry: ChartEntry<T>,
+const drawer = <T extends object, K extends string>(
+  entry: ChartEntry<T, K>,
   Component: ComponentType<T>
 ) =>
   function draw(payload: Payload, extra: Partial<T> = {}): ReactElement {
@@ -63,4 +63,4 @@ export const drawers = {
   "range-dots": drawer(charts["range-dots"], RangeDots),
   "rung-bars": drawer(charts["rung-bars"], RungBars),
   slope: drawer(charts.slope, Slope),
-};
+} satisfies Record<ChartKind, (payload: Payload) => ReactElement>;

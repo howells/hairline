@@ -49,17 +49,44 @@ export const suggestChart = createTool({
   description:
     "Optional and slow (about a minute): give it raw data (CSV, JSON or prose) and what the chart should show, and a small model picks a Hairline chart and writes a payload that passes validation. Pass the result to render-chart as { kind, input: { payload } }. If you can reason about the data yourself, use list-charts and get-chart-tool instead.",
   execute: async ({ data, point }) => {
-    const result = await chartist.generate(
-      `Data:\n${data}\n\nWhat the chart should show: ${point}`,
-      {
-        structuredOutput: {
-          jsonPromptInjection: "auto",
-          schema: suggestionSchema,
-        },
-      }
-    );
+    let suggestion: z.infer<typeof suggestionSchema> | undefined;
 
-    const suggestion = result.object;
+    try {
+      const result = await chartist.generate(
+        `Data:\n${data}\n\nWhat the chart should show: ${point}`,
+        {
+          structuredOutput: {
+            jsonPromptInjection: "auto",
+            schema: suggestionSchema,
+          },
+        }
+      );
+
+      suggestion = result.object;
+    } catch {
+      return {
+        problem: problem("suggestion-failed", {
+          detail: "The agent could not produce a valid structured suggestion.",
+          is_retriable: true,
+          suggestions: [
+            "Call suggest-chart again, or choose the chart yourself with list-charts and get-chart-tool.",
+          ],
+        }),
+      };
+    }
+
+    if (suggestion === undefined) {
+      return {
+        problem: problem("suggestion-failed", {
+          detail: "The agent returned no structured suggestion.",
+          is_retriable: true,
+          suggestions: [
+            "Call suggest-chart again, or choose the chart yourself with list-charts and get-chart-tool.",
+          ],
+        }),
+      };
+    }
+
     const payload = z.json().safeParse(suggestion.payload);
 
     const checked = payload.success

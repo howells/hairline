@@ -25,7 +25,7 @@ export type Job =
   | "ranking"
   | "spatial";
 
-export interface ChartEntry<T = unknown> {
+export interface ChartEntry<T = unknown, K extends string = ChartKind> {
   /** The chart's name in the package, e.g. "RungBars". */
   component: string;
   /** Plain-words shape of `data`, for a prompt. */
@@ -36,7 +36,7 @@ export interface ChartEntry<T = unknown> {
     series: { max: number; min: number };
   };
   /** The stable id: what a payload's `kind` says. */
-  kind: string;
+  kind: K;
   /** The Visual Vocabulary job the chart does best, then the next best. */
   jobs: readonly [Job, ...Job[]];
   schema: ZodType<T>;
@@ -46,7 +46,9 @@ export interface ChartEntry<T = unknown> {
   whenToUse: string;
 }
 
-const entry = <T>(details: Omit<ChartEntry<T>, "validate">): ChartEntry<T> => ({
+const entry = <T, K extends string>(
+  details: Omit<ChartEntry<T, K>, "validate">
+): ChartEntry<T, K> => ({
   ...details,
   validate: (input) => validate(details.schema, input),
 });

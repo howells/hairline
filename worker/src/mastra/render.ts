@@ -41,19 +41,10 @@ const escapeHtml = (text: string) =>
     (c) => `&${{ '"': "quot", "&": "amp", "<": "lt", ">": "gt" }[c]};`
   );
 
-const isDrawerKind = (kind: string): kind is keyof typeof drawers =>
-  Object.hasOwn(drawers, kind);
-
 const markup = (request: RenderRequest) => {
-  const { kind } = request.chart;
-
-  if (!isDrawerKind(kind)) {
-    throw new Error(`No drawer for chart kind "${kind}".`);
-  }
-
   // fit: the chart shrinks with a narrow container instead of being cut off;
   // maxWidth: it never grows past the width asked for.
-  const chart = drawers[kind](request.payload, {
+  const chart = drawers[request.chart.kind](request.payload, {
     animate: "off",
     fit: true,
     height: request.height,
