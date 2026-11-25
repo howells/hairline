@@ -246,21 +246,17 @@ export const DottedLine = ({
   const fixed = Math.round(vertical ? x0 : y0);
   const n = Math.max(0, Math.floor((b - a) / pitch));
 
+  const d = Array.from({ length: n + 1 }, (_, k) => {
+    const run = a + k * pitch;
+    const x = vertical ? fixed : run;
+    const y = vertical ? run : fixed;
+
+    return `M${x},${y}h1v1h-1z`;
+  }).join("");
+
   return (
     <g className={`${className ?? ""} ${tone}`}>
-      {Array.from({ length: n + 1 }, (_, k) => {
-        const run = a + k * pitch;
-
-        return (
-          <rect
-            height={1}
-            key={`dot-${fixed}-${run}`}
-            width={1}
-            x={vertical ? fixed : run}
-            y={vertical ? run : fixed}
-          />
-        );
-      })}
+      <path d={d} />
     </g>
   );
 };
@@ -421,13 +417,17 @@ interface PixelLineProps {
  * A 1px line at any angle drawn on whole pixels, the way the shared hatches
  * are: crisp where an antialiased short line would smudge.
  */
-export const PixelLine = (props: PixelLineProps) => (
-  <g className={`${props.className ?? ""} ${props.tone}`}>
-    {pixelSteps(props.x0, props.y0, props.x1, props.y1).map((c) => (
-      <rect height={1} key={`px-${c.x}-${c.y}`} width={1} x={c.x} y={c.y} />
-    ))}
-  </g>
-);
+export const PixelLine = (props: PixelLineProps) => {
+  const d = pixelSteps(props.x0, props.y0, props.x1, props.y1)
+    .map((c) => `M${c.x},${c.y}h1v1h-1z`)
+    .join("");
+
+  return (
+    <g className={`${props.className ?? ""} ${props.tone}`}>
+      <path d={d} />
+    </g>
+  );
+};
 
 interface KeySwatchProps {
   /** A pattern fill (`paint(id)`) or omit and pass a fill class in `tone`. */
