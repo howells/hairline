@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { VALUE_AXIS_LEFT } from "./basics/util-a";
+import { VALUE_AXIS_LEFT } from "./axes";
 import {
   FACET_GAP,
   facetColumns,

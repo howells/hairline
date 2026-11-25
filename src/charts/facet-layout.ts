@@ -72,6 +72,10 @@ export const facetDomains = (
   panels: FacetPanel[],
   scale: "free" | "shared"
 ): [number, number][] => {
+  if (panels.length === 0) {
+    return [];
+  }
+
   if (scale === "free") {
     return panels.map((p) => nice(...p.domain));
   }
@@ -87,6 +91,10 @@ export const facetDomains = (
 /** The key of the panel reaching highest, the default hero. */
 export const highestPanel = (panels: FacetPanel[]) => {
   let [best] = panels;
+
+  if (best === undefined) {
+    return null;
+  }
 
   for (const p of panels) {
     if (p.domain[1] > best.domain[1]) {

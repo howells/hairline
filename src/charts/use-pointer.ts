@@ -135,13 +135,14 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
 
   const linked = link?.value ?? null;
   const key = link === undefined ? state.key : linked;
+  const pinned = state.pinned && key !== null;
   const held: HeldRef<K> = useRef(null);
   const leaving = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** A touch scrub ends in a click the browser sends anyway: let it pass. */
   const swallow = useRef(false);
 
-  const put = (next: K | null, via: Via, pinned?: boolean) => {
-    setState({ key: next, pinned: pinned ?? state.pinned, via });
+  const put = (next: K | null, via: Via, nextPinned?: boolean) => {
+    setState({ key: next, pinned: nextPinned ?? pinned, via });
     link?.set(next);
   };
 
@@ -160,7 +161,7 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
   const leave = () => {
     cancelLeave();
 
-    if (!state.pinned) {
+    if (!pinned) {
       leaving.current = setTimeout(clear, LEAVE_MS);
     }
   };
@@ -175,7 +176,7 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
     },
     []
   );
-  useDismissWhenPinned(state.pinned, id, clear);
+  useDismissWhenPinned(pinned, id, clear);
 
   return {
     cancelLeave,
@@ -184,6 +185,7 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
     id,
     key,
     leave,
+    pinned,
     put,
     state,
     swallow,
@@ -191,8 +193,18 @@ const usePointerState = <K>(link?: PointerLink<K>) => {
 };
 
 export const usePointer = <K>(link?: PointerLink<K>) => {
-  const { cancelLeave, clear, held, id, key, leave, put, state, swallow } =
-    usePointerState(link);
+  const {
+    cancelLeave,
+    clear,
+    held,
+    id,
+    key,
+    leave,
+    pinned,
+    put,
+    state,
+    swallow,
+  } = usePointerState(link);
 
   const bind = (options: BindOptions<K>) => {
     const { axis, height, stops, width } = options;
@@ -204,9 +216,9 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
     const touch = touchHandlers<K>({
       held,
       keyAt: (client, el) => pick(client, el, Infinity)?.key ?? null,
-      pinned: state.pinned,
-      put: (next, pinned) => {
-        put(next, "touch", pinned);
+      pinned,
+      put: (next, nextPinned) => {
+        put(next, "touch", nextPinned);
       },
       swallow,
     });
@@ -218,7 +230,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
         return;
       }
 
-      if (state.pinned) {
+      if (pinned) {
         return;
       }
 
@@ -235,7 +247,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
     };
 
     const onPointerLeave = (e: PointerEvent<SVGSVGElement>) => {
-      if (e.pointerType === "touch" || state.pinned) {
+      if (e.pointerType === "touch" || pinned) {
         return;
       }
 
@@ -249,7 +261,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
     const onClick = (e: MouseEvent<SVGSVGElement>) => {
       if (swallow.current) {
         swallow.current = false;
-      } else if (state.pinned) {
+      } else if (pinned) {
         // A second click lets go; the pointer is still over the chart.
         put(key, "pointer", false);
       } else {
@@ -266,9 +278,9 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
       clear,
       key,
       keys: stops.map((s) => s.key),
-      pinned: state.pinned,
-      put: (next, pinned) => {
-        put(next, "key", pinned);
+      pinned,
+      put: (next, nextPinned) => {
+        put(next, "key", nextPinned);
       },
     });
 
@@ -278,7 +290,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
         // The next focus is the keyboard's unless a pointer says otherwise.
         delete e.currentTarget.dataset.hlInput;
 
-        if (!state.pinned && state.via === "key") {
+        if (!pinned && state.via === "key") {
           clear();
         }
       },
@@ -306,7 +318,7 @@ export const usePointer = <K>(link?: PointerLink<K>) => {
     id,
     key,
     leave,
-    pinned: state.pinned && key !== null,
+    pinned,
     via: state.via,
   };
 };

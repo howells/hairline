@@ -19,5 +19,8 @@ export const phase = (i: number, cursor: number) => {
   return i === cursor ? "active" : "future";
 };
 
+/** Room a left-hand value scale takes in front of the plot, px: the gutter Facets leaves its first column. */
+export const VALUE_AXIS_LEFT = 40;
+
 /** Snap a coordinate to the pixel grid for crisp 1px lines. */
 export const crisp = (v: number) => Math.round(v) + 0.5;

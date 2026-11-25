@@ -2,6 +2,7 @@ import { utcFormat } from "d3-time-format";
 
 import type { ValueAxis } from "../../schema/daily";
 import type { FontMetrics } from "../../schema/metrics";
+import { VALUE_AXIS_LEFT } from "../axes";
 import { NOTE_LINE, noteLines } from "../util";
 
 /** Saturday or Sunday, in UTC. */
@@ -21,9 +22,6 @@ export const dayAfter = (start: string, n: number) => {
 
 /** Room a right-hand value scale needs past the last datum, in px. */
 export const VALUE_AXIS_ROOM = 48;
-
-/** Room a left-hand value scale takes in front of the plot, px: the gutter Facets leaves its first column. */
-export const VALUE_AXIS_LEFT = 40;
 
 /** Room kept past the last datum when the numbers are not on the right, px. */
 const END_ROOM = 12;

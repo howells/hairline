@@ -68,6 +68,14 @@ describe("the facet grid takes its columns from the width", () => {
   ])("lays the panels out at %ipx in %i grid columns", (width, columns) => {
     expect(grid(width)).toContain(`px repeat(${columns - 1}, `);
   });
+
+  it("renders empty panels without throwing and returns empty domains", () => {
+    expect(facetDomains([], "shared")).toStrictEqual([]);
+    expect(facetDomains([], "free")).toStrictEqual([]);
+    expect(
+      facets({ children: nothing, label: "Empty", panels: [], width: 800 })
+    ).toContain('aria-label="Empty"');
+  });
 });
 
 describe("the scale is shared by default", () => {
