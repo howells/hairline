@@ -1,5 +1,5 @@
 import { scaleLinear } from "d3-scale";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import type { NoteProps } from "../../schema/options";
@@ -365,20 +365,11 @@ const LAYOUTS: Record<View, (c: Ctx) => Layout> = {
   scatter: scatterLayout,
 };
 
-/** Where a morph starts: a settled view, or the pose an earlier morph was cut off at. */
-type Pose =
-  | { kind: "between"; from: Pose; t: number; to: number }
-  | { kind: "view"; view: number };
+/** Where a morph starts: a settled view, or a flat snapshot of the in-flight marks. */
+type StartPose = { kind: "pts"; pts: Pt[][] } | { kind: "view"; view: number };
 
-/** The marks of a pose, given each view's marks. */
-const poseMarks = (pose: Pose, marksOf: (view: number) => Pt[][]): Pt[][] => {
-  if (pose.kind === "view") {
-    return marksOf(pose.view);
-  }
-
-  const a = poseMarks(pose.from, marksOf);
-  const b = marksOf(pose.to);
-  const e = easeTravel(pose.t);
+const blendMarks = (a: Pt[][], b: Pt[][], t: number): Pt[][] => {
+  const e = easeTravel(t);
 
   return a.map((pts, i) => blendPts(pts, b[i], e));
 };
@@ -390,20 +381,20 @@ const poseMarks = (pose: Pose, marksOf: (view: number) => Pt[][]): Pt[][] => {
  * to the chosen view.
  */
 const useMorph = (shown: boolean, reduced: boolean, paused: boolean) => {
-  const [start, setStart] = useState<Pose>({ kind: "view", view: 0 });
+  const [start, setStart] = useState<StartPose>({ kind: "view", view: 0 });
   const [to, setTo] = useState(0);
   const [t, setT] = useState(1);
   const settled = t >= 1;
 
-  const go = (k: number) => {
+  const go = (k: number, current?: Pt[][]) => {
     if (k === to) {
       return;
     }
 
     setStart(
-      settled || reduced
+      settled || reduced || current === undefined
         ? { kind: "view", view: to }
-        : { from: start, kind: "between", t, to }
+        : { kind: "pts", pts: current }
     );
     setTo(k);
     setT(reduced ? 1 : 0);
@@ -534,6 +525,124 @@ const MorphLabels = ({
   </g>
 );
 
+interface MorphPlotProps {
+  data: MorphDatum[];
+  format: (v: number) => string;
+  fx: (v: number) => string;
+  fy: (v: number) => string;
+  height: number;
+  note: string | undefined;
+  order: number[];
+  reduced: boolean;
+  shown: boolean;
+  tones: number[];
+  width: number;
+  xName: string;
+  yName: string;
+}
+
+const MorphPlot = (p: MorphPlotProps) => {
+  const hover = useHover<number>();
+  const morph = useMorph(p.shown, p.reduced, hover.key !== null);
+  const tex = useTextureIds("morph");
+  const noteH = noteSpace(p.note, p.width - 16, 16);
+  const h = p.height - CONTROL_SLOT_H - noteH;
+  const narrow = p.width < 460;
+
+  const layouts = useMemo(
+    () =>
+      VIEWS.map((v) =>
+        LAYOUTS[v]({
+          data: p.data,
+          fx: p.fx,
+          fy: p.fy,
+          h,
+          narrow,
+          order: p.order,
+          width: p.width,
+          xLabel: p.xName,
+          yLabel: p.yName,
+        })
+      ),
+    [p.data, p.fx, p.fy, h, narrow, p.order, p.width, p.xName, p.yName]
+  );
+
+  const view = VIEWS[morph.to];
+  const b = layouts[morph.to];
+
+  const fromMarks =
+    morph.start.kind === "view"
+      ? layouts[morph.start.view].marks
+      : morph.start.pts;
+
+  const marks = morph.settled
+    ? b.marks
+    : blendMarks(fromMarks, b.marks, morph.t);
+
+  const label = `${p.data.length} items shown as ${VIEW_NAMES[view].toLowerCase()}: ${p.order.map((i) => `${p.data[i].label} ${p.format(p.data[i].value)}`).join(", ")}`;
+  const tip = hover.key === null ? undefined : b.tips[hover.key];
+
+  return (
+    <>
+      <ControlSlot>
+        <ViewChips
+          active={morph.to}
+          onPick={(k) => {
+            morph.go(k, marks);
+          }}
+        />
+      </ControlSlot>
+      <div className="relative">
+        <ChartSvg
+          height={h + noteH}
+          label={label}
+          leave={hover.clear}
+          width={p.width}
+        >
+          <defs>
+            <Hatch id={tex("hatch")} tone="fill-l3" />
+          </defs>
+          {morph.settled ? (
+            <g key={`f-${view}`} className="fade">
+              {b.furniture}
+            </g>
+          ) : null}
+          {p.data.map((d, i) => (
+            <MorphMark
+              key={d.label}
+              d={ptsPath(marks[i])}
+              dim={hover.dim(i)}
+              fill={p.tones[i] === 0 ? undefined : paint(tex("hatch"))}
+              i={i}
+              onPointerEnter={hover.enter(i)}
+            />
+          ))}
+          {morph.settled ? (
+            <MorphLabels
+              key={`l-${view}`}
+              labels={b.labels}
+              halo={view === "scatter"}
+            />
+          ) : null}
+          <FootNote height={h + noteH} text={p.note} width={p.width} />
+        </ChartSvg>
+        {tip === undefined || hover.key === null ? null : (
+          <Tooltip x={tip[0]} y={tip[1]}>
+            <TipText
+              facts={[
+                p.format(p.data[hover.key].value),
+                `${p.fx(p.data[hover.key].x)} ${p.xName.toLowerCase()}`,
+                `${p.fy(p.data[hover.key].y)} ${p.yName.toLowerCase()}`,
+              ]}
+              lead={p.data[hover.key].label}
+            />
+          </Tooltip>
+        )}
+      </div>
+    </>
+  );
+};
+
 /**
  * G9 Largest asteroids. One set of entities that cycles through three views,
  * scatter → bars → ring, every few seconds; each mark flies smoothly into its
@@ -553,116 +662,43 @@ export const ScatterMorph = (props: ScatterMorphProps) => {
   const wrap = useRef<HTMLDivElement>(null);
   const shown = useReveal(wrap);
   const reduced = useReducedMotion();
-  const hover = useHover<number>();
-  const morph = useMorph(shown, reduced, hover.key !== null);
-  const tex = useTextureIds("morph");
-  const handlePick = morph.go;
 
   // The biggest item in solid ink; the rest engraved in one hatch.
-  const tones = rankTones(
-    data.map((d) => d.value),
-    [0, 4]
+  const tones = useMemo(
+    () =>
+      rankTones(
+        data.map((d) => d.value),
+        [0, 4]
+      ),
+    [data]
   );
 
-  const order = data
-    .map((_, i) => i)
-    .toSorted((a, b) => data[b].value - data[a].value);
-
-  const view = VIEWS[morph.to];
-  const label = `${data.length} items shown as ${VIEW_NAMES[view].toLowerCase()}: ${order.map((i) => `${data[i].label} ${format(data[i].value)}`).join(", ")}`;
+  const order = useMemo(
+    () =>
+      data.map((_, i) => i).toSorted((a, b) => data[b].value - data[a].value),
+    [data]
+  );
 
   return (
     <div ref={wrap}>
-      <ControlSlot>
-        <ViewChips active={morph.to} onPick={handlePick} />
-      </ControlSlot>
       <Plot>
-        {(width) => {
-          const noteH = noteSpace(noteOf(props), width - 16, 16);
-          const h = height - CONTROL_SLOT_H - noteH;
-
-          const ctx: Ctx = {
-            data,
-            fx,
-            fy,
-            h,
-            narrow: width < 460,
-            order,
-            width,
-            xLabel: xName,
-            yLabel: yName,
-          };
-
-          const b = LAYOUTS[view](ctx);
-
-          const marks = morph.settled
-            ? b.marks
-            : poseMarks(
-                {
-                  from: morph.start,
-                  kind: "between",
-                  t: morph.t,
-                  to: morph.to,
-                },
-                (v) => LAYOUTS[VIEWS[v]](ctx).marks
-              );
-
-          const tip = hover.key === null ? undefined : b.tips[hover.key];
-
-          return (
-            <div className="relative">
-              <ChartSvg
-                height={h + noteH}
-                label={label}
-                leave={hover.clear}
-                width={width}
-              >
-                <defs>
-                  <Hatch id={tex("hatch")} tone="fill-l3" />
-                </defs>
-                {morph.settled ? (
-                  <g key={`f-${view}`} className="fade">
-                    {b.furniture}
-                  </g>
-                ) : null}
-                {data.map((d, i) => (
-                  <MorphMark
-                    key={d.label}
-                    d={ptsPath(marks[i])}
-                    dim={hover.dim(i)}
-                    fill={tones[i] === 0 ? undefined : paint(tex("hatch"))}
-                    i={i}
-                    onPointerEnter={hover.enter(i)}
-                  />
-                ))}
-                {morph.settled ? (
-                  <MorphLabels
-                    key={`l-${view}`}
-                    labels={b.labels}
-                    halo={view === "scatter"}
-                  />
-                ) : null}
-                <FootNote
-                  height={h + noteH}
-                  text={noteOf(props)}
-                  width={width}
-                />
-              </ChartSvg>
-              {tip === undefined || hover.key === null ? null : (
-                <Tooltip x={tip[0]} y={tip[1]}>
-                  <TipText
-                    facts={[
-                      format(data[hover.key].value),
-                      `${fx(data[hover.key].x)} ${xName.toLowerCase()}`,
-                      `${fy(data[hover.key].y)} ${yName.toLowerCase()}`,
-                    ]}
-                    lead={data[hover.key].label}
-                  />
-                </Tooltip>
-              )}
-            </div>
-          );
-        }}
+        {(width) => (
+          <MorphPlot
+            data={data}
+            format={format}
+            fx={fx}
+            fy={fy}
+            height={height}
+            note={noteOf(props)}
+            order={order}
+            reduced={reduced}
+            shown={shown}
+            tones={tones}
+            width={width}
+            xName={xName}
+            yName={yName}
+          />
+        )}
       </Plot>
     </div>
   );

@@ -378,9 +378,12 @@ const placeLabels = (props: MapLabelsProps): PlacedLabel[] => {
   return placed;
 };
 
-const MapLabels = (props: MapLabelsProps) => (
+const MapLabels = (props: {
+  lit: Set<string> | null;
+  placed: PlacedLabel[];
+}) => (
   <g className="pointer-events-none">
-    {placeLabels(props).map((p, i) => (
+    {props.placed.map((p, i) => (
       <g className="fade" key={p.key} style={stagger(10 + i, "mark")}>
         <DimGroup dim={props.lit !== null && !props.lit.has(p.key)}>
           {p.leader && (
@@ -471,6 +474,20 @@ const MapSvg = (
     [pid, territories, width]
   );
 
+  const placedLabels = useMemo(
+    () =>
+      placeLabels({
+        labels: props.labels,
+        lit: null,
+        narrow: width < 560,
+        short: props.short,
+        territories,
+        values,
+        width,
+      }),
+    [props.labels, props.short, territories, values, width]
+  );
+
   const focusBin =
     focus?.kind === "region"
       ? (territories.find((t) => t.key === focus.key)?.bin ?? null)
@@ -527,13 +544,8 @@ const MapSvg = (
       </g>
       <LitLayer lit={lit} pid={pid} />
       <MapLabels
-        labels={props.labels}
         lit={focus === null ? null : new Set(lit.map((t) => t.key))}
-        narrow={width < 560}
-        short={props.short}
-        territories={territories}
-        values={values}
-        width={width}
+        placed={placedLabels}
       />
       <Legend
         active={focusBin}

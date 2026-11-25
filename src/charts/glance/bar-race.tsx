@@ -1,5 +1,5 @@
 import { scaleLinear } from "d3-scale";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { RefObject } from "react";
 
 import type { NoteProps } from "../../schema/options";
@@ -378,6 +378,8 @@ export const BarRace = (props: BarRaceProps) => {
   const label = `Bar race, ${data.periods[0]} to ${data.periods[last]}. ${period}: ${order.map((s) => `${data.series[s.i].label} ${format(s.v)}`).join(", ")}`;
   const action = buttonText(clock.done, clock.playing);
 
+  const m = useMemo(() => margins(data, format), [data, format]);
+
   return (
     <div ref={box} className="relative">
       <ControlSlot>
@@ -404,7 +406,6 @@ export const BarRace = (props: BarRaceProps) => {
         }
       >
         {(width) => {
-          const m = margins(data, format);
           const pitch = (height - m.top - m.bottom) / data.series.length;
 
           const x = scaleLinear()
@@ -430,7 +431,11 @@ export const BarRace = (props: BarRaceProps) => {
                   jump={clock.reduced}
                   dimmed={hover.dim(i)}
                   fill={
-                    props.highlight === s.label || rank[i] === 0
+                    (
+                      props.highlight === undefined
+                        ? rank[i] === 0
+                        : props.highlight === s.label
+                    )
                       ? "fill-hero"
                       : undefined
                   }
