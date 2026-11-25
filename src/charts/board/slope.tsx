@@ -6,12 +6,13 @@ import { resolveFormat } from "../../schema/format";
 import { keyOf } from "../../schema/key";
 import type { SlopeProps, SlopeRow as RowData } from "../../schema/slope";
 import { Plot } from "../core";
-import { useHover } from "../hooks";
 import { DimGroup } from "../hover";
 import { nudge } from "../line-ends";
 import type { Nudged } from "../line-ends";
 import { Dot, Ring } from "../markers";
 import { FootNote } from "../plot-note";
+import { Pointer } from "../pointer";
+import type { Stop } from "../pointer";
 import { VALUE } from "../roles";
 import { VRule } from "../rules";
 import { chartTable, plotOptions, scoped } from "../shared-options";
@@ -111,7 +112,6 @@ const SlopeRow = (props: {
   /** The hero row, the alert row, or neither. */
   role: Role;
   format: (v: number) => string;
-  onHover: () => void;
 }) => {
   const { i, row, y } = props;
   const [xa, xb] = props.xs;
@@ -120,20 +120,7 @@ const SlopeRow = (props: {
   const { name } = row;
 
   return (
-    <DimGroup
-      className="fade"
-      dim={props.dim}
-      style={stagger(i)}
-      onPointerEnter={props.onHover}
-    >
-      <line
-        x1={xa}
-        x2={xb}
-        y1={y(row.from)}
-        y2={y(row.to)}
-        stroke="transparent"
-        strokeWidth={14}
-      />
+    <DimGroup className="fade" dim={props.dim} style={stagger(i)}>
       <line
         className="cap-round"
         x1={xa}
@@ -258,6 +245,124 @@ const columnXs = (
     ),
 ];
 
+const SlopeSvg = (props: {
+  domain: [number, number];
+  format: (v: number) => string;
+  h: number;
+  props: SlopeProps;
+  rows: Row[];
+  width: number;
+}) => {
+  const { domain, format, h, rows, width } = props;
+  const chart = props.props;
+  const top = 40;
+
+  // The note sits under the columns, which stop short of it.
+  const noteRoom = noteSpace(chart.unitNote, width - 16, 26, chart.metrics);
+  const bottom = 24 + noteRoom;
+  const xs = columnXs(rows, format, width, chart.metrics);
+
+  const y = scaleLinear()
+    .domain(domain)
+    .range([h - bottom, top + 16]);
+
+  const lys = nudge(
+    rows.map((r) => y(r.from)),
+    15,
+    top + 8,
+    h - bottom + 16
+  );
+
+  const rys = nudge(
+    rows.map((r) => y(r.to)),
+    15,
+    top + 8,
+    h - bottom + 16
+  );
+
+  const seen = new Map<string, number>();
+
+  const keys = rows.map((r) => {
+    const key = keyOf(r);
+    const nth = seen.get(key) ?? 0;
+    seen.set(key, nth + 1);
+
+    return `${key}#${nth}`;
+  });
+
+  const roleAt = (r: Row, i: number): Role => {
+    if (chart.emphasis === undefined) {
+      return roleOf(r, rows, chart.alert ?? "rise");
+    }
+
+    // The first row of that key leads, should the key repeat.
+    return keys[i] === `${chart.emphasis}#0` ? "lead" : "rest";
+  };
+
+  const label =
+    chart.title ??
+    chart.label ??
+    (rows.length === 0
+      ? "No data"
+      : rows
+          .map(
+            (r) =>
+              `${r.name} ${format(r.from)} ${chart.labels[0]}, ${format(r.to)} ${chart.labels[1]}`
+          )
+          .join("; "));
+
+  const stops: Stop<number>[] = rows.map((r, i) => ({
+    key: i,
+    lead: r.name,
+    rows: [
+      { name: chart.labels[0], value: format(r.from) },
+      { name: chart.labels[1], value: format(r.to) },
+    ],
+    x: (xs[0] + xs[1]) / 2,
+    y: (lys[i].y + rys[i].y) / 2,
+  }));
+
+  return (
+    <Pointer axis="y" height={h} stops={stops} width={width}>
+      {(pointer) => (
+        <ChartSvg
+          desc={summary(rows, chart.labels, format)}
+          height={h}
+          label={label}
+          width={width}
+          {...pointer.svg}
+        >
+          <Columns
+            xs={xs}
+            labels={chart.labels}
+            top={top}
+            height={h - noteRoom}
+          />
+          {rows.map((r, i) => (
+            <SlopeRow
+              key={keys[i]}
+              row={r}
+              i={i}
+              xs={xs}
+              labelYs={[lys[i], rys[i]]}
+              y={y}
+              dim={pointer.key !== null && pointer.key !== i}
+              role={roleAt(r, i)}
+              format={format}
+            />
+          ))}
+          <FootNote
+            height={h}
+            metrics={chart.metrics}
+            text={chart.unitNote}
+            width={width}
+          />
+        </ChartSvg>
+      )}
+    </Pointer>
+  );
+};
+
 const SlopePlot = (props: SlopeProps) => {
   const rows = (props.rows ?? []).filter(
     (r) => Number.isFinite(r.from) && Number.isFinite(r.to)
@@ -270,7 +375,6 @@ const SlopePlot = (props: SlopeProps) => {
     props.narrowFormat === undefined ? wide : resolveFormat(props.narrowFormat);
 
   const domain = props.domain ?? extentOf(rows);
-  const hover = useHover<number>();
 
   return (
     <Plot
@@ -284,110 +388,16 @@ const SlopePlot = (props: SlopeProps) => {
       )}
       width={props.width}
     >
-      {(width) => {
-        const format = width < NARROW ? narrow : wide;
-        const top = 40;
-
-        // The note sits under the columns, which stop short of it.
-        const noteRoom = noteSpace(
-          props.unitNote,
-          width - 16,
-          26,
-          props.metrics
-        );
-
-        const bottom = 24 + noteRoom;
-
-        const xs = columnXs(rows, format, width, props.metrics);
-
-        const y = scaleLinear()
-          .domain(domain)
-          .range([h - bottom, top + 16]);
-
-        const lys = nudge(
-          rows.map((r) => y(r.from)),
-          15,
-          top + 8,
-          h - bottom + 16
-        );
-
-        const rys = nudge(
-          rows.map((r) => y(r.to)),
-          15,
-          top + 8,
-          h - bottom + 16
-        );
-
-        const seen = new Map<string, number>();
-
-        const keys = rows.map((r) => {
-          const key = keyOf(r);
-          const nth = seen.get(key) ?? 0;
-          seen.set(key, nth + 1);
-
-          return `${key}#${nth}`;
-        });
-
-        const roleAt = (r: Row, i: number): Role => {
-          if (props.emphasis === undefined) {
-            return roleOf(r, rows, props.alert ?? "rise");
-          }
-
-          // The first row of that key leads, should the key repeat.
-          return keys[i] === `${props.emphasis}#0` ? "lead" : "rest";
-        };
-
-        const label =
-          props.title ??
-          props.label ??
-          (rows.length === 0
-            ? "No data"
-            : rows
-                .map(
-                  (r) =>
-                    `${r.name} ${format(r.from)} ${props.labels[0]}, ${format(r.to)} ${props.labels[1]}`
-                )
-                .join("; "));
-
-        return (
-          <ChartSvg
-            desc={summary(rows, props.labels, format)}
-            height={h}
-            label={label}
-            leave={hover.clear}
-            width={width}
-          >
-            <Columns
-              xs={xs}
-              labels={props.labels}
-              top={top}
-              height={h - noteRoom}
-            />
-            {rows.map((r, i) => (
-              <SlopeRow
-                key={keys[i]}
-                row={r}
-                i={i}
-                xs={xs}
-                labelYs={[lys[i], rys[i]]}
-                y={y}
-                dim={hover.dim(i)}
-                role={roleAt(r, i)}
-                format={format}
-                onHover={() => {
-                  hover.show(i);
-                }}
-              />
-            ))}
-            <FootNote
-              height={h}
-              metrics={props.metrics}
-              text={props.unitNote}
-              width={width}
-            />
-          </ChartSvg>
-        );
-      }}
+      {(width) => (
+        <SlopeSvg
+          domain={domain}
+          format={width < NARROW ? narrow : wide}
+          h={h}
+          props={props}
+          rows={rows}
+          width={width}
+        />
+      )}
     </Plot>
   );
 };

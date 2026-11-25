@@ -9,7 +9,7 @@ import {
   stackOrderNone,
 } from "d3-shape";
 import { utcFormat } from "d3-time-format";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { fmtDay, fmtInt, monthTickLabels } from "../../lib/format";
@@ -441,17 +441,24 @@ const TimeAxis = (props: {
 const hoverAt = (
   e: PointerEvent<SVGSVGElement>,
   layout: Layout,
-  river: River
+  river: River,
+  width: number
 ): Hover | null => {
   const box = e.currentTarget.getBoundingClientRect();
-  const px = e.clientX - box.left;
+
+  if (box.width === 0 || box.height === 0) {
+    return null;
+  }
+
+  const px = (e.clientX - box.left) * (width / box.width);
+  const py = (e.clientY - box.top) * (layout.height / box.height);
 
   if (px < layout.px0 - 10 || px > layout.px0 + layout.plotW + 10) {
     return null;
   }
 
   const i = maxIndex(layout.xs.map((x) => -Math.abs(x - px)));
-  const v = layout.y.invert(e.clientY - box.top);
+  const v = layout.y.invert(py);
 
   const s = river.layers.findIndex((l) => {
     const edge = l[i];
@@ -532,7 +539,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
   const clip = useSvgId("stream");
   const textures = useTextureIds("stream");
   const [hover, setHover] = useState<Hover | null>(null);
-  const river = buildRiver(data);
+  const river = useMemo(() => buildRiver(data), [data]);
   const label = `Stream of ${data.series.map((s) => s.name).join(", ")} over ${data.dates.length} ${props.yearly === true ? "years" : "periods"}; latest total ${format(river.totals.at(-1) ?? 0)}`;
 
   return (
@@ -561,7 +568,7 @@ export const StreamRibbon = (props: StreamRibbonProps) => {
               setHover(null);
             }}
             onPointerMove={(e) => {
-              setHover(hoverAt(e, layout, river));
+              setHover(hoverAt(e, layout, river, width));
             }}
             width={width}
           >
