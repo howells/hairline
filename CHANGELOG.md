@@ -1,5 +1,20 @@
 # @howells/hairline
 
+## 0.6.0
+
+### Minor Changes
+
+- dc58e76: `drawers[kind](payload)` from `@howells/hairline/draw` now throws a `ChartValidationError` carrying the payload's `issues` (path, pointer, code and message for each), instead of a plain `Error` with the issues joined into its message. The message text is unchanged.
+- dd5bb21: Slope takes `alert` ("rise", "fall" or "none"), as DumbbellQueue does: which direction of change is bad news. Its biggest change is drawn in the alert colour and the other direction's biggest in the hero colour. It defaults to "rise", which is how Slope already drew, so set "fall" for a measure where rising is good, such as visits or revenue.
+- be115e4: Slope takes `unitNote`, the in-plot key the other charts already take, so a JSON payload can name its unit. It prints under the plot, and the columns stop above it. The gallery's range-dots chart now shows real data: 2023 e-cigarette use from the CDC's BRFSS, with 95% intervals.
+
+### Patch Changes
+
+- 9329208: Internal: linted with @howells/lint 3.10.2. Settle and playback timers keep their state in refs rather than reassigning render-time locals; no change to what charts draw.
+- d04a5b5: HairlineLine and HairlineArea print values to the precision of their value axis when no `format` is given. On an axis labelled 7.5, 7.75, 8, a reading of 7.81 now prints "7.81" beside its dot and in the description and table, where it printed "8". The internal daily grid's `wholeNumbers` prop is gone; the grid takes the chart's format.
+  
+  HairlineArea staggers its entry stem by stem rather than by day, so a year of monthly stems settles in about 1.5 seconds instead of 6.
+
 ## 0.5.0
 
 ### Minor Changes
